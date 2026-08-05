@@ -20,10 +20,15 @@ const jobs={
  Trust:{purpose:'Change a belief and build preference for this creator or method.',research:'Doubts, misconceptions, objections, proof, stories and credibility gaps.'},
  Convert:{purpose:'Help a ready viewer make one decision or take the next step.',research:'Buyer questions, fit, alternatives, risk, objections and decision criteria.'}
 };
+function selectedVideo(){
+ const app=window.state;
+ const selectedCreator=(app?.creators||[]).find(item=>item.id===app.currentCreatorId)||(app?.creators||[])[0];
+ const videos=selectedCreator?.videos||[];
+ return videos.find(item=>item.id===app.currentVideoId)||videos[0]||null;
+}
 function ensureVideoFocus(){
  if(window.state?.currentView!=='video'||document.querySelector('.v71-video-focus'))return;
- let current=null;
- try{current=typeof video==='function'?video():null}catch{}
+ const current=selectedVideo();
  if(!current)return;
  const job=first(current.job,'Reach');
  const info=jobs[job]||jobs.Reach;
