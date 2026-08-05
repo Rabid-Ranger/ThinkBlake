@@ -29,8 +29,9 @@ const assert=(v,m)=>{if(!v){report.errors.push(m);throw new Error(m)}pass(m)};
   await page.locator('[data-v69-open-strategy]').first().click();
   await page.waitForTimeout(100);
   assert(await page.locator('#v69-overlay.open').count()===1,'Creator Strategy opens without leaving onboarding.');
-  const emptyStrategy=await page.locator('#v69-body').innerText();
-  assert(/Audience/.test(emptyStrategy)&&/Message and brand/.test(emptyStrategy)&&/Business and funnel/.test(emptyStrategy),'The reference clearly separates audience, brand and funnel information.');
+  const strategySectionCount=await page.locator('#v69-body .v69-section').count();
+  const strategyLabels=(await page.locator('#v69-body .v69-kicker').allTextContents()).map(x=>x.trim().toLowerCase());
+  assert(strategySectionCount>=5&&strategyLabels.includes('audience')&&strategyLabels.includes('message and brand')&&strategyLabels.includes('business and funnel'),'The reference clearly separates audience, brand and funnel information.');
   await page.locator('[data-v69-close]').click();
 
   await page.evaluate(()=>{
