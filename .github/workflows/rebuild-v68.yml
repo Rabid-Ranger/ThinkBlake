@@ -73,12 +73,12 @@ jobs:
           path = Path('tests/v68-smoke.js')
           text = path.read_text()
           replacements = {
-            "[data-v67-stage-go=\"setup\"]": "[data-v67-stage-go=\"setup\"]:visible",
-            "[data-v68-confirm-foundation]": "[data-v68-confirm-foundation]:visible",
-            "[data-v58-signal=\"discovery\"][data-v58-value=\"Weak\"]": "[data-v58-signal=\"discovery\"][data-v58-value=\"Weak\"]:visible",
-            "[data-v67-confirm-diagnosis]": "[data-v67-confirm-diagnosis]:visible",
-            "details.v57-guides": "details.v57-guides:visible",
-            "[data-v57-hook]": "[data-v57-hook]:visible"
+            "page.locator('[data-v67-stage-go=\"setup\"]')": "page.locator('[data-v67-stage-go=\"setup\"]:visible')",
+            "page.locator('[data-v68-confirm-foundation]')": "page.locator('[data-v68-confirm-foundation]:visible')",
+            "page.locator('[data-v58-signal=\"discovery\"][data-v58-value=\"Weak\"]')": "page.locator('[data-v58-signal=\"discovery\"][data-v58-value=\"Weak\"]:visible')",
+            "page.locator('[data-v67-confirm-diagnosis]')": "page.locator('[data-v67-confirm-diagnosis]:visible')",
+            "page.locator('details.v57-guides')": "page.locator('details.v57-guides:visible')",
+            "page.locator('[data-v57-hook]')": "page.locator('[data-v57-hook]:visible')"
           }
           for old, new in replacements.items():
             text = text.replace(old, new)
