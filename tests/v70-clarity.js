@@ -70,17 +70,22 @@ const assert=(v,m)=>{if(!v){report.errors.push(m);throw new Error(m)}pass(m)};
    const section=document.querySelector('[data-v49-section="video-experience"]');
    const control=[...section.querySelectorAll('[data-v57-structure]')].find(node=>node.getAttribute('data-v57-structure')===value);
    const card=control?.closest('.v57-choice-card');
-   return {open:section?.open,top:card?.getBoundingClientRect().top??null,values:[...section.querySelectorAll('.v57-choice-card')].filter(visible).map(card=>card.querySelector('[data-v57-structure]')?.getAttribute('data-v57-structure')).filter(Boolean)};
+   return {open:section?.open,top:card?.getBoundingClientRect().top??null,scrollY:window.scrollY,values:[...section.querySelectorAll('.v57-choice-card')].filter(visible).map(card=>card.querySelector('[data-v57-structure]')?.getAttribute('data-v57-structure')).filter(Boolean)};
   },clickedValue);
-  await visibleStory.click();
-  await page.waitForTimeout(1000);
+  await page.evaluate(value=>{
+   const section=document.querySelector('[data-v49-section="video-experience"]');
+   const control=[...section.querySelectorAll('[data-v57-structure]')].find(node=>node.getAttribute('data-v57-structure')===value);
+   control?.click();
+  },clickedValue);
+  await page.waitForTimeout(350);
   const after=await page.evaluate(value=>{
    const visible=node=>{const r=node.getBoundingClientRect(),s=getComputedStyle(node);return r.width>0&&r.height>0&&s.display!=='none'&&s.visibility!=='hidden'};
    const section=document.querySelector('[data-v49-section="video-experience"]');
    const control=[...section.querySelectorAll('[data-v57-structure]')].find(node=>node.getAttribute('data-v57-structure')===value);
    const card=control?.closest('.v57-choice-card');
-   return {open:section?.open,top:card?.getBoundingClientRect().top??null,selected:card?.classList.contains('selected')||false,values:[...section.querySelectorAll('.v57-choice-card')].filter(visible).map(card=>card.querySelector('[data-v57-structure]')?.getAttribute('data-v57-structure')).filter(Boolean)};
+   return {open:section?.open,top:card?.getBoundingClientRect().top??null,scrollY:window.scrollY,selected:card?.classList.contains('selected')||false,values:[...section.querySelectorAll('.v57-choice-card')].filter(visible).map(card=>card.querySelector('[data-v57-structure]')?.getAttribute('data-v57-structure')).filter(Boolean)};
   },clickedValue);
+  console.log(`PLANNER_POSITION:${JSON.stringify({before,after})}`);
   assert(before.open&&after.open,'Choosing a story option does not close the Story, Hook and Pacing section.');
   assert(JSON.stringify(before.values)===JSON.stringify(after.values),'Choosing a story option does not change which three choices are visible.');
   assert(after.selected,'The exact clicked story choice becomes selected.');
