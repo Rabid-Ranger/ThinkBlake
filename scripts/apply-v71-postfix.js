@@ -21,6 +21,13 @@ const jobs={
  Trust:{purpose:'Change a belief and build preference for this creator or method.',research:'Doubts, misconceptions, objections, proof, stories and credibility gaps.'},
  Convert:{purpose:'Help a ready viewer make one decision or take the next step.',research:'Buyer questions, fit, alternatives, risk, objections and decision criteria.'}
 };
+function normalizeDiagnosisRoute(){
+ const app=appState();
+ if(app?.currentView==='diagnosis'){
+  app.currentView='overview';
+  app.v67DiagnosisReview=true;
+ }
+}
 function selectedVideo(){
  const app=appState();
  const selectedCreator=(app?.creators||[]).find(item=>item.id===app.currentCreatorId)||(app?.creators||[])[0];
@@ -58,7 +65,7 @@ const clean=()=>{
 const observer=new MutationObserver(clean);
 observer.observe(document.documentElement,{childList:true,subtree:true});
 const previous=window.render;
-window.render=function(...args){const result=previous.apply(this,args);clean();setTimeout(clean,0);setTimeout(clean,120);setTimeout(clean,300);return result};
+window.render=function(...args){normalizeDiagnosisRoute();const result=previous.apply(this,args);clean();setTimeout(clean,0);setTimeout(clean,120);setTimeout(clean,300);return result};
 clean();
 })();
 </script>`;
