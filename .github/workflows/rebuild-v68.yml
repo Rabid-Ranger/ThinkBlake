@@ -134,11 +134,17 @@ jobs:
           from pathlib import Path
           path = Path('tests/v70-clarity.js')
           text = path.read_text()
-          anchor = "c.foundationConfirmedAt=c.foundationConfirmedAt||todayIso();"
-          replacement = anchor + "\n   c.onboardingCompletedAt=c.onboardingCompletedAt||todayIso();"
-          if anchor not in text:
+          active_anchor = "c.foundationConfirmedAt=c.foundationConfirmedAt||todayIso();"
+          active_replacement = active_anchor + "\n   c.onboardingCompletedAt=c.onboardingCompletedAt||todayIso();"
+          if active_anchor not in text:
             raise SystemExit('The active-creator fixture anchor was not found.')
-          path.write_text(text.replace(anchor, replacement, 1))
+          text = text.replace(active_anchor, active_replacement, 1)
+          calendar_anchor = "assert(await page.locator('.calendar-stack').count()===1,'The calendar page keeps a permanent calendar stack.');"
+          calendar_diagnostic = """const calendarState=await page.evaluate(()=>({\n   currentView:state.currentView,\n   heading:document.querySelector('.page-head h2')?.textContent?.trim()||'',\n   contentText:(document.querySelector('.content')?.innerText||'').slice(0,500),\n   stacks:document.querySelectorAll('.calendar-stack').length,\n   calendars:document.querySelectorAll('.calendar-card').length,\n   upcoming:document.querySelectorAll('.upcoming-panel').length,\n   directChildren:[...document.querySelectorAll('.content > *')].map(node=>({tag:node.tagName,className:String(node.className||''),text:(node.textContent||'').replace(/\\s+/g,' ').trim().slice(0,80)}))\n  }));\n  console.log(`CALENDAR_STATE:${JSON.stringify(calendarState)}`);\n  assert(calendarState.stacks===1,'The calendar page keeps a permanent calendar stack.');"""
+          if calendar_anchor not in text:
+            raise SystemExit('The calendar assertion anchor was not found.')
+          text = text.replace(calendar_anchor, calendar_diagnostic, 1)
+          path.write_text(text)
           PY
           node tests/v70-clarity.js
 
