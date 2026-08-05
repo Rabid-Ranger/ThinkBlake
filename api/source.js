@@ -12,13 +12,13 @@ module.exports = function handler(req, res) {
     }
 
     const source = zlib.gunzipSync(Buffer.from(match[1], 'base64')).toString('utf8');
+    const lines = source.split('\n');
     const query = typeof req.query.q === 'string' ? req.query.q : '';
 
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('X-Accelerator-Source-Length', String(source.length));
 
     if (query) {
-      const lines = source.split('\n');
       const needle = query.toLowerCase();
       const context = Math.min(20, Math.max(0, Number.parseInt(req.query.context || '6', 10) || 6));
       const matches = [];
@@ -35,6 +35,16 @@ module.exports = function handler(req, res) {
       }
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
       res.status(200).json({query, lineCount: lines.length, sourceLength: source.length, matches});
+      return;
+    }
+
+    if (req.query.lineStart || req.query.lineEnd) {
+      const requestedStartLine = Number.parseInt(req.query.lineStart || '1', 10);
+      const requestedEndLine = Number.parseInt(req.query.lineEnd || String(lines.length), 10);
+      const startLine = Math.max(1, Number.isFinite(requestedStartLine) ? requestedStartLine : 1);
+      const endLine = Math.min(lines.length, Math.max(startLine, Number.isFinite(requestedEndLine) ? requestedEndLine : lines.length), startLine + 499);
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      res.status(200).send(lines.slice(startLine - 1, endLine).map((line, offset) => `${startLine + offset}: ${line}`).join('\n'));
       return;
     }
 
