@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - tests/v71-usability-audit.js
+      - tests/v71-video-map.js
       - .github/workflows/audit-v71-usability.yml
 
 permissions:
@@ -41,6 +42,8 @@ jobs:
           done
           cat /tmp/v71-audit-server.log
           exit 1
+      - name: Map the video planner structure
+        run: node tests/v71-video-map.js
       - name: Run page-by-page audit
         continue-on-error: true
         run: node tests/v71-usability-audit.js
@@ -48,7 +51,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add qa/v71-usability-audit.json qa/v71-usability-audit.md qa/v71-*.png
+          git add qa/v71-usability-audit.json qa/v71-usability-audit.md qa/v71-video-map.json qa/v71-*.png
           if git diff --cached --quiet; then
             echo "Audit evidence is unchanged."
           else
