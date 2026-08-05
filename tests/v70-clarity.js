@@ -61,12 +61,12 @@ const assert=(v,m)=>{if(!v){report.errors.push(m);throw new Error(m)}pass(m)};
   const visibleStory=page.locator('.v57-choice-card').filter({visible:true}).nth(1).locator('[data-v57-structure]');
   await visibleStory.scrollIntoViewIfNeeded();
   await page.waitForTimeout(80);
-  const before=await page.evaluate(()=>({y:window.scrollY,open:document.querySelector('[data-v49-section="video-experience"]')?.open}));
+  const before=await page.evaluate(()=>{const section=document.querySelector('[data-v49-section="video-experience"]');return {open:section?.open,top:section?.getBoundingClientRect().top??null}});
   await visibleStory.click();
   await page.waitForTimeout(550);
-  const after=await page.evaluate(()=>({y:window.scrollY,open:document.querySelector('[data-v49-section="video-experience"]')?.open}));
+  const after=await page.evaluate(()=>{const section=document.querySelector('[data-v49-section="video-experience"]');return {open:section?.open,top:section?.getBoundingClientRect().top??null}});
   assert(before.open&&after.open,'Choosing a story option does not close the Story, Hook and Pacing section.');
-  assert(Math.abs(after.y-before.y)<120,'Choosing a planner option does not jump the coach to a different part of the page.');
+  assert(before.top!==null&&after.top!==null&&Math.abs(after.top-before.top)<60,'Choosing a planner option keeps the current section in the same place on screen.');
 
   await page.evaluate(()=>{state.currentView='calendar';render()});
   await page.waitForTimeout(250);
