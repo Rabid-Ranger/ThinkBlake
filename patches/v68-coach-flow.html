@@ -22,14 +22,28 @@
   };
   function captureDetails68(){
     const nodes=[...document.querySelectorAll('.content details')];
-    return {view:state?.currentView||'',items:nodes.map((node,index)=>({key:detailKey68(node,index),open:node.open,index}))};
+    const currentFoundation=nodes.find(node=>node.matches('.v67-foundation-section.current'));
+    const currentFoundationIndex=currentFoundation?nodes.indexOf(currentFoundation):-1;
+    return {
+      view:state?.currentView||'',
+      currentFoundationKey:currentFoundation?detailKey68(currentFoundation,currentFoundationIndex):'',
+      items:nodes.map((node,index)=>({key:detailKey68(node,index),open:node.open,index}))
+    };
   }
   function restoreDetails68(snapshot){
     if(!snapshot||snapshot.view!==(state?.currentView||''))return;
     const keyed=new Map(snapshot.items.map(item=>[item.key,item.open]));
     const byIndex=snapshot.items.map(item=>item.open);
-    [...document.querySelectorAll('.content details')].forEach((node,index)=>{
+    const nodes=[...document.querySelectorAll('.content details')];
+    const currentFoundation=nodes.find(node=>node.matches('.v67-foundation-section.current'))||null;
+    const currentFoundationIndex=currentFoundation?nodes.indexOf(currentFoundation):-1;
+    const currentFoundationKey=currentFoundation?detailKey68(currentFoundation,currentFoundationIndex):'';
+    const foundationStepChanged=Boolean(snapshot.currentFoundationKey&&currentFoundationKey&&snapshot.currentFoundationKey!==currentFoundationKey);
+
+    nodes.forEach((node,index)=>{
       if(node.getAttribute('data-v67-locked')==='true')return;
+      if(node===currentFoundation){node.open=true;return;}
+      if(foundationStepChanged&&node.matches('.v67-foundation-section')){node.open=false;return;}
       const key=detailKey68(node,index);
       if(keyed.has(key))node.open=keyed.get(key);
       else if(index<byIndex.length)node.open=byIndex[index];
