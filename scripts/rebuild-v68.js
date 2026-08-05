@@ -56,8 +56,9 @@ source = source
   .replace('<title>Accelerator OS V36 Clarity System</title>', '<title>Accelerator OS V52.1 Coach Flow V68</title>');
 
 if (source.includes('id="v68-coach-flow-fixes"')) throw new Error('The V68 patch is already present in the V67 base.');
-if (!source.includes('</body>')) throw new Error('Closing body tag is missing.');
-source = source.replace('</body>', `${patch}\n</body>`);
+const closingBody = source.lastIndexOf('</body>');
+if (closingBody < 0) throw new Error('Closing body tag is missing.');
+source = `${source.slice(0, closingBody)}${patch}\n${source.slice(closingBody)}`;
 
 fs.writeFileSync(decodedPath, source);
 
