@@ -10,12 +10,20 @@ on:
       - patches/v72-reference-ui.js
       - scripts/build-v72-reference.js
       - tests/v72-reference-ui.js
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/verify-v72-reference-ui.yml
+      - patches/v72-reference-ui.css
+      - patches/v72-reference-ui.js
+      - scripts/build-v72-reference.js
+      - tests/v72-reference-ui.js
 
 permissions:
   contents: write
 
 concurrency:
-  group: verify-v72-reference-led-ui
+  group: verify-v72-reference-led-ui-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -25,7 +33,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: v72-reference-led-ui
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || 'v72-reference-led-ui' }}
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
@@ -58,6 +66,7 @@ jobs:
       - name: Verify phase flow and guide drawer
         run: node tests/v72-reference-ui.js
       - name: Commit the verified preview and evidence
+        if: github.event_name == 'push'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
