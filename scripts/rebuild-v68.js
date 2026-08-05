@@ -12,6 +12,7 @@ const creatorAttentionFixPath = path.join(root, 'patches', 'v70-creator-attentio
 const videoJobGuideFixPath = path.join(root, 'patches', 'v70-video-job-guide-fix.html');
 const scrollStabilityFixPath = path.join(root, 'patches', 'v70-scroll-stability-fix.html');
 const fixedChoiceSetPath = path.join(root, 'patches', 'v70-fixed-choice-set.html');
+const inplacePlannerSelectionPath = path.join(root, 'patches', 'v70-inplace-planner-selection.html');
 const indexPath = path.join(root, 'index.html');
 
 if (!fs.existsSync(decodedPath)) throw new Error('decoded-source.html is missing.');
@@ -22,6 +23,7 @@ if (!fs.existsSync(creatorAttentionFixPath)) throw new Error('patches/v70-creato
 if (!fs.existsSync(videoJobGuideFixPath)) throw new Error('patches/v70-video-job-guide-fix.html is missing.');
 if (!fs.existsSync(scrollStabilityFixPath)) throw new Error('patches/v70-scroll-stability-fix.html is missing.');
 if (!fs.existsSync(fixedChoiceSetPath)) throw new Error('patches/v70-fixed-choice-set.html is missing.');
+if (!fs.existsSync(inplacePlannerSelectionPath)) throw new Error('patches/v70-inplace-planner-selection.html is missing.');
 if (!fs.existsSync(basePath)) fs.copyFileSync(decodedPath, basePath);
 
 let source = fs.readFileSync(basePath, 'utf8');
@@ -32,6 +34,7 @@ const creatorAttentionFix = fs.readFileSync(creatorAttentionFixPath, 'utf8').tri
 const videoJobGuideFix = fs.readFileSync(videoJobGuideFixPath, 'utf8').trim();
 const scrollStabilityFix = fs.readFileSync(scrollStabilityFixPath, 'utf8').trim();
 const fixedChoiceSet = fs.readFileSync(fixedChoiceSetPath, 'utf8').trim();
+const inplacePlannerSelection = fs.readFileSync(inplacePlannerSelectionPath, 'utf8').trim();
 
 function replaceOnce(label, search, replacement) {
   const count = source.split(search).length - 1;
@@ -80,9 +83,10 @@ if (source.includes('id="v70-creator-attention-fix-styles"')) throw new Error('T
 if (source.includes('id="v70-video-job-guide-fix-script"')) throw new Error('The V70 video job guide fix is already present in the V67 base.');
 if (source.includes('id="v70-scroll-stability-fix-script"')) throw new Error('The V70 scroll stability fix is already present in the V67 base.');
 if (source.includes('id="v70-fixed-choice-set-script"')) throw new Error('The V70 fixed choice-set patch is already present in the V67 base.');
+if (source.includes('id="v70-inplace-planner-selection-script"')) throw new Error('The V70 in-place planner selection patch is already present in the V67 base.');
 const closingBody = source.lastIndexOf('</body>');
 if (closingBody < 0) throw new Error('Closing body tag is missing.');
-source = `${source.slice(0, closingBody)}${patch}\n${contextPatch}\n${clarityPatch}\n${creatorAttentionFix}\n${videoJobGuideFix}\n${scrollStabilityFix}\n${fixedChoiceSet}\n${source.slice(closingBody)}`;
+source = `${source.slice(0, closingBody)}${patch}\n${contextPatch}\n${clarityPatch}\n${creatorAttentionFix}\n${videoJobGuideFix}\n${scrollStabilityFix}\n${fixedChoiceSet}\n${inplacePlannerSelection}\n${source.slice(closingBody)}`;
 
 fs.writeFileSync(decodedPath, source);
 
