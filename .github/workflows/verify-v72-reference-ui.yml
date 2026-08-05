@@ -1,0 +1,70 @@
+name: Verify V72 reference-led UI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [v72-reference-led-ui]
+    paths:
+      - .github/workflows/verify-v72-reference-ui.yml
+      - patches/v72-reference-ui.css
+      - patches/v72-reference-ui.js
+      - scripts/build-v72-reference.js
+      - tests/v72-reference-ui.js
+
+permissions:
+  contents: write
+
+concurrency:
+  group: verify-v72-reference-led-ui
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v72-reference-led-ui
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build the reviewable V72 dashboard
+        run: node scripts/build-v72-reference.js
+      - name: Validate embedded scripts
+        run: |
+          node <<'NODE'
+          const fs=require('fs'),cp=require('child_process'),os=require('os'),path=require('path');
+          const html=fs.readFileSync('decoded-source.html','utf8');
+          const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(match=>match[1]).filter(code=>code.trim());
+          const dir=fs.mkdtempSync(path.join(os.tmpdir(),'accelerator-v72-'));
+          scripts.forEach((code,index)=>{const file=path.join(dir,`script-${index}.js`);fs.writeFileSync(file,code);cp.execFileSync(process.execPath,['--check',file],{stdio:'inherit'})});
+          console.log(`Validated ${scripts.length} embedded scripts.`);
+          NODE
+      - name: Install browser verification
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Start the rebuilt dashboard
+        run: |
+          python3 -m http.server 4173 >/tmp/v72-server.log 2>&1 &
+          for attempt in {1..20}; do
+            curl -fsS http://127.0.0.1:4173/decoded-source.html >/dev/null && exit 0
+            sleep 1
+          done
+          cat /tmp/v72-server.log
+          exit 1
+      - name: Verify phase flow and guide drawer
+        run: node tests/v72-reference-ui.js
+      - name: Commit the verified preview and evidence
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add decoded-source.html index.html qa/v72-reference-ui-report.json qa/v72-reference-ui-screen.png
+          if git diff --cached --quiet; then
+            echo "Verified V72 preview is already current."
+          else
+            git commit -m "Publish verified V72 reference UI preview"
+            git push origin HEAD:v72-reference-led-ui
+          fi
