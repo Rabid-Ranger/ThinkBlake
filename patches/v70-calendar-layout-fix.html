@@ -1,35 +1,69 @@
+<style id="v70-calendar-layout-fix-styles">
+body.v70-calendar .v70-calendar-flat{display:grid;gap:18px;margin-top:14px}
+body.v70-calendar .v70-calendar-block{border:1px solid #35515d;background:#0f1d23;border-radius:14px;padding:14px;min-width:0}
+body.v70-calendar .v70-calendar-block-head{margin:0 0 12px}
+body.v70-calendar .v70-calendar-block-head span{display:block;color:#7fd2ee;font-size:8px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+body.v70-calendar .v70-calendar-block-head h3{margin:4px 0 0;color:#e2edf1;font-size:15px}
+body.v70-calendar .v70-calendar-block-head p{margin:5px 0 0;color:#899fa8;font-size:9px;line-height:1.45}
+body.v70-calendar .v70-calendar-block .v49-calendar-note{margin-bottom:10px}
+body.v70-calendar .v70-calendar-block .page-actions{margin:0 0 10px}
+body.v70-calendar .v70-calendar-block .calendar-card,
+body.v70-calendar .v70-calendar-block .upcoming-panel{margin:0}
+body.v70-calendar .v70-calendar-handoff{padding:0;border:0;background:transparent}
+body.v70-calendar .v70-calendar-handoff>.v70-calendar-block-head{margin-left:2px}
+body.v70-calendar .v70-calendar-handoff .v49-handoff{margin:0}
+</style>
 <script id="v70-calendar-layout-fix-script">
 (()=>{
   if(window.__v70CalendarLayoutFixInstalled)return;
   window.__v70CalendarLayoutFixInstalled=true;
 
+  const sectionIds=['calendar-full','calendar-upcoming','calendar-handoff'];
+
+  function bodyFor(section){
+    return section?.querySelector(':scope > .v49-section-body')||null;
+  }
+
+  function block70(type,title,copy,body){
+    const block=document.createElement('section');
+    block.className=`v70-calendar-block v70-calendar-${type}`;
+    block.dataset.v70CalendarBlock=type;
+    block.innerHTML=`<header class="v70-calendar-block-head"><span>${type==='full'?'Schedule':type==='upcoming'?'Review queue':'Share'}</span><h3>${title}</h3><p>${copy}</p></header>`;
+    if(body){
+      body.querySelectorAll('.v49-section-foot').forEach(node=>node.remove());
+      while(body.firstChild)block.appendChild(body.firstChild);
+    }
+    return block;
+  }
+
   function flattenCalendarLayout(){
+    document.body.classList.toggle('v70-calendar',state?.currentView==='calendar');
     if(state?.currentView!=='calendar')return;
+
     const content=document.querySelector('.content');
-    const stack=content?.querySelector('.calendar-stack');
-    if(!content||!stack)return;
+    const stack=content?.querySelector('.v49-accordion-stack');
+    if(!content||!stack||stack.classList.contains('v70-calendar-flat'))return;
 
-    content.querySelectorAll(':scope > .v36-page-guide,:scope > details.page-guide').forEach(node=>node.remove());
-    stack.querySelectorAll(':scope > details').forEach(detail=>{
-      const fragment=document.createDocumentFragment();
-      [...detail.children].filter(child=>child.tagName!=='SUMMARY').forEach(child=>fragment.appendChild(child));
-      detail.replaceWith(fragment);
-    });
+    const sections=Object.fromEntries(sectionIds.map(id=>[id,stack.querySelector(`:scope > [data-v49-section="${id}"]`)]));
+    if(!sections['calendar-full']||!sections['calendar-upcoming'])return;
 
-    const upcoming=stack.querySelector(':scope > .upcoming-panel');
-    const calendar=[...stack.children].find(node=>node.matches?.('article.card')&&!node.classList.contains('upcoming-panel'));
-    if(calendar)calendar.classList.add('calendar-card');
+    content.querySelectorAll(':scope > .v32-use-note,:scope > .v32-calendar-review,:scope > .v67-lifecycle,:scope > .v49-progress-shell,:scope > .v36-page-guide,:scope > details.page-guide').forEach(node=>node.remove());
 
-    let heading=stack.querySelector(':scope > .v70-upcoming-title');
-    if(upcoming&&!heading){
-      heading=document.createElement('div');
-      heading.className='v70-upcoming-title';
-      heading.innerHTML='<h3>Upcoming work and reviews</h3><p>Calls, commitments, publish dates and planned evidence checks appear here.</p>';
+    const full=block70('full','Calendar','See the full month first. Add or change only the dates, owners, and commitments the system cannot infer.',bodyFor(sections['calendar-full']));
+    const upcoming=block70('upcoming','Upcoming work and reviews','Calls, commitments, publish dates, and planned evidence checks appear underneath the calendar.',bodyFor(sections['calendar-upcoming']));
+    const handoff=sections['calendar-handoff']?block70('handoff','Execution handoff','Open, copy, or share the current schedule when someone else needs the plan.',bodyFor(sections['calendar-handoff'])):null;
+
+    full.querySelector('article.card:not(.upcoming-panel)')?.classList.add('calendar-card');
+    const upcomingPanel=upcoming.querySelector('.upcoming-panel');
+    if(upcomingPanel){
+      const marker=document.createElement('div');
+      marker.className='v70-upcoming-title';
+      marker.hidden=true;
+      upcoming.insertBefore(marker,upcomingPanel);
     }
 
-    if(calendar)stack.appendChild(calendar);
-    if(heading)stack.appendChild(heading);
-    if(upcoming)stack.appendChild(upcoming);
+    stack.className='calendar-stack v70-calendar-flat';
+    stack.replaceChildren(full,upcoming,...(handoff?[handoff]:[]));
   }
 
   const renderBeforeCalendarFix=render;
@@ -39,6 +73,7 @@
     finish();
     setTimeout(finish,0);
     setTimeout(finish,120);
+    setTimeout(finish,260);
     return result;
   };
 
