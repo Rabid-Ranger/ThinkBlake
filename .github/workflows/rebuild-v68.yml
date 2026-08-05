@@ -1,0 +1,83 @@
+name: Rebuild and verify Accelerator V68
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/rebuild-v68.js
+      - patches/v68-coach-flow.html
+      - tests/v68-smoke.js
+      - .github/workflows/rebuild-v68.yml
+
+permissions:
+  contents: write
+
+jobs:
+  rebuild-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Rebuild V68 source and wrapper
+        run: node scripts/rebuild-v68.js
+
+      - name: Validate every inline script
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs=require('fs');
+          const cp=require('child_process');
+          const os=require('os');
+          const path=require('path');
+          const html=fs.readFileSync('decoded-source.html','utf8');
+          const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(match=>match[1]).filter(text=>text.trim());
+          if(!scripts.length)throw new Error('No inline scripts were found.');
+          const dir=fs.mkdtempSync(path.join(os.tmpdir(),'accelerator-scripts-'));
+          scripts.forEach((script,index)=>{
+            const file=path.join(dir,`script-${index}.js`);
+            fs.writeFileSync(file,script);
+            cp.execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
+          });
+          console.log(`Validated ${scripts.length} inline scripts.`);
+          NODE
+
+      - name: Install browser test dependency
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+
+      - name: Start local dashboard
+        run: |
+          python3 -m http.server 4173 > /tmp/accelerator-server.log 2>&1 &
+          echo $! > /tmp/accelerator-server.pid
+          for attempt in {1..20}; do
+            if curl -fsS http://127.0.0.1:4173/decoded-source.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/accelerator-server.log
+          exit 1
+
+      - name: Walk the full fresh-coach lifecycle
+        run: node tests/v68-smoke.js
+
+      - name: Commit verified production build
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add base-source-v67.html decoded-source.html index.html qa/v68-report.json qa/v68-final-screen.png
+          if git diff --cached --quiet; then
+            echo "Verified build is already current."
+          else
+            git commit -m "Publish verified V68 coach lifecycle"
+            git push
+          fi
