@@ -24,7 +24,7 @@ function replaceOnce(label, search, replacement) {
 replaceOnce(
   'confirmed Foundation gate',
   "function foundationDone67(c){return channelDone67(c)&&audienceStatus(c)==='Complete'&&messageStatus(c)==='Complete'&&businessStatus(c)==='Complete';}",
-  "function foundationCoreDone67(c){return channelDone67(c)&&audienceStatus(c)==='Complete'&&messageStatus(c)==='Complete'&&businessStatus(c)==='Complete';}\n  function foundationDone67(c){\n    const core=foundationCoreDone67(c);\n    if(core&&!has67(c.foundationConfirmedAt)){\n      const established=has67(c.diagnostic?.updatedAt)||has67(c.diagnosticReviewedAt)||has67(c.roadmap?.destination)||has67(c.cycleOutcome)||(c.videos||[]).length>0||(c.sessions||[]).length>0||(c.monthHistory||[]).length>0;\n      if(established)c.foundationConfirmedAt=c.strategyUpdatedAt||c.createdAt||todayIso();\n    }\n    return core&&has67(c.foundationConfirmedAt);\n  }"
+  "function foundationCoreDone67(c){return channelDone67(c)&&audienceStatus(c)==='Complete'&&messageStatus(c)==='Complete'&&businessStatus(c)==='Complete';}\n  function foundationDone67(c){\n    const core=foundationCoreDone67(c);\n    if(core&&c.foundationConfirmedAt===undefined){\n      const established=has67(c.diagnostic?.updatedAt)||has67(c.diagnosticReviewedAt)||has67(c.roadmap?.destination)||has67(c.cycleOutcome)||(c.videos||[]).length>0||(c.sessions||[]).length>0||(c.monthHistory||[]).length>0;\n      if(established)c.foundationConfirmedAt=c.strategyUpdatedAt||c.createdAt||todayIso();\n    }\n    return core&&has67(c.foundationConfirmedAt);\n  }"
 );
 
 replaceOnce(
