@@ -8,6 +8,7 @@ on:
       - patches/v68-coach-flow.html
       - patches/v69-context-layer.html
       - patches/v70-coaching-clarity.html
+      - patches/v70-creator-attention-fix.html
       - tests/v68-smoke.js
       - tests/v69-context.js
       - tests/v70-clarity.js
