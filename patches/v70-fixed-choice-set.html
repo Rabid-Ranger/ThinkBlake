@@ -6,16 +6,20 @@
   const visibleSets=new Map();
   const pendingClicked=new Map();
 
-  const isVisible=node=>{
-    if(!node)return false;
-    const style=getComputedStyle(node),rect=node.getBoundingClientRect();
-    return style.display!=='none'&&style.visibility!=='hidden'&&rect.width>0&&rect.height>0;
-  };
+  const isAvailable=item=>item&&!item.classList.contains('v70-choice-hidden');
   const currentVideoId=()=>String(state?.currentVideoId||'');
   const keyFor=kind=>`${currentVideoId()}:${kind}`;
 
   function optionValue(item,attribute){
     return item?.querySelector(`[${attribute}]`)?.getAttribute(attribute)||'';
+  }
+
+  function startingValues(items,attribute,key){
+    let values=items.filter(isAvailable).map(item=>optionValue(item,attribute)).filter(Boolean).slice(0,3);
+    if(!values.length)values=items.map(item=>optionValue(item,attribute)).filter(Boolean).slice(0,3);
+    const clicked=pendingClicked.get(key);
+    if(clicked&&!values.includes(clicked))values=[...values.slice(0,2),clicked];
+    return values;
   }
 
   function freezeContainer(container,itemSelector,attribute,kind){
@@ -25,9 +29,7 @@
     const key=keyFor(kind);
     let values=visibleSets.get(key);
     if(!values?.length){
-      values=items.filter(isVisible).map(item=>optionValue(item,attribute)).filter(Boolean).slice(0,3);
-      const clicked=pendingClicked.get(key);
-      if(clicked&&!values.includes(clicked))values=[...values.slice(0,2),clicked];
+      values=startingValues(items,attribute,key);
       visibleSets.set(key,values);
     }
     items.forEach(item=>{
@@ -50,7 +52,10 @@
       const key=keyFor('structure'),value=structure.getAttribute('data-v57-structure');
       pendingClicked.set(key,value);
       const container=structure.closest('.v57-structure-grid');
-      if(container&&!visibleSets.has(key))visibleSets.set(key,[...container.querySelectorAll(':scope > .v57-choice-card')].filter(isVisible).map(item=>optionValue(item,'data-v57-structure')).filter(Boolean).slice(0,3));
+      if(container&&!visibleSets.has(key)){
+        const items=[...container.querySelectorAll(':scope > .v57-choice-card')];
+        visibleSets.set(key,startingValues(items,'data-v57-structure',key));
+      }
       return;
     }
     const hook=event.target.closest?.('[data-v57-hook]');
@@ -58,7 +63,10 @@
       const key=keyFor('hook'),value=hook.getAttribute('data-v57-hook');
       pendingClicked.set(key,value);
       const container=hook.closest('.v57-hook-grid');
-      if(container&&!visibleSets.has(key))visibleSets.set(key,[...container.querySelectorAll(':scope > .v57-hook-choice')].filter(isVisible).map(item=>optionValue(item,'data-v57-hook')).filter(Boolean).slice(0,3));
+      if(container&&!visibleSets.has(key)){
+        const items=[...container.querySelectorAll(':scope > .v57-hook-choice')];
+        visibleSets.set(key,startingValues(items,'data-v57-hook',key));
+      }
     }
   }
 
