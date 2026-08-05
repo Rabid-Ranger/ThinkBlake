@@ -45,9 +45,9 @@ function ensurePackagingExplanation(){
  const app=appState();
  if(app?.currentView!=='video')return;
  const section=document.querySelector('details[data-v49-section="video-package"]');
- if(!section||section.querySelector(':scope > .v71-package-note'))return;
- const summary=section.querySelector(':scope > summary');
- summary?.insertAdjacentHTML('afterend','<div class="v71-package-note"><b>Topic</b> is what the video is about. <b>Click frame</b> is the honest reason the right viewer clicks now, such as a mistake, proof, comparison, warning or useful reframe. It guides the title and thumbnail. It does not choose the story or pacing.</div>');
+ const summary=section?.querySelector(':scope > summary');
+ const copy=summary?.querySelector('.v71-step-copy');
+ if(copy&&!copy.querySelector('.v71-package-summary-help'))copy.insertAdjacentHTML('beforeend','<small class="v71-package-summary-help">Topic = what it is about. Click frame = why the right viewer clicks now.</small>');
 }
 const clean=()=>{
  const app=appState();
