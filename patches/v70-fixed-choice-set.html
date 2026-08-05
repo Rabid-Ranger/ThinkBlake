@@ -11,7 +11,9 @@
   const keyFor=kind=>`${currentVideoId()}:${kind}`;
 
   function optionValue(item,attribute){
-    return item?.querySelector(`[${attribute}]`)?.getAttribute(attribute)||'';
+    if(!item)return'';
+    if(item.hasAttribute(attribute))return item.getAttribute(attribute)||'';
+    return item.querySelector(`[${attribute}]`)?.getAttribute(attribute)||'';
   }
 
   function uniqueValues(items,attribute){
