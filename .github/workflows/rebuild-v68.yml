@@ -73,7 +73,7 @@ jobs:
           path = Path('tests/v68-smoke.js')
           text = path.read_text()
           ready_line = "await page.waitForTimeout(500);"
-          unlock = """await page.waitForTimeout(500);\n    await page.evaluate(() => {\n      document.body.classList.remove('cloud-locked');\n      const gate=document.getElementById('cloud-gate');\n      if(gate)gate.hidden=true;\n      render();\n    });\n    await page.waitForTimeout(150);"""
+          unlock = """await page.waitForTimeout(500);\n    await page.evaluate(() => {\n      document.body.classList.remove('cloud-locked');\n      const gate=document.getElementById('cloud-gate');\n      if(gate)gate.hidden=true;\n      window.addMonthsIso=(base,offset)=>{\n        const date=new Date(`${base}-01T00:00:00Z`);\n        date.setUTCMonth(date.getUTCMonth()+offset);\n        return date.toISOString().slice(0,7);\n      };\n      render();\n    });\n    await page.waitForTimeout(150);"""
           if ready_line not in text:
             raise SystemExit('The initial readiness wait was not found.')
           text = text.replace(ready_line, unlock, 1)
