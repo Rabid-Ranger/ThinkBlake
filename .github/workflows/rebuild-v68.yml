@@ -72,16 +72,6 @@ jobs:
           from pathlib import Path
           path = Path('tests/v68-smoke.js')
           text = path.read_text()
-          replacements = {
-            "page.locator('[data-v67-stage-go=\"setup\"]')": "page.locator('[data-v67-stage-go=\"setup\"]:visible')",
-            "page.locator('[data-v68-confirm-foundation]')": "page.locator('[data-v68-confirm-foundation]:visible')",
-            "page.locator('[data-v58-signal=\"discovery\"][data-v58-value=\"Weak\"]')": "page.locator('[data-v58-signal=\"discovery\"][data-v58-value=\"Weak\"]:visible')",
-            "page.locator('[data-v67-confirm-diagnosis]')": "page.locator('[data-v67-confirm-diagnosis]:visible')",
-            "page.locator('details.v57-guides')": "page.locator('details.v57-guides:visible')",
-            "page.locator('[data-v57-hook]')": "page.locator('[data-v57-hook]:visible')"
-          }
-          for old, new in replacements.items():
-            text = text.replace(old, new)
           ready_line = "await page.waitForTimeout(500);"
           unlock = """await page.waitForTimeout(500);\n    await page.evaluate(() => {\n      document.body.classList.remove('cloud-locked');\n      const gate=document.getElementById('cloud-gate');\n      if(gate)gate.hidden=true;\n      render();\n    });\n    await page.waitForTimeout(150);"""
           if ready_line not in text:
