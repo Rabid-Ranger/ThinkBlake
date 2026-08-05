@@ -1,0 +1,235 @@
+<style id="v70-coaching-clarity-styles">
+.v70-attention-button{display:inline-flex;align-items:center;gap:6px;border:1px solid #785b31;background:#2b2115;color:#ffdca0;border-radius:999px;padding:6px 9px;font-size:9px;font-weight:900;cursor:pointer;white-space:nowrap}.v70-attention-button:hover{background:#382a18}.v70-attention-button b{display:grid;place-items:center;min-width:17px;height:17px;border-radius:999px;background:#ffbf5a;color:#2b1a03;font-size:8px}.v70-card-attention{margin-left:auto}.v70-attention-overlay{position:fixed;inset:0;z-index:100100;display:none;align-items:flex-start;justify-content:center;padding:8vh 18px;background:rgba(3,8,11,.8);backdrop-filter:blur(5px);overflow:auto}.v70-attention-overlay.open{display:flex}.v70-attention-modal{width:min(720px,100%);border:1px solid #4e6873;border-radius:16px;background:#0b151a;box-shadow:0 24px 80px rgba(0,0,0,.55);overflow:hidden}.v70-attention-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;padding:16px 18px;border-bottom:1px solid #314a55;background:#102129}.v70-attention-head span{display:block;color:#82d2ed;font-size:8px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}.v70-attention-head h2{margin:4px 0 0;color:#e8f2f5;font-size:18px}.v70-attention-head p{margin:5px 0 0;color:#91a7b0;font-size:10px}.v70-attention-close{border:1px solid #4a6470;background:#15262e;color:#cde0e7;border-radius:9px;padding:7px 10px;cursor:pointer}.v70-attention-body{display:grid;gap:9px;padding:14px}.v70-reminder{display:grid;grid-template-columns:10px 1fr auto;gap:10px;align-items:center;border:1px solid #304a55;background:#101d23;border-radius:11px;padding:11px}.v70-reminder i{width:9px;height:9px;border-radius:999px;background:#ffbd56}.v70-reminder strong{display:block;color:#dce9ee;font-size:10px}.v70-reminder small{display:block;margin-top:4px;color:#8199a3;font-size:8px;line-height:1.4}.v70-reminder button{border:1px solid #48626e;background:#172a32;color:#cfe4eb;border-radius:8px;padding:6px 9px;font-size:8px;font-weight:850;cursor:pointer}.v70-job-guide{margin:12px 0;border:1px solid #36525e;background:#0d181e;border-radius:14px;padding:13px}.v70-job-guide>header{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.v70-job-guide>header span{display:block;color:#7fd2ee;font-size:8px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}.v70-job-guide h3{margin:4px 0 0;color:#e3edf1;font-size:14px}.v70-job-guide>header p{margin:5px 0 0;color:#8ea4ad;font-size:9px;line-height:1.45}.v70-job-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:11px}.v70-job-card{border:1px solid #304953;background:#111f26;border-radius:11px;padding:11px}.v70-job-card.active{border-color:#74cce8;background:#11303c}.v70-job-card b{display:block;color:#dce9ee;font-size:10px}.v70-job-card p{margin:5px 0;color:#8da3ac;font-size:8px;line-height:1.45}.v70-job-card dl{display:grid;gap:6px;margin:9px 0 0}.v70-job-card dt{color:#68848f;font-size:7px;font-weight:900;text-transform:uppercase}.v70-job-card dd{margin:2px 0 0;color:#bdd0d7;font-size:8px;line-height:1.35}.v70-job-note{margin-top:9px;padding:8px 9px;border-radius:9px;background:#172830;color:#9cb1b9;font-size:8px;line-height:1.45}.v70-job-note b{color:#d5e7ed}.v70-current-job{display:grid;grid-template-columns:auto 1fr;gap:11px;align-items:start}.v70-current-job .v70-job-mark{display:grid;place-items:center;min-width:58px;height:58px;border-radius:12px;background:#163440;color:#85d9f5;font-size:10px;font-weight:950}.v70-current-job h3{font-size:12px}.v70-current-job p{margin:4px 0;color:#8ea4ad;font-size:8.5px;line-height:1.45}.v70-planner-guide{margin:0 0 11px;padding:11px 12px;border:1px solid #3a5763;border-radius:11px;background:#101d23}.v70-planner-guide strong{display:block;color:#e1edf1;font-size:11px}.v70-planner-guide p{margin:4px 0 0;color:#8ca2ab;font-size:8.5px;line-height:1.45}.v70-planner-guide ol{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;list-style:none;padding:0;margin:9px 0 0}.v70-planner-guide li{border:1px solid #2e4751;background:#14242b;border-radius:9px;padding:8px;color:#aec0c7;font-size:8px}.v70-planner-guide li b{display:block;color:#d8e7ec;font-size:8px;margin-bottom:3px}.v57-planner-head h3{font-size:15px!important}.v57-planner-head p{max-width:760px}.v70-choice-hidden{display:none!important}.v70-show-all .v70-choice-hidden{display:flex!important}.v57-structure-grid.v70-show-all .v70-choice-hidden{display:block!important}.v70-choice-toggle,.v70-inline-toggle{margin-top:8px;border:1px solid #405c68;background:#14262e;color:#9ed3e3;border-radius:8px;padding:6px 9px;font-size:8px;font-weight:850;cursor:pointer}.v70-why{margin:8px 0 10px!important;padding:9px 10px!important}.v70-why strong{font-size:9px!important}.v70-why p{font-size:7.8px!important}.v70-why .v70-based{color:#79949f!important}.v70-why ul{display:none!important}.v69-card-why{display:none!important}.v70-live-collapsed ol{display:none}.v70-live-collapsed.v70-open ol{display:grid}.v70-secondary-copy{display:none!important}.v70-pace-grid-collapsed{display:none!important}.v70-pace-grid-collapsed.v70-open{display:grid!important}.v70-pace-summary{display:flex;justify-content:space-between;gap:12px;align-items:center;border:1px solid #35515d;background:#14252d;border-radius:10px;padding:10px}.v70-pace-summary span{display:block;color:#6f8a95;font-size:7px;font-weight:900;text-transform:uppercase}.v70-pace-summary strong{display:block;margin-top:3px;color:#d7e7ec;font-size:10px}.v57-guides>summary small:after{content:' This is reference, not another required step.'}.v70-click-frame-note{margin:8px 0;padding:9px 10px;border:1px solid #3b5864;border-radius:10px;background:#101d23;color:#8fa5ae;font-size:8px;line-height:1.45}.v70-click-frame-note b{color:#d4e5eb}.v70-click-frame-note .v70-vs{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px}.v70-click-frame-note .v70-vs>div{border:1px solid #2e4751;border-radius:8px;padding:7px;background:#14242b}.v70-calendar .v36-page-guide,.v70-calendar details.page-guide{display:none!important}.v70-calendar .calendar-stack{display:grid!important;gap:14px!important}.v70-calendar .calendar-card{order:1}.v70-calendar .v70-upcoming-title{order:2;margin:3px 0 -4px}.v70-calendar .v70-upcoming-title h3{margin:0;color:#e1ecf0;font-size:14px}.v70-calendar .v70-upcoming-title p{margin:4px 0 0;color:#879da6;font-size:9px}.v70-calendar .upcoming-panel{order:3}.v70-calendar details{overflow:visible}.v70-learn-guide{margin:12px 0;border:1px solid #3a5662;background:#0f1d23;border-radius:13px;padding:13px}.v70-learn-guide>div:first-child span{display:block;color:#7fd3ef;font-size:8px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}.v70-learn-guide h3{margin:4px 0 0;color:#e3edf1;font-size:14px}.v70-learn-guide>div:first-child p{margin:5px 0 0;color:#8fa5ae;font-size:9px;line-height:1.45}.v70-learn-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}.v70-learn-step{border:1px solid #304a55;background:#14242b;border-radius:10px;padding:9px}.v70-learn-step b{display:block;color:#d8e7ec;font-size:9px}.v70-learn-step p{margin:4px 0 0;color:#8299a3;font-size:8px;line-height:1.4}.v70-review-times{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.v70-review-times span{border-radius:999px;padding:5px 8px;background:#1a3039;color:#a9c0c8;font-size:7.5px;font-weight:850}.v70-session-note{display:flex;justify-content:space-between;gap:14px;align-items:center;margin:10px 0;padding:11px 12px;border:1px solid #3c5a66;border-radius:11px;background:#102129}.v70-session-note strong{display:block;color:#e0edf1;font-size:10px}.v70-session-note p{margin:4px 0 0;color:#8da3ac;font-size:8px;line-height:1.45}.v70-session-note span{display:inline-flex;align-items:center;gap:5px;color:#a8c9d4;font-size:8px;font-weight:850}.v70-session-note span:before{content:'';width:7px;height:7px;border-radius:999px;background:#8edb7e}.v70-session-note button{border:1px solid #405c68;background:#14262e;color:#a9cbd6;border-radius:8px;padding:6px 8px;font-size:7.5px;font-weight:850;cursor:pointer}.v70-session-note .v70-session-actions{display:flex;gap:7px;align-items:center}.v70-results .v36-page-guide{display:none!important}@media(max-width:900px){.v70-job-grid,.v70-planner-guide ol,.v70-learn-steps{grid-template-columns:1fr}.v70-session-note,.v70-job-guide>header{display:block}.v70-session-note .v70-session-actions{margin-top:9px}.v70-click-frame-note .v70-vs{grid-template-columns:1fr}}
+</style>
+<script id="v70-coaching-clarity-script">
+(()=>{
+  if(window.__v70CoachingClarityInstalled)return;
+  window.__v70CoachingClarityInstalled=true;
+  window.__acceleratorBuild='V52.1-coach-flow-v70';
+
+  const T70=value=>String(value??'').replace(/\s+/g,' ').trim();
+  const H70=value=>T70(value).length>0;
+  const A70=value=>Array.isArray(value)?value:[];
+  const E70=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  const C70=()=>{try{return typeof creator==='function'?creator():null}catch{return null}};
+  const V70=()=>{try{return typeof video==='function'?video():null}catch{return null}};
+  const today70=()=>typeof todayIso==='function'?todayIso():new Date().toISOString().slice(0,10);
+  const expanded70=new Set();
+
+  function days70(value){
+    if(!H70(value))return 9999;
+    const raw=String(value).slice(0,10),date=new Date(`${raw}T12:00:00`),now=new Date(`${today70()}T12:00:00`);
+    if(Number.isNaN(date.getTime()))return 9999;
+    return Math.floor((now-date)/86400000);
+  }
+  function setupReady70(c){try{return typeof creatorReady==='function'?creatorReady(c):H70(c?.foundationConfirmedAt)}catch{return H70(c?.foundationConfirmedAt)}}
+  function latestHistory70(c){return A70(c?.monthHistory).map(x=>x?.closedAt||x?.date||'').filter(H70).sort().at(-1)||''}
+  function reminders70(c){
+    if(!c)return[];
+    const list=[],ready=setupReady70(c);
+    if(!ready)list.push({kind:'foundation',label:'Finish one-time Foundation',detail:'Audience, message, business path and capacity still need to be confirmed.',action:'setup'});
+    if(ready&&c?.needsReview?.foundation)list.push({kind:'foundation',label:'Foundation review flagged',detail:'New learning suggests the audience, message or business path may need review.',action:'setup'});
+    const monthDate=c?.month?.reviewedAt||c?.month?.updatedAt||latestHistory70(c);
+    if(ready&&(!monthDate||days70(monthDate)>=30))list.push({kind:'month',label:'Monthly planning check due',detail:'Review what changed and confirm or adjust the next monthly chapter.',action:'plan'});
+    const diagnosisDate=c?.diagnosticReviewedAt||c?.diagnostic?.updatedAt||'';
+    if(ready&&(!diagnosisDate||days70(diagnosisDate)>=90||c?.needsReview?.diagnosis))list.push({kind:'diagnosis',label:'90-day diagnosis review due',detail:'Confirm whether the current constraint is still the right one.',action:'diagnosis'});
+    const reviewEvents=A70(c?.events).filter(event=>event?.status!=='Complete'&&H70(event?.date)&&event.date<=today70()&&/check|review|analytics|learning/i.test(`${event?.type||''} ${event?.title||''}`));
+    if(reviewEvents.length)list.push({kind:'learn',label:`${reviewEvents.length} video review${reviewEvents.length===1?'':'s'} due`,detail:reviewEvents.slice(0,2).map(x=>x.title).filter(H70).join(' · ')||'Review the planned evidence and record what it changes.',action:'results'});
+    return list;
+  }
+  window.acceleratorReminders70=reminders70;
+
+  try{
+    if(typeof creatorAttention==='function'){
+      const attentionBefore70=creatorAttention;
+      creatorAttention=function(c){return attentionBefore70(c)||reminders70(c).length>0};
+    }
+  }catch(error){console.warn('V70 could not extend creatorAttention',error)}
+
+  function ensureAttentionModal70(){
+    if(document.querySelector('#v70-attention-overlay'))return;
+    document.body.insertAdjacentHTML('beforeend','<div class="v70-attention-overlay" id="v70-attention-overlay" aria-hidden="true"><div class="v70-attention-modal" role="dialog" aria-modal="true"><div class="v70-attention-head"><div><span>Creator reminders</span><h2 id="v70-attention-title">Needs attention</h2><p id="v70-attention-sub"></p></div><button class="v70-attention-close" type="button" data-v70-close-attention>Close</button></div><div class="v70-attention-body" id="v70-attention-body"></div></div></div>');
+  }
+  function openAttention70(id){
+    ensureAttentionModal70();
+    const c=A70(state?.creators).find(x=>x.id===id)||C70();if(!c)return;
+    const items=reminders70(c),body=document.querySelector('#v70-attention-body');
+    document.querySelector('#v70-attention-title').textContent=`${c.name} · ${items.length} due`;
+    document.querySelector('#v70-attention-sub').textContent='These are review reminders, not extra strategy work. Open the item that needs a decision.';
+    body.innerHTML=items.length?items.map(item=>`<article class="v70-reminder"><i></i><div><strong>${E70(item.label)}</strong><small>${E70(item.detail)}</small></div><button type="button" data-v70-go-reminder="${E70(item.action)}" data-v70-creator="${E70(c.id)}">Open</button></article>`).join(''):'<div class="v70-reminder"><i style="background:#8edb7e"></i><div><strong>Nothing is due</strong><small>This creator has no scheduled strategy or learning review waiting.</small></div></div>';
+    document.querySelector('#v70-attention-overlay').classList.add('open');
+  }
+  function closeAttention70(){document.querySelector('#v70-attention-overlay')?.classList.remove('open')}
+  function goReminder70(id,action){
+    if(id)state.currentCreatorId=id;
+    state.currentVideoId=state.currentVideoId||A70(C70()?.videos)[0]?.id||'';
+    if(action==='setup')state.currentView='setup';
+    else if(action==='plan')state.currentView='plan';
+    else if(action==='results')state.currentView='results';
+    else{state.currentView='overview';if(action==='diagnosis')state.v67DiagnosisReview=true;}
+    closeAttention70();
+    if(typeof save==='function')save();
+    render();window.scrollTo(0,0);
+  }
+  function decorateCreatorSwitcher70(){
+    const select=document.querySelector('[data-creator-switch]');if(!select)return;
+    [...select.options].forEach(option=>{const c=A70(state?.creators).find(x=>x.id===option.value);if(!c)return;const n=reminders70(c).length;option.textContent=`${c.name}${n?` • ${n} due`:''}`});
+    const c=C70(),n=reminders70(c).length,actions=select.closest('.top-actions')||select.parentElement;
+    if(c&&n&&actions&&!actions.querySelector('[data-v70-current-attention]')){
+      select.insertAdjacentHTML('afterend',`<button type="button" class="v70-attention-button" data-v70-current-attention="${E70(c.id)}" title="Open ${n} due reminder${n===1?'':'s'}"><b>${n}</b> due</button>`);
+    }
+  }
+  function decorateCreatorCards70(){
+    if(state?.currentView!=='creators')return;
+    document.querySelectorAll('[data-creator-item]').forEach(card=>{
+      if(card.querySelector('[data-v70-card-attention]'))return;
+      const open=card.querySelector('[data-open-creator]'),id=open?.dataset?.openCreator,c=A70(state?.creators).find(x=>x.id===id),items=reminders70(c);if(!c||!items.length)return;
+      const target=card.querySelector('.creator-row-v14-main,.creator-row-v13-main,.creator-row-main,.creator-top,.creator-footer')||card;
+      target.insertAdjacentHTML('beforeend',`<button type="button" class="v70-attention-button v70-card-attention" data-v70-card-attention="${E70(id)}" title="${E70(items.map(x=>x.label).join(' · '))}"><b>${items.length}</b>${items.length===1?' review due':' reviews due'}</button>`);
+    });
+  }
+
+  const JOBS70={
+    Reach:{purpose:'Earn attention from the right new viewer.',research:'Look for repeated demand: outliers, searches, comments, problems and packaging patterns.',structure:'Recognize the problem fast, confirm the promise, then deliver an early useful payoff.',cta:'Usually continue to the next relevant video or useful resource.'},
+    Trust:{purpose:'Change a belief and build preference for this creator or method.',research:'Study doubts, misconceptions, objections, stories, proof and what the viewer needs to believe.',structure:'Name the belief gap, show proof or story, explain the method, then apply it to the viewer.',cta:'Deepen the relationship with relevant content or a resource when it naturally follows.'},
+    Convert:{purpose:'Help a ready viewer make a clear decision or take the next step.',research:'Study buyer questions, objections, fit, alternatives, risk, cost of inaction and proof.',structure:'Frame the decision, give criteria and proof, answer objections, clarify fit, then present one action.',cta:'Use one clear next step tied to the saved offer or funnel.'}
+  };
+  function job70(value){const x=T70(value).toLowerCase();return x.includes('trust')?'Trust':x.includes('convert')?'Convert':'Reach'}
+  function jobGuideHtml70(active,compact=false){
+    const names=['Reach','Trust','Convert'];
+    if(compact){const d=JOBS70[active];return `<section class="v70-job-guide v70-current-job"><div class="v70-job-mark">${active}</div><div><header><span>What this video job changes</span><h3>${E70(d.purpose)}</h3></header><p><b>Research:</b> ${E70(d.research)}</p><p><b>Viewer flow:</b> ${E70(d.structure)}</p><p><b>Next action:</b> ${E70(d.cta)}</p><div class="v70-job-note"><b>Job is not format.</b> A how-to, comparison, case study or story can serve any job. The job describes what this video must accomplish for this viewer.</div></div></section>`}
+    return `<section class="v70-job-guide"><header><div><span>Reach, Trust and Convert</span><h3>Choose the job before choosing the format</h3><p>One video can create several benefits, but it needs one primary job so the research, viewer experience and CTA are coherent.</p></div></header><div class="v70-job-grid">${names.map(name=>{const d=JOBS70[name];return `<article class="v70-job-card ${name===active?'active':''}"><b>${name}</b><p>${E70(d.purpose)}</p><dl><div><dt>Research</dt><dd>${E70(d.research)}</dd></div><div><dt>Structure</dt><dd>${E70(d.structure)}</dd></div><div><dt>CTA</dt><dd>${E70(d.cta)}</dd></div></dl></article>`}).join('')}</div><div class="v70-job-note"><b>Examples:</b> a how-to can be Reach when it solves a searched problem, Trust when it proves the creator’s method, or Convert when it helps someone decide whether the paid solution fits.</div></section>`;
+  }
+  function addJobGuides70(){
+    const c=C70();if(!c)return;
+    if(state?.currentView==='videos'){
+      const head=document.querySelector('.content .page-head');if(head&&!document.querySelector('.v70-job-guide'))head.insertAdjacentHTML('afterend',jobGuideHtml70(job70(c?.month?.slots?.[0]?.job||'Reach')));
+    }
+    if(state?.currentView==='video'){
+      const v=V70(),head=document.querySelector('.content .page-head');if(v&&head&&!document.querySelector('.v70-current-job'))head.insertAdjacentHTML('afterend',jobGuideHtml70(job70(v.job),true));
+    }
+  }
+
+  function reason70(kind,c,v){
+    const j=job70(v?.job),format=T70(v?.format)||'Not chosen',problem=T70(v?.surfaceProblem||v?.viewerMoment||c?.audience?.surfaceProblems)||'Not captured',proof=T70(v?.research?.platformEvidence||v?.research?.storyOrProof||v?.research?.proofNeeded||v?.research?.referenceVideos)||'Not captured';
+    const map={
+      structure:{title:'Why this viewer flow is recommended',copy:'The flow should match the progress the viewer needs to make, not a generic storytelling formula.',inputs:[`Video job: ${j}`,`Format: ${format}`,`Promise: ${T70(v?.promise)||'Not captured'}`],outcome:'Choosing it changes the beat sequence only.'},
+      hook:{title:'Why this opening move is recommended',copy:'The opening should confirm the click with the fastest honest proof, problem or tension available.',inputs:[`Video job: ${j}`,`Viewer problem: ${problem}`,`Proof available: ${proof}`],outcome:'Choosing it saves an opening mechanism, not final wording.'},
+      pace:{title:'Why this pacing is recommended',copy:'Pacing is the timing of proof and payoff. It is not a command to add more cuts.',inputs:[`Video job: ${j}`,`Format: ${format}`,`Viewer moment: ${T70(v?.viewerMoment)||'Not captured'}`],outcome:'Keep the recommendation unless the planned experience clearly needs more or less room.'},
+      package:{title:'Choose how the idea earns the click',copy:'The topic is what the video is about. The click frame is why the viewer clicks now: mistake, proof, comparison, tension or reframe.',inputs:[`Video job: ${j}`,`Topic: ${T70(v?.title||v?.surfaceProblem)||'Not captured'}`,`Viewer problem: ${problem}`],outcome:'This guides the title and thumbnail. It does not choose the story structure or pacing.'}
+    };return map[kind];
+  }
+  function setReason70(section,kind,c,v){
+    const r=reason70(kind,c,v);if(!r||!section)return;
+    let box=section.querySelector(':scope > .v69-rationale');
+    if(!box){box=document.createElement('div');box.className='v69-rationale v70-why';const heading=section.querySelector('.v57-choice-heading,.v51-choice-head,h3,h4');heading?.insertAdjacentElement('afterend',box)}
+    box.classList.add('v70-why');
+    box.innerHTML=`<strong>${E70(r.title)}</strong><p>${E70(r.copy)}</p><p class="v70-based"><b>Based on:</b> ${r.inputs.map(E70).join(' · ')}</p><p><code>Best fit</code> means the strongest starting recommendation from the saved inputs, not another required choice. ${E70(r.outcome)}</p>`;
+    section.querySelectorAll('.v69-card-why').forEach(x=>x.remove());
+  }
+  function limitChoices70(container,selector,key,max=3){
+    if(!container)return;const items=[...container.querySelectorAll(selector)];items.forEach(x=>x.classList.remove('v70-choice-hidden'));
+    const selected=items.find(x=>x.classList.contains('selected')),recommended=items.find(x=>x.classList.contains('recommended')),keep=[];
+    [selected,recommended,...items].forEach(item=>{if(item&&!keep.includes(item)&&keep.length<max)keep.push(item)});
+    items.filter(item=>!keep.includes(item)).forEach(item=>item.classList.add('v70-choice-hidden'));
+    const open=expanded70.has(key);container.classList.toggle('v70-show-all',open);
+    let button=container.parentElement?.querySelector(`:scope > [data-v70-expand="${key}"]`);
+    if(items.length>max&&!button){button=document.createElement('button');button.type='button';button.className='v70-choice-toggle';button.dataset.v70Expand=key;container.insertAdjacentElement('afterend',button)}
+    if(button)button.textContent=open?'Show fewer choices':`See ${items.length-max} more option${items.length-max===1?'':'s'}`;
+  }
+  function enhancePlanner70(){
+    if(state?.currentView!=='video')return;const flow=document.querySelector('.v57-planner-flow'),v=V70(),c=C70();if(!flow||!v||!c)return;
+    const head=flow.querySelector('.v57-planner-head');if(head){const h=head.querySelector('h3'),p=head.querySelector('p');if(h)h.textContent='Make three viewer-experience decisions';if(p)p.textContent='Start with the recommendation. Change it only when this video’s evidence or promise gives you a clear reason. You do not need to study every option.';if(!flow.querySelector('.v70-planner-guide'))head.insertAdjacentHTML('afterend','<div class="v70-planner-guide"><strong>Work in this order</strong><p>These are not three separate creative projects. Each decision narrows the next one.</p><ol><li><b>1. Viewer flow</b>How the idea moves from problem to payoff.</li><li><b>2. Opening move</b>How the first seconds confirm the click.</li><li><b>3. Pacing</b>When proof and payoffs arrive.</li></ol></div>')}
+    const sections=[...flow.querySelectorAll(':scope > .v57-choice-section')];
+    if(sections[0]){
+      const label=sections[0].querySelector('.v57-choice-heading span'),title=sections[0].querySelector('.v57-choice-heading h4');if(label)label.textContent='1 · Viewer flow';if(title)title.textContent='How should the viewer move from problem to payoff?';
+      setReason70(sections[0],'structure',c,v);limitChoices70(sections[0].querySelector('.v57-structure-grid'),'.v57-choice-card',`${v.id}:structures`,3);
+      const live=sections[0].querySelector('.v57-live-example');if(live){live.classList.add('v70-live-collapsed');live.classList.toggle('v70-open',expanded70.has(`${v.id}:beats`));if(!live.querySelector('[data-v70-toggle-beats]')){const b=document.createElement('button');b.type='button';b.className='v70-inline-toggle';b.dataset.v70ToggleBeats=`${v.id}:beats`;b.textContent=expanded70.has(`${v.id}:beats`)?'Hide beat preview':'Preview the recommended beats';live.querySelector('.v57-example-label')?.insertAdjacentElement('afterend',b)}else live.querySelector('[data-v70-toggle-beats]').textContent=expanded70.has(`${v.id}:beats`)?'Hide beat preview':'Preview the recommended beats'}
+    }
+    if(sections[1]){
+      const label=sections[1].querySelector('.v57-choice-heading span'),title=sections[1].querySelector('.v57-choice-heading h4');if(label)label.textContent='2 · Opening move';if(title)title.textContent='What is the fastest honest way to confirm the click?';
+      setReason70(sections[1],'hook',c,v);limitChoices70(sections[1].querySelector('.v57-hook-grid'),'.v57-hook-choice',`${v.id}:hooks`,3);
+      sections[1].querySelectorAll('.v57-live-example p').forEach(p=>{if(/^avoid:/i.test(T70(p.textContent)))p.classList.add('v70-secondary-copy')});
+    }
+    if(sections[2]){
+      const label=sections[2].querySelector('.v57-choice-heading span'),title=sections[2].querySelector('.v57-choice-heading h4');if(label)label.textContent='3 · Pacing';if(title)title.textContent='Use the recommendation unless the video clearly needs a different rhythm.';
+      setReason70(sections[2],'pace',c,v);const grid=sections[2].querySelector('.v57-pace-grid'),key=`${v.id}:pace`,open=expanded70.has(key);if(grid){grid.classList.add('v70-pace-grid-collapsed');grid.classList.toggle('v70-open',open);if(!sections[2].querySelector('.v70-pace-summary')){const selected=sections[2].querySelector('.v57-pace-choice.selected strong,.v57-pace-choice.recommended strong')?.textContent||'Recommended pacing';grid.insertAdjacentHTML('beforebegin',`<div class="v70-pace-summary"><div><span>Current starting point</span><strong>${E70(selected)}</strong></div><button type="button" class="v70-inline-toggle" data-v70-expand="${E70(key)}">${open?'Hide pacing options':'Change pacing'}</button></div>`)}else sections[2].querySelector('.v70-pace-summary button').textContent=open?'Hide pacing options':'Change pacing'}
+    }
+    const guides=flow.querySelector('.v57-guides');if(guides){const summary=guides.querySelector(':scope > summary strong'),small=guides.querySelector(':scope > summary small');if(summary)summary.textContent='Advanced reference';if(small)small.textContent='Open only when the recommendation does not fit and you need to compare the full library.'}
+    flow.querySelectorAll('.v69-card-why').forEach(x=>x.remove());
+  }
+  function clarifyClickFrame70(){
+    if(state?.currentView!=='video')return;const v=V70();if(!v)return;
+    document.querySelectorAll('.content label,.content h3,.content h4,.content strong,.content span').forEach(node=>{if(node.children.length)return;const t=T70(node.textContent).toLowerCase();if(t==='choose the packaging angle')node.textContent='Choose how the idea earns the click';else if(t==='packaging angle')node.textContent='Click frame'});
+    document.querySelectorAll('.content .help,.content small').forEach(node=>{const t=T70(node.textContent);if(/choice updates the recommended title direction/i.test(t)||/choose the packaging angle/i.test(t))node.textContent='The topic is what the video is about. This choice is the frame that creates curiosity, such as a mistake, proof, comparison, tension, or useful reframe. It guides the title and thumbnail only.'});
+    const candidates=[...document.querySelectorAll('.content .v51-package-coach,.content .v49-section-body,.content .field')];const host=candidates.find(node=>/earns the click|click frame|packaging angle/i.test(T70(node.textContent)));if(host&&!host.querySelector('.v70-click-frame-note'))host.insertAdjacentHTML('afterbegin',`<div class="v70-click-frame-note"><b>This is not a second topic decision.</b> First decide what the video is about. Then choose the most compelling honest way to frame that same idea for the click.<div class="v70-vs"><div><b>Topic</b><br>${E70(v.title||v.surfaceProblem||'What the video teaches or explores')}</div><div><b>Click frame</b><br>${E70(v.angle||'Mistake, proof, comparison, tension or reframe')}</div></div></div>`);
+    const packageSection=document.querySelector('.v51-package-coach')||host;if(packageSection)setReason70(packageSection,'package',C70(),v);
+  }
+
+  function flattenCalendar70(){
+    document.body.classList.toggle('v70-calendar',state?.currentView==='calendar');if(state?.currentView!=='calendar')return;
+    const content=document.querySelector('.content');if(!content)return;const head=content.querySelector('.page-head');if(head){const h=head.querySelector('h2'),p=[...head.querySelectorAll('p')].find(x=>!x.classList.contains('eyebrow'));if(h)h.textContent='Calendar';if(p)p.textContent='See the month first, then the work and reviews that are coming up. This page is execution, not another strategy workflow.'}
+    content.querySelectorAll(':scope > .v36-page-guide,:scope > details.page-guide').forEach(x=>x.remove());
+    const stack=content.querySelector('.calendar-stack');if(!stack)return;
+    [...stack.querySelectorAll('details')].forEach(detail=>{detail.open=true;const fragment=document.createDocumentFragment();[...detail.children].filter(x=>x.tagName!=='SUMMARY').forEach(x=>fragment.appendChild(x));detail.replaceWith(fragment)});
+    const calendar=stack.querySelector('.calendar-card'),upcoming=stack.querySelector('.upcoming-panel');if(calendar)stack.appendChild(calendar);let title=stack.querySelector('.v70-upcoming-title');if(upcoming){if(!title){title=document.createElement('div');title.className='v70-upcoming-title';title.innerHTML='<h3>Upcoming work and reviews</h3><p>Calls, commitments, publish dates and planned evidence checks appear here.</p>';upcoming.insertAdjacentElement('beforebegin',title)}stack.appendChild(title);stack.appendChild(upcoming)}
+  }
+  function clarifyLearn70(){
+    document.body.classList.toggle('v70-results',state?.currentView==='results');if(state?.currentView!=='results')return;
+    const content=document.querySelector('.content'),head=content?.querySelector('.page-head');if(!content||!head)return;const h=head.querySelector('h2'),p=[...head.querySelectorAll('p')].find(x=>!x.classList.contains('eyebrow'));if(h)h.textContent='Review & Learn';if(p)p.textContent='Use published evidence to improve one next decision. This is not where you grade the creator or rewrite old plans with hindsight.';
+    content.querySelectorAll(':scope > .v36-page-guide').forEach(x=>x.remove());
+    if(!content.querySelector('.v70-learn-guide'))head.insertAdjacentHTML('afterend','<section class="v70-learn-guide"><div><span>When to use this page</span><h3>Review a published video when the planned evidence is ready</h3><p>Enter what happened, separate observation from interpretation, then intentionally choose where one useful learning should go next.</p></div><div class="v70-learn-steps"><div class="v70-learn-step"><b>1. Observe</b><p>Record the metrics, comments, leads, sales or viewer behaviour without explaining them yet.</p></div><div class="v70-learn-step"><b>2. Interpret</b><p>Write the most reasonable meaning and your confidence. Avoid treating one video as certainty.</p></div><div class="v70-learn-step"><b>3. Route</b><p>Send one next move to the next video, diagnosis, next month, a commitment or Foundation review.</p></div></div><div class="v70-review-times"><span>24 hours · early signal</span><span>7 days · working read</span><span>28 days · stronger pattern</span><span>Or when enough evidence exists</span></div></section>');
+  }
+
+  function draftKey70(id){return `accelerator-v70-session-draft:${id||'unknown'}`}
+  function readDraft70(c){try{const raw=localStorage.getItem(draftKey70(c?.id));if(!raw)return null;const saved=JSON.parse(raw);return saved?.draft||null}catch{return null}}
+  function writeDraft70(){try{const c=C70();if(c&&typeof sessionDraft!=='undefined'&&sessionDraft)localStorage.setItem(draftKey70(c.id),JSON.stringify({savedAt:new Date().toISOString(),draft:sessionDraft}))}catch(error){console.warn('V70 session draft could not be saved',error)}}
+  function clearDraft70(id){try{localStorage.removeItem(draftKey70(id))}catch{}}
+  let initBefore70=null;
+  try{
+    if(typeof initSessionDraft==='function'){
+      initBefore70=initSessionDraft;
+      initSessionDraft=function(c){const saved=readDraft70(c);if(saved){sessionDraft=saved;return}initBefore70(c);writeDraft70()};
+    }
+  }catch(error){console.warn('V70 could not add session draft recovery',error)}
+  try{
+    if(typeof handleAction==='function'){
+      const actionBefore70=handleAction;
+      handleAction=function(action,el){const c=C70(),id=c?.id;if(action==='cancel-session')writeDraft70();const result=actionBefore70(action,el);if(action==='save-session'&&typeof sessionDraft!=='undefined'&&sessionDraft===null&&state?.currentView!=='session')clearDraft70(id);else if(/^session-|run-session/.test(action))setTimeout(writeDraft70,0);return result};
+    }
+  }catch(error){console.warn('V70 could not wrap coaching-call actions',error)}
+  function enhanceSession70(){
+    if(state?.currentView!=='session')return;const shell=document.querySelector('.session-shell'),c=C70();if(!shell||!c||shell.querySelector('.v70-session-note'))return;
+    const top=shell.querySelector('.session-top');top?.insertAdjacentHTML('afterend','<div class="v70-session-note"><div><strong>Use this screen live during the call.</strong><p>The draft auto-saves in this browser as you type. The permanent call history, commitments and next-call event are created only when you click <b>Save call and commitments</b>.</p></div><div class="v70-session-actions"><span>Draft recovery on</span><button type="button" data-v70-discard-draft>Start fresh</button></div></div>');
+  }
+
+  function captureUi70(){
+    const section=document.querySelector('[data-v49-section="video-experience"]');return{view:state?.currentView||'',videoId:state?.currentVideoId||'',scrollY:window.scrollY,sectionOpen:section?.open===true};
+  }
+  function restoreUi70(snapshot){
+    if(!snapshot||snapshot.view!==(state?.currentView||'')||snapshot.videoId!==(state?.currentVideoId||''))return;
+    const section=document.querySelector('[data-v49-section="video-experience"]');if(section&&snapshot.sectionOpen)section.open=true;
+    requestAnimationFrame(()=>window.scrollTo(0,snapshot.scrollY));
+  }
+  function enhance70(){
+    ensureAttentionModal70();decorateCreatorSwitcher70();decorateCreatorCards70();addJobGuides70();enhancePlanner70();clarifyClickFrame70();flattenCalendar70();clarifyLearn70();enhanceSession70();
+    document.querySelectorAll('.v14-version').forEach(x=>x.textContent='V52.1');document.title='Accelerator OS V52.1 Coaching Clarity V70';
+  }
+
+  document.addEventListener('input',event=>{if(event.target.closest?.('.session-shell'))setTimeout(writeDraft70,0)});
+  document.addEventListener('change',event=>{if(event.target.closest?.('.session-shell'))setTimeout(writeDraft70,0)});
+  window.addEventListener('pagehide',writeDraft70);
+  document.addEventListener('click',event=>{
+    const attention=event.target.closest?.('[data-v70-current-attention],[data-v70-card-attention]');if(attention){event.preventDefault();event.stopPropagation();openAttention70(attention.dataset.v70CurrentAttention||attention.dataset.v70CardAttention);return}
+    if(event.target.closest?.('[data-v70-close-attention]')||event.target.id==='v70-attention-overlay'){event.preventDefault();closeAttention70();return}
+    const go=event.target.closest?.('[data-v70-go-reminder]');if(go){event.preventDefault();goReminder70(go.dataset.v70Creator,go.dataset.v70GoReminder);return}
+    const expand=event.target.closest?.('[data-v70-expand]');if(expand){event.preventDefault();event.stopPropagation();const key=expand.dataset.v70Expand;expanded70.has(key)?expanded70.delete(key):expanded70.add(key);enhancePlanner70();return}
+    const beats=event.target.closest?.('[data-v70-toggle-beats]');if(beats){event.preventDefault();event.stopPropagation();const key=beats.dataset.v70ToggleBeats;expanded70.has(key)?expanded70.delete(key):expanded70.add(key);enhancePlanner70();return}
+    const fresh=event.target.closest?.('[data-v70-discard-draft]');if(fresh){event.preventDefault();const c=C70();if(!c||!confirm('Discard the unfinished call draft and start a fresh call?'))return;clearDraft70(c.id);sessionDraft=null;if(initBefore70)initBefore70(c);else if(typeof initSessionDraft==='function')initSessionDraft(c);render();return}
+  });
+
+  const renderBefore70=render;
+  render=function(...args){const snapshot=captureUi70(),result=renderBefore70(...args),finish=()=>{try{enhance70();restoreUi70(snapshot)}catch(error){console.error('V70 coaching clarity enhancement failed',error)}};finish();setTimeout(finish,0);setTimeout(finish,100);setTimeout(finish,240);return result};
+  enhance70();
+})();
+</script>
