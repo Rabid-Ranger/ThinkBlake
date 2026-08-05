@@ -1,0 +1,135 @@
+<script id="v70-inplace-planner-selection-script">
+(()=>{
+  if(window.__v70InplacePlannerSelectionInstalled)return;
+  window.__v70InplacePlannerSelectionInstalled=true;
+
+  const clean70=value=>String(value??'').replace(/\s+/g,' ').trim();
+  const activeVideo70=()=>{try{return state?.currentView==='video'&&typeof video==='function'?video():null}catch{return null}};
+  const planner70=()=>document.querySelector('[data-v49-section="video-experience"] .v57-planner-flow')||document.querySelector('.content .v57-planner-flow');
+  const notify70=message=>{try{if(typeof toast==='function')toast(message)}catch{}};
+
+  function persist70(){
+    try{if(typeof save==='function')save()}catch(error){console.error('V70 could not save planner selection',error)}
+  }
+
+  function setCardState70(card,selected){
+    if(!card)return;
+    card.classList.toggle('selected',selected);
+    const badge=card.querySelector('.v57-card-badge');
+    if(badge)badge.textContent=selected?'Selected':card.classList.contains('recommended')?'Best fit':'Alternative';
+    const button=card.querySelector('[data-v57-structure]');
+    if(button)button.textContent=selected?'Keep selected':'Choose this';
+  }
+
+  function selectStructure70(control,v,flow){
+    const name=control.getAttribute('data-v57-structure');
+    if(!name)return;
+    v.structure=v.structure||{};
+    v.structure.framework=name;
+    flow.querySelectorAll('.v57-choice-card').forEach(card=>{
+      const value=card.querySelector('[data-v57-structure]')?.getAttribute('data-v57-structure');
+      setCardState70(card,value===name);
+    });
+    const section=control.closest('.v57-choice-section');
+    const example=section?.querySelector('.v57-live-example');
+    const label=example?.querySelector('.v57-example-label strong');
+    const why=example?.querySelector('.v57-example-label p');
+    const card=control.closest('.v57-choice-card');
+    if(label)label.textContent=name;
+    if(why)why.textContent=clean70(card?.querySelector('p')?.textContent)||why.textContent;
+    const build=example?.querySelector('[data-v57-build-structure]');
+    if(build)build.setAttribute('data-v57-build-structure',name);
+    persist70();
+    notify70('Viewer flow selected.');
+  }
+
+  function hookGuide70(flow,name){
+    const articles=[...flow.querySelectorAll('.v57-guides .v57-guide-grid article')];
+    const article=articles.find(item=>clean70(item.querySelector('strong')?.textContent)===name);
+    return article?{
+      hint:clean70(article.querySelector('p')?.textContent),
+      example:clean70(article.querySelector('small')?.textContent)
+    }:null;
+  }
+
+  function selectHook70(control,v,flow){
+    const name=control.getAttribute('data-v57-hook');
+    if(!name)return;
+    v.structure=v.structure||{};
+    v.structure.hookType=name;
+    flow.querySelectorAll('.v57-hook-choice').forEach(card=>{
+      const selected=card.getAttribute('data-v57-hook')===name;
+      card.classList.toggle('selected',selected);
+      const stateLabel=card.querySelector('span');
+      if(stateLabel)stateLabel.textContent=selected?'Selected':card.classList.contains('recommended')?'Best fit':'Option';
+    });
+    const section=control.closest('.v57-choice-section');
+    const example=section?.querySelector('.v57-live-example.hook');
+    const guide=hookGuide70(flow,name);
+    const title=example?.querySelector('.v57-example-label strong');
+    const hint=example?.querySelector('.v57-example-label p');
+    const quote=example?.querySelector('blockquote');
+    const paragraphs=[...example?.querySelectorAll(':scope > p')||[]];
+    const plannerExample=paragraphs.find(node=>/^planner example:/i.test(clean70(node.textContent)));
+    const avoid=paragraphs.find(node=>/^avoid:/i.test(clean70(node.textContent)));
+    if(title)title.textContent=name;
+    if(hint)hint.textContent=guide?.hint||clean70(control.querySelector('small')?.textContent)||hint.textContent;
+    if(quote)quote.textContent=guide?.example||`Open with a clear ${name.toLowerCase()} that confirms the promise.`;
+    if(plannerExample)plannerExample.innerHTML=`<b>Planner example:</b> ${guide?.example||`Use ${name.toLowerCase()} to confirm the click immediately.`}`;
+    if(avoid)avoid.innerHTML='<b>Avoid:</b> A vague opening that delays the promised problem, proof, or decision.';
+    const starter=example?.querySelector('[data-v57-use-hook-starter]');
+    if(starter)starter.setAttribute('data-v57-use-hook-starter',name);
+    persist70();
+    notify70('Opening move selected.');
+  }
+
+  function paceGuide70(flow,name){
+    const guideDetails=[...flow.querySelectorAll('.v57-guides details')].find(detail=>/pacing guide/i.test(clean70(detail.querySelector('summary')?.textContent)));
+    const article=[...guideDetails?.querySelectorAll('article')||[]].find(item=>clean70(item.querySelector('strong')?.textContent)===name);
+    return article?{
+      best:clean70(article.querySelector('p')?.textContent),
+      example:clean70(article.querySelector('small')?.textContent)
+    }:null;
+  }
+
+  function selectPace70(control,v,flow){
+    const name=control.getAttribute('data-v57-pace');
+    if(!name)return;
+    v.structure=v.structure||{};
+    v.structure.paceMode=name;
+    flow.querySelectorAll('.v57-pace-choice').forEach(card=>{
+      const selected=card.getAttribute('data-v57-pace')===name;
+      card.classList.toggle('selected',selected);
+      const stateLabel=card.querySelector('span');
+      if(stateLabel)stateLabel.textContent=selected?'Selected':card.classList.contains('recommended')?'Best fit':'Option';
+    });
+    const section=control.closest('.v57-choice-section');
+    const example=section?.querySelector('.v57-live-example.compact');
+    const guide=paceGuide70(flow,name);
+    const title=example?.querySelector('.v57-example-label strong');
+    const copy=example?.querySelector(':scope > p');
+    if(title)title.textContent=name;
+    if(copy)copy.textContent=guide?.example||guide?.best||clean70(control.querySelector('small')?.textContent)||copy.textContent;
+    const summary=section?.querySelector('.v70-pace-summary strong');
+    if(summary)summary.textContent=name;
+    persist70();
+    notify70('Pacing selected.');
+  }
+
+  window.addEventListener('click',event=>{
+    if(state?.currentView!=='video')return;
+    const flow=planner70();
+    if(!flow)return;
+    const control=event.target.closest?.('[data-v57-structure],[data-v57-hook],[data-v57-pace]');
+    if(!control||!flow.contains(control))return;
+    const v=activeVideo70();
+    if(!v)return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+    if(control.hasAttribute('data-v57-structure'))selectStructure70(control,v,flow);
+    else if(control.hasAttribute('data-v57-hook'))selectHook70(control,v,flow);
+    else if(control.hasAttribute('data-v57-pace'))selectPace70(control,v,flow);
+  },true);
+})();
+</script>
