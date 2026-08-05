@@ -74,6 +74,11 @@ jobs:
           from pathlib import Path
           path = Path('tests/v68-smoke.js')
           text = path.read_text()
+          old_build = "assert(build === 'V52.1-coach-flow-v68', 'The decoded app identifies itself as the V68 coach-flow build.');"
+          new_build = "assert(/^V52\\.1-coach-flow-v68(?:\\.|$)/.test(build), 'The decoded app identifies itself as a V68 coach-flow build.');"
+          if old_build not in text:
+            raise SystemExit('The V68 build assertion was not found.')
+          text = text.replace(old_build, new_build, 1)
           ready_line = "await page.waitForTimeout(500);"
           unlock = """await page.waitForTimeout(500);\n    await page.evaluate(() => {\n      document.body.classList.remove('cloud-locked');\n      const gate=document.getElementById('cloud-gate');\n      if(gate)gate.hidden=true;\n      window.addMonthsIso=(base,offset)=>{\n        const date=new Date(`${base}-01T00:00:00Z`);\n        date.setUTCMonth(date.getUTCMonth()+offset);\n        return date.toISOString().slice(0,7);\n      };\n      render();\n    });\n    await page.waitForTimeout(150);"""
           if ready_line not in text:
