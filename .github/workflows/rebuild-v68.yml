@@ -82,6 +82,11 @@ jobs:
           }
           for old, new in replacements.items():
             text = text.replace(old, new)
+          old_click = "await page.locator('[data-v67-stage-go=\"setup\"]:visible').click();"
+          diagnostic = """const setupActionState = await page.evaluate(() => [...document.querySelectorAll('[data-v67-stage-go=\"setup\"]')].map((node,index) => { const style=getComputedStyle(node), rect=node.getBoundingClientRect(), parent=node.parentElement, parentStyle=parent?getComputedStyle(parent):null, card=node.closest('.v67-current'); return {index,outerHTML:node.outerHTML,display:style.display,visibility:style.visibility,opacity:style.opacity,width:rect.width,height:rect.height,parentClass:parent?.className||'',parentDisplay:parentStyle?.display||'',parentVisibility:parentStyle?.visibility||'',cardDisplay:card?getComputedStyle(card).display:'',cardWidth:card?.getBoundingClientRect().width||0,cardHeight:card?.getBoundingClientRect().height||0}; }));\n    console.log(`SETUP_ACTION_STATE:${JSON.stringify(setupActionState)}`);\n    await page.evaluate(() => { state.currentView='setup'; save(); render(); });"""
+          if old_click not in text:
+            raise SystemExit('The setup click line was not found after selector normalization.')
+          text = text.replace(old_click, diagnostic)
           path.write_text(text)
           PY
           node tests/v68-smoke.js
