@@ -1,0 +1,47 @@
+/* Apply the shared creator-card treatment to every roster wrapper used by Accelerator. */
+body.v73-app-design [data-creator-item],
+body.v73-app-design .v303-creator-row,
+body.v73-app-design .v16-creator-row,
+body.v73-app-design .creator-card,
+body.v73-app-design article.v73-creator-card{
+  position:relative;
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  align-items:start;
+  gap:11px;
+  padding:14px 15px!important;
+  border:1px solid var(--v73-line)!important;
+  border-radius:var(--v73-radius)!important;
+  background:var(--v73-panel)!important;
+  box-shadow:var(--v73-shadow)!important;
+  transition:border-color .16s ease,transform .16s ease,background .16s ease;
+}
+body.v73-app-design [data-creator-item]:hover,
+body.v73-app-design .v303-creator-row:hover,
+body.v73-app-design .v16-creator-row:hover,
+body.v73-app-design .creator-card:hover,
+body.v73-app-design article.v73-creator-card:hover{
+  border-color:#46515D!important;
+  background:var(--v73-panel-raised)!important;
+  transform:translateY(-1px);
+}
+body.v73-app-design [data-creator-item] > .v73-creator-avatar,
+body.v73-app-design .v303-creator-row > .v73-creator-avatar,
+body.v73-app-design .v16-creator-row > .v73-creator-avatar,
+body.v73-app-design .creator-card > .v73-creator-avatar,
+body.v73-app-design article.v73-creator-card > .v73-creator-avatar{
+  grid-column:1;
+  grid-row:1 / span 2;
+}
+body.v73-app-design [data-creator-item] > :not(.v73-creator-avatar),
+body.v73-app-design .v303-creator-row > :not(.v73-creator-avatar),
+body.v73-app-design .v16-creator-row > :not(.v73-creator-avatar),
+body.v73-app-design .creator-card > :not(.v73-creator-avatar),
+body.v73-app-design article.v73-creator-card > :not(.v73-creator-avatar){grid-column:2}
+@media(max-width:640px){
+  body.v73-app-design [data-creator-item],
+  body.v73-app-design .v303-creator-row,
+  body.v73-app-design .v16-creator-row,
+  body.v73-app-design .creator-card,
+  body.v73-app-design article.v73-creator-card{padding:12px!important;gap:9px}
+}
