@@ -11,6 +11,7 @@ on:
       - patches/v71-simplification.css
       - patches/v71-simplification.js
       - tests/v71-simplification.js
+      - tests/run-v71-simplification.js
 
 permissions:
   contents: write
@@ -60,7 +61,7 @@ jobs:
       - name: Verify the complete simplified workflow
         id: verify
         continue-on-error: true
-        run: node tests/v71-simplification.js
+        run: node tests/run-v71-simplification.js
       - name: Re-run the page-by-page usability audit
         continue-on-error: true
         run: node tests/v71-usability-audit.js
