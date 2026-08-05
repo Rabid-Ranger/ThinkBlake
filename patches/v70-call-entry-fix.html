@@ -1,0 +1,71 @@
+<style id="v70-call-entry-fix-styles">
+.v70-call-entry{display:inline-flex;align-items:center;gap:7px;border:1px solid #3f6574;background:#15303a;color:#d9f2fa;border-radius:9px;padding:8px 11px;font-size:8px;font-weight:900;cursor:pointer;white-space:nowrap}.v70-call-entry:hover{background:#1a3b47;border-color:#69b6d1}.v70-call-entry:before{content:'';width:8px;height:8px;border-radius:999px;background:#8cdb7d;box-shadow:0 0 0 3px rgba(140,219,125,.12)}
+</style>
+<script id="v70-call-entry-fix-script">
+(()=>{
+  if(window.__v70CallEntryFixInstalled)return;
+  window.__v70CallEntryFixInstalled=true;
+
+  const clean70=value=>String(value??'').replace(/\s+/g,' ').trim();
+
+  function visible70(node){
+    if(!node)return false;
+    const style=getComputedStyle(node),rect=node.getBoundingClientRect();
+    return style.display!=='none'&&style.visibility!=='hidden'&&rect.width>0&&rect.height>0;
+  }
+
+  function existingCallControl70(){
+    return [...document.querySelectorAll('.content button,.content a')].find(node=>visible70(node)&&/run\s+(coach|coaching)\s+call|start\s+(coach|coaching)\s+call/i.test(clean70(node.textContent)))||null;
+  }
+
+  function attachCallEntry70(){
+    if(state?.currentView!=='overview')return;
+    const content=document.querySelector('.content');
+    if(!content)return;
+    const existing=existingCallControl70();
+    if(existing){
+      existing.dataset.v70RunCall='';
+      return;
+    }
+    if(content.querySelector('[data-v70-run-call]'))return;
+    const head=content.querySelector('.page-head');
+    if(!head)return;
+    const actions=head.querySelector('.page-actions,.head-actions,.page-head-actions')||head;
+    actions.insertAdjacentHTML('beforeend','<button type="button" class="v70-call-entry" data-v70-run-call>Run coaching call</button>');
+  }
+
+  function openCall70(){
+    try{
+      const c=typeof creator==='function'?creator():null;
+      if(!c)return;
+      state.currentView='session';
+      if(typeof save==='function')save();
+      render();
+      window.scrollTo(0,0);
+    }catch(error){
+      console.error('V70 could not open the coaching call workspace',error);
+    }
+  }
+
+  document.addEventListener('click',event=>{
+    const control=event.target.closest?.('[data-v70-run-call]');
+    if(!control)return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+    openCall70();
+  },true);
+
+  const renderBeforeCallEntry70=render;
+  render=function(...args){
+    const result=renderBeforeCallEntry70(...args);
+    const finish=()=>{try{attachCallEntry70()}catch(error){console.error('V70 call entry enhancement failed',error)}};
+    finish();
+    setTimeout(finish,0);
+    setTimeout(finish,120);
+    return result;
+  };
+
+  attachCallEntry70();
+})();
+</script>
