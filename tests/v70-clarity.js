@@ -51,8 +51,9 @@ const assert=(v,m)=>{if(!v){report.errors.push(m);throw new Error(m)}pass(m)};
   assert(/how the idea earns the click/i.test(contentText)&&/Click frame/i.test(contentText),'Packaging angle is replaced with a clear topic-versus-click-frame explanation.');
   const visibleCounts=await page.evaluate(()=>{
    const visible=n=>{const s=getComputedStyle(n),r=n.getBoundingClientRect();return s.display!=='none'&&s.visibility!=='hidden'&&r.width>0&&r.height>0};
-   return {stories:[...document.querySelectorAll('.v57-choice-card')].filter(visible).length,hooks:[...document.querySelectorAll('.v57-hook-choice')].filter(visible).length,paceVisible:[...document.querySelectorAll('.v57-pace-choice')].filter(visible).length};
+   return {stories:[...document.querySelectorAll('.v57-choice-card')].filter(visible).length,hooks:[...document.querySelectorAll('.v57-hook-choice')].filter(visible).length,paceVisible:[...document.querySelectorAll('.v57-pace-choice')].filter(visible).length,hookClasses:[...document.querySelectorAll('.v57-hook-choice')].map(node=>({value:node.getAttribute('data-v57-hook'),hidden:node.classList.contains('v70-choice-hidden'),display:getComputedStyle(node).display,width:node.getBoundingClientRect().width,height:node.getBoundingClientRect().height}))};
   });
+  console.log(`VISIBLE_COUNTS:${JSON.stringify(visibleCounts)}`);
   assert(visibleCounts.stories>=2&&visibleCounts.stories<=3,'The main story decision shows no more than three useful choices.');
   assert(visibleCounts.hooks>=2&&visibleCounts.hooks<=3,'The main opening decision shows no more than three useful choices.');
   assert(visibleCounts.paceVisible===0,'The full pacing library stays hidden until the coach asks to change pacing.');
