@@ -1,0 +1,82 @@
+<script id="v70-fixed-choice-set-script">
+(()=>{
+  if(window.__v70FixedChoiceSetInstalled)return;
+  window.__v70FixedChoiceSetInstalled=true;
+
+  const visibleSets=new Map();
+  const pendingClicked=new Map();
+
+  const isVisible=node=>{
+    if(!node)return false;
+    const style=getComputedStyle(node),rect=node.getBoundingClientRect();
+    return style.display!=='none'&&style.visibility!=='hidden'&&rect.width>0&&rect.height>0;
+  };
+  const currentVideoId=()=>String(state?.currentVideoId||'');
+  const keyFor=kind=>`${currentVideoId()}:${kind}`;
+
+  function optionValue(item,attribute){
+    return item?.querySelector(`[${attribute}]`)?.getAttribute(attribute)||'';
+  }
+
+  function freezeContainer(container,itemSelector,attribute,kind){
+    if(!container||container.classList.contains('v70-show-all'))return;
+    const items=[...container.querySelectorAll(`:scope > ${itemSelector}`)];
+    if(!items.length)return;
+    const key=keyFor(kind);
+    let values=visibleSets.get(key);
+    if(!values?.length){
+      values=items.filter(isVisible).map(item=>optionValue(item,attribute)).filter(Boolean).slice(0,3);
+      const clicked=pendingClicked.get(key);
+      if(clicked&&!values.includes(clicked))values=[...values.slice(0,2),clicked];
+      visibleSets.set(key,values);
+    }
+    items.forEach(item=>{
+      const value=optionValue(item,attribute);
+      item.classList.toggle('v70-choice-hidden',!values.includes(value));
+    });
+  }
+
+  function applyFixedSets(){
+    if(state?.currentView!=='video'||!currentVideoId())return;
+    const flow=document.querySelector('.v57-planner-flow');
+    if(!flow)return;
+    freezeContainer(flow.querySelector('.v57-structure-grid'),'.v57-choice-card','data-v57-structure','structure');
+    freezeContainer(flow.querySelector('.v57-hook-grid'),'.v57-hook-choice','data-v57-hook','hook');
+  }
+
+  function rememberClicked(event){
+    const structure=event.target.closest?.('[data-v57-structure]');
+    if(structure){
+      const key=keyFor('structure'),value=structure.getAttribute('data-v57-structure');
+      pendingClicked.set(key,value);
+      const container=structure.closest('.v57-structure-grid');
+      if(container&&!visibleSets.has(key))visibleSets.set(key,[...container.querySelectorAll(':scope > .v57-choice-card')].filter(isVisible).map(item=>optionValue(item,'data-v57-structure')).filter(Boolean).slice(0,3));
+      return;
+    }
+    const hook=event.target.closest?.('[data-v57-hook]');
+    if(hook){
+      const key=keyFor('hook'),value=hook.getAttribute('data-v57-hook');
+      pendingClicked.set(key,value);
+      const container=hook.closest('.v57-hook-grid');
+      if(container&&!visibleSets.has(key))visibleSets.set(key,[...container.querySelectorAll(':scope > .v57-hook-choice')].filter(isVisible).map(item=>optionValue(item,'data-v57-hook')).filter(Boolean).slice(0,3));
+    }
+  }
+
+  document.addEventListener('pointerdown',rememberClicked,true);
+  document.addEventListener('mousedown',rememberClicked,true);
+  document.addEventListener('keydown',event=>{
+    if(event.key==='Enter'||event.key===' ')rememberClicked(event);
+  },true);
+
+  const renderBeforeFixedSets=render;
+  render=function(...args){
+    const result=renderBeforeFixedSets(...args);
+    [0,35,100,220,420,700].forEach(delay=>setTimeout(()=>{
+      try{applyFixedSets()}catch(error){console.error('V70 fixed choice-set enhancement failed',error)}
+    },delay));
+    return result;
+  };
+
+  applyFixedSets();
+})();
+</script>
