@@ -15,19 +15,12 @@ const fixedChoiceSetPath = path.join(root, 'patches', 'v70-fixed-choice-set.html
 const inplacePlannerSelectionPath = path.join(root, 'patches', 'v70-inplace-planner-selection.html');
 const calendarLayoutFixPath = path.join(root, 'patches', 'v70-calendar-layout-fix.html');
 const callEntryFixPath = path.join(root, 'patches', 'v70-call-entry-fix.html');
+const simplificationCssPath = path.join(root, 'patches', 'v71-simplification.css');
+const simplificationJsPath = path.join(root, 'patches', 'v71-simplification.js');
 const indexPath = path.join(root, 'index.html');
 
-if (!fs.existsSync(decodedPath)) throw new Error('decoded-source.html is missing.');
-if (!fs.existsSync(patchPath)) throw new Error('patches/v68-coach-flow.html is missing.');
-if (!fs.existsSync(contextPatchPath)) throw new Error('patches/v69-context-layer.html is missing.');
-if (!fs.existsSync(clarityPatchPath)) throw new Error('patches/v70-coaching-clarity.html is missing.');
-if (!fs.existsSync(creatorAttentionFixPath)) throw new Error('patches/v70-creator-attention-fix.html is missing.');
-if (!fs.existsSync(videoJobGuideFixPath)) throw new Error('patches/v70-video-job-guide-fix.html is missing.');
-if (!fs.existsSync(scrollStabilityFixPath)) throw new Error('patches/v70-scroll-stability-fix.html is missing.');
-if (!fs.existsSync(fixedChoiceSetPath)) throw new Error('patches/v70-fixed-choice-set.html is missing.');
-if (!fs.existsSync(inplacePlannerSelectionPath)) throw new Error('patches/v70-inplace-planner-selection.html is missing.');
-if (!fs.existsSync(calendarLayoutFixPath)) throw new Error('patches/v70-calendar-layout-fix.html is missing.');
-if (!fs.existsSync(callEntryFixPath)) throw new Error('patches/v70-call-entry-fix.html is missing.');
+const required = [decodedPath, patchPath, contextPatchPath, clarityPatchPath, creatorAttentionFixPath, videoJobGuideFixPath, scrollStabilityFixPath, fixedChoiceSetPath, inplacePlannerSelectionPath, calendarLayoutFixPath, callEntryFixPath, simplificationCssPath, simplificationJsPath];
+for (const file of required) if (!fs.existsSync(file)) throw new Error(`${path.relative(root, file)} is missing.`);
 if (!fs.existsSync(basePath)) fs.copyFileSync(decodedPath, basePath);
 
 let source = fs.readFileSync(basePath, 'utf8');
@@ -41,6 +34,8 @@ const fixedChoiceSet = fs.readFileSync(fixedChoiceSetPath, 'utf8').trim();
 const inplacePlannerSelection = fs.readFileSync(inplacePlannerSelectionPath, 'utf8').trim();
 const calendarLayoutFix = fs.readFileSync(calendarLayoutFixPath, 'utf8').trim();
 const callEntryFix = fs.readFileSync(callEntryFixPath, 'utf8').trim();
+const simplificationCss = fs.readFileSync(simplificationCssPath, 'utf8').trim();
+const simplificationJs = fs.readFileSync(simplificationJsPath, 'utf8').trim();
 
 function replaceOnce(label, search, replacement) {
   const count = source.split(search).length - 1;
@@ -53,25 +48,21 @@ replaceOnce(
   "function foundationDone67(c){return channelDone67(c)&&audienceStatus(c)==='Complete'&&messageStatus(c)==='Complete'&&businessStatus(c)==='Complete';}",
   "function foundationCoreDone67(c){return channelDone67(c)&&audienceStatus(c)==='Complete'&&messageStatus(c)==='Complete'&&businessStatus(c)==='Complete';}\n  function foundationDone67(c){\n    const core=foundationCoreDone67(c);\n    if(core&&c.foundationConfirmedAt===undefined){\n      const established=has67(c.diagnostic?.updatedAt)||has67(c.diagnosticReviewedAt)||has67(c.roadmap?.destination)||has67(c.cycleOutcome)||(c.videos||[]).length>0||(c.sessions||[]).length>0||(c.monthHistory||[]).length>0;\n      if(established)c.foundationConfirmedAt=c.strategyUpdatedAt||c.createdAt||todayIso();\n    }\n    return core&&has67(c.foundationConfirmedAt);\n  }"
 );
-
 replaceOnce(
   'confirmed diagnosis gate',
   "function diagnosisDone67(c){ensure67(c);return has67(c.diagnostic.updatedAt)||has67(c.diagnosticReviewedAt)||Object.values(c.diagnostic.signals).some(v=>v&&v!=='Unknown');}",
   "function diagnosisDone67(c){ensure67(c);return has67(c.diagnostic.updatedAt)&&has67(c.diagnosticReviewedAt);}"
 );
-
 replaceOnce(
   'real video-plan gate',
   "function videosDone67(c){return (c.videos||[]).length>0;}",
   "function videoPlanReady67(v){\n    const titleCount=(v.packaging?.titles||[]).filter(has67).length;\n    const thumbCount=(v.packaging?.thumbnailIdeas||[]).filter(has67).length;\n    const purpose=[v.exactViewer,v.viewerMoment,v.surfaceProblem,v.promise].filter(has67).length>=3;\n    const evidence=[v.angle,v.format,v.research?.platformEvidence,v.research?.referenceVideos,v.research?.openGap||v.research?.beliefShift||v.research?.objection].filter(has67).length>=3;\n    const packaging=(titleCount>=3||has67(v.packaging?.selectedTitle))&&(thumbCount>=1||has67(v.packaging?.selectedThumbnail)||has67(v.packaging?.thumbnailImage));\n    const structure=[v.structure?.hook,v.structure?.first30,v.structure?.beats||v.structure?.storyProblem,v.structure?.firstPayoff].filter(has67).length>=3;\n    return purpose&&evidence&&packaging&&structure;\n  }\n  function videosDone67(c){const list=c.videos||[];return list.length>0&&list.some(videoPlanReady67);}"
 );
-
 replaceOnce(
   'explicit Foundation confirmation',
   '<button class="button" type="button" data-v67-stage-go="overview">Continue to starting diagnosis</button>',
   '<button class="button" type="button" data-v68-confirm-foundation>Confirm Foundation and continue</button>'
 );
-
 replaceOnce(
   'stable story-choice order',
   "const names=[rec.name,selected,...rec.alts,'Problem → Cause → Solution → Application','Story → Lesson → Viewer Application'].filter(Boolean);",
@@ -79,23 +70,15 @@ replaceOnce(
 );
 
 source = source
-  .replace(/<meta content="Accelerator OS V30\.3:[^"]+" name="description"\/>/, '<meta content="Accelerator OS V52.1 V70: guided coaching workflow with visible reminders and simplified video decisions." name="description"/>')
-  .replace('<title>Accelerator OS V36 Clarity System</title>', '<title>Accelerator OS V52.1 Coaching Clarity V70</title>');
+  .replace(/<meta content="Accelerator OS V30\.3:[^"]+" name="description"\/>/, '<meta content="Accelerator OS V52.1 V71: a simplified coaching workflow with creator reminders, focused video planning and clear reviews." name="description"/>')
+  .replace('<title>Accelerator OS V36 Clarity System</title>', '<title>Accelerator OS V52.1 Simplified Coaching V71</title>');
 
-if (source.includes('id="v68-coach-flow-fixes"')) throw new Error('The V68 patch is already present in the V67 base.');
-if (source.includes('id="v69-context-layer-styles"')) throw new Error('The V69 context patch is already present in the V67 base.');
-if (source.includes('id="v70-coaching-clarity-styles"')) throw new Error('The V70 clarity patch is already present in the V67 base.');
-if (source.includes('id="v70-creator-attention-fix-styles"')) throw new Error('The V70 creator attention fix is already present in the V67 base.');
-if (source.includes('id="v70-video-job-guide-fix-script"')) throw new Error('The V70 video job guide fix is already present in the V67 base.');
-if (source.includes('id="v70-scroll-stability-fix-script"')) throw new Error('The V70 scroll stability fix is already present in the V67 base.');
-if (source.includes('id="v70-fixed-choice-set-script"')) throw new Error('The V70 fixed choice-set patch is already present in the V67 base.');
-if (source.includes('id="v70-inplace-planner-selection-script"')) throw new Error('The V70 in-place planner selection patch is already present in the V67 base.');
-if (source.includes('id="v70-calendar-layout-fix-script"')) throw new Error('The V70 calendar layout patch is already present in the V67 base.');
-if (source.includes('id="v70-call-entry-fix-script"')) throw new Error('The V70 call entry patch is already present in the V67 base.');
+const markers = ['v68-coach-flow-fixes','v69-context-layer-styles','v70-coaching-clarity-styles','v70-creator-attention-fix-styles','v70-video-job-guide-fix-script','v70-scroll-stability-fix-script','v70-fixed-choice-set-script','v70-inplace-planner-selection-script','v70-calendar-layout-fix-script','v70-call-entry-fix-script','v71-simplification-reset-styles'];
+for (const marker of markers) if (source.includes(`id="${marker}"`)) throw new Error(`${marker} is already present in the V67 base.`);
 const closingBody = source.lastIndexOf('</body>');
 if (closingBody < 0) throw new Error('Closing body tag is missing.');
-source = `${source.slice(0, closingBody)}${patch}\n${contextPatch}\n${clarityPatch}\n${creatorAttentionFix}\n${videoJobGuideFix}\n${scrollStabilityFix}\n${fixedChoiceSet}\n${inplacePlannerSelection}\n${calendarLayoutFix}\n${callEntryFix}\n${source.slice(closingBody)}`;
-
+const v71 = `<style id="v71-simplification-reset-styles">${simplificationCss}</style>\n<script id="v71-simplification-reset-script">${simplificationJs}</script>`;
+source = `${source.slice(0, closingBody)}${patch}\n${contextPatch}\n${clarityPatch}\n${creatorAttentionFix}\n${videoJobGuideFix}\n${scrollStabilityFix}\n${fixedChoiceSet}\n${inplacePlannerSelection}\n${calendarLayoutFix}\n${callEntryFix}\n${v71}\n${source.slice(closingBody)}`;
 fs.writeFileSync(decodedPath, source);
 
 const payload = zlib.gzipSync(Buffer.from(source, 'utf8'), { level: 9 }).toString('base64');
@@ -104,7 +87,7 @@ const wrapper = `<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="accelerator-build" content="V52.1-coach-flow-v70">
+<meta name="accelerator-build" content="V52.1-coach-flow-v71">
 <title>Accelerator OS V52.1</title>
 <style>html,body{margin:0;min-height:100%;background:#081116;color:#f4f7f8;font-family:Inter,system-ui,sans-serif}body{display:grid;place-items:center}.load{text-align:center;padding:24px}.load p{color:#9fb3bd}</style>
 </head>
@@ -123,4 +106,4 @@ document.open();document.write(html);document.close();
 </body>
 </html>`;
 fs.writeFileSync(indexPath, wrapper);
-console.log(JSON.stringify({ sourceCharacters: source.length, wrapperCharacters: wrapper.length, build: 'V52.1-coach-flow-v70' }, null, 2));
+console.log(JSON.stringify({ sourceCharacters: source.length, wrapperCharacters: wrapper.length, build: 'V52.1-coach-flow-v71' }, null, 2));
