@@ -78,12 +78,9 @@ jobs:
       - name: Block unverified production
         if: steps.verify.outcome != 'success'
         run: exit 1
-      - name: Publish verified production files
+      - name: Publish the exact verified production files
         if: steps.verify.outcome == 'success'
         run: |
-          git pull --rebase
-          node scripts/rebuild-v68.js
-          node scripts/apply-v71-postfix.js
           git add decoded-source.html index.html
           if git diff --cached --quiet; then
             echo "Verified V71 production files are already current."
