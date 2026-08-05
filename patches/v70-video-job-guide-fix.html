@@ -17,7 +17,9 @@
   }
   function attach70(){
     if(state?.currentView!=='video')return;
-    const content=document.querySelector('.content'),v=activeVideo70();if(!content||!v||content.querySelector('.v70-current-job'))return;
+    const content=document.querySelector('.content'),v=activeVideo70();if(!content||!v)return;
+    content.querySelectorAll('.v69-card-why').forEach(node=>node.remove());
+    if(content.querySelector('.v70-current-job'))return;
     const planner=content.querySelector('#planner-panel,.v49-accordion-stack,[data-v49-section="video-purpose"],.video-planner,.v57-planner-flow');
     if(planner)planner.insertAdjacentHTML('beforebegin',guide70(v));
     else content.insertAdjacentHTML('afterbegin',guide70(v));
