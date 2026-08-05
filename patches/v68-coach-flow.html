@@ -1,0 +1,99 @@
+<style id="v68-coach-flow-fixes">
+/* V68 final lifecycle gates and interaction stability. */
+.v68-gate-note{margin:10px 0 0;padding:9px 11px;border-radius:10px;border:1px solid #3d5966;background:#101d23;color:#9fb3bd;font-size:12px;line-height:1.48}
+.v68-gate-note strong{color:#e5f1f5}
+.v67-foundation-section.current>.v67-foundation-body{scroll-margin-top:90px}
+.v67-progress-item.current{box-shadow:0 0 0 2px rgba(117,212,255,.08)}
+.v57-structure-grid.v62-fixed-order .v57-choice-card{transition:border-color .15s,background .15s,box-shadow .15s}
+</style>
+<script id="v68-coach-flow-fixes-script">
+(()=>{
+  if(window.__v68CoachFlowInstalled)return;
+  window.__v68CoachFlowInstalled=true;
+  window.__acceleratorBuild='V52.1-coach-flow-v68';
+
+  const clean68=value=>String(value||'').replace(/\s+/g,' ').trim();
+  const detailKey68=(node,index)=>{
+    const attrs=['data-v67-foundation','data-v49-section','data-v54-stage','data-v32-review','data-v50-diagnosis','data-v55-example'];
+    for(const attr of attrs){const value=node.getAttribute(attr);if(value)return `${attr}:${value}`;}
+    if(node.id)return `id:${node.id}`;
+    const summary=clean68(node.querySelector(':scope>summary')?.textContent).slice(0,120);
+    return summary?`summary:${summary}`:`index:${index}`;
+  };
+  function captureDetails68(){
+    const nodes=[...document.querySelectorAll('.content details')];
+    return {view:state?.currentView||'',items:nodes.map((node,index)=>({key:detailKey68(node,index),open:node.open,index}))};
+  }
+  function restoreDetails68(snapshot){
+    if(!snapshot||snapshot.view!==(state?.currentView||''))return;
+    const keyed=new Map(snapshot.items.map(item=>[item.key,item.open]));
+    const byIndex=snapshot.items.map(item=>item.open);
+    [...document.querySelectorAll('.content details')].forEach((node,index)=>{
+      if(node.getAttribute('data-v67-locked')==='true')return;
+      const key=detailKey68(node,index);
+      if(keyed.has(key))node.open=keyed.get(key);
+      else if(index<byIndex.length)node.open=byIndex[index];
+    });
+  }
+  function actionSignature68(button){
+    const data=[...button.attributes].filter(attr=>attr.name.startsWith('data-')).map(attr=>`${attr.name}=${attr.value}`).sort().join('|');
+    return `${clean68(button.textContent).toLowerCase()}|${data}`;
+  }
+  function removeDuplicateActions68(){
+    document.querySelectorAll('.content .v49-section-body,.content .v67-current,.content .v67-reference-section,.content .v57-choice-section,.content article.card').forEach(scope=>{
+      const seen=new Set();
+      scope.querySelectorAll(':scope button,:scope a.button').forEach(button=>{
+        const signature=actionSignature68(button);
+        if(!signature||signature==='|')return;
+        if(seen.has(signature))button.remove();else seen.add(signature);
+      });
+    });
+    document.querySelectorAll('.channel-tools').forEach(scope=>{
+      const youtube=[...scope.querySelectorAll('a,button')].filter(node=>/youtube|youtu\.be/i.test(`${node.getAttribute('href')||''} ${node.textContent||''} ${node.getAttribute('title')||''}`));
+      youtube.slice(1).forEach(node=>node.remove());
+    });
+  }
+  function explainCurrentGate68(){
+    if(state?.currentView==='overview'&&document.querySelector('.v67-diagnosis')&&!document.querySelector('.v68-gate-note')){
+      document.querySelector('.v67-diagnosis-result')?.insertAdjacentHTML('beforebegin','<p class="v68-gate-note"><strong>Selecting an answer does not complete this step.</strong> Review the recommendation, then confirm it before the 90-day roadmap opens.</p>');
+    }
+    if(state?.currentView==='videos'&&!document.querySelector('.v68-gate-note')){
+      document.querySelector('.v67-lifecycle')?.insertAdjacentHTML('afterend','<p class="v68-gate-note"><strong>A blank video card does not complete onboarding.</strong> Finish the viewer, evidence, package, and story decisions for at least one approved video before execution opens.</p>');
+    }
+  }
+  function enhance68(){
+    document.querySelectorAll('button:not([type])').forEach(button=>button.type='button');
+    removeDuplicateActions68();
+    explainCurrentGate68();
+    document.querySelectorAll('.v14-version').forEach(node=>node.textContent='V52.1');
+    document.title='Accelerator OS V52.1 Coach Flow V68';
+  }
+
+  document.addEventListener('click',event=>{
+    const confirm=event.target.closest?.('[data-v68-confirm-foundation]');
+    if(!confirm)return;
+    event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();
+    const c=typeof creator==='function'?creator():null;
+    if(!c)return;
+    c.foundationConfirmedAt=typeof todayIso==='function'?todayIso():new Date().toISOString().slice(0,10);
+    state.currentView='overview';
+    state.v67DiagnosisReview=false;
+    save();render();window.scrollTo(0,0);
+    if(typeof toast==='function')toast('Foundation confirmed. Starting diagnosis is now open.');
+  },true);
+
+  const baseRender68=render;
+  render=function(...args){
+    const snapshot=captureDetails68();
+    const result=baseRender68(...args);
+    const finish=()=>{try{enhance68();restoreDetails68(snapshot);}catch(error){console.error('V68 coach-flow enhancement failed',error);}};
+    finish();
+    window.setTimeout(finish,0);
+    window.setTimeout(finish,100);
+    window.setTimeout(finish,220);
+    return result;
+  };
+
+  enhance68();
+})();
+</script>
