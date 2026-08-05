@@ -1,0 +1,41 @@
+{
+  "build": "V52.1-coach-flow-v68",
+  "passed": [
+    "The decoded app identifies itself as the V68 coach-flow build.",
+    "A brand-new creator sees Foundation as the only current onboarding step.",
+    "Later strategy and learning pages stay out of the navigation during initial setup.",
+    "The current Foundation section opens automatically.",
+    "Changing a Foundation field does not collapse the section being worked on.",
+    "A completed Foundation waits for one explicit confirmation before diagnosis opens.",
+    "Confirming Foundation opens the starting diagnosis.",
+    "Selecting one diagnosis answer does not prematurely complete the diagnosis.",
+    "The 90-day roadmap remains locked until the diagnosis recommendation is confirmed.",
+    "Confirming the diagnosis opens the 90-day roadmap.",
+    "Adding a blank video does not unlock execution.",
+    "Execution opens only after a real video plan is ready.",
+    "The video package shows three separate thumbnail upload areas.",
+    "The story planner presents four focused structure choices.",
+    "Selecting a story structure does not reorder the four options.",
+    "The selected story structure is highlighted instead of moved.",
+    "Selecting a story structure does not collapse the Story, Hook and Pacing section.",
+    "Changing a video-planner choice does not collapse the open guide.",
+    "Focused sections do not contain duplicate buttons with the same action.",
+    "The active creator workspace exposes no more than one YouTube channel button.",
+    "After onboarding, Home becomes the recurring coaching screen.",
+    "The one-time onboarding progress disappears from recurring Creator Home.",
+    "overview renders a single dashboard content area.",
+    "setup renders a single dashboard content area.",
+    "roadmap renders a single dashboard content area.",
+    "plan renders a single dashboard content area.",
+    "videos renders a single dashboard content area.",
+    "video renders a single dashboard content area.",
+    "calendar renders a single dashboard content area.",
+    "results renders a single dashboard content area.",
+    "No runtime or console errors were captured during the end-to-end walkthrough."
+  ],
+  "warnings": [
+    "Possible single-letter UI artifacts: [{\"tag\":\"SPAN\",\"text\":\"D\",\"className\":\"v50-diagnosis-icon\"},{\"tag\":\"SPAN\",\"text\":\"D\",\"className\":\"v50-diagnosis-icon\"},{\"tag\":\"SPAN\",\"text\":\"D\",\"className\":\"v50-diagnosis-icon\"},{\"tag\":\"SPAN\",\"text\":\"D\",\"className\":\"v50-diagnosis-icon\"}]"
+  ],
+  "errors": [],
+  "checkedAt": "2026-08-05T14:35:12.762Z"
+}

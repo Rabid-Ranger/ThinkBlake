@@ -8,8 +8,8 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
 <meta content="#0b1014" name="theme-color"/>
-<meta content="Accelerator OS V52.1 V68: guided one-decision-at-a-time onboarding and recurring coaching flow." name="description"/>
-<title>Accelerator OS V52.1 Coach Flow V68</title>
+<meta content="Accelerator OS V30.3: V30.1 desktop base with improved narrative spacing, a fully worked strategist example, persistent YouTube access, and a guided Plan the Experience workflow grounded in the retention and storytelling playbooks." name="description"/>
+<title>Accelerator OS V36 Clarity System</title>
 <style>:root {
   color-scheme: dark;
   --bg: #0b1014;
@@ -10334,7 +10334,7 @@ try{
   function structureChoices57(v){
     const rec=structureRecommendation57(v);
     const selected=v?.structure?.framework;
-    const names=[rec.name,...rec.alts,'Problem → Cause → Solution → Application','Story → Lesson → Viewer Application'].filter(Boolean);
+    const names=[rec.name,selected,...rec.alts,'Problem → Cause → Solution → Application','Story → Lesson → Viewer Application'].filter(Boolean);
     return [...new Set(names)].filter(name=>STRUCTURES57[name]).slice(0,4).map(name=>({name,recommended:name===rec.name,selected:name===selected}));
   }
 
@@ -12874,28 +12874,11 @@ html,body{font-size:15px;line-height:1.5}
     c.resourceLinks = Array.isArray(c.resourceLinks)?c.resourceLinks:[];
   }
   function channelDone67(c){ensure67(c);return has67(c.channelName)&&has67(c.channelUrl)&&Number(c.capacity.videosPerMonth||0)>0&&has67(c.capacity.hoursPerWeek)&&has67(c.capacity.team);}
-  function foundationCoreDone67(c){return channelDone67(c)&&audienceStatus(c)==='Complete'&&messageStatus(c)==='Complete'&&businessStatus(c)==='Complete';}
-  function foundationDone67(c){
-    const core=foundationCoreDone67(c);
-    if(core&&c.foundationConfirmedAt===undefined){
-      const established=has67(c.diagnostic?.updatedAt)||has67(c.diagnosticReviewedAt)||has67(c.roadmap?.destination)||has67(c.cycleOutcome)||(c.videos||[]).length>0||(c.sessions||[]).length>0||(c.monthHistory||[]).length>0;
-      if(established)c.foundationConfirmedAt=c.strategyUpdatedAt||c.createdAt||todayIso();
-    }
-    return core&&has67(c.foundationConfirmedAt);
-  }
-  function diagnosisDone67(c){ensure67(c);return has67(c.diagnostic.updatedAt)&&has67(c.diagnosticReviewedAt);}
+  function foundationDone67(c){return channelDone67(c)&&audienceStatus(c)==='Complete'&&messageStatus(c)==='Complete'&&businessStatus(c)==='Complete';}
+  function diagnosisDone67(c){ensure67(c);return has67(c.diagnostic.updatedAt)||has67(c.diagnosticReviewedAt)||Object.values(c.diagnostic.signals).some(v=>v&&v!=='Unknown');}
   function roadmapDone67(c){const r=c.roadmap||c.ninetyDayRoadmap||{};const months=Array.isArray(r.months)?r.months:[];return has67(r.destination||c.cycleOutcome)&&has67(r.successDefinition)&&months.length>=3&&months.every(m=>has67(m.outcome)&&has67(m.learningQuestion));}
   function monthDone67(c){const m=c.month||{};return has67(m.constraint||c.bottleneck)&&has67(m.monthlyGoal)&&has67(m.learningQuestion)&&!!m.portfolioConfirmedAt&&(m.slots||[]).length>0;}
-  function videoPlanReady67(v){
-    const titleCount=(v.packaging?.titles||[]).filter(has67).length;
-    const thumbCount=(v.packaging?.thumbnailIdeas||[]).filter(has67).length;
-    const purpose=[v.exactViewer,v.viewerMoment,v.surfaceProblem,v.promise].filter(has67).length>=3;
-    const evidence=[v.angle,v.format,v.research?.platformEvidence,v.research?.referenceVideos,v.research?.openGap||v.research?.beliefShift||v.research?.objection].filter(has67).length>=3;
-    const packaging=(titleCount>=3||has67(v.packaging?.selectedTitle))&&(thumbCount>=1||has67(v.packaging?.selectedThumbnail)||has67(v.packaging?.thumbnailImage));
-    const structure=[v.structure?.hook,v.structure?.first30,v.structure?.beats||v.structure?.storyProblem,v.structure?.firstPayoff].filter(has67).length>=3;
-    return purpose&&evidence&&packaging&&structure;
-  }
-  function videosDone67(c){const list=c.videos||[];return list.length>0&&list.some(videoPlanReady67);}
+  function videosDone67(c){return (c.videos||[]).length>0;}
   function executionDone67(c){return (c.assignments||[]).some(a=>a.status!=='Complete'&&has67(a.owner)&&has67(a.due))||(c.videos||[]).some(v=>has67(v.publishDate));}
   function stages67(c){
     ensure67(c);
@@ -12974,7 +12957,7 @@ html,body{font-size:15px;line-height:1.5}
       audience:`<p>Use the guided interview once. The completed profile becomes the audience context for the roadmap, monthly plan, and every video.</p>${audienceDone?setupSummary67(c,'audience'):''}<button class="button" type="button" data-action="audience-wizard">${audienceDone?'Review audience answers':'Start audience interview'}</button>`,
       message:`<p>Build this after the audience is clear. You are choosing the promise and point of view the channel should consistently communicate.</p>${messageDone?setupSummary67(c,'message'):''}<button class="button" type="button" data-action="message-wizard">${messageDone?'Review message answers':'Build the message'}</button>`,
       business:`<p>Map only the next step that is actually useful. A lead magnet or offer is optional when it does not fit the creator.</p>${businessDone?setupSummary67(c,'business'):''}<button class="button" type="button" data-action="business-wizard">${businessDone?'Review business path':'Build the business path'}</button>`,
-      handoff:`<p>The Foundation is complete. It remains available for reference, but it will leave the main navigation after onboarding. Revisit it only when the audience, message, business path, channel, or capacity materially changes.</p><div class="v67-summary-grid"><div class="v67-summary-cell"><span>Audience</span><strong>${E67(short67(c.audience?.onePerson))}</strong></div><div class="v67-summary-cell"><span>Promise</span><strong>${E67(short67(c.message?.valueProposition))}</strong></div><div class="v67-summary-cell"><span>Business path</span><strong>${E67(short67(c.business?.businessGoal))}</strong></div></div><div class="v67-current-actions"><button class="button secondary" type="button" data-v27-handoff="foundation" data-v27-handoff-mode="download">Download PDF</button><button class="button ghost" type="button" data-action="copy-strategy">Copy for AI</button><button class="button" type="button" data-v68-confirm-foundation>Confirm Foundation and continue</button></div>`
+      handoff:`<p>The Foundation is complete. It remains available for reference, but it will leave the main navigation after onboarding. Revisit it only when the audience, message, business path, channel, or capacity materially changes.</p><div class="v67-summary-grid"><div class="v67-summary-cell"><span>Audience</span><strong>${E67(short67(c.audience?.onePerson))}</strong></div><div class="v67-summary-cell"><span>Promise</span><strong>${E67(short67(c.message?.valueProposition))}</strong></div><div class="v67-summary-cell"><span>Business path</span><strong>${E67(short67(c.business?.businessGoal))}</strong></div></div><div class="v67-current-actions"><button class="button secondary" type="button" data-v27-handoff="foundation" data-v27-handoff-mode="download">Download PDF</button><button class="button ghost" type="button" data-action="copy-strategy">Copy for AI</button><button class="button" type="button" data-v67-stage-go="overview">Continue to starting diagnosis</button></div>`
     };
     return `${pageHead67('Foundation',foundationDone67(c)?'The one-time source of truth is complete. Review it only when the strategy or capacity genuinely changes.':'Complete the current section. Later sections stay quiet until the information they need exists.')}<div class="v67-foundation"><div class="v67-foundation-head"><div><strong>One-time setup</strong><p>These answers feed every later planning layer, so they should be captured once rather than repeated.</p></div><span class="v67-foundation-count">${items.filter(x=>x.done).length} of ${items.length}</span></div>${items.map((item,index)=>setupSection67({id:item.id,index:index+1,title:item.title,summary:item.summary,done:item.done,current:index===current,locked:index>current,body:bodies[item.id]})).join('')}</div>`;
   };
@@ -13035,118 +13018,5 @@ html,body{font-size:15px;line-height:1.5}
 })();
 </script>
 
-<style id="v68-coach-flow-fixes">
-/* V68 final lifecycle gates and interaction stability. */
-.v68-gate-note{margin:10px 0 0;padding:9px 11px;border-radius:10px;border:1px solid #3d5966;background:#101d23;color:#9fb3bd;font-size:12px;line-height:1.48}
-.v68-gate-note strong{color:#e5f1f5}
-.v67-foundation-section.current>.v67-foundation-body{scroll-margin-top:90px}
-.v67-progress-item.current{box-shadow:0 0 0 2px rgba(117,212,255,.08)}
-.v57-structure-grid.v62-fixed-order .v57-choice-card{transition:border-color .15s,background .15s,box-shadow .15s}
-</style>
-<script id="v68-coach-flow-fixes-script">
-(()=>{
-  if(window.__v68CoachFlowInstalled)return;
-  window.__v68CoachFlowInstalled=true;
-  window.__acceleratorBuild='V52.1-coach-flow-v68';
-
-  const clean68=value=>String(value||'').replace(/\s+/g,' ').trim();
-  const detailKey68=(node,index)=>{
-    const attrs=['data-v67-foundation','data-v49-section','data-v54-stage','data-v32-review','data-v50-diagnosis','data-v55-example'];
-    for(const attr of attrs){const value=node.getAttribute(attr);if(value)return `${attr}:${value}`;}
-    if(node.id)return `id:${node.id}`;
-    const summary=clean68(node.querySelector(':scope>summary')?.textContent).slice(0,120);
-    return summary?`summary:${summary}`:`index:${index}`;
-  };
-  function captureDetails68(){
-    const nodes=[...document.querySelectorAll('.content details')];
-    const currentFoundation=nodes.find(node=>node.matches('.v67-foundation-section.current'));
-    const currentFoundationIndex=currentFoundation?nodes.indexOf(currentFoundation):-1;
-    return {
-      view:state?.currentView||'',
-      currentFoundationKey:currentFoundation?detailKey68(currentFoundation,currentFoundationIndex):'',
-      items:nodes.map((node,index)=>({key:detailKey68(node,index),open:node.open,index}))
-    };
-  }
-  function restoreDetails68(snapshot){
-    if(!snapshot||snapshot.view!==(state?.currentView||''))return;
-    const keyed=new Map(snapshot.items.map(item=>[item.key,item.open]));
-    const byIndex=snapshot.items.map(item=>item.open);
-    const nodes=[...document.querySelectorAll('.content details')];
-    const currentFoundation=nodes.find(node=>node.matches('.v67-foundation-section.current'))||null;
-    const currentFoundationIndex=currentFoundation?nodes.indexOf(currentFoundation):-1;
-    const currentFoundationKey=currentFoundation?detailKey68(currentFoundation,currentFoundationIndex):'';
-    const foundationStepChanged=Boolean(snapshot.currentFoundationKey&&currentFoundationKey&&snapshot.currentFoundationKey!==currentFoundationKey);
-
-    nodes.forEach((node,index)=>{
-      if(node.getAttribute('data-v67-locked')==='true')return;
-      if(node===currentFoundation){node.open=true;return;}
-      if(foundationStepChanged&&node.matches('.v67-foundation-section')){node.open=false;return;}
-      const key=detailKey68(node,index);
-      if(keyed.has(key))node.open=keyed.get(key);
-      else if(index<byIndex.length)node.open=byIndex[index];
-    });
-  }
-  function actionSignature68(button){
-    const data=[...button.attributes].filter(attr=>attr.name.startsWith('data-')).map(attr=>`${attr.name}=${attr.value}`).sort().join('|');
-    return `${clean68(button.textContent).toLowerCase()}|${data}`;
-  }
-  function removeDuplicateActions68(){
-    document.querySelectorAll('.content .v49-section-body,.content .v67-current,.content .v67-reference-section,.content .v57-choice-section,.content article.card').forEach(scope=>{
-      const seen=new Set();
-      scope.querySelectorAll(':scope button,:scope a.button').forEach(button=>{
-        const signature=actionSignature68(button);
-        if(!signature||signature==='|')return;
-        if(seen.has(signature))button.remove();else seen.add(signature);
-      });
-    });
-    document.querySelectorAll('.channel-tools').forEach(scope=>{
-      const youtube=[...scope.querySelectorAll('a,button')].filter(node=>/youtube|youtu\.be/i.test(`${node.getAttribute('href')||''} ${node.textContent||''} ${node.getAttribute('title')||''}`));
-      youtube.slice(1).forEach(node=>node.remove());
-    });
-  }
-  function explainCurrentGate68(){
-    if(state?.currentView==='overview'&&document.querySelector('.v67-diagnosis')&&!document.querySelector('.v68-gate-note')){
-      document.querySelector('.v67-diagnosis-result')?.insertAdjacentHTML('beforebegin','<p class="v68-gate-note"><strong>Selecting an answer does not complete this step.</strong> Review the recommendation, then confirm it before the 90-day roadmap opens.</p>');
-    }
-    if(state?.currentView==='videos'&&!document.querySelector('.v68-gate-note')){
-      document.querySelector('.v67-lifecycle')?.insertAdjacentHTML('afterend','<p class="v68-gate-note"><strong>A blank video card does not complete onboarding.</strong> Finish the viewer, evidence, package, and story decisions for at least one approved video before execution opens.</p>');
-    }
-  }
-  function enhance68(){
-    document.querySelectorAll('button:not([type])').forEach(button=>button.type='button');
-    removeDuplicateActions68();
-    explainCurrentGate68();
-    document.querySelectorAll('.v14-version').forEach(node=>node.textContent='V52.1');
-    document.title='Accelerator OS V52.1 Coach Flow V68';
-  }
-
-  document.addEventListener('click',event=>{
-    const confirm=event.target.closest?.('[data-v68-confirm-foundation]');
-    if(!confirm)return;
-    event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();
-    const c=typeof creator==='function'?creator():null;
-    if(!c)return;
-    c.foundationConfirmedAt=typeof todayIso==='function'?todayIso():new Date().toISOString().slice(0,10);
-    state.currentView='overview';
-    state.v67DiagnosisReview=false;
-    save();render();window.scrollTo(0,0);
-    if(typeof toast==='function')toast('Foundation confirmed. Starting diagnosis is now open.');
-  },true);
-
-  const baseRender68=render;
-  render=function(...args){
-    const snapshot=captureDetails68();
-    const result=baseRender68(...args);
-    const finish=()=>{try{enhance68();restoreDetails68(snapshot);}catch(error){console.error('V68 coach-flow enhancement failed',error);}};
-    finish();
-    window.setTimeout(finish,0);
-    window.setTimeout(finish,100);
-    window.setTimeout(finish,220);
-    return result;
-  };
-
-  enhance68();
-})();
-</script>
 </body>
 </html>
