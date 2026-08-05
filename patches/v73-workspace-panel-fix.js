@@ -13,10 +13,23 @@ function candidateFor(heading,root){
   }
   return node&&node!==root?node:null;
 }
+function markPanel(panel,heading=null){
+  if(!panel||panel.classList.contains('v73-generic-work-panel'))return;
+  panel.classList.add('v73-work-card','v73-generic-work-panel');
+  if(panel.tagName==='DETAILS')return;
+  const directHeader=heading?.closest('header,.section-title');
+  if(directHeader&&directHeader.parentElement===panel)directHeader.classList.add('v73-generic-panel-head');
+  else heading?.classList.add('v73-card-heading');
+}
 function decorate(){
   const view=stateNow()?.currentView;
   if(view!=='setup'&&view!=='plan')return;
   const root=document.querySelector('.content');if(!root)return;
+
+  if(view==='setup'){
+    root.querySelectorAll('details.v67-foundation-section,[data-v67-foundation]').forEach(panel=>markPanel(panel));
+  }
+
   const seen=new Set();
   for(const heading of root.querySelectorAll('h2,h3,h4')){
     if(heading.closest('.v73-page-head,.page-head,.v72-guide-drawer,[role="dialog"],summary,.v73-work-card'))continue;
@@ -26,13 +39,7 @@ function decorate(){
     if(panel===root||panel.contains(root.querySelector('.v73-page-head')))continue;
     const hasWork=panel.querySelector('input,textarea,select,button,[contenteditable="true"],details');
     if(!hasWork)continue;
-    seen.add(panel);
-    panel.classList.add('v73-work-card','v73-generic-work-panel');
-    if(panel.tagName!=='DETAILS'){
-      const directHeader=heading.closest('header,.section-title');
-      if(directHeader&&directHeader.parentElement===panel)directHeader.classList.add('v73-generic-panel-head');
-      else heading.classList.add('v73-card-heading');
-    }
+    seen.add(panel);markPanel(panel,heading);
   }
 }
 let frame=0;
