@@ -1,6 +1,6 @@
 const fs=require('fs');
 const {chromium}=require('playwright');
-const report={build:'V52.1-reference-ui-v72',checkedAt:new Date().toISOString(),passed:[],errors:[]};
+const report={build:'V52.1-reference-ui-v73',checkedAt:new Date().toISOString(),passed:[],errors:[]};
 const pass=message=>{report.passed.push(message);console.log(`PASS: ${message}`)};
 const check=(value,message)=>{if(!value){report.errors.push(message);throw new Error(message)}pass(message)};
 
@@ -22,7 +22,7 @@ const check=(value,message)=>{if(!value){report.errors.push(message);throw new E
    localStorage.clear();save();render();
   });
   await page.waitForTimeout(500);
-  check(await page.evaluate(()=>window.__acceleratorBuild)==='V52.1-reference-ui-v72','The app identifies the V72 reference-led build.');
+  check(await page.evaluate(()=>window.__acceleratorBuild)==='V52.1-reference-ui-v73','The app identifies the V73 reference-led build.');
   check(await page.locator('.v72-flow-note').count()===1,'The video page begins with one short flow instruction.');
   check(await page.locator('.v72-phase-tab').count()===4,'The planner has four clear phase tabs.');
   check((await page.locator('.v72-phase-tab.active').innerText()).includes('Plan'),'Plan is the default active phase.');
