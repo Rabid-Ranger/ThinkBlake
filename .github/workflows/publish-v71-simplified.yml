@@ -7,6 +7,7 @@ on:
     paths:
       - .github/workflows/publish-v71-simplified.yml
       - scripts/rebuild-v68.js
+      - scripts/apply-v71-postfix.js
       - patches/v71-simplification.css
       - patches/v71-simplification.js
       - tests/v71-simplification.js
@@ -30,7 +31,9 @@ jobs:
         with:
           node-version: 22
       - name: Rebuild the production dashboard
-        run: node scripts/rebuild-v68.js
+        run: |
+          node scripts/rebuild-v68.js
+          node scripts/apply-v71-postfix.js
       - name: Validate every embedded script
         run: |
           node <<'NODE'
@@ -79,6 +82,7 @@ jobs:
         run: |
           git pull --rebase
           node scripts/rebuild-v68.js
+          node scripts/apply-v71-postfix.js
           git add decoded-source.html index.html
           if git diff --cached --quiet; then
             echo "Verified V71 production files are already current."
