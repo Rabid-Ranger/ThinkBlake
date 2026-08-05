@@ -8,8 +8,8 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
 <meta content="#0b1014" name="theme-color"/>
-<meta content="Accelerator OS V52.1 V71: a simplified coaching workflow with creator reminders, focused video planning and clear reviews." name="description"/>
-<title>Accelerator OS V52.1 Simplified Coaching V71</title>
+<meta content="Accelerator OS V52.1 V72: a reference-led coaching workspace with clear phases and pop-out guides." name="description"/>
+<title>Accelerator OS V52.1 Reference UI V72</title>
 <style>:root {
   color-scheme: dark;
   --bg: #0b1014;
@@ -14118,5 +14118,427 @@ window.render=function(...args){normalizeDiagnosisRoute();const result=previous.
 clean();
 })();
 </script>
+<style id="v72-reference-ui-styles">/* V72 reference-led UI, based on the supplied planner's clear phase flow and pop-out guides. */
+:root{
+  --bg:#0D1117;
+  --panel:#161B22;
+  --panel-2:#21262D;
+  --panel-3:#30363D;
+  --line:#30363D;
+  --text:#E6EDF3;
+  --muted:#8B949E;
+  --brand:#3B82F6;
+  --brand-2:#93C5FD;
+  --green:#3FB950;
+  --amber:#F59E0B;
+  --red:#F85149;
+  --purple:#A855F7;
+}
+body.v72-reference-ui{background:#0D1117;color:#E6EDF3}
+body.v72-reference-ui .sidebar{background:#0D1117;border-color:#30363D}
+body.v72-reference-ui .topbar{background:rgba(22,27,34,.96);border-color:#30363D}
+body.v72-reference-ui .card,
+body.v72-reference-ui .creator-row-v14,
+body.v72-reference-ui .creator-row-v13,
+body.v72-reference-ui .creator-row,
+body.v72-reference-ui .video-card{background:#161B22;border-color:#30363D;box-shadow:0 8px 28px rgba(0,0,0,.16)}
+body.v72-reference-ui .button{background:#3B82F6;color:#fff;border-color:#3B82F6}
+body.v72-reference-ui .button.secondary{background:#21262D;color:#E6EDF3;border-color:#30363D}
+body.v72-reference-ui .button.ghost{background:transparent;color:#8B949E;border-color:#30363D}
+body.v72-reference-ui input,
+body.v72-reference-ui textarea,
+body.v72-reference-ui select{background:#0D1117!important;color:#E6EDF3!important;border-color:#30363D!important}
+body.v72-reference-ui input:focus,
+body.v72-reference-ui textarea:focus,
+body.v72-reference-ui select:focus{border-color:#3B82F6!important;box-shadow:0 0 0 3px rgba(59,130,246,.18)!important}
+
+.v72-video-shell{max-width:1120px;margin:0 auto}
+.v72-flow-note{display:flex;align-items:flex-start;gap:10px;margin:0 0 14px;padding:12px 14px;border:1px solid rgba(59,130,246,.35);border-radius:10px;background:#1A2332;color:#C8DAF8;font-size:12px;line-height:1.5}
+.v72-flow-note strong{color:#93C5FD}
+.v72-flow-note-icon{width:24px;height:24px;display:grid;place-items:center;flex:0 0 auto;border-radius:7px;background:#233A5B;color:#93C5FD;font-weight:900}
+.v72-phase-tabs{display:flex;gap:8px;margin:0 0 18px;padding-bottom:3px;overflow-x:auto;scrollbar-width:thin}
+.v72-phase-tab{border:1px solid #30363D;background:#21262D;color:#8B949E;border-radius:9px;padding:9px 13px;font-size:12px;font-weight:800;white-space:nowrap;transition:.18s}
+.v72-phase-tab:hover{background:#30363D;color:#E6EDF3}
+.v72-phase-tab.active{background:#3B82F6;border-color:#3B82F6;color:#fff;box-shadow:0 8px 22px rgba(59,130,246,.22)}
+.v72-phase-tab.complete:not(.active){border-color:#2F6B43;color:#86EFAC;background:#132D1D}
+.v72-phase-tab span{opacity:.72;margin-right:5px}
+.v72-phase-hidden{display:none!important}
+
+body.v72-video-flow .v71-video-focus{border-color:#30363D;background:#161B22;border-radius:10px;margin-bottom:12px}
+body.v72-video-flow .v71-video-focus span{color:#60A5FA}
+body.v72-video-flow .v71-compact-button,
+body.v72-video-flow .v71-more{background:#21262D;border-color:#30363D;color:#D7E5F7}
+body.v72-video-flow details[data-v49-section]{border:1px solid #30363D!important;border-radius:12px!important;background:#161B22!important;margin:0 0 14px!important;overflow:visible!important;box-shadow:0 8px 24px rgba(0,0,0,.14)}
+body.v72-video-flow details[data-v49-section]>summary{grid-template-columns:28px minmax(0,1fr) auto auto!important;gap:10px!important;min-height:68px!important;padding:12px 14px!important;background:linear-gradient(135deg,#2563EB 0%,#60A5FA 100%)!important;border-radius:11px!important;color:#fff!important}
+body.v72-video-flow details[data-v49-section][open]>summary{border-radius:11px 11px 0 0!important}
+body.v72-video-flow details[data-v49-section]>summary .v71-step-number{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.28);color:#fff}
+body.v72-video-flow details[data-v49-section]>summary .v71-step-copy b{color:#fff;font-size:14px}
+body.v72-video-flow details[data-v49-section]>summary .v71-step-copy small{color:#DBEAFE;font-size:11px;line-height:1.35}
+body.v72-video-flow details[data-v49-section]>summary .v71-step-state{background:rgba(13,17,23,.2);color:#EFF6FF;border:1px solid rgba(255,255,255,.2)}
+.v72-guide-button{border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.16);color:#fff;border-radius:7px;padding:6px 9px;font-size:10px;font-weight:800;white-space:nowrap}
+.v72-guide-button:hover{background:rgba(255,255,255,.26)}
+body.v72-video-flow details[data-v49-section]>:not(summary){margin-left:14px;margin-right:14px}
+body.v72-video-flow details[data-v49-section]>summary+*{margin-top:14px}
+body.v72-video-flow details[data-v49-section]>:last-child{margin-bottom:14px}
+body.v72-video-flow .v71-package-summary-help{display:none!important}
+body.v72-video-flow .v71-package-note{border-left-color:#3B82F6;background:#1A2332;color:#C8D4E3}
+body.v72-video-flow .v71-pacing-row{background:#1A2332;border-color:#3B82F640}
+
+.v72-review-phase{display:none;border:1px solid #30363D;background:#161B22;border-radius:12px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.14)}
+.v72-review-phase.active{display:block}
+.v72-review-head{padding:15px 17px;background:linear-gradient(135deg,#2563EB 0%,#60A5FA 100%)}
+.v72-review-head h3{margin:0;color:#fff;font-size:16px}
+.v72-review-head p{margin:5px 0 0;color:#DBEAFE;font-size:12px}
+.v72-review-body{padding:16px}
+.v72-review-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.v72-review-card{padding:13px;border:1px solid #30363D;border-radius:10px;background:#0D1117}
+.v72-review-card span{display:block;color:#60A5FA;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em}
+.v72-review-card strong{display:block;margin-top:5px;color:#E6EDF3;font-size:13px}
+.v72-review-card p{margin:5px 0 0;color:#8B949E;font-size:11px;line-height:1.45}
+.v72-review-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+.v72-guide-backdrop{position:fixed;inset:0;z-index:100400;display:none;background:rgba(0,0,0,.72)}
+.v72-guide-backdrop.open{display:block}
+.v72-guide-drawer{position:absolute;top:0;right:0;width:min(720px,100%);height:100%;overflow:auto;background:#161B22;border-left:1px solid #30363D;box-shadow:-24px 0 70px rgba(0,0,0,.45)}
+.v72-guide-head{position:sticky;top:0;z-index:2;display:flex;justify-content:space-between;gap:14px;align-items:flex-start;padding:16px 18px;background:#161B22;border-bottom:1px solid #30363D}
+.v72-guide-head span{display:block;color:#60A5FA;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.1em}
+.v72-guide-head h2{margin:4px 0 0;color:#E6EDF3;font-size:20px}
+.v72-guide-head p{margin:5px 0 0;color:#8B949E;font-size:12px;line-height:1.4}
+.v72-guide-close{width:36px;height:36px;border:1px solid #30363D;border-radius:9px;background:#21262D;color:#8B949E;font-size:20px}
+.v72-guide-content{padding:18px}
+.v72-guide-intro{padding:14px;border:1px solid #30363D;border-radius:10px;background:linear-gradient(135deg,#161B22 0%,#1A2332 100%);margin-bottom:16px}
+.v72-guide-intro p{margin:0;color:#D6E2F0;font-size:13px;line-height:1.65}
+.v72-guide-section{border-left:4px solid #3B82F6;padding:13px 14px;margin:16px 0;background:linear-gradient(90deg,rgba(59,130,246,.09),transparent);border-radius:0 9px 9px 0}
+.v72-guide-section h3{margin:0 0 7px;color:#60A5FA;font-size:14px}
+.v72-guide-section p,.v72-guide-section li{color:#C8D4E3;font-size:12px;line-height:1.6}
+.v72-guide-section ul,.v72-guide-section ol{margin:7px 0 0;padding-left:18px}
+.v72-guide-tip{padding:12px 14px;margin:14px 0;border-left:4px solid #3FB950;border-radius:0 9px 9px 0;background:#132D1D;color:#A8E6A8;font-size:12px;line-height:1.55}
+.v72-guide-warning{padding:12px 14px;margin:14px 0;border-left:4px solid #F59E0B;border-radius:0 9px 9px 0;background:#3D3415;color:#FCD34D;font-size:12px;line-height:1.55}
+.v72-guide-table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid #30363D;border-radius:9px;overflow:hidden;font-size:11px}
+.v72-guide-table th{padding:9px 10px;text-align:left;background:#1A3A5C;color:#93C5FD;border-bottom:1px solid #3B82F6;text-transform:uppercase;letter-spacing:.06em}
+.v72-guide-table td{padding:10px;border-bottom:1px solid #30363D;color:#D6E2F0;vertical-align:top;line-height:1.5}
+.v72-guide-table tr:last-child td{border-bottom:0}
+
+.v72-status-ready{border-color:#3B82F6!important;background:#1A3A5C!important;color:#93C5FD!important}
+.v72-status-changes{border-color:#F59E0B!important;background:#3D3415!important;color:#FCD34D!important}
+.v72-status-approved{border-color:#3FB950!important;background:#132D1D!important;color:#86EFAC!important}
+
+@media(max-width:760px){
+  .v72-phase-tabs{margin-left:-2px;margin-right:-2px}
+  .v72-phase-tab{padding:8px 10px;font-size:11px}
+  body.v72-video-flow details[data-v49-section]>summary{grid-template-columns:26px minmax(0,1fr) auto!important}
+  body.v72-video-flow details[data-v49-section]>summary .v71-step-state{display:none}
+  .v72-guide-button{padding:5px 7px;font-size:9px}
+  .v72-review-grid{grid-template-columns:1fr}
+  .v72-guide-drawer{width:100%}
+}</style>
+<script id="v72-reference-ui-script">(()=>{
+if(window.__v72ReferenceUiInstalled)return;
+window.__v72ReferenceUiInstalled=true;
+window.__acceleratorBuild='V52.1-reference-ui-v72';
+
+const clean=value=>String(value??'').replace(/\s+/g,' ').trim();
+const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+const appState=()=>{try{return typeof state!=='undefined'?state:null}catch{return null}};
+const currentCreator=()=>{
+  const app=appState();
+  return (app?.creators||[]).find(item=>item.id===app.currentCreatorId)||(app?.creators||[])[0]||null;
+};
+const currentVideo=()=>{
+  const app=appState();
+  const creator=currentCreator();
+  const videos=creator?.videos||[];
+  return videos.find(item=>item.id===app?.currentVideoId)||videos[0]||null;
+};
+const first=(...values)=>values.find(value=>clean(value))||'';
+
+const phases=[
+  {id:'plan',number:'1',label:'Plan',sections:['video-purpose','video-strategy','video-package']},
+  {id:'script',number:'2',label:'Script',sections:['video-experience']},
+  {id:'produce',number:'3',label:'Produce & Publish',sections:['video-publish','video-handoff']},
+  {id:'review',number:'4',label:'Review & Learn',sections:[]}
+];
+
+const guides={
+  'video-purpose':{
+    eyebrow:'Phase 1 guide',
+    title:'Viewer and goal',
+    subtitle:'Decide who the video is for and what must change for them.',
+    intro:'This section should leave you with one specific viewer, one immediate problem, one useful promise, and one measurable definition of success.',
+    sections:[
+      ['Choose the video job','Reach brings the right new people in. Trust changes a belief and builds preference. Convert helps a ready viewer decide or act. The job is not the format.'],
+      ['Narrow the viewer','Write for one viewer in one moment. Avoid broad audience descriptions that could fit almost anyone.'],
+      ['Define the promise','Describe what the viewer will understand, decide, or be able to do differently after watching.']
+    ],
+    tip:'You should be able to read the viewer and promise aloud in one breath.'
+  },
+  'video-strategy':{
+    eyebrow:'Phase 1 guide',
+    title:'Research and approach',
+    subtitle:'Find the evidence first, then choose the format that carries it best.',
+    intro:'Research changes by video job. Do not force every video through the same outlier process.',
+    table:[
+      ['Reach','Demand, repeated problems, outliers, searches and click patterns.','Fast relevance, clear promise and early payoff.'],
+      ['Trust','Doubts, misconceptions, objections, proof and stories.','Old belief, evidence, new belief and application.'],
+      ['Convert','Fit, buyer questions, risk, alternatives and decision criteria.','Fit, tradeoffs, proof and one clear next step.']
+    ],
+    sections:[
+      ['Choose format after evidence','Use a how-to when the viewer needs a process. Use comparison when they need criteria and tradeoffs. Use a case study when proof is the main asset. Use a story when the belief shift depends on lived experience.'],
+      ['What best fit means','Best fit is the strongest starting recommendation from the saved strategy and evidence. It is not a mandatory answer.']
+    ],
+    warning:'Do not choose a format because it is familiar. Choose it because it makes the evidence easiest to understand.'
+  },
+  'video-package':{
+    eyebrow:'Phase 1 guide',
+    title:'Title and thumbnail',
+    subtitle:'Make the topic clear and give the right viewer an honest reason to click now.',
+    intro:'The topic is what the video is about. The click frame is why this version of the topic feels urgent, useful, surprising, risky, or emotionally relevant.',
+    sections:[
+      ['Common click frames','Mistake, proof, comparison, warning, tension, result, useful reframe, or a strong unanswered question.'],
+      ['Title and thumbnail relationship','They should work together, not repeat each other. The title can carry context while the thumbnail carries proof, emotion, contrast, or the visual question.'],
+      ['One-second test','A viewer should understand the main visual and emotional direction before reading every word.']
+    ],
+    tip:'A click frame guides the title and thumbnail. It does not choose the story structure or pacing.'
+  },
+  'video-experience':{
+    eyebrow:'Phase 2 guide',
+    title:'Story and opening',
+    subtitle:'Confirm the click immediately, then move the viewer toward the promised payoff.',
+    intro:'Choose one viewer flow and one opening move. Keep pacing at the recommended default unless the evidence clearly calls for something different.',
+    sections:[
+      ['Viewer flow','Use problem to cause to solution when the viewer needs understanding. Use problem to attempt to solution when failed effort matters. Use story to lesson to application when lived experience carries the proof.'],
+      ['Opening move','The first seconds should confirm the title and thumbnail, name the stakes, and make the next step feel worth watching.'],
+      ['Pacing','Pacing is the timing of proof, tension and payoff. It is not a separate creative concept that needs to be reinvented for every video.']
+    ],
+    warning:'Do not open with background information that the viewer did not click for.'
+  },
+  'video-publish':{
+    eyebrow:'Phase 3 guide',
+    title:'CTA and publishing',
+    subtitle:'Connect the video to the next useful action and schedule the review points.',
+    intro:'The CTA should feel like the natural next step from the video, not an interruption pasted onto the ending.',
+    sections:[
+      ['Match CTA to the job','Reach often points to another video or subscription path. Trust can point to a deeper resource. Convert can point to the offer, lead magnet, consultation, or decision step.'],
+      ['Set review dates','Use the calendar to schedule the 24-hour, 7-day and 28-day reviews that actually matter for this video.'],
+      ['Keep the ending open','Transition into the next action. Avoid dropping energy with a long conclusion.']
+    ],
+    tip:'One clear CTA is usually stronger than several competing next steps.'
+  },
+  'video-handoff':{
+    eyebrow:'Phase 3 guide',
+    title:'Handoff',
+    subtitle:'Make the plan usable by the creator, editor and coach without another explanation meeting.',
+    intro:'The handoff is complete when the approved title, thumbnail direction, opening, main beats, CTA, owner and dates are clear.',
+    sections:[
+      ['What must be visible','Final title direction, thumbnail concept, opening, structure, proof assets, CTA, due dates and ownership.'],
+      ['What does not belong here','Long strategy teaching, every rejected option, or unresolved brainstorming that will confuse execution.'],
+      ['Coach check','Ask whether another person could execute this plan without guessing what you meant.']
+    ],
+    warning:'Do not mark the plan ready while the title, thumbnail or opening still depend on a future decision.'
+  }
+};
+
+function guideMarkup(guide){
+  let html=`<div class="v72-guide-intro"><p>${escapeHtml(guide.intro||'')}</p></div>`;
+  if(guide.table){
+    html+=`<table class="v72-guide-table"><thead><tr><th>Video job</th><th>Research</th><th>Structure</th></tr></thead><tbody>${guide.table.map(row=>`<tr>${row.map(cell=>`<td>${escapeHtml(cell)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  }
+  for(const section of guide.sections||[]){
+    html+=`<section class="v72-guide-section"><h3>${escapeHtml(section[0])}</h3><p>${escapeHtml(section[1])}</p></section>`;
+  }
+  if(guide.tip)html+=`<div class="v72-guide-tip"><strong>Useful check:</strong> ${escapeHtml(guide.tip)}</div>`;
+  if(guide.warning)html+=`<div class="v72-guide-warning"><strong>Watch for this:</strong> ${escapeHtml(guide.warning)}</div>`;
+  return html;
+}
+
+function ensureGuideDrawer(){
+  if(document.querySelector('#v72-guide-backdrop'))return;
+  document.body.insertAdjacentHTML('beforeend',`<div class="v72-guide-backdrop" id="v72-guide-backdrop" aria-hidden="true"><aside class="v72-guide-drawer" role="dialog" aria-modal="true"><header class="v72-guide-head"><div><span id="v72-guide-eyebrow">Guide</span><h2 id="v72-guide-title">Guide</h2><p id="v72-guide-subtitle"></p></div><button type="button" class="v72-guide-close" data-v72-close-guide aria-label="Close guide">×</button></header><div class="v72-guide-content" id="v72-guide-content"></div></aside></div>`);
+}
+
+function openGuide(key){
+  const guide=guides[key];
+  if(!guide)return;
+  ensureGuideDrawer();
+  document.querySelector('#v72-guide-eyebrow').textContent=guide.eyebrow||'Guide';
+  document.querySelector('#v72-guide-title').textContent=guide.title||'Guide';
+  document.querySelector('#v72-guide-subtitle').textContent=guide.subtitle||'';
+  document.querySelector('#v72-guide-content').innerHTML=guideMarkup(guide);
+  const backdrop=document.querySelector('#v72-guide-backdrop');
+  backdrop.classList.add('open');
+  backdrop.setAttribute('aria-hidden','false');
+}
+
+function closeGuide(){
+  const backdrop=document.querySelector('#v72-guide-backdrop');
+  backdrop?.classList.remove('open');
+  backdrop?.setAttribute('aria-hidden','true');
+}
+
+function phaseStorageKey(){
+  const creator=currentCreator();
+  const video=currentVideo();
+  return `accelerator-v72-phase-${creator?.id||'creator'}-${video?.id||'video'}`;
+}
+
+function currentPhase(){
+  try{return localStorage.getItem(phaseStorageKey())||'plan'}catch{return 'plan'}
+}
+
+function savePhase(id){
+  try{localStorage.setItem(phaseStorageKey(),id)}catch{}
+}
+
+function phaseIsComplete(phase){
+  if(phase.id==='review')return false;
+  return phase.sections.length>0&&phase.sections.every(id=>document.querySelector(`details[data-v49-section="${id}"]`)?.classList.contains('complete'));
+}
+
+function ensureReviewPanel(){
+  if(document.querySelector('.v72-review-phase'))return;
+  const anchor=document.querySelector('details[data-v49-section="video-handoff"]');
+  if(!anchor)return;
+  anchor.insertAdjacentHTML('afterend',`<section class="v72-review-phase"><header class="v72-review-head"><h3>Review and learn from the video</h3><p>Use this phase after the video is published and a scheduled review is due.</p></header><div class="v72-review-body"><div class="v72-review-grid"><article class="v72-review-card"><span>24 hours</span><strong>Packaging and opening</strong><p>Check early click response, first-minute behavior and obvious launch issues.</p></article><article class="v72-review-card"><span>7 days</span><strong>Viewer journey</strong><p>Review retention, traffic sources, comments and whether the promise held.</p></article><article class="v72-review-card"><span>28 days</span><strong>Strategic learning</strong><p>Decide what this video should change in future planning and packaging.</p></article></div><div class="v72-review-actions"><button type="button" class="button" data-v72-open-review>Open Review & Learn</button><button type="button" class="button secondary" data-v72-open-calendar>Open review calendar</button><button type="button" class="v72-guide-button" data-v72-review-guide>View Guide</button></div></div></section>`);
+}
+
+function ensureFlowUi(){
+  if(appState()?.currentView!=='video')return;
+  document.body.classList.add('v72-video-flow');
+  const existing=document.querySelector('.v72-phase-tabs');
+  if(!existing){
+    const focus=document.querySelector('.v71-video-focus');
+    const anchor=focus||document.querySelector('.content .page-head');
+    if(!anchor)return;
+    anchor.insertAdjacentHTML('afterend',`<div class="v72-video-shell"><div class="v72-flow-note"><span class="v72-flow-note-icon">i</span><div><strong>Work one phase at a time.</strong> The page tells you what to complete. Use View Guide only when you need the teaching or examples.</div></div><nav class="v72-phase-tabs" aria-label="Video workflow phases">${phases.map(phase=>`<button type="button" class="v72-phase-tab" data-v72-phase="${phase.id}"><span>${phase.number}.</span>${escapeHtml(phase.label)}</button>`).join('')}</nav></div>`);
+  }
+  ensureReviewPanel();
+  decorateSections();
+  applyPhase(currentPhase());
+}
+
+function decorateSections(){
+  for(const phase of phases){
+    for(const id of phase.sections){
+      const detail=document.querySelector(`details[data-v49-section="${id}"]`);
+      const summary=detail?.querySelector(':scope>summary');
+      if(!detail||!summary)continue;
+      detail.dataset.v72Phase=phase.id;
+      if(!summary.querySelector('[data-v72-guide]')){
+        summary.insertAdjacentHTML('beforeend',`<button type="button" class="v72-guide-button" data-v72-guide="${id}">View Guide</button>`);
+      }
+    }
+  }
+}
+
+function applyPhase(id){
+  const phase=phases.find(item=>item.id===id)||phases[0];
+  savePhase(phase.id);
+  document.querySelectorAll('.v72-phase-tab').forEach(button=>{
+    const target=phases.find(item=>item.id===button.dataset.v72Phase);
+    button.classList.toggle('active',button.dataset.v72Phase===phase.id);
+    button.classList.toggle('complete',Boolean(target&&phaseIsComplete(target)));
+  });
+  document.querySelectorAll('details[data-v49-section]').forEach(detail=>{
+    const visible=phase.sections.includes(detail.dataset.v49Section);
+    detail.classList.toggle('v72-phase-hidden',!visible);
+    if(!visible)detail.open=false;
+  });
+  const review=document.querySelector('.v72-review-phase');
+  review?.classList.toggle('active',phase.id==='review');
+  if(phase.sections.length){
+    const visible=phase.sections.map(sectionId=>document.querySelector(`details[data-v49-section="${sectionId}"]`)).filter(Boolean);
+    if(!visible.some(detail=>detail.open))visible[0].open=true;
+  }
+  document.querySelector('.v72-phase-tabs')?.scrollIntoView({block:'nearest'});
+}
+
+function applyGlobalUi(){
+  document.body.classList.add('v72-reference-ui');
+  if(appState()?.currentView!=='video')document.body.classList.remove('v72-video-flow');
+}
+
+function showReviewGuide(){
+  openGuide('video-publish');
+  document.querySelector('#v72-guide-eyebrow').textContent='Phase 4 guide';
+  document.querySelector('#v72-guide-title').textContent='Review and learn';
+  document.querySelector('#v72-guide-subtitle').textContent='Turn performance evidence into one future decision.';
+  document.querySelector('#v72-guide-content').innerHTML=`<div class="v72-guide-intro"><p>Do not review a video just to describe the numbers. Record what happened, interpret what it probably means, and choose the one future decision this evidence should change.</p></div><section class="v72-guide-section"><h3>24-hour review</h3><p>Look for launch problems, packaging response, first-minute behavior and whether the right viewers arrived.</p></section><section class="v72-guide-section"><h3>7-day review</h3><p>Study the full viewer journey, retention shape, traffic sources, comments and promise delivery.</p></section><section class="v72-guide-section"><h3>28-day review</h3><p>Decide whether the topic, click frame, opening, structure or CTA produced a repeatable learning.</p></section><div class="v72-guide-tip"><strong>Useful check:</strong> End every review with one sentence beginning, “Because of this video, next time we will...”</div>`;
+}
+
+function enhance(){
+  applyGlobalUi();
+  ensureGuideDrawer();
+  ensureFlowUi();
+  document.title='Accelerator OS V52.1 Reference UI V72';
+}
+
+document.addEventListener('click',event=>{
+  const guideButton=event.target.closest?.('[data-v72-guide]');
+  if(guideButton){
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+    openGuide(guideButton.dataset.v72Guide);
+    return;
+  }
+  const phaseButton=event.target.closest?.('[data-v72-phase]');
+  if(phaseButton){
+    event.preventDefault();
+    applyPhase(phaseButton.dataset.v72Phase);
+    return;
+  }
+  if(event.target.closest?.('[data-v72-close-guide]')||event.target.id==='v72-guide-backdrop'){
+    event.preventDefault();
+    closeGuide();
+    return;
+  }
+  if(event.target.closest?.('[data-v72-review-guide]')){
+    event.preventDefault();
+    showReviewGuide();
+    return;
+  }
+  if(event.target.closest?.('[data-v72-open-review]')){
+    event.preventDefault();
+    const app=appState();
+    if(app){app.currentView='results';render()}
+    return;
+  }
+  if(event.target.closest?.('[data-v72-open-calendar]')){
+    event.preventDefault();
+    const app=appState();
+    if(app){app.currentView='calendar';render()}
+  }
+},true);
+
+document.addEventListener('keydown',event=>{if(event.key==='Escape')closeGuide()});
+
+const previousRender=window.render;
+window.render=function(...args){
+  const result=previousRender.apply(this,args);
+  const run=()=>{try{enhance()}catch(error){console.error('V72 reference UI failed',error)}};
+  run();
+  setTimeout(run,0);
+  setTimeout(run,120);
+  setTimeout(run,320);
+  return result;
+};
+
+enhance();
+})();</script>
+<script id="v72-reference-ui-fix-script">(()=>{
+if(window.__v72PhaseAttributeFixInstalled)return;
+window.__v72PhaseAttributeFixInstalled=true;
+function repairPhaseAttributes(){
+  document.querySelectorAll('details[data-v72-phase]').forEach(detail=>{
+    detail.dataset.v72PhaseSection=detail.dataset.v72Phase;
+    detail.removeAttribute('data-v72-phase');
+  });
+}
+const observer=new MutationObserver(repairPhaseAttributes);
+observer.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['data-v72-phase']});
+repairPhaseAttributes();
+setTimeout(repairPhaseAttributes,0);
+setTimeout(repairPhaseAttributes,200);
+})();</script>
 </body>
 </html>
