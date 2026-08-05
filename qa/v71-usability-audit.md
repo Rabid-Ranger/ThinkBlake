@@ -1,7 +1,7 @@
 # V71 Usability Audit
 
 Build: V52.1-coach-flow-v71
-Checked: 2026-08-05T21:58:21.467Z
+Checked: 2026-08-05T22:01:30.172Z
 
 ## Page inventory
 
@@ -33,20 +33,20 @@ Checked: 2026-08-05T21:58:21.467Z
 - Main headings: Jordan Lee · Foundation | Foundation
 
 ### Diagnosis
-- Visible controls: 25
+- Visible controls: 17
 - Visible cards: 0
-- Visible disclosure sections: 7 (1 open)
+- Visible disclosure sections: 1 (0 open)
 - Separate guide panels: 0
-- Visible text characters: 1458
+- Visible text characters: 1424
 - Horizontal overflow: No
-- Main headings: Jordan Lee · Diagnosis | Learn | Observe, before explaining | Interpret the viewer journey | Opening and viewer experience | What these numbers might mean | Observed | Working interpretation | Decision question | Calibrate confidence | Make one next decision | Choose where this evidence should matter next
+- Main headings: Jordan Lee · Creator Home | Getting this creator ready | 90-day direction | One current decision, with the full path still visible
 
 ### Plan
 - Visible controls: 32
 - Visible cards: 0
-- Visible disclosure sections: 4 (0 open)
+- Visible disclosure sections: 4 (1 open)
 - Separate guide panels: 0
-- Visible text characters: 976
+- Visible text characters: 1990
 - Horizontal overflow: No
 - Main headings: Jordan Lee · Monthly Plan | Monthly Plan · August 2026 | Current mix | 5 Mistakes New Managers Make in Their First 30 Days | What to Do in Your First Week as a Manager | The Leadership Conversation I Avoided for Too Long | Is Leadership Coaching Worth It for a New Director? | Open commitments | Upcoming automatic and manual dates | August 2026: Publish two Reach videos, one Trust video, and one Convert video; produce 180 qualified lead-magnet visits and identify one repeatable opening pattern
 
@@ -92,7 +92,6 @@ Checked: 2026-08-05T21:58:21.467Z
 
 ## Overload warnings
 
-- Diagnosis shows 25 visible controls.
 - Plan shows 32 visible controls.
 - Calendar shows 106 visible controls.
 - Review and Learn shows 26 visible controls.

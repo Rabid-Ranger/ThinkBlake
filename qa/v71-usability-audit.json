@@ -1,6 +1,6 @@
 {
   "build": "V52.1-coach-flow-v71",
-  "checkedAt": "2026-08-05T21:58:21.467Z",
+  "checkedAt": "2026-08-05T22:01:30.172Z",
   "runtimeErrors": [],
   "pages": [
     {
@@ -128,19 +128,10 @@
       "label": "Diagnosis",
       "title": "Accelerator OS V52.1 Coach Flow V68.1",
       "headings": [
-        "Jordan Lee · Diagnosis",
-        "Learn",
-        "Observe, before explaining",
-        "Interpret the viewer journey",
-        "Opening and viewer experience",
-        "What these numbers might mean",
-        "Observed",
-        "Working interpretation",
-        "Decision question",
-        "Calibrate confidence",
-        "Make one next decision",
-        "Choose where this evidence should matter next",
-        "5 Mistakes New Managers Make in Their First 30 Days"
+        "Jordan Lee · Creator Home",
+        "Getting this creator ready",
+        "90-day direction",
+        "One current decision, with the full path still visible"
       ],
       "buttons": [
         "Creators",
@@ -150,43 +141,28 @@
         "Creator Strategy",
         "2 due",
         "•••",
+        "Run coaching call",
         "Continue",
-        "Use as next move",
-        "Create assignment",
-        "Refresh read",
-        "Use interpretation as learning note",
-        "Continue",
-        "UnknownNo useful evidence yet.",
-        "HypothesisOne useful signal worth testing.",
-        "Emerging PatternRepeated comparable evidence is pointing the same way.",
-        "Confirmed LearningMultiple comparable results support the lesson.",
-        "Continue",
-        "Continue",
-        "Apply selected routes",
-        "Continue",
-        "Open learning memo",
-        "Download PDF",
-        "Copy for AI",
-        "Creator Home"
+        "View Creator Strategy",
+        "Foundation Audience, message, business path, capacity COMPLETE",
+        "Diagnosis Find the current growth constraint COMPLETE",
+        "90-day plan Turn the constraint into a learning sequence CURRENT",
+        "Monthly plan Choose cadence and Reach, Trust, Convert mix PREVIEW",
+        "Video plans Apply the strategy to specific videos COMPLETE",
+        "Execution Owners, dates, production and publishing COMPLETE",
+        "Learning Results update the next decision COMPLETE"
       ],
-      "textCharacters": 1458,
-      "visibleButtons": 25,
+      "textCharacters": 1424,
+      "visibleButtons": 17,
       "visibleCards": 0,
-      "visibleDetails": 7,
-      "openDetails": 1,
+      "visibleDetails": 1,
+      "openDetails": 0,
       "visibleGuides": 0,
-      "duplicateLabels": [
-        [
-          "creator home",
-          2
-        ],
-        [
-          "continue",
-          5
-        ]
-      ],
+      "duplicateLabels": [],
       "horizontalOverflow": false,
-      "bodyClasses": []
+      "bodyClasses": [
+        "v36-creator-home"
+      ]
     },
     {
       "view": "plan",
@@ -238,11 +214,11 @@
         "Copy for AI",
         "Continue to Videos"
       ],
-      "textCharacters": 976,
+      "textCharacters": 1990,
       "visibleButtons": 32,
       "visibleCards": 0,
       "visibleDetails": 4,
-      "openDetails": 0,
+      "openDetails": 1,
       "visibleGuides": 0,
       "duplicateLabels": [
         [
@@ -603,7 +579,6 @@
     }
   ],
   "warnings": [
-    "Diagnosis shows 25 visible controls.",
     "Plan shows 32 visible controls.",
     "Calendar shows 106 visible controls.",
     "Review and Learn shows 26 visible controls."

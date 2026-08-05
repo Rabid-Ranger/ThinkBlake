@@ -8,6 +8,7 @@
     "Creator Strategy keeps branding, funnel and cadence available.",
     "The reminder list includes diagnosis and video reviews.",
     "The diagnosis reminder opens the actual diagnosis-review workflow.",
+    "Opening Diagnosis directly routes to the actual diagnosis-review workflow, not Review and Learn.",
     "The all-creators page marks creators who need attention.",
     "Foundation no longer repeats the full journey map.",
     "Creator Strategy remains available from Foundation.",
@@ -28,10 +29,13 @@
     "Monthly Plan no longer shows repeated Continue buttons.",
     "The full calendar is permanently visible.",
     "Calendar content is not hidden in dropdowns.",
-    "Upcoming work and reviews appears beneath the calendar."
+    "Upcoming work and reviews appears beneath the calendar.",
+    "Execution handoff no longer competes with the main calendar page.",
+    "Reviews clearly explains when the coach uses it.",
+    "The old large Learn guide is hidden.",
+    "An unfinished live coaching-call draft restores after leaving the workspace.",
+    "No runtime errors occur in the complete V71 walkthrough. "
   ],
-  "errors": [
-    "Execution handoff no longer competes with the main calendar page."
-  ],
-  "checkedAt": "2026-08-05T21:58:16.763Z"
+  "errors": [],
+  "checkedAt": "2026-08-05T22:01:24.284Z"
 }
