@@ -1,0 +1,55 @@
+<script id="v70-scroll-stability-fix-script">
+(()=>{
+  if(window.__v70ScrollStabilityFixInstalled)return;
+  window.__v70ScrollStabilityFixInstalled=true;
+
+  let pendingPlannerSnapshot=null;
+  const plannerControlSelector='[data-v57-structure],[data-v57-hook],[data-v57-pace],[data-v70-expand],[data-v70-toggle-beats]';
+
+  function capturePlannerPosition(){
+    if(state?.currentView!=='video')return null;
+    const section=document.querySelector('[data-v49-section="video-experience"]');
+    return {
+      view:state.currentView,
+      videoId:state.currentVideoId||'',
+      scrollY:window.scrollY,
+      sectionOpen:section?.open===true,
+      sectionTop:section?section.getBoundingClientRect().top:null
+    };
+  }
+
+  function stabilizePlannerPosition(snapshot){
+    if(!snapshot||state?.currentView!==snapshot.view||(state?.currentVideoId||'')!==snapshot.videoId)return;
+    const section=document.querySelector('[data-v49-section="video-experience"]');
+    if(section&&snapshot.sectionOpen)section.open=true;
+    if(section&&snapshot.sectionTop!==null){
+      const delta=section.getBoundingClientRect().top-snapshot.sectionTop;
+      if(Math.abs(delta)>1)window.scrollBy(0,delta);
+    }else if(Number.isFinite(snapshot.scrollY)){
+      window.scrollTo(0,snapshot.scrollY);
+    }
+  }
+
+  function rememberPlannerPosition(event){
+    if(!event.target.closest?.(plannerControlSelector))return;
+    pendingPlannerSnapshot=capturePlannerPosition();
+  }
+
+  document.addEventListener('pointerdown',rememberPlannerPosition,true);
+  document.addEventListener('mousedown',rememberPlannerPosition,true);
+  document.addEventListener('keydown',event=>{
+    if((event.key==='Enter'||event.key===' ')&&event.target.closest?.(plannerControlSelector))pendingPlannerSnapshot=capturePlannerPosition();
+  },true);
+
+  const renderBeforeScrollFix=render;
+  render=function(...args){
+    const snapshot=pendingPlannerSnapshot||capturePlannerPosition();
+    pendingPlannerSnapshot=null;
+    const result=renderBeforeScrollFix(...args);
+    [0,45,110,220,360,520].forEach(delay=>setTimeout(()=>{
+      try{stabilizePlannerPosition(snapshot)}catch(error){console.error('V70 planner scroll stabilization failed',error)}
+    },delay));
+    return result;
+  };
+})();
+</script>
