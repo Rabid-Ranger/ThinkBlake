@@ -1,7 +1,7 @@
 {
   "build": "V52.1-coach-flow-v68",
   "passed": [
-    "The decoded app identifies itself as the V68 coach-flow build.",
+    "The decoded app identifies itself as a V68 coach-flow build.",
     "A brand-new creator sees Foundation as the only current onboarding step.",
     "Later strategy and learning pages stay out of the navigation during initial setup.",
     "The current Foundation section opens automatically.",
@@ -37,5 +37,5 @@
     "Possible single-letter UI artifacts: [{\"tag\":\"SPAN\",\"text\":\"D\",\"className\":\"v50-diagnosis-icon\"},{\"tag\":\"SPAN\",\"text\":\"D\",\"className\":\"v50-diagnosis-icon\"},{\"tag\":\"SPAN\",\"text\":\"D\",\"className\":\"v50-diagnosis-icon\"},{\"tag\":\"SPAN\",\"text\":\"D\",\"className\":\"v50-diagnosis-icon\"}]"
   ],
   "errors": [],
-  "checkedAt": "2026-08-05T14:35:12.762Z"
+  "checkedAt": "2026-08-05T18:22:29.416Z"
 }

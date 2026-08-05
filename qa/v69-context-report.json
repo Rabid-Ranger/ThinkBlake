@@ -1,0 +1,24 @@
+{
+  "build": "V52.1-coach-flow-v68.1",
+  "passed": [
+    "The app identifies the contextual guided-flow build.",
+    "A new creator sees the full journey map while Foundation remains current.",
+    "The journey map shows Foundation through Learning.",
+    "Only Foundation is marked as the current action.",
+    "Later stages remain visible as previews instead of disappearing.",
+    "Creator Strategy is always available from the workspace.",
+    "Creator Strategy opens without leaving onboarding.",
+    "The reference clearly separates audience, brand and funnel information.",
+    "Jordan Lee’s lead magnet is visible in Creator Strategy.",
+    "Jordan Lee’s coaching offer is visible in Creator Strategy.",
+    "Jordan Lee’s saved branding message is visible.",
+    "Jordan Lee’s coaching cadence is visible.",
+    "The video planner explains why recommendations are being shown.",
+    "Best fit is defined and tied to visible creator and video inputs.",
+    "The recommendation explanation describes what the choice controls.",
+    "The active Foundation section states what its answer will influence later.",
+    "No runtime errors occur in the context flow. "
+  ],
+  "errors": [],
+  "checkedAt": "2026-08-05T18:22:36.464Z"
+}
