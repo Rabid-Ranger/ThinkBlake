@@ -15,19 +15,21 @@ window.__v71PostfixInstalled=true;
 const compact=value=>String(value??'').replace(/\\s+/g,' ').trim();
 const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const first=(...values)=>values.find(value=>compact(value))||'';
+const appState=()=>{try{return typeof state!=='undefined'?state:null}catch{return null}};
 const jobs={
  Reach:{purpose:'Bring the right new viewers into the channel.',research:'Demand, repeated problems, outliers, search language and proven click patterns.'},
  Trust:{purpose:'Change a belief and build preference for this creator or method.',research:'Doubts, misconceptions, objections, proof, stories and credibility gaps.'},
  Convert:{purpose:'Help a ready viewer make one decision or take the next step.',research:'Buyer questions, fit, alternatives, risk, objections and decision criteria.'}
 };
 function selectedVideo(){
- const app=window.state;
+ const app=appState();
  const selectedCreator=(app?.creators||[]).find(item=>item.id===app.currentCreatorId)||(app?.creators||[])[0];
  const videos=selectedCreator?.videos||[];
  return videos.find(item=>item.id===app.currentVideoId)||videos[0]||null;
 }
 function ensureVideoFocus(){
- if(window.state?.currentView!=='video'||document.querySelector('.v71-video-focus'))return;
+ const app=appState();
+ if(app?.currentView!=='video'||document.querySelector('.v71-video-focus'))return;
  const current=selectedVideo();
  if(!current)return;
  const job=first(current.job,'Reach');
@@ -40,7 +42,8 @@ function ensureVideoFocus(){
  anchor.insertAdjacentHTML('afterend',\`<section class="v71-video-focus"><div><span>\${escapeHtml(job)} video</span><strong>\${escapeHtml(info.purpose)}</strong><p><b>Research:</b> \${escapeHtml(info.research)}</p><p><b>Topic:</b> \${escapeHtml(topic)} &nbsp; <b>Click frame:</b> \${escapeHtml(clickFrame)}</p></div><div class="v71-video-focus-actions"><button class="v71-compact-button" data-v71-jobs>How video jobs differ</button><button class="v71-compact-button" data-v69-open-strategy>Creator Strategy</button></div></section>\`);
 }
 const clean=()=>{
- if(window.state?.currentView==='setup')document.querySelectorAll('.v69-map').forEach(node=>node.remove());
+ const app=appState();
+ if(app?.currentView==='setup')document.querySelectorAll('.v69-map').forEach(node=>node.remove());
  ensureVideoFocus();
 };
 const observer=new MutationObserver(clean);
