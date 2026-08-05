@@ -18,20 +18,14 @@ const assert = (condition, message) => { if (!condition) fail(message); pass(mes
     await page.goto('http://127.0.0.1:4173/decoded-source.html', { waitUntil: 'domcontentloaded', timeout: 60000 });
     await page.waitForFunction(() => typeof render === 'function' && typeof state !== 'undefined' && typeof blankCreator === 'function', null, { timeout: 60000 });
     await page.waitForTimeout(500);
+    await page.evaluate(() => { window.__v68SampleCreator = structuredClone(state.creators[0]); });
     const build = await page.evaluate(() => window.__acceleratorBuild);
     assert(build === 'V52.1-coach-flow-v68', 'The decoded app identifies itself as the V68 coach-flow build.');
 
     await page.evaluate(() => {
       const c = blankCreator();
-      c.id = 'v68-new-coach';
-      c.name = 'New Coach Test';
-      c.channelName = '';
-      c.channelUrl = '';
-      state.creators = [c];
-      state.currentCreatorId = c.id;
-      state.currentVideoId = '';
-      state.currentView = 'overview';
-      state.v67DiagnosisReview = false;
+      c.id = 'v68-new-coach'; c.name = 'New Coach Test'; c.channelName = ''; c.channelUrl = '';
+      state.creators = [c]; state.currentCreatorId = c.id; state.currentVideoId = ''; state.currentView = 'overview'; state.v67DiagnosisReview = false;
       save(); render();
     });
     await page.waitForTimeout(150);
@@ -48,12 +42,8 @@ const assert = (condition, message) => { if (!condition) fail(message); pass(mes
     assert(await page.locator('[data-v67-foundation="channel"]').getAttribute('open') !== null, 'Changing a Foundation field does not collapse the section being worked on.');
 
     await page.evaluate(() => {
-      const original = state.creators[0];
-      const complete = structuredClone((state.creators.find(item => item.id === 'jordan') || original));
-      const reference = typeof seedCreators === 'function' ? seedCreators().find(item => item.id === 'jordan') : null;
-      const c = structuredClone(reference || complete);
-      c.id = 'v68-gate-test'; c.name = 'Lifecycle Gate Test';
-      c.foundationConfirmedAt = '';
+      const c = structuredClone(window.__v68SampleCreator);
+      c.id = 'v68-gate-test'; c.name = 'Lifecycle Gate Test'; c.foundationConfirmedAt = '';
       c.diagnostic = { signals: { discovery:'Unknown',click:'Unknown',trust:'Unknown',action:'Unknown',consistency:'Unknown',clarity:'Unknown' } };
       c.diagnosticReviewedAt = ''; c.bottleneck = ''; c.priority = ''; c.diagnosticWhy = '';
       c.roadmap = {}; c.ninetyDayRoadmap = {}; c.cycleOutcome = '';
@@ -84,8 +74,7 @@ const assert = (condition, message) => { if (!condition) fail(message); pass(mes
       c.diagnostic.updatedAt = todayIso(); c.diagnosticReviewedAt = todayIso();
       c.bottleneck = 'Qualified discovery'; c.priority = 'Reach topics and packaging';
       c.roadmap = {
-        destination:'Create a repeatable qualified discovery system',
-        successDefinition:'Three comparable videos create useful evidence',
+        destination:'Create a repeatable qualified discovery system', successDefinition:'Three comparable videos create useful evidence',
         months:[
           {month:monthIso(),outcome:'Prove one topic family',learningQuestion:'Which problem creates qualified clicks?'},
           {month:addMonthsIso(monthIso(),1),outcome:'Repeat the useful pattern',learningQuestion:'Does the pattern hold across formats?'},
@@ -101,10 +90,8 @@ const assert = (condition, message) => { if (!condition) fail(message); pass(mes
 
     await page.evaluate(() => {
       const v = video();
-      v.exactViewer='A creator struggling to earn qualified discovery';
-      v.viewerMoment='They are choosing the next topic to film';
-      v.surfaceProblem='Their ideas do not earn enough qualified clicks';
-      v.promise='Choose a clearer topic and package it around a proven viewer problem';
+      v.exactViewer='A creator struggling to earn qualified discovery'; v.viewerMoment='They are choosing the next topic to film';
+      v.surfaceProblem='Their ideas do not earn enough qualified clicks'; v.promise='Choose a clearer topic and package it around a proven viewer problem';
       v.angle='Mistake or risk'; v.format='Educational';
       v.research={...(v.research||{}),platformEvidence:'Three relevant outliers',referenceVideos:'Three saved examples',openGap:'No one explains the decision for this viewer'};
       v.packaging={...(v.packaging||{}),titles:['Title one','Title two','Title three'],thumbnailIdeas:['Clear before and after concept'],thumbnailUploads:[]};
@@ -133,17 +120,13 @@ const assert = (condition, message) => { if (!condition) fail(message); pass(mes
     assert(await guides.getAttribute('open') !== null, 'Changing a video-planner choice does not collapse the open guide.');
 
     const duplicateActions = await page.evaluate(() => {
-      const clean=value=>String(value||'').replace(/\s+/g,' ').trim().toLowerCase();
-      const duplicates=[];
+      const clean=value=>String(value||'').replace(/\s+/g,' ').trim().toLowerCase(); const duplicates=[];
       document.querySelectorAll('.content .v49-section-body,.content .v67-current,.content .v67-reference-section,.content .v57-choice-section,.content article.card').forEach((scope,index)=>{
-        const seen=new Set();
-        scope.querySelectorAll(':scope button,:scope a.button').forEach(button=>{
+        const seen=new Set(); scope.querySelectorAll(':scope button,:scope a.button').forEach(button=>{
           const data=[...button.attributes].filter(attr=>attr.name.startsWith('data-')).map(attr=>`${attr.name}=${attr.value}`).sort().join('|');
-          const signature=`${clean(button.textContent)}|${data}`;
-          if(seen.has(signature))duplicates.push({index,signature});else seen.add(signature);
+          const signature=`${clean(button.textContent)}|${data}`; if(seen.has(signature))duplicates.push({index,signature});else seen.add(signature);
         });
-      });
-      return duplicates;
+      }); return duplicates;
     });
     assert(duplicateActions.length === 0, 'Focused sections do not contain duplicate buttons with the same action.');
 
@@ -155,12 +138,7 @@ const assert = (condition, message) => { if (!condition) fail(message); pass(mes
     const youtubeCount = await page.evaluate(() => [...document.querySelectorAll('a,button')].filter(node => /youtube|youtu\.be/i.test(`${node.getAttribute('href')||''} ${node.textContent||''} ${node.getAttribute('title')||''}`)).length);
     assert(youtubeCount <= 1, 'The active creator workspace exposes no more than one YouTube channel button.');
 
-    await page.evaluate(() => {
-      const c=creator();
-      c.onboardingCompletedAt=todayIso();
-      c.videos[0].publishDate=todayIso();
-      state.currentView='overview'; save(); render();
-    });
+    await page.evaluate(() => { const c=creator(); c.onboardingCompletedAt=todayIso(); c.videos[0].publishDate=todayIso(); state.currentView='overview'; save(); render(); });
     await page.waitForTimeout(200);
     assert((await page.locator('.page-head h2').textContent()).includes('Creator Home'), 'After onboarding, Home becomes the recurring coaching screen.');
     assert(await page.locator('.v67-progress').count() === 0, 'The one-time onboarding progress disappears from recurring Creator Home.');
@@ -175,7 +153,7 @@ const assert = (condition, message) => { if (!condition) fail(message); pass(mes
     if(runtimeErrors.length)fail(`Runtime errors were captured: ${runtimeErrors.join(' | ')}`);
     pass('No runtime or console errors were captured during the end-to-end walkthrough.');
   } catch (error) {
-    report.errors.push(error.message);
+    if(!report.errors.includes(error.message))report.errors.push(error.message);
     console.error(error.stack || error);
   } finally {
     fs.mkdirSync('qa', { recursive: true });
