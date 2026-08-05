@@ -1,6 +1,6 @@
 {
   "build": "V52.1-coach-flow-v71",
-  "checkedAt": "2026-08-05T21:55:49.226Z",
+  "checkedAt": "2026-08-05T21:58:21.467Z",
   "runtimeErrors": [],
   "pages": [
     {
@@ -306,7 +306,7 @@
         "How video jobs differ",
         "Creator Strategy"
       ],
-      "textCharacters": 6511,
+      "textCharacters": 6584,
       "visibleButtons": 24,
       "visibleCards": 7,
       "visibleDetails": 6,

@@ -22,10 +22,16 @@
     "Opening planning shows only two or three useful starting choices.",
     "The open Story and opening stage stays under twenty visible controls.",
     "A visible story choice is available.",
-    "Choosing a story option keeps the stage open."
+    "Choosing a story option keeps the stage open.",
+    "Title and thumbnail explains topic versus click frame where the choice is made.",
+    "The optional video-job guide explains how research and structure differ.",
+    "Monthly Plan no longer shows repeated Continue buttons.",
+    "The full calendar is permanently visible.",
+    "Calendar content is not hidden in dropdowns.",
+    "Upcoming work and reviews appears beneath the calendar."
   ],
   "errors": [
-    "locator.innerText: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('details[data-v49-section=\"video-package\"] > .v71-package-note:visible')\n"
+    "Execution handoff no longer competes with the main calendar page."
   ],
-  "checkedAt": "2026-08-05T21:55:15.098Z"
+  "checkedAt": "2026-08-05T21:58:16.763Z"
 }

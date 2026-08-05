@@ -1,7 +1,7 @@
 # V71 Usability Audit
 
 Build: V52.1-coach-flow-v71
-Checked: 2026-08-05T21:55:49.226Z
+Checked: 2026-08-05T21:58:21.467Z
 
 ## Page inventory
 
@@ -55,7 +55,7 @@ Checked: 2026-08-05T21:55:49.226Z
 - Visible cards: 7
 - Visible disclosure sections: 6 (1 open)
 - Separate guide panels: 0
-- Visible text characters: 6511
+- Visible text characters: 6584
 - Horizontal overflow: No
 - Main headings: Jordan Lee · Video Plan | 5 Mistakes New Managers Make in Their First 30 Days | Choose the viewer flow and opening | How should the viewer move from problem to payoff? | What is the fastest honest way to confirm the click? | Turn the choices above into the actual opening, beats, proof, and ending | 1Hook + first 30 seconds | 2Main beats / sections | Problem → Attempt → Solution | 3Payoff + proof + retention plan | 4Ending bridge
 
