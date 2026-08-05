@@ -77,6 +77,11 @@ jobs:
           if ready_line not in text:
             raise SystemExit('The initial readiness wait was not found.')
           text = text.replace(ready_line, unlock, 1)
+          video_assert = "assert((await page.locator('.v67-current h3').textContent()).trim() === 'Ready to execute', 'Execution opens only after a real video plan is ready.');"
+          video_diagnostic = """const videoGateState = await page.evaluate(() => ({\n      heading:document.querySelector('.v67-current h3')?.textContent?.trim()||'',\n      readiness:typeof readiness==='function'?readiness(video()):null,\n      currentVideoId:state.currentVideoId,\n      videos:(creator().videos||[]).map(item=>({id:item.id,title:item.title,job:item.job,readiness:typeof readiness==='function'?readiness(item):null}))\n    }));\n    console.log(`VIDEO_GATE_STATE:${JSON.stringify(videoGateState)}`);\n    assert(videoGateState.heading === 'Ready to execute', 'Execution opens only after a real video plan is ready.');"""
+          if video_assert not in text:
+            raise SystemExit('The video readiness assertion was not found.')
+          text = text.replace(video_assert, video_diagnostic, 1)
           path.write_text(text)
           PY
           node tests/v68-smoke.js
