@@ -1,0 +1,17 @@
+{
+  "build": "V52.1-coach-flow-v71",
+  "passed": [
+    "The live app identifies the V71 simplified build.",
+    "Creator Home keeps the complete creator journey visible.",
+    "Creator Home shows the selected creator’s due-work badge.",
+    "Creator Home has one clear Run coaching call entry.",
+    "Creator Strategy keeps branding, funnel and cadence available.",
+    "The reminder list includes diagnosis and video reviews.",
+    "The diagnosis reminder opens the actual diagnosis-review workflow.",
+    "The all-creators page marks creators who need attention."
+  ],
+  "errors": [
+    "Foundation no longer repeats the full journey map."
+  ],
+  "checkedAt": "2026-08-05T21:35:55.255Z"
+}

@@ -1,6 +1,6 @@
 {
-  "build": "V52.1-coach-flow-v70",
-  "checkedAt": "2026-08-05T21:25:51.159Z",
+  "build": "V52.1-coach-flow-v71",
+  "checkedAt": "2026-08-05T21:35:57.852Z",
   "runtimeErrors": [],
   "pages": [
     {
@@ -93,8 +93,7 @@
       "title": "Accelerator OS V52.1 Coach Flow V68.1",
       "headings": [
         "Jordan Lee · Foundation",
-        "Foundation",
-        "One current decision, with the full path still visible"
+        "Foundation"
       ],
       "buttons": [
         "Creators",
@@ -110,25 +109,19 @@
         "Review business path",
         "Download PDF",
         "Copy for AI",
-        "Confirm Foundation and continue",
-        "View Creator Strategy",
-        "Foundation Audience, message, business path, capacity COMPLETE",
-        "Diagnosis Find the current growth constraint COMPLETE",
-        "90-day plan Turn the constraint into a learning sequence CURRENT",
-        "Monthly plan Choose cadence and Reach, Trust, Convert mix PREVIEW",
-        "Video plans Apply the strategy to specific videos COMPLETE",
-        "Execution Owners, dates, production and publishing COMPLETE",
-        "Learning Results update the next decision COMPLETE"
+        "Confirm Foundation and continue"
       ],
-      "textCharacters": 2429,
-      "visibleButtons": 22,
+      "textCharacters": 1793,
+      "visibleButtons": 14,
       "visibleCards": 0,
       "visibleDetails": 5,
       "openDetails": 1,
       "visibleGuides": 0,
       "duplicateLabels": [],
       "horizontalOverflow": false,
-      "bodyClasses": []
+      "bodyClasses": [
+        "v71-setup"
+      ]
     },
     {
       "view": "diagnosis",
@@ -219,14 +212,12 @@
         "Creator Strategy",
         "2 due",
         "•••",
-        "Continue",
         "Rebuild from diagnosis",
         "Open plan",
         "Open plan",
         "Open plan",
         "Open plan",
         "Confirm this portfolio",
-        "Continue",
         "+ Commitment",
         "Edit",
         "Edit",
@@ -248,16 +239,12 @@
         "Continue to Videos"
       ],
       "textCharacters": 976,
-      "visibleButtons": 34,
+      "visibleButtons": 32,
       "visibleCards": 0,
       "visibleDetails": 4,
       "openDetails": 0,
       "visibleGuides": 0,
       "duplicateLabels": [
-        [
-          "continue",
-          3
-        ],
         [
           "open plan",
           4
@@ -272,7 +259,9 @@
         ]
       ],
       "horizontalOverflow": false,
-      "bodyClasses": []
+      "bodyClasses": [
+        "v71-plan"
+      ]
     },
     {
       "view": "video",
@@ -280,40 +269,16 @@
       "title": "Accelerator OS V52.1 Coach Flow V68.1",
       "headings": [
         "Jordan Lee · Video Plan",
-        "Earn attention from the right new viewer.",
         "5 Mistakes New Managers Make in Their First 30 Days",
-        "Reach",
-        "Use the creator strategy here",
-        "Who is this video helping, and what must it do?",
-        "Needs research",
-        "Teaching breakdown with examples",
-        "Use the creator strategy here",
-        "Bring the right new people into the channel.",
-        "Choose the approach",
-        "Reach research",
-        "Comparison or decision + Split contrast",
-        "Use the creator strategy here",
-        "Build the click",
-        "Title options",
-        "Thumbnail",
-        "Upload up to 3 thumbnail options",
-        "Package check",
-        "Make three viewer-experience decisions",
+        "Choose the viewer flow and opening",
         "How should the viewer move from problem to payoff?",
         "What is the fastest honest way to confirm the click?",
-        "Use the recommendation unless the video clearly needs a different rhythm.",
         "Turn the choices above into the actual opening, beats, proof, and ending",
         "1Hook + first 30 seconds",
         "2Main beats / sections",
         "Problem → Attempt → Solution",
         "3Payoff + proof + retention plan",
-        "4Ending bridge",
-        "Another video or playlist",
-        "Use the creator strategy here",
-        "Connect the video to the business and the calendar",
-        "What to check and when",
-        "Edit review",
-        "5 Mistakes New Managers Make in Their First 30 Days"
+        "4Ending bridge"
       ],
       "buttons": [
         "Creators",
@@ -323,90 +288,38 @@
         "Creator Strategy",
         "2 due",
         "•••",
-        "ReachEarn discovery and the right click.",
-        "TrustBuild belief, proof, and preference.",
-        "ConvertHelp a ready viewer make one decision.",
-        "Use creator setup",
-        "Continue",
-        "Explain or teachTeach the reason and the fix",
-        "Demonstrate a processShow the work on screen",
-        "Show a real result or caseUse a real outcome as evidence",
-        "Compare options or tradeoffsHelp the viewer choose",
-        "Tell a relevant storyUse a story to create meaning",
-        "Investigate or testAnswer through an experiment",
-        "Interview or conversationBuild around guided questions",
-        "Use format",
-        "Use this",
-        "Use this",
-        "Use this",
-        "Save as focus",
-        "How-toTeach the steps to reach one specific result.",
-        "MistakesShow the common wrong moves, why they fail, and what replaces them.",
-        "ComparisonHelp the viewer choose between options using clear criteria.",
-        "Warning signsReveal signals that the problem is happening before it gets worse.",
-        "Myth-bustChallenge a common belief, then replace it with a more useful truth.",
-        "Why it is not workingDiagnose the hidden reason the viewer’s current attempt keeps failing.",
-        "Continue",
-        "Use directions",
-        "Use this",
-        "Use this",
-        "Use this",
-        "Continue",
         "Choose this",
         "Choose this",
         "Choose this",
         "See 1 more option",
         "Preview the recommended beats",
         "Build these beats in the outline",
+        "More viewer flows",
         "OPTION Bold Claim Make a specific, intriguing statement that demands proof.",
         "OPTION Question Ask something the viewer genuinely needs answered.",
         "BEST FIT Proof First Lead with the result, evidence, demonstration, or credibility.",
         "See 5 more options",
         "Use this as the hook starter",
+        "More opening moves",
         "Change pacing",
-        "Continue",
-        "Use destination",
-        "Use this",
-        "Use this",
-        "Use this",
-        "Add suggested dates to calendar",
-        "Delete video",
-        "Continue",
-        "Open video handoff",
-        "Download PDF",
-        "Copy for AI",
-        "Open execution calendar"
+        "Continue"
       ],
-      "textCharacters": 11562,
-      "visibleButtons": 60,
-      "visibleCards": 11,
-      "visibleDetails": 17,
+      "textCharacters": 6511,
+      "visibleButtons": 22,
+      "visibleCards": 7,
+      "visibleDetails": 6,
       "openDetails": 1,
-      "visibleGuides": 4,
+      "visibleGuides": 0,
       "duplicateLabels": [
-        [
-          "5 mistakes new managers make in their first 30 days",
-          2
-        ],
-        [
-          "use the creator strategy here",
-          4
-        ],
-        [
-          "continue",
-          5
-        ],
-        [
-          "use this",
-          9
-        ],
         [
           "choose this",
           3
         ]
       ],
       "horizontalOverflow": false,
-      "bodyClasses": []
+      "bodyClasses": [
+        "v71-video"
+      ]
     },
     {
       "view": "calendar",
@@ -415,10 +328,7 @@
       "headings": [
         "Jordan Lee · Calendar",
         "Calendar",
-        "Calendar",
         "Upcoming work and reviews",
-        "Execution handoff",
-        "Jordan Lee Calendar Handoff",
         "August 2026",
         "Upcoming work"
       ],
@@ -431,10 +341,6 @@
         "2 due",
         "•••",
         "+ Add calendar item",
-        "Open schedule",
-        "Download PDF",
-        "Copy for AI",
-        "Results & Learn",
         "‹",
         "›",
         "26 ＋ Publish What to Do in Your First Week as a Manager Publish What to Do in Your First Week as a Manager",
@@ -534,17 +440,13 @@
         "Blocked",
         "Show all 31"
       ],
-      "textCharacters": 3995,
-      "visibleButtons": 110,
+      "textCharacters": 3562,
+      "visibleButtons": 106,
       "visibleCards": 2,
       "visibleDetails": 0,
       "openDetails": 0,
       "visibleGuides": 0,
       "duplicateLabels": [
-        [
-          "calendar",
-          2
-        ],
         [
           "publish what to do in your first week as a manager",
           2
@@ -580,7 +482,8 @@
       ],
       "horizontalOverflow": false,
       "bodyClasses": [
-        "v70-calendar"
+        "v70-calendar",
+        "v71-calendar"
       ]
     },
     {
@@ -590,7 +493,6 @@
       "headings": [
         "Jordan Lee · Learn",
         "Review & Learn",
-        "Review a published video when the planned evidence is ready",
         "Observe, before explaining",
         "No clear weak stage",
         "Interpret the viewer journey",
@@ -632,12 +534,12 @@
         "Copy for AI",
         "Creator Home"
       ],
-      "textCharacters": 2535,
+      "textCharacters": 2069,
       "visibleButtons": 26,
       "visibleCards": 0,
       "visibleDetails": 8,
       "openDetails": 1,
-      "visibleGuides": 1,
+      "visibleGuides": 0,
       "duplicateLabels": [
         [
           "creator home",
@@ -650,7 +552,8 @@
       ],
       "horizontalOverflow": false,
       "bodyClasses": [
-        "v70-results"
+        "v70-results",
+        "v71-results"
       ]
     }
   ],
@@ -695,10 +598,8 @@
   ],
   "warnings": [
     "Diagnosis shows 25 visible controls.",
-    "Plan shows 34 visible controls.",
-    "Video planner shows 60 visible controls.",
-    "Video planner shows 4 separate guide/explanation panels.",
-    "Calendar shows 110 visible controls.",
+    "Plan shows 32 visible controls.",
+    "Calendar shows 106 visible controls.",
     "Review and Learn shows 26 visible controls."
   ]
 }
