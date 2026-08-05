@@ -1,0 +1,47 @@
+<script id="v70-calendar-layout-fix-script">
+(()=>{
+  if(window.__v70CalendarLayoutFixInstalled)return;
+  window.__v70CalendarLayoutFixInstalled=true;
+
+  function flattenCalendarLayout(){
+    if(state?.currentView!=='calendar')return;
+    const content=document.querySelector('.content');
+    const stack=content?.querySelector('.calendar-stack');
+    if(!content||!stack)return;
+
+    content.querySelectorAll(':scope > .v36-page-guide,:scope > details.page-guide').forEach(node=>node.remove());
+    stack.querySelectorAll(':scope > details').forEach(detail=>{
+      const fragment=document.createDocumentFragment();
+      [...detail.children].filter(child=>child.tagName!=='SUMMARY').forEach(child=>fragment.appendChild(child));
+      detail.replaceWith(fragment);
+    });
+
+    const upcoming=stack.querySelector(':scope > .upcoming-panel');
+    const calendar=[...stack.children].find(node=>node.matches?.('article.card')&&!node.classList.contains('upcoming-panel'));
+    if(calendar)calendar.classList.add('calendar-card');
+
+    let heading=stack.querySelector(':scope > .v70-upcoming-title');
+    if(upcoming&&!heading){
+      heading=document.createElement('div');
+      heading.className='v70-upcoming-title';
+      heading.innerHTML='<h3>Upcoming work and reviews</h3><p>Calls, commitments, publish dates and planned evidence checks appear here.</p>';
+    }
+
+    if(calendar)stack.appendChild(calendar);
+    if(heading)stack.appendChild(heading);
+    if(upcoming)stack.appendChild(upcoming);
+  }
+
+  const renderBeforeCalendarFix=render;
+  render=function(...args){
+    const result=renderBeforeCalendarFix(...args);
+    const finish=()=>{try{flattenCalendarLayout()}catch(error){console.error('V70 calendar layout enhancement failed',error)}};
+    finish();
+    setTimeout(finish,0);
+    setTimeout(finish,120);
+    return result;
+  };
+
+  flattenCalendarLayout();
+})();
+</script>
