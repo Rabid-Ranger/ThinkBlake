@@ -50,9 +50,10 @@ const assert=(v,m)=>{if(!v){report.errors.push(m);throw new Error(m)}pass(m)};
   await page.evaluate(()=>{state.currentView='video';const v=video();if(v)v.uiStep='structure';save();render()});
   await page.waitForTimeout(400);
   assert(await page.locator('.v69-rationale').count()>=1,'The video planner explains why recommendations are being shown.');
-  const rationale=(await page.locator('.v69-rationale').allInnerTexts()).join(' ');
-  const hasInputEvidence=/Video job|Format:|Angle:|Viewer problem|Proof available|Research signal|Creator capacity|Monthly business goal/.test(rationale);
-  assert(rationale.includes('Best fit')&&hasInputEvidence,'Best fit is defined and tied to visible creator and video inputs.');
+  const rationale=(await page.locator('.v69-rationale').allTextContents()).join(' ');
+  const bestFitLabels=(await page.locator('.v69-rationale code').allTextContents()).map(x=>x.trim().toLowerCase());
+  const hasInputEvidence=/video job|format:|angle(?: or topic)?:|viewer problem|proof available|research signal|creator capacity|monthly business goal/i.test(rationale);
+  assert(bestFitLabels.includes('best fit')&&hasInputEvidence,'Best fit is defined and tied to visible creator and video inputs.');
   assert(/packaging angle|story shape|video types|opening|pacing|next action/i.test(rationale),'The recommendation explanation describes what the choice controls.');
 
   await page.evaluate(()=>{state.currentView='setup';render()});
