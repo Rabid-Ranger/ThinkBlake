@@ -6,7 +6,9 @@ on:
     paths:
       - scripts/rebuild-v68.js
       - patches/v68-coach-flow.html
+      - patches/v69-context-layer.html
       - tests/v68-smoke.js
+      - tests/v69-context.js
       - .github/workflows/rebuild-v68.yml
 
 permissions:
@@ -27,7 +29,7 @@ jobs:
         with:
           node-version: 22
 
-      - name: Rebuild V68 source and wrapper
+      - name: Rebuild V68.1 source and wrapper
         run: node scripts/rebuild-v68.js
 
       - name: Validate every inline script
@@ -94,15 +96,29 @@ jobs:
           PY
           node tests/v68-smoke.js
 
+      - name: Verify creator strategy context and recommendation explanations
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('tests/v69-context.js')
+          text = path.read_text()
+          anchor = "await page.waitForTimeout(500);"
+          unlock = """await page.waitForTimeout(500);\n  await page.evaluate(()=>{\n   document.body.classList.remove('cloud-locked');\n   const gate=document.getElementById('cloud-gate');if(gate)gate.hidden=true;\n   render();\n  });\n  await page.waitForTimeout(150);"""
+          if anchor not in text:
+            raise SystemExit('The context-test readiness wait was not found.')
+          path.write_text(text.replace(anchor, unlock, 1))
+          PY
+          node tests/v69-context.js
+
       - name: Commit verified production build
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add base-source-v67.html decoded-source.html index.html qa/v68-report.json qa/v68-final-screen.png
+          git add base-source-v67.html decoded-source.html index.html qa/v68-report.json qa/v68-final-screen.png qa/v69-context-report.json qa/v69-context-screen.png
           if git diff --cached --quiet; then
             echo "Verified build is already current."
           else
-            git commit -m "Publish verified V68 coach lifecycle"
+            git commit -m "Publish verified V68.1 creator context flow"
             git push
           fi
