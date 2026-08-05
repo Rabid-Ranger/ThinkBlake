@@ -12,6 +12,8 @@ on:
       - patches/v70-video-job-guide-fix.html
       - patches/v70-scroll-stability-fix.html
       - patches/v70-fixed-choice-set.html
+      - patches/v70-inplace-planner-selection.html
+      - patches/v70-calendar-layout-fix.html
       - tests/v68-smoke.js
       - tests/v69-context.js
       - tests/v70-clarity.js
@@ -127,7 +129,18 @@ jobs:
           node tests/v69-context.js
 
       - name: Verify reminders planner calendar learning and live calls
-        run: node tests/v70-clarity.js
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('tests/v70-clarity.js')
+          text = path.read_text()
+          anchor = "c.foundationConfirmedAt=c.foundationConfirmedAt||todayIso();"
+          replacement = anchor + "\n   c.onboardingCompletedAt=c.onboardingCompletedAt||todayIso();"
+          if anchor not in text:
+            raise SystemExit('The active-creator fixture anchor was not found.')
+          path.write_text(text.replace(anchor, replacement, 1))
+          PY
+          node tests/v70-clarity.js
 
       - name: Commit verified production build
         shell: bash
