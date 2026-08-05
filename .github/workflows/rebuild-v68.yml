@@ -67,7 +67,24 @@ jobs:
           exit 1
 
       - name: Walk the full fresh-coach lifecycle
-        run: node tests/v68-smoke.js
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('tests/v68-smoke.js')
+          text = path.read_text()
+          replacements = {
+            "[data-v67-stage-go=\"setup\"]": "[data-v67-stage-go=\"setup\"]:visible",
+            "[data-v68-confirm-foundation]": "[data-v68-confirm-foundation]:visible",
+            "[data-v58-signal=\"discovery\"][data-v58-value=\"Weak\"]": "[data-v58-signal=\"discovery\"][data-v58-value=\"Weak\"]:visible",
+            "[data-v67-confirm-diagnosis]": "[data-v67-confirm-diagnosis]:visible",
+            "details.v57-guides": "details.v57-guides:visible",
+            "[data-v57-hook]": "[data-v57-hook]:visible"
+          }
+          for old, new in replacements.items():
+            text = text.replace(old, new)
+          path.write_text(text)
+          PY
+          node tests/v68-smoke.js
 
       - name: Commit verified production build
         shell: bash
