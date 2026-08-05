@@ -1,0 +1,29 @@
+{
+  "build": "V52.1-reference-ui-v73",
+  "checkedAt": "2026-08-05T23:07:52.277Z",
+  "passed": [
+    "The app identifies the V73 reference-led build.",
+    "The video page begins with one short flow instruction.",
+    "The planner has four clear phase tabs.",
+    "Plan is the default active phase.",
+    "Plan shows only viewer, research and packaging work.",
+    "Only three working sections are visible in Plan.",
+    "Each visible Plan section has a View Guide action.",
+    "View Guide opens a separate right-side guide drawer.",
+    "The packaging guide explains topic versus click frame.",
+    "The guide drawer closes without changing the working page.",
+    "Script becomes the active phase.",
+    "Script shows the Story and opening workspace.",
+    "Script hides unrelated planning sections.",
+    "The first section in a selected phase opens automatically.",
+    "Choosing a story option keeps the section open.",
+    "Produce and Publish shows only publishing and handoff work.",
+    "Review hides planning form sections.",
+    "Review shows a focused 24-hour, 7-day and 28-day panel.",
+    "Review shows the three meaningful review windows.",
+    "The review guide ends with one future-decision prompt.",
+    "The reference blue is the primary action color.",
+    "No runtime errors occur. "
+  ],
+  "errors": []
+}
