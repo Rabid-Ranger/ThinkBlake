@@ -4,9 +4,9 @@
   window.__v70FixedChoiceSetInstalled=true;
 
   const visibleSets=new Map();
-  const pendingClicked=new Map();
+  let applying=false;
+  let scheduled=false;
 
-  const isAvailable=item=>item&&!item.classList.contains('v70-choice-hidden');
   const currentVideoId=()=>String(state?.currentVideoId||'');
   const keyFor=kind=>`${currentVideoId()}:${kind}`;
 
@@ -14,60 +14,81 @@
     return item?.querySelector(`[${attribute}]`)?.getAttribute(attribute)||'';
   }
 
-  function startingValues(items,attribute,key){
-    let values=items.filter(isAvailable).map(item=>optionValue(item,attribute)).filter(Boolean).slice(0,3);
-    if(!values.length)values=items.map(item=>optionValue(item,attribute)).filter(Boolean).slice(0,3);
-    const clicked=pendingClicked.get(key);
-    if(clicked&&!values.includes(clicked))values=[...values.slice(0,2),clicked];
+  function uniqueValues(items,attribute){
+    const values=[];
+    items.forEach(item=>{
+      const value=optionValue(item,attribute);
+      if(value&&!values.includes(value))values.push(value);
+    });
     return values;
   }
 
+  function startingValues(items,attribute){
+    const selected=items.filter(item=>item.classList.contains('selected'));
+    const recommended=items.filter(item=>item.classList.contains('recommended'));
+    const currentlyShown=items.filter(item=>!item.classList.contains('v70-choice-hidden'));
+    return uniqueValues([...selected,...recommended,...currentlyShown,...items],attribute).slice(0,3);
+  }
+
+  function includeClicked(kind,value){
+    if(!value)return;
+    const key=keyFor(kind),values=visibleSets.get(key);
+    if(!values?.length){visibleSets.set(key,[value]);return}
+    if(values.includes(value))return;
+    visibleSets.set(key,[...values.slice(0,2),value]);
+  }
+
   function freezeContainer(container,itemSelector,attribute,kind){
-    if(!container||container.classList.contains('v70-show-all'))return;
+    if(!container)return;
     const items=[...container.querySelectorAll(`:scope > ${itemSelector}`)];
     if(!items.length)return;
+
+    if(container.classList.contains('v70-show-all')){
+      items.forEach(item=>item.style.removeProperty('display'));
+      return;
+    }
+
     const key=keyFor(kind);
     let values=visibleSets.get(key);
     if(!values?.length){
-      values=startingValues(items,attribute,key);
+      values=startingValues(items,attribute);
       visibleSets.set(key,values);
     }
+    if(values.length<3){
+      const additions=uniqueValues(items,attribute).filter(value=>!values.includes(value));
+      values=[...values,...additions].slice(0,3);
+      visibleSets.set(key,values);
+    }
+
     items.forEach(item=>{
-      const value=optionValue(item,attribute);
-      item.classList.toggle('v70-choice-hidden',!values.includes(value));
+      const show=values.includes(optionValue(item,attribute));
+      item.classList.toggle('v70-choice-hidden',!show);
+      item.style.setProperty('display',show?'flex':'none','important');
     });
   }
 
   function applyFixedSets(){
-    if(state?.currentView!=='video'||!currentVideoId())return;
+    if(applying||state?.currentView!=='video'||!currentVideoId())return;
     const flow=document.querySelector('.v57-planner-flow');
     if(!flow)return;
-    freezeContainer(flow.querySelector('.v57-structure-grid'),'.v57-choice-card','data-v57-structure','structure');
-    freezeContainer(flow.querySelector('.v57-hook-grid'),'.v57-hook-choice','data-v57-hook','hook');
+    applying=true;
+    try{
+      freezeContainer(flow.querySelector('.v57-structure-grid'),'.v57-choice-card','data-v57-structure','structure');
+      freezeContainer(flow.querySelector('.v57-hook-grid'),'.v57-hook-choice','data-v57-hook','hook');
+    }finally{applying=false}
+  }
+
+  function scheduleApply(){
+    if(scheduled)return;
+    scheduled=true;
+    requestAnimationFrame(()=>{scheduled=false;applyFixedSets()});
   }
 
   function rememberClicked(event){
     const structure=event.target.closest?.('[data-v57-structure]');
-    if(structure){
-      const key=keyFor('structure'),value=structure.getAttribute('data-v57-structure');
-      pendingClicked.set(key,value);
-      const container=structure.closest('.v57-structure-grid');
-      if(container&&!visibleSets.has(key)){
-        const items=[...container.querySelectorAll(':scope > .v57-choice-card')];
-        visibleSets.set(key,startingValues(items,'data-v57-structure',key));
-      }
-      return;
-    }
+    if(structure){includeClicked('structure',structure.getAttribute('data-v57-structure'));return}
     const hook=event.target.closest?.('[data-v57-hook]');
-    if(hook){
-      const key=keyFor('hook'),value=hook.getAttribute('data-v57-hook');
-      pendingClicked.set(key,value);
-      const container=hook.closest('.v57-hook-grid');
-      if(container&&!visibleSets.has(key)){
-        const items=[...container.querySelectorAll(':scope > .v57-hook-choice')];
-        visibleSets.set(key,startingValues(items,'data-v57-hook',key));
-      }
-    }
+    if(hook)includeClicked('hook',hook.getAttribute('data-v57-hook'));
   }
 
   document.addEventListener('pointerdown',rememberClicked,true);
@@ -76,10 +97,13 @@
     if(event.key==='Enter'||event.key===' ')rememberClicked(event);
   },true);
 
+  const observer=new MutationObserver(()=>scheduleApply());
+  observer.observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});
+
   const renderBeforeFixedSets=render;
   render=function(...args){
     const result=renderBeforeFixedSets(...args);
-    [0,35,100,220,420,700].forEach(delay=>setTimeout(()=>{
+    [0,35,100,220,420,700,1100].forEach(delay=>setTimeout(()=>{
       try{applyFixedSets()}catch(error){console.error('V70 fixed choice-set enhancement failed',error)}
     },delay));
     return result;
