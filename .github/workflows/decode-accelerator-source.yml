@@ -1,0 +1,47 @@
+name: Decode Accelerator Source
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/decode-accelerator-source.yml
+
+permissions:
+  contents: write
+
+jobs:
+  decode:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Decode production wrapper
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const zlib = require('zlib');
+          const wrapper = fs.readFileSync('index.html', 'utf8');
+          const match = wrapper.match(/atob\('([^']+)'\)/s);
+          if (!match) throw new Error('Compressed Accelerator payload was not found.');
+          const decoded = zlib.gunzipSync(Buffer.from(match[1], 'base64')).toString('utf8');
+          fs.writeFileSync('decoded-source.html', decoded);
+          console.log(`Decoded ${decoded.length} characters.`);
+          NODE
+
+      - name: Commit decoded source
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add decoded-source.html
+          if git diff --cached --quiet; then
+            echo "Decoded source is already current."
+          else
+            git commit -m "Expose decoded Accelerator source for verification"
+            git push
+          fi
