@@ -18,7 +18,6 @@ const assert = (condition, message) => { if (!condition) fail(message); pass(mes
     await page.goto('http://127.0.0.1:4173/decoded-source.html', { waitUntil: 'domcontentloaded', timeout: 60000 });
     await page.waitForFunction(() => typeof render === 'function' && typeof state !== 'undefined' && typeof blankCreator === 'function', null, { timeout: 60000 });
     await page.waitForTimeout(500);
-    await page.evaluate(() => { window.__v68SampleCreator = structuredClone(state.creators[0]); });
     const build = await page.evaluate(() => window.__acceleratorBuild);
     assert(build === 'V52.1-coach-flow-v68', 'The decoded app identifies itself as the V68 coach-flow build.');
 
@@ -42,9 +41,11 @@ const assert = (condition, message) => { if (!condition) fail(message); pass(mes
     assert(await page.locator('[data-v67-foundation="channel"]').getAttribute('open') !== null, 'Changing a Foundation field does not collapse the section being worked on.');
 
     await page.evaluate(() => {
-      const c = structuredClone(window.__v68SampleCreator);
-      c.id = 'v68-gate-test'; c.name = 'Lifecycle Gate Test'; c.foundationConfirmedAt = '';
-      c.diagnostic = { signals: { discovery:'Unknown',click:'Unknown',trust:'Unknown',action:'Unknown',consistency:'Unknown',clarity:'Unknown' } };
+      const c = structuredClone(seedData().creators[0]);
+      c.id = 'v68-gate-test'; c.name = 'Lifecycle Gate Test';
+      c.foundationConfirmedAt = ''; c.foundationReviewedAt = ''; c.onboardingCompletedAt = '';
+      c.capacity = {videosPerMonth:4,hoursPerWeek:'8 focused hours',team:'Creator and editor',editing:'Dedicated editor',callCadence:'Every two weeks'};
+      c.diagnostic = { signals: { discovery:'Unknown',click:'Unknown',trust:'Unknown',action:'Unknown',consistency:'Unknown',clarity:'Unknown' }, updatedAt:'' };
       c.diagnosticReviewedAt = ''; c.bottleneck = ''; c.priority = ''; c.diagnosticWhy = '';
       c.roadmap = {}; c.ninetyDayRoadmap = {}; c.cycleOutcome = '';
       c.videos = []; c.sessions = []; c.monthHistory = []; c.assignments = []; c.events = [];
@@ -53,6 +54,13 @@ const assert = (condition, message) => { if (!condition) fail(message); pass(mes
       save(); render();
     });
     await page.waitForTimeout(180);
+    const foundationState = await page.evaluate(() => ({
+      states:[...document.querySelectorAll('[data-v67-foundation]')].map(node=>({id:node.dataset.v67Foundation,open:node.open,state:node.querySelector('.v67-foundation-state')?.textContent?.trim()})),
+      count:document.querySelectorAll('[data-v68-confirm-foundation]').length,
+      visible:[...document.querySelectorAll('[data-v68-confirm-foundation]')].filter(node=>{const rect=node.getBoundingClientRect(),style=getComputedStyle(node);return rect.width>0&&rect.height>0&&style.display!=='none'&&style.visibility!=='hidden';}).length,
+      creator:{foundationConfirmedAt:creator().foundationConfirmedAt,audienceStatus:audienceStatus(creator()),messageStatus:messageStatus(creator()),businessStatus:businessStatus(creator()),capacity:creator().capacity}
+    }));
+    console.log(`FOUNDATION_GATE_STATE:${JSON.stringify(foundationState)}`);
     const confirmation = page.locator('[data-v68-confirm-foundation]');
     assert(await confirmation.count() === 1, 'A completed Foundation waits for one explicit confirmation before diagnosis opens.');
     await confirmation.click();
