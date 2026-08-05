@@ -1,0 +1,57 @@
+name: Audit Accelerator usability
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - tests/v71-usability-audit.js
+      - .github/workflows/audit-v71-usability.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: audit-accelerator-usability
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Rebuild the current production source
+        run: node scripts/rebuild-v68.js
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Start dashboard
+        run: |
+          python3 -m http.server 4173 >/tmp/v71-audit-server.log 2>&1 &
+          for attempt in {1..20}; do
+            curl -fsS http://127.0.0.1:4173/decoded-source.html >/dev/null && exit 0
+            sleep 1
+          done
+          cat /tmp/v71-audit-server.log
+          exit 1
+      - name: Run page-by-page audit
+        continue-on-error: true
+        run: node tests/v71-usability-audit.js
+      - name: Commit audit evidence
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add qa/v71-usability-audit.json qa/v71-usability-audit.md qa/v71-*.png
+          if git diff --cached --quiet; then
+            echo "Audit evidence is unchanged."
+          else
+            git commit -m "Record V71 page-by-page usability audit"
+            git push
+          fi
