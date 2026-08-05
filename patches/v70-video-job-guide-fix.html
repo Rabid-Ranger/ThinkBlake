@@ -1,0 +1,26 @@
+<script id="v70-video-job-guide-fix-script">
+(()=>{
+  if(window.__v70VideoJobGuideFixInstalled)return;
+  window.__v70VideoJobGuideFixInstalled=true;
+  const text70=value=>String(value??'').replace(/\s+/g,' ').trim();
+  const esc70=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  const activeVideo70=()=>{try{return typeof video==='function'?video():null}catch{return null}};
+  const jobName70=value=>{const job=text70(value).toLowerCase();return job.includes('trust')?'Trust':job.includes('convert')?'Convert':'Reach'};
+  const jobs70={
+    Reach:{purpose:'Earn attention from the right new viewer.',research:'Look for repeated demand: outliers, searches, comments, problems and packaging patterns.',flow:'Recognize the problem fast, confirm the promise, then deliver an early useful payoff.',cta:'Usually continue to the next relevant video or useful resource.'},
+    Trust:{purpose:'Change a belief and build preference for this creator or method.',research:'Study doubts, misconceptions, objections, stories, proof and what the viewer needs to believe.',flow:'Name the belief gap, show proof or story, explain the method, then apply it to the viewer.',cta:'Deepen the relationship with relevant content or a resource when it naturally follows.'},
+    Convert:{purpose:'Help a ready viewer make a clear decision or take the next step.',research:'Study buyer questions, objections, fit, alternatives, risk, cost of inaction and proof.',flow:'Frame the decision, give criteria and proof, answer objections, clarify fit, then present one action.',cta:'Use one clear next step tied to the saved offer or funnel.'}
+  };
+  function guide70(v){const name=jobName70(v?.job),d=jobs70[name];return `<section class="v70-job-guide v70-current-job"><div class="v70-job-mark">${name}</div><div><header><span>What this video job changes</span><h3>${esc70(d.purpose)}</h3></header><p><b>Research:</b> ${esc70(d.research)}</p><p><b>Viewer flow:</b> ${esc70(d.flow)}</p><p><b>Next action:</b> ${esc70(d.cta)}</p><div class="v70-job-note"><b>Job is not format.</b> A how-to, comparison, case study or story can serve any job. The job describes what this video must accomplish for this viewer.</div></div></section>`}
+  function attach70(){
+    if(state?.currentView!=='video')return;
+    const content=document.querySelector('.content'),v=activeVideo70();if(!content||!v||content.querySelector('.v70-current-job'))return;
+    const planner=content.querySelector('#planner-panel,.v49-accordion-stack,[data-v49-section="video-purpose"],.video-planner,.v57-planner-flow');
+    if(planner)planner.insertAdjacentHTML('beforebegin',guide70(v));
+    else content.insertAdjacentHTML('afterbegin',guide70(v));
+  }
+  const renderBeforeJobGuide70=render;
+  render=function(...args){const result=renderBeforeJobGuide70(...args);const finish=()=>{try{attach70()}catch(error){console.error('V70 video job guide enhancement failed',error)}};finish();setTimeout(finish,0);setTimeout(finish,120);return result};
+  attach70();
+})();
+</script>
