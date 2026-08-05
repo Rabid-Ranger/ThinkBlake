@@ -55,17 +55,33 @@ jobs:
           cat /tmp/v71-server.log
           exit 1
       - name: Verify the complete simplified workflow
+        id: verify
+        continue-on-error: true
         run: node tests/v71-simplification.js
       - name: Re-run the page-by-page usability audit
         continue-on-error: true
         run: node tests/v71-usability-audit.js
-      - name: Commit only the verified production build
+      - name: Save verification evidence
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add decoded-source.html index.html qa/v71-simplification-report.json qa/v71-simplification-screen.png qa/v71-usability-audit.json qa/v71-usability-audit.md qa/v71-*.png
+          git add qa/v71-simplification-report.json qa/v71-simplification-screen.png qa/v71-usability-audit.json qa/v71-usability-audit.md qa/v71-*.png
+          if ! git diff --cached --quiet; then
+            git commit -m "Record V71 simplification verification evidence"
+            git push
+          fi
+      - name: Block unverified production
+        if: steps.verify.outcome != 'success'
+        run: exit 1
+      - name: Publish verified production files
+        if: steps.verify.outcome == 'success'
+        run: |
+          git pull --rebase
+          node scripts/rebuild-v68.js
+          git add decoded-source.html index.html
           if git diff --cached --quiet; then
-            echo "Verified V71 build is already current."
+            echo "Verified V71 production files are already current."
           else
             git commit -m "Publish verified simplified V71 coaching workflow"
             git push
