@@ -7,6 +7,10 @@
   const plannerControlSelector='[data-v57-structure],[data-v57-hook],[data-v57-pace],[data-v70-expand],[data-v70-toggle-beats]';
   const anchorAttributes=['data-v57-structure','data-v57-hook','data-v57-pace','data-v70-expand','data-v70-toggle-beats'];
 
+  function activePlanner(){
+    return document.querySelector('[data-v49-section="video-experience"] .v57-planner-flow')||document.querySelector('.content .v57-planner-flow');
+  }
+
   function controlIdentity(control){
     if(!control)return null;
     const attribute=anchorAttributes.find(name=>control.hasAttribute(name));
@@ -15,7 +19,13 @@
 
   function findControl(identity){
     if(!identity)return null;
-    return [...document.querySelectorAll(`[${identity.attribute}]`)].find(node=>node.getAttribute(identity.attribute)===identity.value)||null;
+    const scope=activePlanner();
+    if(!scope)return null;
+    const candidates=[...scope.querySelectorAll(`[${identity.attribute}]`)].filter(node=>node.getAttribute(identity.attribute)===identity.value);
+    return candidates.find(node=>{
+      const rect=node.getBoundingClientRect(),style=getComputedStyle(node);
+      return rect.width>0&&rect.height>0&&style.display!=='none'&&style.visibility!=='hidden';
+    })||candidates[0]||null;
   }
 
   function visualAnchor(control){
@@ -60,7 +70,7 @@
 
   function rememberPlannerPosition(event){
     const control=event.target.closest?.(plannerControlSelector);
-    if(!control)return;
+    if(!control||!activePlanner()?.contains(control))return;
     pendingPlannerSnapshot=capturePlannerPosition(control);
   }
 
@@ -69,7 +79,7 @@
   document.addEventListener('keydown',event=>{
     if(event.key!=='Enter'&&event.key!==' ')return;
     const control=event.target.closest?.(plannerControlSelector);
-    if(control)pendingPlannerSnapshot=capturePlannerPosition(control);
+    if(control&&activePlanner()?.contains(control))pendingPlannerSnapshot=capturePlannerPosition(control);
   },true);
 
   const renderBeforeScrollFix=render;
@@ -77,7 +87,7 @@
     const snapshot=pendingPlannerSnapshot||capturePlannerPosition();
     pendingPlannerSnapshot=null;
     const result=renderBeforeScrollFix(...args);
-    [0,45,110,220,360,520,760].forEach(delay=>setTimeout(()=>{
+    [0,45,110,220,360,520,760,980,1250].forEach(delay=>setTimeout(()=>{
       try{stabilizePlannerPosition(snapshot)}catch(error){console.error('V70 planner scroll stabilization failed',error)}
     },delay));
     return result;
