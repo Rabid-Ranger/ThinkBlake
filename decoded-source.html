@@ -8,8 +8,8 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
 <meta content="#0b1014" name="theme-color"/>
-<meta content="Accelerator OS V52.1 V70: guided coaching workflow with visible reminders and simplified video decisions." name="description"/>
-<title>Accelerator OS V52.1 Coaching Clarity V70</title>
+<meta content="Accelerator OS V52.1 V71: a simplified coaching workflow with creator reminders, focused video planning and clear reviews." name="description"/>
+<title>Accelerator OS V52.1 Simplified Coaching V71</title>
 <style>:root {
   color-scheme: dark;
   --bg: #0b1014;
@@ -13988,6 +13988,134 @@ body.v70-calendar .v70-calendar-handoff .v49-handoff{margin:0}
   };
 
   attachCallEntry70();
+})();
+</script>
+<style id="v71-simplification-reset-styles">/* V71 simplified coaching layout */
+body.v71-video .v70-job-guide,
+body.v71-video .v70-planner-guide,
+body.v71-video .v70-click-frame-note,
+body.v71-video .v69-rationale,
+body.v71-video .v57-guides,
+body.v71-video .v303-retention-audit,
+body.v71-video .v68-gate-note{display:none!important}
+body.v71-video details[data-v49-section]:not([open])>:not(summary){display:none!important}
+body.v71-video details[data-v49-section]{margin-bottom:9px!important;overflow:hidden!important}
+body.v71-video details[data-v49-section]>summary{display:grid!important;grid-template-columns:30px minmax(0,1fr) auto;gap:10px;align-items:center;padding:12px 13px!important;min-height:58px;list-style:none;cursor:pointer}
+body.v71-video details[data-v49-section]>summary::-webkit-details-marker{display:none}
+.v71-step-number{width:28px;height:28px;border:1px solid #36515d;border-radius:9px;display:grid;place-items:center;color:#81d4ef;background:#10222a;font-size:10px;font-weight:950}
+.v71-step-copy b{display:block;color:#e3edf1;font-size:11px}.v71-step-copy small{display:block;margin-top:3px;color:#839aa4;font-size:8px;line-height:1.35}.v71-step-state{border-radius:999px;padding:4px 7px;background:#1a2c34;color:#91a8b1;font-size:7px;font-style:normal;font-weight:900;text-transform:uppercase}
+details[data-v49-section][open] .v71-step-state{background:#173744;color:#91ddf5}
+.v71-video-focus{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(220px,.7fr);gap:12px;align-items:center;margin:0 0 12px;padding:12px 13px;border:1px solid #355461;border-radius:12px;background:#101e24}
+.v71-video-focus span{display:block;color:#79cde9;font-size:7px;font-weight:950;text-transform:uppercase;letter-spacing:.08em}.v71-video-focus strong{display:block;margin-top:4px;color:#e1edf1;font-size:11px}.v71-video-focus p{margin:4px 0 0;color:#8da3ac;font-size:8px;line-height:1.45}.v71-video-focus-actions{display:flex;justify-content:flex-end;gap:7px;flex-wrap:wrap}
+.v71-compact-button,.v71-more{border:1px solid #405c68;background:#14262e;color:#acd0dc;border-radius:8px;padding:7px 9px;font-size:8px;font-weight:850;cursor:pointer}
+.v71-package-note{margin:10px 12px;padding:10px 11px;border-left:3px solid #72cde9;background:#101e24;border-radius:0 9px 9px 0;color:#94aab3;font-size:8.5px;line-height:1.5}.v71-package-note b{color:#dce9ee}
+.v71-choice-extra{display:none!important}.v71-choice-group.v71-show-extra .v71-choice-extra{display:flex!important}.v57-structure-grid.v71-show-extra .v71-choice-extra{display:block!important}
+.v71-more{margin-top:8px}.v71-pacing-row{display:flex;justify-content:space-between;gap:12px;align-items:center;border:1px solid #304b56;background:#111f26;border-radius:10px;padding:10px 11px;margin-top:9px}.v71-pacing-row span{display:block;color:#6f8994;font-size:7px;font-weight:900;text-transform:uppercase}.v71-pacing-row strong{display:block;margin-top:3px;color:#dce8ec;font-size:9px}.v71-pacing-row p{margin:3px 0 0;color:#849aa3;font-size:7.5px}
+.v71-reference-hidden,.v71-calendar-hidden{display:none!important}body.v71-setup .v69-map{display:none!important}
+.v71-learn-intro{margin:-7px 0 14px;color:#91a6af;font-size:10px;line-height:1.5;max-width:760px}.v71-learn-intro b{color:#dfecef}
+.v71-help-overlay{position:fixed;inset:0;z-index:100200;display:none;align-items:flex-start;justify-content:center;padding:8vh 18px;background:rgba(3,8,11,.8);backdrop-filter:blur(5px);overflow:auto}.v71-help-overlay.open{display:flex}.v71-help{width:min(780px,100%);border:1px solid #45636f;border-radius:15px;background:#0c171c;overflow:hidden}.v71-help-head{display:flex;justify-content:space-between;gap:14px;padding:15px 17px;border-bottom:1px solid #304a55;background:#102129}.v71-help-head span{display:block;color:#7fd1ec;font-size:8px;font-weight:950;text-transform:uppercase}.v71-help-head h2{margin:4px 0 0;font-size:17px}.v71-help-head p{margin:5px 0 0;color:#8fa4ad;font-size:9px}.v71-help-body{padding:14px}.v71-job-list{display:grid;gap:9px}.v71-job-row{display:grid;grid-template-columns:80px 1fr 1fr;gap:10px;border:1px solid #304a55;background:#111f26;border-radius:11px;padding:11px}.v71-job-row b{font-size:10px}.v71-job-row span{color:#8198a2;font-size:8px;line-height:1.45}.v71-job-row span strong{display:block;color:#aac0c8;font-size:7px;text-transform:uppercase;margin-bottom:3px}.v71-help-close{border:1px solid #48636f;background:#15262e;color:#cce0e7;border-radius:8px;padding:7px 9px;cursor:pointer}
+@media(max-width:800px){.v71-video-focus{grid-template-columns:1fr}.v71-video-focus-actions{justify-content:flex-start}.v71-job-row{grid-template-columns:1fr}.v71-pacing-row{display:block}.v71-pacing-row button{margin-top:8px}}</style>
+<script id="v71-simplification-reset-script">(()=>{
+if(window.__v71SimplificationInstalled)return;
+window.__v71SimplificationInstalled=true;
+window.__acceleratorBuild='V52.1-coach-flow-v71';
+const text=v=>String(v??'').replace(/\s+/g,' ').trim();
+const has=v=>text(v).length>0;
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const currentCreator=()=>{try{return creator()}catch{return null}};
+const currentVideo=()=>{try{return video()}catch{return null}};
+const first=(...values)=>values.find(has)||'';
+const jobs={
+ Reach:{purpose:'Bring the right new viewers into the channel.',research:'Demand, repeated problems, outliers, search language and proven click patterns.'},
+ Trust:{purpose:'Change a belief and build preference for this creator or method.',research:'Doubts, misconceptions, objections, proof, stories and credibility gaps.'},
+ Convert:{purpose:'Help a ready viewer make one decision or take the next step.',research:'Buyer questions, fit, alternatives, risk, objections and decision criteria.'}
+};
+const steps={
+ 'video-purpose':['1','Viewer and goal','Who this is for and what the video must accomplish.'],
+ 'video-strategy':['2','Research and approach','Choose evidence, format and the video job.'],
+ 'video-package':['3','Title and thumbnail','Define the topic and the honest click frame.'],
+ 'video-experience':['4','Story and opening','Choose the viewer flow and opening move.'],
+ 'video-publish':['5','CTA and publishing','Connect the video to the funnel and review dates.'],
+ 'video-handoff':['6','Handoff','Review the plan and send it forward.']
+};
+function classes(){document.body.classList.remove('v71-video','v71-setup','v71-calendar','v71-results','v71-plan');const view=state?.currentView;if(view==='video')document.body.classList.add('v71-video');if(view==='setup')document.body.classList.add('v71-setup');if(view==='calendar')document.body.classList.add('v71-calendar');if(view==='results')document.body.classList.add('v71-results');if(view==='plan')document.body.classList.add('v71-plan')}
+function help(){if(document.querySelector('#v71-help-overlay'))return;document.body.insertAdjacentHTML('beforeend',`<div class="v71-help-overlay" id="v71-help-overlay"><div class="v71-help"><div class="v71-help-head"><div><span>Reference, only when needed</span><h2>Reach, Trust and Convert</h2><p>These are video jobs, not formats.</p></div><button class="v71-help-close" data-v71-close-help>Close</button></div><div class="v71-help-body"><div class="v71-job-list"><div class="v71-job-row"><b>Reach</b><span><strong>Research</strong>Demand, repeated problems, outliers, searches and click patterns.</span><span><strong>Structure</strong>Fast relevance and an early useful payoff.</span></div><div class="v71-job-row"><b>Trust</b><span><strong>Research</strong>Doubts, objections, misconceptions, proof and stories.</span><span><strong>Structure</strong>Old belief, evidence, new belief and application.</span></div><div class="v71-job-row"><b>Convert</b><span><strong>Research</strong>Fit, buyer questions, risk, alternatives and criteria.</span><span><strong>Structure</strong>Fit, tradeoffs, proof and one clear next step.</span></div></div><p style="color:#859ba4;font-size:8px;line-height:1.5"><b style="color:#d7e5e9">A how-to, comparison, case study or story can serve any job.</b> Choose the job from the monthly strategy, then choose the format that best carries the evidence.</p></div></div></div>`)}
+function cleanSections(){const all=[...document.querySelectorAll('.content details[data-v49-section]')];all.forEach(d=>{const meta=steps[d.dataset.v49Section],s=d.querySelector(':scope>summary');if(!meta||!s||s.dataset.v71Clean)return;s.dataset.v71Clean='1';s.innerHTML=`<span class="v71-step-number">${meta[0]}</span><span class="v71-step-copy"><b>${meta[1]}</b><small>${meta[2]}</small></span><em class="v71-step-state">${d.classList.contains('complete')?'Complete':'Continue'}</em>`});const open=all.filter(d=>d.open);if(open.length>1)open.slice(0,-1).forEach(d=>d.open=false)}
+function focus(){if(document.querySelector('.v71-video-focus'))return;const v=currentVideo();if(!v)return;const job=first(v.job,'Reach'),info=jobs[job]||jobs.Reach,topic=first(v.surfaceProblem,v.promise,v.title,v.packaging?.selectedTitle,'Not chosen yet'),click=first(v.packaging?.clickFrame,v.packaging?.mechanism,v.angle,'Not chosen yet'),head=document.querySelector('.content .page-head');if(!head)return;head.insertAdjacentHTML('afterend',`<section class="v71-video-focus"><div><span>${esc(job)} video</span><strong>${esc(info.purpose)}</strong><p><b>Research:</b> ${esc(info.research)}</p><p><b>Topic:</b> ${esc(topic)} &nbsp; <b>Click frame:</b> ${esc(click)}</p></div><div class="v71-video-focus-actions"><button class="v71-compact-button" data-v71-jobs>How video jobs differ</button><button class="v71-compact-button" data-v69-open-strategy>Creator Strategy</button></div></section>`)}
+function packageNote(){const d=document.querySelector('details[data-v49-section="video-package"]');if(!d||d.querySelector(':scope>.v71-package-note'))return;d.querySelector(':scope>summary')?.insertAdjacentHTML('afterend','<div class="v71-package-note"><b>Topic</b> is what the video is about. <b>Click frame</b> is the honest reason the right viewer clicks now, such as a mistake, proof, comparison, warning or useful reframe. It guides the title and thumbnail. It does not choose the story or pacing.</div>')}
+function replaceWords(){const root=document.querySelector('.content');if(!root)return;const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);nodes.forEach(n=>{if(n.parentElement?.closest('script,style'))return;const changed=n.nodeValue.replace(/packaging angle/gi,'click frame').replace(/choose the approach/gi,'Choose the click frame').replace(/Make three viewer-experience decisions/gi,'Choose the viewer flow and opening');if(changed!==n.nodeValue)n.nodeValue=changed})}
+function groupChoices(host,items,label){if(!host||items.length<=3)return;host.classList.add('v71-choice-group');items.forEach((item,i)=>{item.classList.toggle('v71-choice-extra',i>=3);if(i<3){item.classList.remove('v70-choice-hidden');item.style.removeProperty('display')}});if(!host.querySelector(':scope>.v71-more'))host.insertAdjacentHTML('beforeend',`<button class="v71-more" data-v71-more>${label}</button>`)}
+function choices(){const exp=document.querySelector('details[data-v49-section="video-experience"]');if(exp){const groups=[...exp.querySelectorAll('.v57-choice-section')],story=groups[0],hook=groups[1],pace=groups[2];if(story)groupChoices(story,[...story.querySelectorAll('.v57-choice-card')],'More viewer flows');if(hook)groupChoices(hook,[...hook.querySelectorAll('.v57-hook-choice')],'More opening moves');if(pace&&!pace.dataset.v71Pace){pace.dataset.v71Pace='1';pace.classList.add('v71-reference-hidden');const value=first(currentVideo()?.structure?.pacing,currentVideo()?.structure?.pace,'Balanced');pace.insertAdjacentHTML('beforebegin',`<div class="v71-pacing-row"><div><span>Pacing</span><strong>${esc(value)}</strong><p>Keep the recommended rhythm unless this video clearly needs a different one.</p></div><button class="v71-compact-button" data-v71-change-pacing>Change pacing</button></div>`)}}
+ const strategy=document.querySelector('details[data-v49-section="video-strategy"]');if(strategy){const a=[...strategy.querySelectorAll('button')].filter(b=>/^(Explain or teach|Demonstrate a process|Show a real result or case|Compare options or tradeoffs|Tell a relevant story|Investigate or test|Interview or conversation)/i.test(text(b.textContent)));if(a[0])groupChoices(a[0].parentElement,a,'More formats');const b=[...strategy.querySelectorAll('button')].filter(x=>/^(How-to|Mistakes|Comparison|Warning signs|Myth-bust|Why it is not working)/i.test(text(x.textContent)));if(b[0])groupChoices(b[0].parentElement,b,'More approaches')}}
+function hideNoise(){document.querySelectorAll('.content h2,.content h3,.content h4').forEach(h=>{if(/^use the creator strategy here$/i.test(text(h.textContent)))h.closest('article.card,section.card,.card')?.classList.add('v71-reference-hidden')});document.querySelectorAll('details[data-v49-section] details').forEach(d=>{if(/optional guides|hook guide|story structure guide|pacing guide|retention audit/i.test(text(d.querySelector(':scope>summary')?.textContent)))d.classList.add('v71-reference-hidden')});document.querySelectorAll('details[data-v49-section]').forEach(section=>{const c=[...section.querySelectorAll('button')].filter(b=>/^continue$/i.test(text(b.textContent)));c.slice(0,-1).forEach(b=>b.classList.add('v71-reference-hidden'))})}
+function calendar(){if(state?.currentView!=='calendar')return;const headings=[...document.querySelectorAll('.content h1,.content h2,.content h3')].filter(h=>/^calendar$/i.test(text(h.textContent)));headings.slice(1).forEach(h=>h.closest('header,.section-title')?.classList.add('v71-calendar-hidden')||h.classList.add('v71-calendar-hidden'));document.querySelectorAll('.content h2,.content h3,.content h4').forEach(h=>{if(/^execution handoff$/i.test(text(h.textContent)))h.closest('section,article,.card')?.classList.add('v71-calendar-hidden')})}
+function learn(){if(state?.currentView!=='results')return;document.querySelector('.v70-learn-guide')?.classList.add('v71-reference-hidden');const head=document.querySelector('.content .page-head');if(head&&!document.querySelector('.v71-learn-intro'))head.insertAdjacentHTML('afterend','<p class="v71-learn-intro"><b>Use this only when a video review is due.</b> At 24 hours, 7 days or 28 days, record what happened, what it probably means, and the one future decision it should change.</p>')}
+function setup(){if(state?.currentView==='setup')document.querySelector('.v69-map')?.remove()}
+function plan(){if(state?.currentView!=='plan')return;const c=[...document.querySelectorAll('.content button')].filter(b=>/^continue$/i.test(text(b.textContent)));c.slice(0,-1).forEach(b=>b.classList.add('v71-reference-hidden'))}
+function enhance(){classes();help();setup();if(state?.currentView==='video'){cleanSections();focus();packageNote();replaceWords();choices();hideNoise()}calendar();learn();plan();document.title='Accelerator OS V52.1 Simplified Coaching V71'}
+document.addEventListener('click',e=>{if(e.target.closest?.('[data-v71-jobs]')){e.preventDefault();document.querySelector('#v71-help-overlay')?.classList.add('open');return}if(e.target.closest?.('[data-v71-close-help]')||e.target.id==='v71-help-overlay'){e.preventDefault();document.querySelector('#v71-help-overlay')?.classList.remove('open');return}const more=e.target.closest?.('[data-v71-more]');if(more){e.preventDefault();const g=more.closest('.v71-choice-group');g?.classList.toggle('v71-show-extra');more.textContent=g?.classList.contains('v71-show-extra')?'Show fewer options':'More options';return}if(e.target.closest?.('[data-v71-change-pacing]')){e.preventDefault();const section=[...document.querySelectorAll('details[data-v49-section="video-experience"] .v57-choice-section')][2];section?.classList.remove('v71-reference-hidden');section?.scrollIntoView({block:'center'});return}const summary=e.target.closest?.('details[data-v49-section]>summary');if(summary)setTimeout(()=>{const d=summary.parentElement;if(d.open)document.querySelectorAll('.content details[data-v49-section]').forEach(x=>{if(x!==d)x.open=false})},0)});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelector('#v71-help-overlay')?.classList.remove('open')});
+const base=render;render=function(...args){const out=base(...args);const run=()=>{try{enhance()}catch(error){console.error('V71 simplification failed',error)}};run();setTimeout(run,0);setTimeout(run,100);setTimeout(run,240);return out};enhance();
+})();</script>
+<script id="v71-postfix-script">
+(()=>{
+if(window.__v71PostfixInstalled)return;
+window.__v71PostfixInstalled=true;
+const compact=value=>String(value??'').replace(/\s+/g,' ').trim();
+const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+const first=(...values)=>values.find(value=>compact(value))||'';
+const appState=()=>{try{return typeof state!=='undefined'?state:null}catch{return null}};
+const jobs={
+ Reach:{purpose:'Bring the right new viewers into the channel.',research:'Demand, repeated problems, outliers, search language and proven click patterns.'},
+ Trust:{purpose:'Change a belief and build preference for this creator or method.',research:'Doubts, misconceptions, objections, proof, stories and credibility gaps.'},
+ Convert:{purpose:'Help a ready viewer make one decision or take the next step.',research:'Buyer questions, fit, alternatives, risk, objections and decision criteria.'}
+};
+function normalizeDiagnosisRoute(){
+ const app=appState();
+ if(app?.currentView==='diagnosis'){
+  app.currentView='overview';
+  app.v67DiagnosisReview=true;
+ }
+}
+function selectedVideo(){
+ const app=appState();
+ const selectedCreator=(app?.creators||[]).find(item=>item.id===app.currentCreatorId)||(app?.creators||[])[0];
+ const videos=selectedCreator?.videos||[];
+ return videos.find(item=>item.id===app.currentVideoId)||videos[0]||null;
+}
+function ensureVideoFocus(){
+ const app=appState();
+ if(app?.currentView!=='video'||document.querySelector('.v71-video-focus'))return;
+ const current=selectedVideo();
+ if(!current)return;
+ const job=first(current.job,'Reach');
+ const info=jobs[job]||jobs.Reach;
+ const topic=first(current.surfaceProblem,current.promise,current.title,current.packaging?.selectedTitle,'Not chosen yet');
+ const clickFrame=first(current.packaging?.clickFrame,current.packaging?.mechanism,current.angle,'Not chosen yet');
+ const title=[...document.querySelectorAll('.content h1,.content h2')].find(node=>/video plan/i.test(compact(node.textContent)));
+ const anchor=document.querySelector('.content .page-head,.content .v49-page-head,.content .v49-video-head')||title?.closest('header,.page-head,.v49-page-head,.v49-video-head')||title?.parentElement||document.querySelector('.content');
+ if(!anchor)return;
+ anchor.insertAdjacentHTML('afterend',`<section class="v71-video-focus"><div><span>${escapeHtml(job)} video</span><strong>${escapeHtml(info.purpose)}</strong><p><b>Research:</b> ${escapeHtml(info.research)}</p><p><b>Topic:</b> ${escapeHtml(topic)} &nbsp; <b>Click frame:</b> ${escapeHtml(clickFrame)}</p></div><div class="v71-video-focus-actions"><button class="v71-compact-button" data-v71-jobs>How video jobs differ</button><button class="v71-compact-button" data-v69-open-strategy>Creator Strategy</button></div></section>`);
+}
+function ensurePackagingExplanation(){
+ const app=appState();
+ if(app?.currentView!=='video')return;
+ const section=document.querySelector('details[data-v49-section="video-package"]');
+ const summary=section?.querySelector(':scope > summary');
+ const copy=summary?.querySelector('.v71-step-copy');
+ if(copy&&!copy.querySelector('.v71-package-summary-help'))copy.insertAdjacentHTML('beforeend','<small class="v71-package-summary-help">Topic = what it is about. Click frame = why the right viewer clicks now.</small>');
+}
+const clean=()=>{
+ const app=appState();
+ if(app?.currentView==='setup')document.querySelectorAll('.v69-map').forEach(node=>node.remove());
+ ensureVideoFocus();
+ ensurePackagingExplanation();
+};
+const observer=new MutationObserver(clean);
+observer.observe(document.documentElement,{childList:true,subtree:true});
+const previous=window.render;
+window.render=function(...args){normalizeDiagnosisRoute();const result=previous.apply(this,args);clean();setTimeout(clean,0);setTimeout(clean,120);setTimeout(clean,300);return result};
+clean();
 })();
 </script>
 </body>
