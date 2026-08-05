@@ -103,6 +103,11 @@ jobs:
           selection_assert = "assert(await page.locator('.v57-choice-card.selected').count() === 1, 'The selected story structure is highlighted instead of moved.');"
           selection_with_open = selection_assert + "\n    assert(await page.locator('[data-v49-section=\"video-experience\"]').getAttribute('open') !== null, 'Selecting a story structure does not collapse the Story, Hook and Pacing section.');"
           text = text.replace(selection_assert, selection_with_open, 1)
+          hook_click = "await page.locator('[data-v57-hook]').nth(1).click();"
+          visible_hook_click = "await page.locator('[data-v57-hook]:visible').nth(1).click();"
+          if hook_click not in text:
+            raise SystemExit('The hook-selection assertion was not found.')
+          text = text.replace(hook_click, visible_hook_click, 1)
           path.write_text(text)
           PY
           node tests/v68-smoke.js
