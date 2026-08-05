@@ -98,7 +98,7 @@
   },true);
 
   const observer=new MutationObserver(()=>scheduleApply());
-  observer.observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});
+  observer.observe(document.documentElement,{subtree:true,childList:true});
 
   const renderBeforeFixedSets=render;
   render=function(...args){
