@@ -1,0 +1,44 @@
+<style id="v70-creator-attention-fix-styles">
+.v70-portfolio-attention{margin:12px 0;border:1px solid #5a4930;background:#211a11;border-radius:13px;padding:12px}.v70-portfolio-attention header{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.v70-portfolio-attention header span{display:block;color:#ffca75;font-size:8px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}.v70-portfolio-attention h3{margin:4px 0 0;color:#f2e7d3;font-size:13px}.v70-portfolio-attention header p{margin:4px 0 0;color:#b5a489;font-size:8.5px}.v70-portfolio-attention-list{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}.v70-portfolio-attention .v70-attention-button{background:#302315}.v70-row-attention-host{display:flex!important;align-items:center;gap:8px}.v70-row-attention-host>.v70-card-attention{margin-left:auto}@media(max-width:760px){.v70-portfolio-attention header{display:block}}
+</style>
+<script id="v70-creator-attention-fix-script">
+(()=>{
+  if(window.__v70CreatorAttentionFixInstalled)return;
+  window.__v70CreatorAttentionFixInstalled=true;
+  const list70=()=>Array.isArray(state?.creators)?state.creators:[];
+  const remindersFor70=c=>typeof window.acceleratorReminders70==='function'?window.acceleratorReminders70(c):[];
+  const escape70=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+
+  function attachRowBadges70(){
+    const seen=new Set();
+    document.querySelectorAll('[data-open-creator]').forEach(open=>{
+      const id=open.dataset.openCreator;if(!id||seen.has(id))return;
+      const c=list70().find(x=>x.id===id),items=remindersFor70(c);if(!c||!items.length)return;
+      const host=open.closest('[data-creator-item],article,.creator-row-v14,.creator-row-v13,.creator-row,.v303-creator-row,.v16-creator-row,.creator-card,li,section')||open.parentElement;
+      if(!host||host.querySelector(`[data-v70-card-attention="${CSS.escape(id)}"]`))return;
+      seen.add(id);
+      const target=host.querySelector('.creator-row-v14-main,.creator-row-v13-main,.creator-row-main,.creator-top,.creator-footer,.v303-row-main,.v303-row-actions,.creator-row-actions,.creator-actions')||open.parentElement||host;
+      target.classList.add('v70-row-attention-host');
+      target.insertAdjacentHTML('beforeend',`<button type="button" class="v70-attention-button v70-card-attention" data-v70-card-attention="${escape70(id)}" title="${escape70(items.map(x=>x.label).join(' · '))}"><b>${items.length}</b>${items.length===1?' review due':' reviews due'}</button>`);
+    });
+  }
+
+  function addPortfolioAttention70(){
+    if(state?.currentView!=='creators')return;
+    const due=list70().map(c=>({c,items:remindersFor70(c)})).filter(x=>x.items.length);
+    const content=document.querySelector('.content'),head=content?.querySelector('.page-head');
+    if(!head||!due.length||content.querySelector('.v70-portfolio-attention'))return;
+    head.insertAdjacentHTML('afterend',`<section class="v70-portfolio-attention"><header><div><span>Needs attention</span><h3>${due.length} creator${due.length===1?'':'s'} have a review or setup item due</h3><p>This is the same reminder logic shown inside each Creator Home.</p></div></header><div class="v70-portfolio-attention-list">${due.map(({c,items})=>`<button type="button" class="v70-attention-button" data-v70-card-attention="${escape70(c.id)}" title="${escape70(items.map(x=>x.label).join(' · '))}"><b>${items.length}</b>${escape70(c.name)}</button>`).join('')}</div></section>`);
+  }
+
+  function enhanceCreatorAttention70(){
+    if(state?.currentView!=='creators')return;
+    attachRowBadges70();
+    addPortfolioAttention70();
+  }
+
+  const renderBeforeAttention70=render;
+  render=function(...args){const result=renderBeforeAttention70(...args);const finish=()=>{try{enhanceCreatorAttention70()}catch(error){console.error('V70 creator attention enhancement failed',error)}};finish();setTimeout(finish,0);setTimeout(finish,120);return result};
+  enhanceCreatorAttention70();
+})();
+</script>
