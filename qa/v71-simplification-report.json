@@ -25,7 +25,7 @@
     "Choosing a story option keeps the stage open."
   ],
   "errors": [
-    "Title and thumbnail explains topic versus click frame where the choice is made."
+    "locator.innerText: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('details[data-v49-section=\"video-package\"] > .v71-package-note:visible')\n"
   ],
-  "checkedAt": "2026-08-05T21:52:49.124Z"
+  "checkedAt": "2026-08-05T21:55:15.098Z"
 }
