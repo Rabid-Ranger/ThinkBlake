@@ -1,0 +1,51 @@
+/* Custom Foundation and Monthly Plan panels share the same reference-led work-card language. */
+body.v73-app-design .v73-generic-work-panel{
+  overflow:hidden;
+  margin:0 0 14px!important;
+  padding:0 15px 15px!important;
+  border:1px solid var(--v73-line)!important;
+  border-radius:var(--v73-radius)!important;
+  background:var(--v73-panel)!important;
+  box-shadow:var(--v73-shadow)!important;
+}
+body.v73-app-design details.v73-generic-work-panel{padding:0 15px 15px!important}
+body.v73-app-design .v73-generic-work-panel > summary,
+body.v73-app-design .v73-generic-work-panel > .v73-generic-panel-head,
+body.v73-app-design .v73-generic-work-panel > header:first-child,
+body.v73-app-design .v73-generic-work-panel > .section-title:first-child{
+  display:flex!important;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  min-height:50px;
+  margin:0 -15px 14px!important;
+  padding:11px 14px!important;
+  border:0!important;
+  border-bottom:1px solid rgba(147,197,253,.28)!important;
+  border-radius:11px 11px 0 0!important;
+  background:linear-gradient(135deg,#235FCB 0%,#3B82F6 100%)!important;
+  color:#fff!important;
+  font-weight:850!important;
+  cursor:pointer;
+}
+body.v73-app-design .v73-generic-work-panel > summary *,
+body.v73-app-design .v73-generic-panel-head *{color:inherit!important}
+body.v73-app-design .v73-generic-work-panel > .v73-card-heading{
+  margin:0 -15px 14px!important;
+  padding:11px 14px!important;
+  border-radius:11px 11px 0 0!important;
+}
+body.v73-app-design .v73-generic-work-panel > :last-child{margin-bottom:0}
+body.v73-app-design .v73-generic-work-panel .card{
+  border-color:#39434E!important;
+  background:var(--v73-panel-soft)!important;
+  box-shadow:none!important;
+}
+@media(max-width:640px){
+  body.v73-app-design .v73-generic-work-panel{padding:0 12px 12px!important}
+  body.v73-app-design .v73-generic-work-panel > summary,
+  body.v73-app-design .v73-generic-work-panel > .v73-generic-panel-head,
+  body.v73-app-design .v73-generic-work-panel > header:first-child,
+  body.v73-app-design .v73-generic-work-panel > .section-title:first-child,
+  body.v73-app-design .v73-generic-work-panel > .v73-card-heading{margin:0 -12px 12px!important;padding:10px 12px!important}
+}
