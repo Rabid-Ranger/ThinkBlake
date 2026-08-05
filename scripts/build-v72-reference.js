@@ -16,7 +16,9 @@ const inputs=[
   ['v73-app-design-system-styles','style',path.join(root,'patches','v73-app-design-system.css')],
   ['v73-app-design-system-script','script',path.join(root,'patches','v73-app-design-system.js')],
   ['v73-creator-card-fix-styles','style',path.join(root,'patches','v73-creator-card-fix.css')],
-  ['v73-creator-card-fix-script','script',path.join(root,'patches','v73-creator-card-fix.js')]
+  ['v73-creator-card-fix-script','script',path.join(root,'patches','v73-creator-card-fix.js')],
+  ['v73-workspace-panel-fix-styles','style',path.join(root,'patches','v73-workspace-panel-fix.css')],
+  ['v73-workspace-panel-fix-script','script',path.join(root,'patches','v73-workspace-panel-fix.js')]
 ];
 for(const [, ,file] of inputs)if(!fs.existsSync(file))throw new Error(`${path.relative(root,file)} is missing.`);
 
