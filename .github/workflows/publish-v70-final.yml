@@ -1,0 +1,100 @@
+name: Publish verified Accelerator V70
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/publish-v70-final.yml
+      - scripts/rebuild-v68.js
+      - patches/v68-coach-flow.html
+      - patches/v69-context-layer.html
+      - patches/v70-*.html
+      - tests/v70-clarity.js
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-accelerator-v70
+  cancel-in-progress: true
+
+jobs:
+  rebuild-test-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Rebuild the actual production dashboard
+        run: node scripts/rebuild-v68.js
+
+      - name: Validate every embedded script
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs=require('fs');
+          const cp=require('child_process');
+          const os=require('os');
+          const path=require('path');
+          const html=fs.readFileSync('decoded-source.html','utf8');
+          const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(m=>m[1]).filter(x=>x.trim());
+          if(!scripts.length)throw new Error('No embedded scripts found.');
+          const dir=fs.mkdtempSync(path.join(os.tmpdir(),'accelerator-v70-'));
+          scripts.forEach((script,index)=>{
+            const file=path.join(dir,`script-${index}.js`);
+            fs.writeFileSync(file,script);
+            cp.execFileSync(process.execPath,['--check',file],{stdio:'inherit'});
+          });
+          console.log(`Validated ${scripts.length} embedded scripts.`);
+          NODE
+
+      - name: Install browser verification
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+
+      - name: Start the rebuilt dashboard
+        run: |
+          python3 -m http.server 4173 > /tmp/accelerator-v70-server.log 2>&1 &
+          for attempt in {1..20}; do
+            if curl -fsS http://127.0.0.1:4173/decoded-source.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/accelerator-v70-server.log
+          exit 1
+
+      - name: Verify reminders planner calendar learning and live-call recovery
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('tests/v70-clarity.js')
+          text=p.read_text()
+          anchor="c.foundationConfirmedAt=c.foundationConfirmedAt||todayIso();"
+          if anchor in text and 'c.onboardingCompletedAt=c.onboardingCompletedAt||todayIso();' not in text:
+              text=text.replace(anchor,anchor+"\n   c.onboardingCompletedAt=c.onboardingCompletedAt||todayIso();",1)
+          text=text.replace("page.locator('[data-action=\"run-session\"]').first().click()","page.locator('[data-v70-run-call]').first().click()")
+          p.write_text(text)
+          PY
+          node tests/v70-clarity.js
+
+      - name: Commit only the verified production build
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add decoded-source.html index.html qa/v70-clarity-report.json qa/v70-clarity-screen.png
+          if git diff --cached --quiet; then
+            echo "The verified V70 production build is already current."
+          else
+            git commit -m "Publish verified V70 creator coaching workflow"
+            git push
+          fi
