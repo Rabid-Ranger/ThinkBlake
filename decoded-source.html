@@ -8,8 +8,8 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
 <meta content="#0b1014" name="theme-color"/>
-<meta content="Accelerator OS V52.1 V72: a reference-led coaching workspace with clear phases and pop-out guides." name="description"/>
-<title>Accelerator OS V52.1 Reference UI V72</title>
+<meta content="Accelerator OS V52.1 V73: an app-wide reference-led coaching workspace with clear hierarchy, semantic states, and pop-out guides." name="description"/>
+<title>Accelerator OS V52.1 App Design V73</title>
 <style>:root {
   color-scheme: dark;
   --bg: #0b1014;
@@ -14539,6 +14539,1006 @@ observer.observe(document.documentElement,{childList:true,subtree:true,attribute
 repairPhaseAttributes();
 setTimeout(repairPhaseAttributes,0);
 setTimeout(repairPhaseAttributes,200);
+})();</script>
+<style id="v73-app-design-system-styles">/* V73 app-wide reference design system.
+   The working page stays focused. Teaching, examples and explanation live in drawers. */
+:root{
+  --v73-bg:#0D1117;
+  --v73-panel:#161B22;
+  --v73-panel-raised:#1C222B;
+  --v73-panel-soft:#21262D;
+  --v73-line:#30363D;
+  --v73-line-strong:#3D4652;
+  --v73-text:#E6EDF3;
+  --v73-muted:#8B949E;
+  --v73-blue:#3B82F6;
+  --v73-blue-soft:#1A3A5C;
+  --v73-blue-text:#93C5FD;
+  --v73-green:#3FB950;
+  --v73-green-soft:#132D1D;
+  --v73-green-text:#86EFAC;
+  --v73-amber:#F59E0B;
+  --v73-amber-soft:#3D3415;
+  --v73-amber-text:#FCD34D;
+  --v73-red:#F85149;
+  --v73-red-soft:#3B1D1D;
+  --v73-red-text:#FDA4AF;
+  --v73-purple:#A855F7;
+  --v73-radius:12px;
+  --v73-radius-small:9px;
+  --v73-shadow:0 10px 32px rgba(0,0,0,.18);
+}
+
+html{background:var(--v73-bg)}
+body.v73-app-design{
+  background:var(--v73-bg)!important;
+  color:var(--v73-text)!important;
+  font-size:14px;
+  line-height:1.5;
+}
+body.v73-app-design *{scrollbar-color:#3D4652 #0D1117}
+body.v73-app-design *:focus-visible{outline:2px solid var(--v73-blue)!important;outline-offset:2px}
+
+/* Global frame */
+body.v73-app-design .app,
+body.v73-app-design .app-shell,
+body.v73-app-design .shell{background:var(--v73-bg)!important}
+body.v73-app-design .sidebar{
+  background:#0B0F14!important;
+  border-right:1px solid var(--v73-line)!important;
+  box-shadow:none!important;
+}
+body.v73-app-design .sidebar .brand,
+body.v73-app-design .sidebar-brand{
+  border-bottom:1px solid var(--v73-line)!important;
+  padding-bottom:14px!important;
+}
+body.v73-app-design .sidebar nav,
+body.v73-app-design .nav-list{padding:10px!important}
+body.v73-app-design .sidebar button,
+body.v73-app-design .sidebar a,
+body.v73-app-design [data-view]{
+  min-height:38px;
+  border-radius:8px!important;
+  color:#AAB4C0;
+  transition:background .16s ease,color .16s ease,border-color .16s ease;
+}
+body.v73-app-design .sidebar button:hover,
+body.v73-app-design .sidebar a:hover,
+body.v73-app-design [data-view]:hover{background:var(--v73-panel-soft)!important;color:var(--v73-text)!important}
+body.v73-app-design .sidebar .active,
+body.v73-app-design [data-view].active,
+body.v73-app-design [aria-current="page"]{
+  background:var(--v73-blue-soft)!important;
+  color:var(--v73-blue-text)!important;
+  border-color:rgba(59,130,246,.45)!important;
+  box-shadow:inset 3px 0 0 var(--v73-blue);
+}
+body.v73-app-design .topbar{
+  min-height:58px;
+  background:rgba(22,27,34,.96)!important;
+  border-bottom:1px solid var(--v73-line)!important;
+  box-shadow:0 4px 18px rgba(0,0,0,.13)!important;
+  backdrop-filter:blur(12px);
+}
+body.v73-app-design .content{
+  width:min(1240px,100%);
+  margin:0 auto;
+  padding:22px clamp(16px,2.6vw,32px) 52px!important;
+}
+
+/* Small auto-save indicator, modeled on the reference header */
+.v73-save-state{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  margin-left:auto;
+  padding:6px 9px;
+  border:1px solid transparent;
+  border-radius:999px;
+  color:var(--v73-green-text);
+  background:rgba(19,45,29,.55);
+  font-size:11px;
+  font-weight:750;
+  white-space:nowrap;
+}
+.v73-save-state::before{
+  content:'✓';
+  width:16px;height:16px;
+  display:grid;place-items:center;
+  border-radius:50%;
+  background:var(--v73-green);
+  color:#07140B;
+  font-size:10px;
+  font-weight:1000;
+}
+.v73-save-state.saving{color:var(--v73-blue-text);background:rgba(26,58,92,.55)}
+.v73-save-state.saving::before{content:'•';background:var(--v73-blue);color:white}
+
+/* Page orientation */
+body.v73-app-design .page-head,
+body.v73-app-design .v49-page-head,
+.v73-page-head{
+  position:relative;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:end;
+  gap:8px 18px;
+  margin:0 0 18px!important;
+  padding:0 0 17px!important;
+  border-bottom:1px solid var(--v73-line)!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.v73-page-copy{min-width:0}
+.v73-page-eyebrow{
+  display:block;
+  margin:0 0 5px;
+  color:#60A5FA;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.11em;
+  text-transform:uppercase;
+}
+body.v73-app-design .page-head h1,
+body.v73-app-design .page-head h2,
+body.v73-app-design .v49-page-head h1,
+body.v73-app-design .v49-page-head h2,
+.v73-page-head h1,
+.v73-page-head h2{
+  margin:0!important;
+  color:var(--v73-text)!important;
+  font-size:clamp(22px,2.5vw,31px)!important;
+  line-height:1.15!important;
+  letter-spacing:-.025em;
+}
+.v73-page-purpose{
+  max-width:760px;
+  margin:7px 0 0;
+  color:var(--v73-muted);
+  font-size:13px;
+  line-height:1.55;
+}
+.v73-page-actions{
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.v73-page-guide{
+  display:inline-flex;align-items:center;gap:7px;
+  min-height:36px;
+  padding:8px 11px;
+  border:1px solid var(--v73-line-strong);
+  border-radius:8px;
+  background:var(--v73-panel-soft);
+  color:#D7E5F7;
+  font-size:11px;
+  font-weight:800;
+  cursor:pointer;
+}
+.v73-page-guide::before{content:'?';width:17px;height:17px;display:grid;place-items:center;border-radius:5px;background:var(--v73-blue-soft);color:var(--v73-blue-text);font-size:10px}
+.v73-page-guide:hover{border-color:var(--v73-blue);background:var(--v73-blue-soft);color:white}
+
+/* Cards and sections */
+body.v73-app-design .card,
+body.v73-app-design .creator-row-v14,
+body.v73-app-design .creator-row-v13,
+body.v73-app-design .creator-row,
+body.v73-app-design .video-card,
+body.v73-app-design .calendar-card,
+body.v73-app-design .upcoming-panel{
+  border:1px solid var(--v73-line)!important;
+  border-radius:var(--v73-radius)!important;
+  background:var(--v73-panel)!important;
+  box-shadow:var(--v73-shadow)!important;
+}
+body.v73-app-design .card{padding:16px!important}
+body.v73-app-design .card .card{background:var(--v73-panel-soft)!important;box-shadow:none!important}
+.v73-work-card{
+  overflow:hidden;
+  padding:0 16px 16px!important;
+}
+.v73-card-heading,
+.v73-work-card > header:first-child,
+.v73-work-card > .section-title:first-child{
+  display:flex!important;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin:0 -16px 15px!important;
+  padding:12px 15px!important;
+  border-bottom:1px solid rgba(147,197,253,.25)!important;
+  background:linear-gradient(135deg,#235FCB 0%,#3B82F6 100%)!important;
+  color:white!important;
+  border-radius:11px 11px 0 0;
+}
+.v73-card-heading{font-size:14px!important;line-height:1.3!important}
+.v73-card-heading *{color:inherit!important}
+.v73-card-heading + p,
+.v73-work-card > header:first-child + p{color:var(--v73-muted)}
+body.v73-app-design h1,
+body.v73-app-design h2,
+body.v73-app-design h3,
+body.v73-app-design h4{color:var(--v73-text)}
+body.v73-app-design p,
+body.v73-app-design .muted,
+body.v73-app-design small{color:var(--v73-muted)}
+body.v73-app-design hr{border:0;border-top:1px solid var(--v73-line)}
+
+/* Semantic cards make coach work, approvals and warnings scannable */
+.v73-coach-note{
+  border-color:rgba(59,130,246,.45)!important;
+  background:linear-gradient(135deg,rgba(26,58,92,.65),var(--v73-panel))!important;
+  box-shadow:inset 4px 0 0 var(--v73-blue),var(--v73-shadow)!important;
+}
+.v73-coach-note .v73-card-heading{background:transparent!important;color:var(--v73-blue-text)!important;border-bottom-color:rgba(59,130,246,.22)!important}
+.v73-approved-card{
+  border-color:rgba(63,185,80,.42)!important;
+  background:linear-gradient(135deg,rgba(19,45,29,.72),var(--v73-panel))!important;
+  box-shadow:inset 4px 0 0 var(--v73-green),var(--v73-shadow)!important;
+}
+.v73-approved-card .v73-card-heading{background:transparent!important;color:var(--v73-green-text)!important;border-bottom-color:rgba(63,185,80,.22)!important}
+.v73-warning-card{
+  border-color:rgba(245,158,11,.46)!important;
+  background:linear-gradient(135deg,rgba(61,52,21,.72),var(--v73-panel))!important;
+  box-shadow:inset 4px 0 0 var(--v73-amber),var(--v73-shadow)!important;
+}
+.v73-warning-card .v73-card-heading{background:transparent!important;color:var(--v73-amber-text)!important;border-bottom-color:rgba(245,158,11,.22)!important}
+.v73-danger-card{
+  border-color:rgba(248,81,73,.48)!important;
+  background:linear-gradient(135deg,rgba(59,29,29,.74),var(--v73-panel))!important;
+  box-shadow:inset 4px 0 0 var(--v73-red),var(--v73-shadow)!important;
+}
+.v73-danger-card .v73-card-heading{background:transparent!important;color:var(--v73-red-text)!important;border-bottom-color:rgba(248,81,73,.22)!important}
+
+/* Inputs */
+body.v73-app-design label{color:#C8D4E3;font-size:12px;font-weight:750}
+body.v73-app-design input,
+body.v73-app-design textarea,
+body.v73-app-design select{
+  min-height:40px;
+  border:1px solid var(--v73-line)!important;
+  border-radius:8px!important;
+  background:#0D1117!important;
+  color:var(--v73-text)!important;
+  font:inherit;
+  box-shadow:none!important;
+}
+body.v73-app-design textarea{min-height:92px;line-height:1.55;resize:vertical}
+body.v73-app-design input::placeholder,
+body.v73-app-design textarea::placeholder{color:#66717D}
+body.v73-app-design input:hover,
+body.v73-app-design textarea:hover,
+body.v73-app-design select:hover{border-color:var(--v73-line-strong)!important}
+body.v73-app-design input:focus,
+body.v73-app-design textarea:focus,
+body.v73-app-design select:focus{border-color:var(--v73-blue)!important;box-shadow:0 0 0 3px rgba(59,130,246,.16)!important;outline:0!important}
+.v73-field-help{margin:5px 0 0;color:var(--v73-muted);font-size:11px;line-height:1.45}
+
+/* Buttons */
+body.v73-app-design button,
+body.v73-app-design .button{font-family:inherit}
+body.v73-app-design .button,
+body.v73-app-design button.button{
+  min-height:38px;
+  padding:8px 13px!important;
+  border:1px solid var(--v73-blue)!important;
+  border-radius:8px!important;
+  background:var(--v73-blue)!important;
+  color:white!important;
+  font-size:12px!important;
+  font-weight:800!important;
+  box-shadow:0 7px 18px rgba(59,130,246,.16);
+  transition:transform .12s ease,filter .12s ease,background .12s ease;
+}
+body.v73-app-design .button:hover{filter:brightness(1.08);transform:translateY(-1px)}
+body.v73-app-design .button.secondary,
+body.v73-app-design .button.ghost,
+body.v73-app-design button.secondary{
+  border-color:var(--v73-line-strong)!important;
+  background:var(--v73-panel-soft)!important;
+  color:var(--v73-text)!important;
+  box-shadow:none!important;
+}
+body.v73-app-design .button.ghost{background:transparent!important;color:var(--v73-muted)!important}
+body.v73-app-design .button.danger,
+body.v73-app-design [data-danger]{border-color:var(--v73-red)!important;background:var(--v73-red-soft)!important;color:var(--v73-red-text)!important;box-shadow:none!important}
+body.v73-app-design button:disabled,
+body.v73-app-design .button:disabled{opacity:.48;cursor:not-allowed;transform:none}
+
+/* Status pills */
+.v73-status{
+  display:inline-flex!important;
+  align-items:center;
+  gap:5px;
+  min-height:24px;
+  padding:4px 8px!important;
+  border:1px solid var(--v73-line)!important;
+  border-radius:999px!important;
+  background:var(--v73-panel-soft)!important;
+  color:#B8C3CF!important;
+  font-size:10px!important;
+  font-weight:850!important;
+  line-height:1!important;
+  white-space:nowrap;
+}
+.v73-status::before{content:'';width:6px;height:6px;border-radius:50%;background:#77818D}
+.v73-status-blue{border-color:rgba(59,130,246,.48)!important;background:var(--v73-blue-soft)!important;color:var(--v73-blue-text)!important}.v73-status-blue::before{background:var(--v73-blue)}
+.v73-status-green{border-color:rgba(63,185,80,.48)!important;background:var(--v73-green-soft)!important;color:var(--v73-green-text)!important}.v73-status-green::before{background:var(--v73-green)}
+.v73-status-amber{border-color:rgba(245,158,11,.52)!important;background:var(--v73-amber-soft)!important;color:var(--v73-amber-text)!important}.v73-status-amber::before{background:var(--v73-amber)}
+.v73-status-red{border-color:rgba(248,81,73,.52)!important;background:var(--v73-red-soft)!important;color:var(--v73-red-text)!important}.v73-status-red::before{background:var(--v73-red)}
+
+/* Creator management */
+body.v73-app-design .creator-row-v14,
+body.v73-app-design .creator-row-v13,
+body.v73-app-design .creator-row{
+  position:relative;
+  padding:14px 15px!important;
+  transition:border-color .16s ease,transform .16s ease,background .16s ease;
+}
+body.v73-app-design .creator-row-v14:hover,
+body.v73-app-design .creator-row-v13:hover,
+body.v73-app-design .creator-row:hover{border-color:#46515D!important;background:var(--v73-panel-raised)!important;transform:translateY(-1px)}
+body.v73-app-design [data-v70-card-attention]{
+  border-color:rgba(245,158,11,.5)!important;
+  background:var(--v73-amber-soft)!important;
+  color:var(--v73-amber-text)!important;
+}
+.v73-creator-avatar{
+  width:36px;height:36px;
+  display:grid;place-items:center;
+  border-radius:10px;
+  background:var(--v73-blue-soft);
+  color:var(--v73-blue-text);
+  font-size:12px;font-weight:900;
+}
+
+/* Calendar and tables */
+body.v73-app-design table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--v73-line);border-radius:10px;overflow:hidden;background:var(--v73-panel)}
+body.v73-app-design th{padding:10px 11px!important;background:#1A3A5C!important;color:var(--v73-blue-text)!important;border-bottom:1px solid rgba(59,130,246,.48)!important;font-size:10px!important;text-align:left;text-transform:uppercase;letter-spacing:.07em}
+body.v73-app-design td{padding:10px 11px!important;border-bottom:1px solid var(--v73-line)!important;color:#D4DEE8;font-size:12px;vertical-align:top}
+body.v73-app-design tr:last-child td{border-bottom:0!important}
+body.v73-app-design tr:hover td{background:rgba(33,38,45,.75)}
+body.v73-app-design .calendar-card{overflow:hidden}
+body.v73-app-design .calendar-grid{border-color:var(--v73-line)!important;background:var(--v73-panel)!important}
+body.v73-app-design .calendar-grid button,
+body.v73-app-design [data-calendar-day]{border-color:var(--v73-line)!important;background:#10151B!important;color:#C8D4E3!important}
+body.v73-app-design .calendar-grid button:hover,
+body.v73-app-design [data-calendar-day]:hover{border-color:var(--v73-blue)!important;background:var(--v73-blue-soft)!important}
+
+/* Disclosures and accordions outside the V72 video phase system */
+body.v73-app-design details:not([data-v49-section]){
+  border:1px solid var(--v73-line);
+  border-radius:10px;
+  background:var(--v73-panel);
+  overflow:hidden;
+}
+body.v73-app-design details:not([data-v49-section]) > summary{
+  min-height:44px;
+  padding:11px 13px;
+  color:#DCE6F0;
+  background:var(--v73-panel-soft);
+  font-weight:800;
+  cursor:pointer;
+}
+body.v73-app-design details:not([data-v49-section])[open] > summary{border-bottom:1px solid var(--v73-line)}
+body.v73-app-design details:not([data-v49-section]) > :not(summary){margin-left:13px;margin-right:13px}
+
+/* Reminders and empty states */
+body.v73-app-design .v70-reminder,
+.v73-reminder{
+  border:1px solid rgba(245,158,11,.38)!important;
+  border-radius:10px!important;
+  background:linear-gradient(135deg,rgba(61,52,21,.72),var(--v73-panel))!important;
+  color:var(--v73-text)!important;
+}
+.v73-empty-state{
+  display:grid;
+  justify-items:center;
+  gap:7px;
+  padding:28px 18px!important;
+  border:1px dashed #3C4651!important;
+  border-radius:12px!important;
+  background:rgba(22,27,34,.72)!important;
+  color:var(--v73-muted)!important;
+  text-align:center;
+}
+.v73-empty-state::before{
+  content:'+';
+  width:34px;height:34px;
+  display:grid;place-items:center;
+  border-radius:10px;
+  background:var(--v73-panel-soft);
+  color:var(--v73-blue-text);
+  font-size:20px;
+}
+
+/* Modals, coaching calls and drawers */
+body.v73-app-design [role="dialog"],
+body.v73-app-design .modal,
+body.v73-app-design .dialog,
+body.v73-app-design [class*="modal-card"],
+.v73-call-workspace{
+  border:1px solid var(--v73-line)!important;
+  border-radius:14px!important;
+  background:var(--v73-panel)!important;
+  color:var(--v73-text)!important;
+  box-shadow:0 26px 90px rgba(0,0,0,.52)!important;
+}
+body.v73-app-design .modal-backdrop,
+body.v73-app-design [class*="overlay"]{backdrop-filter:blur(5px)}
+.v73-call-workspace{
+  overflow:hidden;
+}
+.v73-call-workspace::before{
+  content:'Live coaching call';
+  display:block;
+  margin:-16px -16px 16px;
+  padding:14px 16px;
+  border-bottom:1px solid rgba(147,197,253,.28);
+  background:linear-gradient(135deg,#235FCB,#3B82F6);
+  color:white;
+  font-size:15px;
+  font-weight:900;
+}
+.v73-call-workspace [data-session-bind]{background:#0D1117!important}
+.v73-call-workspace .button:last-child{box-shadow:0 8px 20px rgba(59,130,246,.2)}
+
+/* Consistent guide drawer across every page */
+body.v73-app-design .v72-guide-backdrop{background:rgba(0,0,0,.76);backdrop-filter:blur(4px)}
+body.v73-app-design .v72-guide-drawer{background:var(--v73-panel);border-left-color:var(--v73-line);box-shadow:-26px 0 80px rgba(0,0,0,.55)}
+body.v73-app-design .v72-guide-head{background:var(--v73-panel);border-bottom-color:var(--v73-line)}
+body.v73-app-design .v72-guide-content{max-width:760px;margin:0 auto;padding:20px}
+
+/* Low sensory load: old large guide layers do not compete with the working page */
+body.v73-app-design .page-guide,
+body.v73-app-design .v70-job-guide,
+body.v73-app-design .v70-planner-guide,
+body.v73-app-design .v70-learn-guide,
+body.v73-app-design .v69-map{display:none!important}
+
+/* Responsive */
+@media(max-width:900px){
+  body.v73-app-design .content{padding:18px 14px 42px!important}
+  body.v73-app-design .page-head,
+  body.v73-app-design .v49-page-head,
+  .v73-page-head{grid-template-columns:1fr;align-items:start}
+  .v73-page-actions{justify-content:flex-start}
+  .v73-save-state{font-size:0;padding:6px}.v73-save-state::before{font-size:10px}
+}
+@media(max-width:640px){
+  body.v73-app-design{font-size:13px}
+  body.v73-app-design .card{padding:13px!important}
+  .v73-work-card{padding:0 13px 13px!important}
+  .v73-card-heading,.v73-work-card > header:first-child,.v73-work-card > .section-title:first-child{margin:0 -13px 13px!important;padding:11px 12px!important}
+  body.v73-app-design .page-head h1,body.v73-app-design .page-head h2,.v73-page-head h1,.v73-page-head h2{font-size:23px!important}
+  .v73-page-purpose{font-size:12px}
+  body.v73-app-design table{display:block;overflow-x:auto}
+}</style>
+<script id="v73-app-design-system-script">(()=>{
+if(window.__v73AppDesignInstalled)return;
+window.__v73AppDesignInstalled=true;
+window.__acceleratorBuild='V52.1-reference-ui-v73';
+
+const clean=value=>String(value??'').replace(/\s+/g,' ').trim();
+const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+const appState=()=>{try{return typeof state!=='undefined'?state:null}catch{return null}};
+const pageRoot=()=>document.querySelector('.content')||document.querySelector('main')||document.body;
+const setText=(node,value)=>{if(node&&node.textContent!==value)node.textContent=value};
+
+const pageDefinitions={
+  overview:{eyebrow:'Creator workspace',purpose:'See what needs attention, run the next coaching step, and leave with one clear commitment.',guideTitle:'Using Creator Home',guideSubtitle:'Orient yourself first, then open only the work that needs attention.'},
+  creators:{eyebrow:'Creator management',purpose:'Scan every creator, address due work, and open the right workspace without hunting across the app.',guideTitle:'Managing creator attention',guideSubtitle:'Use due work and coaching cadence to decide where your attention belongs.'},
+  setup:{eyebrow:'Foundation',purpose:'Define the audience, message, offer, and operating constraints once, then update them only when strategy changes.',guideTitle:'Building the creator foundation',guideSubtitle:'Create the strategic source of truth that every plan and video should inherit.'},
+  plan:{eyebrow:'Monthly planning',purpose:'Choose the month’s priorities and Reach, Trust, and Convert mix before planning individual videos.',guideTitle:'Planning the month',guideSubtitle:'Make a few strategic decisions that reduce choices later in the video workflow.'},
+  video:{eyebrow:'Video workflow',purpose:'Work one phase at a time. Use the pop-out guides only when you need teaching or examples.',guideTitle:'Planning a video',guideSubtitle:'Move from viewer and evidence to packaging, story, publishing, and learning.'},
+  calendar:{eyebrow:'Operating calendar',purpose:'See planning, publishing, review, and coaching commitments in one place.',guideTitle:'Using the calendar',guideSubtitle:'Schedule only the milestones that change what the coach or creator must do.'},
+  results:{eyebrow:'Review and learn',purpose:'Open this when a review is due, then turn performance evidence into one future decision.',guideTitle:'Reviewing a video',guideSubtitle:'Describe what happened, interpret why, and route one lesson forward.'},
+  session:{eyebrow:'Live coaching call',purpose:'Capture decisions while the call is happening. Save permanent history only when the session is complete.',guideTitle:'Running the coaching call',guideSubtitle:'Keep the conversation focused on evidence, decisions, ownership, and the next commitment.'}
+};
+
+const guideContent={
+  overview:{
+    intro:'Creator Home is the orientation screen. It should answer what needs attention, why it matters now, and where to go next without making you inspect every page.',
+    sections:[
+      ['Start with due work','Use the visible attention state to choose the next coaching action. Do not reopen completed strategy work unless new evidence requires it.'],
+      ['Use the journey as orientation','Foundation, diagnosis, the 90-day plan, monthly planning, videos, and reviews are a sequence. They are not six competing dashboards.'],
+      ['End with one commitment','A useful coaching session should finish with one owner, one next action, and one date.']
+    ],
+    tip:'When nothing is due, use the next scheduled coaching call or review as the default next action.'
+  },
+  creators:{
+    intro:'This page is for scanning the whole roster. It should help you find exceptions, not force you to reopen every creator.',
+    sections:[
+      ['Look for attention states','Prioritize overdue diagnosis, planning, review, or coaching work. Healthy creators should stay visually quiet.'],
+      ['Open one creator at a time','Use Creator Home as the detailed workspace after choosing who needs attention.'],
+      ['Protect coaching capacity','Due work should reflect the agreed cadence, not create artificial urgency for every creator.']
+    ],
+    warning:'Do not turn every incomplete optional field into a warning. Attention should mean the coach must make or facilitate a decision.'
+  },
+  setup:{
+    intro:'Foundation is the creator’s strategic source of truth. Complete it during onboarding, confirm it, and revise it only when the business or audience actually changes.',
+    sections:[
+      ['Audience','Define the specific person, situation, problem, desired change, and language the viewer already uses.'],
+      ['Message and brand','Clarify the creator’s point of view, promise, proof, tone, and the ideas they want to become known for.'],
+      ['Business and funnel','Connect content to the offer, lead path, conversion mechanism, and the next useful viewer action.'],
+      ['Capacity and cadence','Record what the creator and team can realistically publish, produce, review, and sustain.']
+    ],
+    tip:'If a future video decision conflicts with Foundation, either the video is wrong or Foundation needs an explicit strategic update.'
+  },
+  plan:{
+    intro:'Monthly planning converts the 90-day direction into a realistic set of video jobs and priorities. It should reduce decisions inside each individual video plan.',
+    table:[
+      ['Reach','Bring the right new viewers in.','Demand, repeated problems, outliers, search language, and click patterns.'],
+      ['Trust','Change a belief and build preference.','Doubts, objections, misconceptions, stories, and proof.'],
+      ['Convert','Help a ready viewer decide or act.','Fit, alternatives, risk, buyer questions, and decision criteria.']
+    ],
+    sections:[
+      ['Choose the month’s outcome','Name the business or audience movement the month is meant to create.'],
+      ['Choose the mix','Set a Reach, Trust, and Convert mix that fits the current bottleneck, rather than defaulting to the same content every month.'],
+      ['Respect capacity','Plan the number of videos the creator can execute well, not the number that looks ambitious in a dashboard.']
+    ],
+    warning:'Video job is not video format. A how-to, story, comparison, or case study can serve any job.'
+  },
+  calendar:{
+    intro:'The calendar is the operating layer. It should show when decisions, production, publishing, reviews, and coaching commitments happen.',
+    sections:[
+      ['Put the calendar first','The month view should orient you before the upcoming-work list.'],
+      ['Schedule meaningful reviews','Use 24-hour, 7-day, and 28-day checkpoints when they will produce a useful decision.'],
+      ['Keep ownership visible','Every milestone should make clear who owns the next action and whether it is complete.']
+    ],
+    tip:'If a calendar item does not change someone’s next action, it probably does not need to be on the operating calendar.'
+  },
+  results:{
+    intro:'Review and Learn is not an analytics archive. It is where evidence becomes one practical change to future planning, packaging, structure, or conversion.',
+    sections:[
+      ['Observe','Record what happened without explaining it away. Use the metrics, retention shape, traffic sources, comments, and relevant context.'],
+      ['Interpret','Choose the most plausible explanation supported by the evidence. Separate signal from assumptions.'],
+      ['Route','End with one sentence: Because of this video, next time we will…']
+    ],
+    tip:'A review is complete when a future decision changes, not when every metric has been described.'
+  },
+  session:{
+    intro:'The live call workspace is temporary working space. It helps the coach capture evidence, decisions, ownership, and commitments while the conversation is happening.',
+    sections:[
+      ['Before the call','Open the creator’s due work and recent evidence. Do not prepare by rereading every page.'],
+      ['During the call','Capture the decision, why it was made, who owns the next step, and the due date.'],
+      ['After the call','Save the final session record. Unfinished drafts should remain drafts and should not become permanent history.']
+    ],
+    warning:'Do not use the call form as a second strategy dashboard. Link or route decisions back to the page where they belong.'
+  }
+};
+
+function currentView(){
+  const app=appState();
+  if(app?.currentView==='overview'&&app?.v67DiagnosisReview)return'diagnosis';
+  return app?.currentView||'overview';
+}
+
+function pageDefinition(){
+  const view=currentView();
+  if(view==='diagnosis')return{eyebrow:'90-day diagnosis',purpose:'Review the creator’s current signals, identify the real bottleneck, and decide what the next 90 days must change.',guideTitle:'Running the 90-day diagnosis',guideSubtitle:'Use evidence to choose the bottleneck before choosing tactics.'};
+  return pageDefinitions[view]||{eyebrow:'Creator workspace',purpose:'Complete the work on this page, then return to Creator Home for the next decision.',guideTitle:'Using this workspace',guideSubtitle:'Keep the working page focused and open guidance only when needed.'};
+}
+
+function diagnosisGuide(){
+  return{
+    intro:'The diagnosis is a periodic strategic review. It should explain where the creator is now, what is preventing progress, and which bottleneck deserves the next 90 days of attention.',
+    sections:[
+      ['Read the evidence','Use recent videos, channel movement, audience response, execution capacity, and business signals.'],
+      ['Name the bottleneck','Choose the constraint that most limits progress now. Avoid solving five secondary symptoms at once.'],
+      ['Route the decision','Update the 90-day direction, monthly plan, or creator strategy only where the diagnosis requires a change.']
+    ],
+    warning:'A diagnosis is not a list of everything that could improve. It is a decision about what matters most next.'
+  };
+}
+
+function renderGuide(key){
+  const guide=key==='diagnosis'?diagnosisGuide():guideContent[key]||guideContent.overview;
+  let html=`<div class="v72-guide-intro"><p>${escapeHtml(guide.intro||'')}</p></div>`;
+  if(guide.table)html+=`<table class="v72-guide-table"><thead><tr><th>Video job</th><th>Purpose</th><th>Research</th></tr></thead><tbody>${guide.table.map(row=>`<tr>${row.map(cell=>`<td>${escapeHtml(cell)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  for(const section of guide.sections||[])html+=`<section class="v72-guide-section"><h3>${escapeHtml(section[0])}</h3><p>${escapeHtml(section[1])}</p></section>`;
+  if(guide.tip)html+=`<div class="v72-guide-tip"><strong>Useful check:</strong> ${escapeHtml(guide.tip)}</div>`;
+  if(guide.warning)html+=`<div class="v72-guide-warning"><strong>Watch for this:</strong> ${escapeHtml(guide.warning)}</div>`;
+  return html;
+}
+
+function openPageGuide(){
+  const view=currentView();
+  const definition=pageDefinition();
+  const backdrop=document.querySelector('#v72-guide-backdrop');
+  if(!backdrop)return;
+  setText(document.querySelector('#v72-guide-eyebrow'),'Workspace guide');
+  setText(document.querySelector('#v72-guide-title'),definition.guideTitle);
+  setText(document.querySelector('#v72-guide-subtitle'),definition.guideSubtitle);
+  const content=document.querySelector('#v72-guide-content');
+  const html=renderGuide(view==='diagnosis'?'diagnosis':view);
+  if(content&&content.innerHTML!==html)content.innerHTML=html;
+  backdrop.classList.add('open');
+  backdrop.setAttribute('aria-hidden','false');
+}
+
+function setViewClass(){
+  const desired=`v73-view-${currentView()}`;
+  for(const name of [...document.body.classList])if(name.startsWith('v73-view-')&&name!==desired)document.body.classList.remove(name);
+  if(!document.body.classList.contains(desired))document.body.classList.add(desired);
+}
+
+function findPageHead(){
+  const root=pageRoot();
+  return root.querySelector(':scope > .page-head,:scope > .v49-page-head,.page-head,.v49-page-head')||root.querySelector('h1,h2')?.parentElement||null;
+}
+
+function decoratePageHead(){
+  const view=currentView();
+  if(view==='video')return;
+  const root=pageRoot();
+  const head=findPageHead();
+  if(!head||head.closest('[role="dialog"],.modal,.v72-guide-drawer'))return;
+  if(!head.classList.contains('v73-page-head'))head.classList.add('v73-page-head');
+  const title=head.querySelector('h1,h2');
+  if(!title)return;
+  let copy=head.querySelector(':scope > .v73-page-copy');
+  if(!copy){
+    copy=document.createElement('div');copy.className='v73-page-copy';
+    title.parentNode.insertBefore(copy,title);copy.appendChild(title);
+  }
+  const definition=pageDefinition();
+  let eyebrow=copy.querySelector('.v73-page-eyebrow');
+  if(!eyebrow){eyebrow=document.createElement('span');eyebrow.className='v73-page-eyebrow';copy.insertBefore(eyebrow,copy.firstChild)}
+  setText(eyebrow,definition.eyebrow);
+  let purpose=copy.querySelector('.v73-page-purpose');
+  if(!purpose){purpose=document.createElement('p');purpose.className='v73-page-purpose';copy.appendChild(purpose)}
+  setText(purpose,definition.purpose);
+  let actions=head.querySelector(':scope > .v73-page-actions');
+  if(!actions){actions=document.createElement('div');actions.className='v73-page-actions';head.appendChild(actions)}
+  const directActions=[...head.children].filter(node=>node!==copy&&node!==actions&&(node.matches?.('button,.button,a.button')||node.classList?.contains('actions')));
+  directActions.forEach(node=>actions.appendChild(node));
+  if(!actions.querySelector('[data-v73-page-guide]')){
+    const button=document.createElement('button');button.type='button';button.className='v73-page-guide';button.dataset.v73PageGuide='1';button.textContent='View Guide';actions.appendChild(button);
+  }
+  if(root.dataset.v73Page!==view)root.dataset.v73Page=view;
+}
+
+function ensureSaveState(){
+  const topbar=document.querySelector('.topbar');
+  if(!topbar||topbar.querySelector('.v73-save-state'))return;
+  const node=document.createElement('span');node.className='v73-save-state';node.textContent='Auto-saved';node.setAttribute('aria-live','polite');
+  (topbar.querySelector('.topbar-actions,.actions,[class*="topbar-right"]')||topbar).appendChild(node);
+}
+
+let saveTimer=0;
+function showSaving(){
+  const node=document.querySelector('.v73-save-state');if(!node)return;
+  if(!node.classList.contains('saving'))node.classList.add('saving');setText(node,'Saving');
+  clearTimeout(saveTimer);saveTimer=setTimeout(()=>{node.classList.remove('saving');setText(node,'Auto-saved')},650);
+}
+
+function ownHeading(card){return[...card.querySelectorAll('h2,h3,h4')].find(heading=>heading.closest('.card')===card)||null}
+function semanticCardClass(label){
+  if(/coach note|coach feedback|coach recommendation|coaching note/.test(label))return'v73-coach-note';
+  if(/approved|final selection|confirmed|complete handoff|ready to execute/.test(label))return'v73-approved-card';
+  if(/needs attention|changes requested|due|review needed|watch/.test(label))return'v73-warning-card';
+  if(/blocked|error|missing|required before/.test(label))return'v73-danger-card';
+  return'';
+}
+
+function decorateCards(){
+  const semantic=['v73-coach-note','v73-approved-card','v73-warning-card','v73-danger-card'];
+  const cards=[...pageRoot().querySelectorAll('.card')].filter(card=>!card.closest('.v72-guide-drawer')&&!card.closest('.card .card'));
+  for(const card of cards){
+    const heading=ownHeading(card);if(!heading)continue;
+    if(!card.classList.contains('v73-work-card'))card.classList.add('v73-work-card');
+    if(!heading.classList.contains('v73-card-heading'))heading.classList.add('v73-card-heading');
+    const desired=semanticCardClass(clean(heading.textContent).toLowerCase());
+    for(const name of semantic)if(name!==desired&&card.classList.contains(name))card.classList.remove(name);
+    if(desired&&!card.classList.contains(desired))card.classList.add(desired);
+  }
+}
+
+function statusTone(label){
+  if(/approved|complete|completed|confirmed|saved|healthy|on track|ready to execute/.test(label))return'green';
+  if(/changes requested|needs attention|attention|due|overdue|review needed|not reviewed|warning|waiting/.test(label))return'amber';
+  if(/blocked|error|failed|missing|critical|cannot|incomplete required/.test(label))return'red';
+  if(/ready|active|in progress|current|review|draft|scheduled|planned/.test(label))return'blue';
+  return'';
+}
+
+function decorateStatuses(){
+  const tones=['v73-status-blue','v73-status-green','v73-status-amber','v73-status-red'];
+  const nodes=[...pageRoot().querySelectorAll('span,small,em,button')].filter(node=>{
+    if(node.closest('.v72-guide-drawer,.v72-phase-tabs,.sidebar,.v73-page-actions'))return false;
+    if(node.matches('.button')||node.querySelector('input,textarea,select'))return false;
+    const label=clean(node.textContent).toLowerCase();if(!label||label.length>42)return false;
+    const className=String(node.className||'').toLowerCase();
+    return/(badge|chip|pill|status|attention|due)/.test(className)||/^(approved|complete|completed|confirmed|saved|ready|active|in progress|draft|scheduled|planned|changes requested|needs attention|due|overdue|blocked|error|missing|not started|not reviewed)$/i.test(label);
+  });
+  for(const node of nodes){
+    if(!node.classList.contains('v73-status'))node.classList.add('v73-status');
+    const tone=statusTone(clean(node.textContent).toLowerCase());const desired=tone?`v73-status-${tone}`:'';
+    for(const name of tones)if(name!==desired&&node.classList.contains(name))node.classList.remove(name);
+    if(desired&&!node.classList.contains(desired))node.classList.add(desired);
+  }
+}
+
+function decorateCreatorRows(){
+  for(const row of document.querySelectorAll('.creator-row-v14,.creator-row-v13,.creator-row')){
+    if(row.querySelector('.v73-creator-avatar'))continue;
+    const name=row.querySelector('h2,h3,h4,strong,b,[class*="name"]');const label=clean(name?.textContent||row.textContent);if(!label)continue;
+    const avatar=document.createElement('span');avatar.className='v73-creator-avatar';avatar.textContent=label.split(/\s+/).slice(0,2).map(word=>word[0]||'').join('').toUpperCase();row.insertBefore(avatar,row.firstChild);
+  }
+}
+
+function decorateEmptyStates(){
+  for(const node of pageRoot().querySelectorAll('p,div')){
+    if(node.children.length>1||node.closest('.v72-guide-drawer,.sidebar,.topbar'))continue;
+    const label=clean(node.textContent).toLowerCase();
+    if(label.length>=5&&label.length<=110&&/^(no .* yet|nothing scheduled|no upcoming|no videos|no reviews|no events|nothing here)/.test(label)&&!node.classList.contains('v73-empty-state'))node.classList.add('v73-empty-state');
+  }
+}
+
+function decorateCallWorkspace(){
+  const field=document.querySelector('[data-session-bind]');if(!field)return;
+  field.closest('[role="dialog"],.modal,.card,form,section')?.classList.add('v73-call-workspace');
+}
+function decorateVideoPage(){if(currentView()==='video')findPageHead()?.classList.add('v73-page-head')}
+
+let enhancing=false;
+let observer=null;
+let frame=0;
+function observe(){observer?.observe(document.documentElement,{subtree:true,childList:true})}
+function enhance(){
+  if(enhancing)return;
+  enhancing=true;observer?.disconnect();
+  try{
+    if(!document.body.classList.contains('v73-app-design'))document.body.classList.add('v73-app-design');
+    setViewClass();ensureSaveState();decoratePageHead();decorateVideoPage();decorateCards();decorateStatuses();decorateCreatorRows();decorateEmptyStates();decorateCallWorkspace();
+    if(document.title!=='Accelerator OS V52.1 App Design V73')document.title='Accelerator OS V52.1 App Design V73';
+  }catch(error){console.error('V73 app design failed',error)}finally{enhancing=false;observe()}
+}
+function scheduleEnhance(){if(frame)return;frame=requestAnimationFrame(()=>{frame=0;enhance()})}
+
+document.addEventListener('click',event=>{
+  if(event.target.closest?.('[data-v73-page-guide]')){event.preventDefault();event.stopPropagation();openPageGuide();return}
+  setTimeout(scheduleEnhance,0);
+});
+document.addEventListener('input',showSaving,true);
+document.addEventListener('change',showSaving,true);
+
+observer=new MutationObserver(scheduleEnhance);observe();
+const previousRender=window.render;
+if(typeof previousRender==='function')window.render=function(...args){observer?.disconnect();const result=previousRender.apply(this,args);enhance();setTimeout(enhance,0);setTimeout(enhance,120);return result};
+enhance();
+})();</script>
+<style id="v73-creator-card-fix-styles">/* Apply the shared creator-card treatment to every roster wrapper used by Accelerator. */
+body.v73-app-design [data-creator-item],
+body.v73-app-design .v303-creator-row,
+body.v73-app-design .v16-creator-row,
+body.v73-app-design .creator-card,
+body.v73-app-design article.v73-creator-card{
+  position:relative;
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  align-items:start;
+  gap:11px;
+  padding:14px 15px!important;
+  border:1px solid var(--v73-line)!important;
+  border-radius:var(--v73-radius)!important;
+  background:var(--v73-panel)!important;
+  box-shadow:var(--v73-shadow)!important;
+  transition:border-color .16s ease,transform .16s ease,background .16s ease;
+}
+body.v73-app-design [data-creator-item]:hover,
+body.v73-app-design .v303-creator-row:hover,
+body.v73-app-design .v16-creator-row:hover,
+body.v73-app-design .creator-card:hover,
+body.v73-app-design article.v73-creator-card:hover{
+  border-color:#46515D!important;
+  background:var(--v73-panel-raised)!important;
+  transform:translateY(-1px);
+}
+body.v73-app-design [data-creator-item] > .v73-creator-avatar,
+body.v73-app-design .v303-creator-row > .v73-creator-avatar,
+body.v73-app-design .v16-creator-row > .v73-creator-avatar,
+body.v73-app-design .creator-card > .v73-creator-avatar,
+body.v73-app-design article.v73-creator-card > .v73-creator-avatar{
+  grid-column:1;
+  grid-row:1 / span 2;
+}
+body.v73-app-design [data-creator-item] > :not(.v73-creator-avatar),
+body.v73-app-design .v303-creator-row > :not(.v73-creator-avatar),
+body.v73-app-design .v16-creator-row > :not(.v73-creator-avatar),
+body.v73-app-design .creator-card > :not(.v73-creator-avatar),
+body.v73-app-design article.v73-creator-card > :not(.v73-creator-avatar){grid-column:2}
+@media(max-width:640px){
+  body.v73-app-design [data-creator-item],
+  body.v73-app-design .v303-creator-row,
+  body.v73-app-design .v16-creator-row,
+  body.v73-app-design .creator-card,
+  body.v73-app-design article.v73-creator-card{padding:12px!important;gap:9px}
+}</style>
+<script id="v73-creator-card-fix-script">(()=>{
+if(window.__v73CreatorCardFixInstalled)return;
+window.__v73CreatorCardFixInstalled=true;
+const text=value=>String(value??'').replace(/\s+/g,' ').trim();
+function rosterRows(){
+  const rows=new Set(document.querySelectorAll('.creator-row-v14,.creator-row-v13,.creator-row,.v303-creator-row,.v16-creator-row,.creator-card,[data-creator-item]'));
+  document.querySelectorAll('[data-open-creator]').forEach(open=>{
+    const host=open.closest('[data-creator-item],article,.creator-row-v14,.creator-row-v13,.creator-row,.v303-creator-row,.v16-creator-row,.creator-card,li,section');
+    if(host)rows.add(host);
+  });
+  return[...rows].filter(row=>row.closest('.content')&&!row.closest('.v70-portfolio-attention,.v72-guide-drawer,[role="dialog"]'));
+}
+function decorate(){
+  for(const row of rosterRows()){
+    if(row.tagName==='ARTICLE')row.classList.add('v73-creator-card');
+    if(row.querySelector(':scope > .v73-creator-avatar'))continue;
+    const name=row.querySelector('h2,h3,h4,[class*="creator-name"],[class*="name"],strong,b');
+    const label=text(name?.textContent||row.querySelector('[data-open-creator]')?.textContent||'');
+    if(!label)continue;
+    const words=label.split(/\s+/).filter(Boolean);
+    const avatar=document.createElement('span');
+    avatar.className='v73-creator-avatar';
+    avatar.setAttribute('aria-hidden','true');
+    avatar.textContent=words.slice(0,2).map(word=>word[0]||'').join('').toUpperCase();
+    row.insertBefore(avatar,row.firstChild);
+  }
+}
+let frame=0;
+const schedule=()=>{if(frame)return;frame=requestAnimationFrame(()=>{frame=0;decorate()})};
+const observer=new MutationObserver(schedule);observer.observe(document.documentElement,{subtree:true,childList:true});
+const prior=window.render;if(typeof prior==='function')window.render=function(...args){const result=prior.apply(this,args);decorate();setTimeout(decorate,0);return result};
+decorate();
+})();</script>
+<style id="v73-workspace-panel-fix-styles">/* Custom Foundation and Monthly Plan panels share the same reference-led work-card language. */
+body.v73-app-design .v73-generic-work-panel{
+  overflow:hidden;
+  margin:0 0 14px!important;
+  padding:0 15px 15px!important;
+  border:1px solid var(--v73-line)!important;
+  border-radius:var(--v73-radius)!important;
+  background:var(--v73-panel)!important;
+  box-shadow:var(--v73-shadow)!important;
+}
+body.v73-app-design details.v73-generic-work-panel{padding:0 15px 15px!important}
+body.v73-app-design .v73-generic-work-panel > summary,
+body.v73-app-design .v73-generic-work-panel > .v73-generic-panel-head,
+body.v73-app-design .v73-generic-work-panel > header:first-child,
+body.v73-app-design .v73-generic-work-panel > .section-title:first-child{
+  display:flex!important;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  min-height:50px;
+  margin:0 -15px 14px!important;
+  padding:11px 14px!important;
+  border:0!important;
+  border-bottom:1px solid rgba(147,197,253,.28)!important;
+  border-radius:11px 11px 0 0!important;
+  background:linear-gradient(135deg,#235FCB 0%,#3B82F6 100%)!important;
+  color:#fff!important;
+  font-weight:850!important;
+  cursor:pointer;
+}
+body.v73-app-design .v73-generic-work-panel > summary *,
+body.v73-app-design .v73-generic-panel-head *{color:inherit!important}
+body.v73-app-design .v73-generic-work-panel > .v73-card-heading{
+  margin:0 -15px 14px!important;
+  padding:11px 14px!important;
+  border-radius:11px 11px 0 0!important;
+}
+body.v73-app-design .v73-generic-work-panel > :last-child{margin-bottom:0}
+body.v73-app-design .v73-generic-work-panel .card{
+  border-color:#39434E!important;
+  background:var(--v73-panel-soft)!important;
+  box-shadow:none!important;
+}
+@media(max-width:640px){
+  body.v73-app-design .v73-generic-work-panel{padding:0 12px 12px!important}
+  body.v73-app-design .v73-generic-work-panel > summary,
+  body.v73-app-design .v73-generic-work-panel > .v73-generic-panel-head,
+  body.v73-app-design .v73-generic-work-panel > header:first-child,
+  body.v73-app-design .v73-generic-work-panel > .section-title:first-child,
+  body.v73-app-design .v73-generic-work-panel > .v73-card-heading{margin:0 -12px 12px!important;padding:10px 12px!important}
+}</style>
+<script id="v73-workspace-panel-fix-script">(()=>{
+if(window.__v73WorkspacePanelFixInstalled)return;
+window.__v73WorkspacePanelFixInstalled=true;
+const text=value=>String(value??'').replace(/\s+/g,' ').trim();
+const stateNow=()=>{try{return typeof state!=='undefined'?state:null}catch{return null}};
+function candidateFor(heading,root){
+  const explicit=heading.closest('details,section,article,.card,[class*="foundation"],[class*="setup"],[class*="stage"],[class*="panel"],[class*="section"]');
+  if(explicit&&explicit!==root&&!explicit.classList.contains('page-head')&&!explicit.classList.contains('v73-page-head'))return explicit;
+  let node=heading.parentElement;
+  while(node&&node.parentElement&&node.parentElement!==root){
+    if(node.querySelector('input,textarea,select,button,[contenteditable="true"]'))return node;
+    node=node.parentElement;
+  }
+  return node&&node!==root?node:null;
+}
+function markPanel(panel,heading=null){
+  if(!panel||panel.classList.contains('v73-generic-work-panel'))return;
+  panel.classList.add('v73-work-card','v73-generic-work-panel');
+  if(panel.tagName==='DETAILS')return;
+  const directHeader=heading?.closest('header,.section-title');
+  if(directHeader&&directHeader.parentElement===panel)directHeader.classList.add('v73-generic-panel-head');
+  else heading?.classList.add('v73-card-heading');
+}
+function decorate(){
+  const view=stateNow()?.currentView;
+  if(view!=='setup'&&view!=='plan')return;
+  const root=document.querySelector('.content');if(!root)return;
+
+  if(view==='setup'){
+    root.querySelectorAll('details.v67-foundation-section,[data-v67-foundation]').forEach(panel=>markPanel(panel));
+  }
+
+  const seen=new Set();
+  for(const heading of root.querySelectorAll('h2,h3,h4')){
+    if(heading.closest('.v73-page-head,.page-head,.v72-guide-drawer,[role="dialog"],summary,.v73-work-card'))continue;
+    const label=text(heading.textContent);if(!label||label.length>110)continue;
+    const panel=candidateFor(heading,root);
+    if(!panel||seen.has(panel)||panel.closest('.v72-guide-drawer,[role="dialog"]'))continue;
+    if(panel===root||panel.contains(root.querySelector('.v73-page-head')))continue;
+    const hasWork=panel.querySelector('input,textarea,select,button,[contenteditable="true"],details');
+    if(!hasWork)continue;
+    seen.add(panel);markPanel(panel,heading);
+  }
+}
+let frame=0;
+const schedule=()=>{if(frame)return;frame=requestAnimationFrame(()=>{frame=0;decorate()})};
+const observer=new MutationObserver(schedule);observer.observe(document.documentElement,{subtree:true,childList:true});
+const prior=window.render;if(typeof prior==='function')window.render=function(...args){const result=prior.apply(this,args);decorate();setTimeout(decorate,0);return result};
+decorate();
+})();</script>
+<script id="v73-page-head-fix-script">(()=>{
+if(window.__v73PageHeadFixInstalled)return;
+window.__v73PageHeadFixInstalled=true;
+const stateNow=()=>{try{return typeof state!=='undefined'?state:null}catch{return null}};
+const definitions={
+ overview:['Creator workspace','See what needs attention, run the next coaching step, and leave with one clear commitment.'],
+ creators:['Creator management','Scan every creator, address due work, and open the right workspace without hunting across the app.'],
+ setup:['Foundation','Define the audience, message, offer, and operating constraints once, then update them only when strategy changes.'],
+ plan:['Monthly planning','Choose the month’s priorities and Reach, Trust, and Convert mix before planning individual videos.'],
+ calendar:['Operating calendar','See planning, publishing, review, and coaching commitments in one place.'],
+ results:['Review and learn','Open this when a review is due, then turn performance evidence into one future decision.']
+};
+function definition(){
+ const app=stateNow();
+ if(app?.currentView==='overview'&&app?.v67DiagnosisReview)return['90-day diagnosis','Review the creator’s current signals, identify the real bottleneck, and decide what the next 90 days must change.'];
+ return definitions[app?.currentView]||['Creator workspace','Complete the work on this page, then return to Creator Home for the next decision.'];
+}
+function unwrap(node){
+ const parent=node.parentNode;if(!parent)return;
+ while(node.firstChild)parent.insertBefore(node.firstChild,node);
+ node.remove();
+}
+function stabilize(){
+ const view=stateNow()?.currentView;
+ if(view==='video')return;
+ const head=document.querySelector('.content .v73-page-head');if(!head)return;
+ const title=head.querySelector('h1,h2');if(!title)return;
+ let direct=head.querySelector(':scope > .v73-page-copy');
+ if(!direct){direct=document.createElement('div');direct.className='v73-page-copy';head.insertBefore(direct,head.firstChild)}
+ if(title.parentElement!==direct)direct.appendChild(title);
+ for(const copy of [...head.querySelectorAll('.v73-page-copy')])if(copy!==direct)unwrap(copy);
+ head.querySelectorAll('.v73-page-eyebrow,.v73-page-purpose').forEach(node=>node.remove());
+ const [eyebrowText,purposeText]=definition();
+ const eyebrow=document.createElement('span');eyebrow.className='v73-page-eyebrow';eyebrow.textContent=eyebrowText;direct.insertBefore(eyebrow,direct.firstChild);
+ const purpose=document.createElement('p');purpose.className='v73-page-purpose';purpose.textContent=purposeText;direct.appendChild(purpose);
+ const actionGroups=[...head.querySelectorAll(':scope > .v73-page-actions')];
+ let actions=actionGroups.shift();
+ if(!actions){actions=document.createElement('div');actions.className='v73-page-actions';head.appendChild(actions)}
+ for(const duplicate of actionGroups){while(duplicate.firstChild)actions.appendChild(duplicate.firstChild);duplicate.remove()}
+ const guides=[...actions.querySelectorAll('[data-v73-page-guide]')];guides.slice(1).forEach(node=>node.remove());
+}
+let frame=0;
+const schedule=()=>{if(frame)return;frame=requestAnimationFrame(()=>{frame=0;stabilize()})};
+const observer=new MutationObserver(schedule);observer.observe(document.documentElement,{subtree:true,childList:true});
+const prior=window.render;if(typeof prior==='function')window.render=function(...args){const result=prior.apply(this,args);stabilize();setTimeout(stabilize,0);return result};
+stabilize();
 })();</script>
 </body>
 </html>

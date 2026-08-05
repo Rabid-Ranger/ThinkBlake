@@ -1,8 +1,8 @@
 {
-  "build": "V52.1-reference-ui-v72",
-  "checkedAt": "2026-08-05T22:24:42.414Z",
+  "build": "V52.1-reference-ui-v73",
+  "checkedAt": "2026-08-05T23:07:52.277Z",
   "passed": [
-    "The app identifies the V72 reference-led build.",
+    "The app identifies the V73 reference-led build.",
     "The video page begins with one short flow instruction.",
     "The planner has four clear phase tabs.",
     "Plan is the default active phase.",
