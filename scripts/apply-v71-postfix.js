@@ -12,8 +12,31 @@ const patch=`<script id="${marker}">
 (()=>{
 if(window.__v71PostfixInstalled)return;
 window.__v71PostfixInstalled=true;
+const compact=value=>String(value??'').replace(/\\s+/g,' ').trim();
+const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+const first=(...values)=>values.find(value=>compact(value))||'';
+const jobs={
+ Reach:{purpose:'Bring the right new viewers into the channel.',research:'Demand, repeated problems, outliers, search language and proven click patterns.'},
+ Trust:{purpose:'Change a belief and build preference for this creator or method.',research:'Doubts, misconceptions, objections, proof, stories and credibility gaps.'},
+ Convert:{purpose:'Help a ready viewer make one decision or take the next step.',research:'Buyer questions, fit, alternatives, risk, objections and decision criteria.'}
+};
+function ensureVideoFocus(){
+ if(window.state?.currentView!=='video'||document.querySelector('.v71-video-focus'))return;
+ let current=null;
+ try{current=typeof window.video==='function'?window.video():null}catch{}
+ if(!current)return;
+ const job=first(current.job,'Reach');
+ const info=jobs[job]||jobs.Reach;
+ const topic=first(current.surfaceProblem,current.promise,current.title,current.packaging?.selectedTitle,'Not chosen yet');
+ const clickFrame=first(current.packaging?.clickFrame,current.packaging?.mechanism,current.angle,'Not chosen yet');
+ const title=[...document.querySelectorAll('.content h1,.content h2')].find(node=>/video plan/i.test(compact(node.textContent)));
+ const anchor=document.querySelector('.content .page-head,.content .v49-page-head,.content .v49-video-head')||title?.closest('header,.page-head,.v49-page-head,.v49-video-head')||title?.parentElement||document.querySelector('.content');
+ if(!anchor)return;
+ anchor.insertAdjacentHTML('afterend',\`<section class="v71-video-focus"><div><span>\${escapeHtml(job)} video</span><strong>\${escapeHtml(info.purpose)}</strong><p><b>Research:</b> \${escapeHtml(info.research)}</p><p><b>Topic:</b> \${escapeHtml(topic)} &nbsp; <b>Click frame:</b> \${escapeHtml(clickFrame)}</p></div><div class="v71-video-focus-actions"><button class="v71-compact-button" data-v71-jobs>How video jobs differ</button><button class="v71-compact-button" data-v69-open-strategy>Creator Strategy</button></div></section>\`);
+}
 const clean=()=>{
  if(window.state?.currentView==='setup')document.querySelectorAll('.v69-map').forEach(node=>node.remove());
+ ensureVideoFocus();
 };
 const observer=new MutationObserver(clean);
 observer.observe(document.documentElement,{childList:true,subtree:true});
