@@ -1,6 +1,6 @@
 const fs=require('fs');
 const {chromium}=require('playwright');
-const report={build:'V52.1-coach-flow-v68.1',passed:[],errors:[],checkedAt:new Date().toISOString()};
+const report={build:'V52.1-coach-flow-v70',passed:[],errors:[],checkedAt:new Date().toISOString()};
 const pass=m=>{report.passed.push(m);console.log(`PASS: ${m}`)};
 const assert=(v,m)=>{if(!v){report.errors.push(m);throw new Error(m)}pass(m)};
 (async()=>{
@@ -13,7 +13,7 @@ const assert=(v,m)=>{if(!v){report.errors.push(m);throw new Error(m)}pass(m)};
   await page.goto('http://127.0.0.1:4173/decoded-source.html',{waitUntil:'domcontentloaded',timeout:60000});
   await page.waitForFunction(()=>typeof render==='function'&&typeof state!=='undefined'&&typeof blankCreator==='function',null,{timeout:60000});
   await page.waitForTimeout(500);
-  assert(await page.evaluate(()=>window.__acceleratorBuild)==='V52.1-coach-flow-v68.1','The app identifies the contextual guided-flow build.');
+  assert(await page.evaluate(()=>window.__acceleratorBuild)==='V52.1-coach-flow-v70','The app identifies the contextual guided-flow build.');
 
   await page.evaluate(()=>{
    const c=blankCreator();c.id='context-new';c.name='Context Test';c.channelName='';c.channelUrl='';
@@ -54,7 +54,7 @@ const assert=(v,m)=>{if(!v){report.errors.push(m);throw new Error(m)}pass(m)};
   const bestFitLabels=(await page.locator('.v69-rationale code').allTextContents()).map(x=>x.trim().toLowerCase());
   const hasInputEvidence=/video job|format:|angle(?: or topic)?:|viewer problem|proof available|research signal|creator capacity|monthly business goal/i.test(rationale);
   assert(bestFitLabels.includes('best fit')&&hasInputEvidence,'Best fit is defined and tied to visible creator and video inputs.');
-  assert(/packaging angle|story shape|video types|opening|pacing|next action/i.test(rationale),'The recommendation explanation describes what the choice controls.');
+  assert(/click frame|packaging angle|story shape|viewer flow|video types|opening|pacing|next action/i.test(rationale),'The recommendation explanation describes what the choice controls.');
 
   await page.evaluate(()=>{state.currentView='setup';render()});
   await page.waitForTimeout(250);
