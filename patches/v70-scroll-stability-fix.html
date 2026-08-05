@@ -5,16 +5,36 @@
 
   let pendingPlannerSnapshot=null;
   const plannerControlSelector='[data-v57-structure],[data-v57-hook],[data-v57-pace],[data-v70-expand],[data-v70-toggle-beats]';
+  const anchorAttributes=['data-v57-structure','data-v57-hook','data-v57-pace','data-v70-expand','data-v70-toggle-beats'];
 
-  function capturePlannerPosition(){
+  function controlIdentity(control){
+    if(!control)return null;
+    const attribute=anchorAttributes.find(name=>control.hasAttribute(name));
+    return attribute?{attribute,value:control.getAttribute(attribute)}:null;
+  }
+
+  function findControl(identity){
+    if(!identity)return null;
+    return [...document.querySelectorAll(`[${identity.attribute}]`)].find(node=>node.getAttribute(identity.attribute)===identity.value)||null;
+  }
+
+  function visualAnchor(control){
+    return control?.closest('.v57-choice-card,.v57-hook-choice,.v57-pace-choice,.v70-pace-summary,.v57-live-example')||control||null;
+  }
+
+  function capturePlannerPosition(control=null){
     if(state?.currentView!=='video')return null;
     const section=document.querySelector('[data-v49-section="video-experience"]');
+    const identity=controlIdentity(control);
+    const anchor=visualAnchor(control);
     return {
       view:state.currentView,
       videoId:state.currentVideoId||'',
       scrollY:window.scrollY,
       sectionOpen:section?.open===true,
-      sectionTop:section?section.getBoundingClientRect().top:null
+      sectionTop:section?section.getBoundingClientRect().top:null,
+      identity,
+      anchorTop:anchor?anchor.getBoundingClientRect().top:null
     };
   }
 
@@ -22,6 +42,14 @@
     if(!snapshot||state?.currentView!==snapshot.view||(state?.currentVideoId||'')!==snapshot.videoId)return;
     const section=document.querySelector('[data-v49-section="video-experience"]');
     if(section&&snapshot.sectionOpen)section.open=true;
+
+    const currentControl=findControl(snapshot.identity);
+    const currentAnchor=visualAnchor(currentControl);
+    if(currentAnchor&&snapshot.anchorTop!==null){
+      const delta=currentAnchor.getBoundingClientRect().top-snapshot.anchorTop;
+      if(Math.abs(delta)>1)window.scrollBy(0,delta);
+      return;
+    }
     if(section&&snapshot.sectionTop!==null){
       const delta=section.getBoundingClientRect().top-snapshot.sectionTop;
       if(Math.abs(delta)>1)window.scrollBy(0,delta);
@@ -31,14 +59,17 @@
   }
 
   function rememberPlannerPosition(event){
-    if(!event.target.closest?.(plannerControlSelector))return;
-    pendingPlannerSnapshot=capturePlannerPosition();
+    const control=event.target.closest?.(plannerControlSelector);
+    if(!control)return;
+    pendingPlannerSnapshot=capturePlannerPosition(control);
   }
 
   document.addEventListener('pointerdown',rememberPlannerPosition,true);
   document.addEventListener('mousedown',rememberPlannerPosition,true);
   document.addEventListener('keydown',event=>{
-    if((event.key==='Enter'||event.key===' ')&&event.target.closest?.(plannerControlSelector))pendingPlannerSnapshot=capturePlannerPosition();
+    if(event.key!=='Enter'&&event.key!==' ')return;
+    const control=event.target.closest?.(plannerControlSelector);
+    if(control)pendingPlannerSnapshot=capturePlannerPosition(control);
   },true);
 
   const renderBeforeScrollFix=render;
@@ -46,7 +77,7 @@
     const snapshot=pendingPlannerSnapshot||capturePlannerPosition();
     pendingPlannerSnapshot=null;
     const result=renderBeforeScrollFix(...args);
-    [0,45,110,220,360,520].forEach(delay=>setTimeout(()=>{
+    [0,45,110,220,360,520,760].forEach(delay=>setTimeout(()=>{
       try{stabilizePlannerPosition(snapshot)}catch(error){console.error('V70 planner scroll stabilization failed',error)}
     },delay));
     return result;
