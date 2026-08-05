@@ -10,6 +10,7 @@ on:
       - patches/v70-coaching-clarity.html
       - patches/v70-creator-attention-fix.html
       - patches/v70-video-job-guide-fix.html
+      - patches/v70-scroll-stability-fix.html
       - tests/v68-smoke.js
       - tests/v69-context.js
       - tests/v70-clarity.js
