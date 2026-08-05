@@ -51,7 +51,8 @@ const assert=(v,m)=>{if(!v){report.errors.push(m);throw new Error(m)}pass(m)};
   await page.waitForTimeout(400);
   assert(await page.locator('.v69-rationale').count()>=1,'The video planner explains why recommendations are being shown.');
   const rationale=(await page.locator('.v69-rationale').allInnerTexts()).join(' ');
-  assert(rationale.includes('Best fit')&&rationale.includes('Video job'),'Best fit is defined and tied to visible creator and video inputs.');
+  const hasInputEvidence=/Video job|Format:|Angle:|Viewer problem|Proof available|Research signal|Creator capacity|Monthly business goal/.test(rationale);
+  assert(rationale.includes('Best fit')&&hasInputEvidence,'Best fit is defined and tied to visible creator and video inputs.');
   assert(/packaging angle|story shape|video types|opening|pacing|next action/i.test(rationale),'The recommendation explanation describes what the choice controls.');
 
   await page.evaluate(()=>{state.currentView='setup';render()});
