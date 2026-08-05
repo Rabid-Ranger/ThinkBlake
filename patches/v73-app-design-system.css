@@ -1,0 +1,477 @@
+/* V73 app-wide reference design system.
+   The working page stays focused. Teaching, examples and explanation live in drawers. */
+:root{
+  --v73-bg:#0D1117;
+  --v73-panel:#161B22;
+  --v73-panel-raised:#1C222B;
+  --v73-panel-soft:#21262D;
+  --v73-line:#30363D;
+  --v73-line-strong:#3D4652;
+  --v73-text:#E6EDF3;
+  --v73-muted:#8B949E;
+  --v73-blue:#3B82F6;
+  --v73-blue-soft:#1A3A5C;
+  --v73-blue-text:#93C5FD;
+  --v73-green:#3FB950;
+  --v73-green-soft:#132D1D;
+  --v73-green-text:#86EFAC;
+  --v73-amber:#F59E0B;
+  --v73-amber-soft:#3D3415;
+  --v73-amber-text:#FCD34D;
+  --v73-red:#F85149;
+  --v73-red-soft:#3B1D1D;
+  --v73-red-text:#FDA4AF;
+  --v73-purple:#A855F7;
+  --v73-radius:12px;
+  --v73-radius-small:9px;
+  --v73-shadow:0 10px 32px rgba(0,0,0,.18);
+}
+
+html{background:var(--v73-bg)}
+body.v73-app-design{
+  background:var(--v73-bg)!important;
+  color:var(--v73-text)!important;
+  font-size:14px;
+  line-height:1.5;
+}
+body.v73-app-design *{scrollbar-color:#3D4652 #0D1117}
+body.v73-app-design *:focus-visible{outline:2px solid var(--v73-blue)!important;outline-offset:2px}
+
+/* Global frame */
+body.v73-app-design .app,
+body.v73-app-design .app-shell,
+body.v73-app-design .shell{background:var(--v73-bg)!important}
+body.v73-app-design .sidebar{
+  background:#0B0F14!important;
+  border-right:1px solid var(--v73-line)!important;
+  box-shadow:none!important;
+}
+body.v73-app-design .sidebar .brand,
+body.v73-app-design .sidebar-brand{
+  border-bottom:1px solid var(--v73-line)!important;
+  padding-bottom:14px!important;
+}
+body.v73-app-design .sidebar nav,
+body.v73-app-design .nav-list{padding:10px!important}
+body.v73-app-design .sidebar button,
+body.v73-app-design .sidebar a,
+body.v73-app-design [data-view]{
+  min-height:38px;
+  border-radius:8px!important;
+  color:#AAB4C0;
+  transition:background .16s ease,color .16s ease,border-color .16s ease;
+}
+body.v73-app-design .sidebar button:hover,
+body.v73-app-design .sidebar a:hover,
+body.v73-app-design [data-view]:hover{background:var(--v73-panel-soft)!important;color:var(--v73-text)!important}
+body.v73-app-design .sidebar .active,
+body.v73-app-design [data-view].active,
+body.v73-app-design [aria-current="page"]{
+  background:var(--v73-blue-soft)!important;
+  color:var(--v73-blue-text)!important;
+  border-color:rgba(59,130,246,.45)!important;
+  box-shadow:inset 3px 0 0 var(--v73-blue);
+}
+body.v73-app-design .topbar{
+  min-height:58px;
+  background:rgba(22,27,34,.96)!important;
+  border-bottom:1px solid var(--v73-line)!important;
+  box-shadow:0 4px 18px rgba(0,0,0,.13)!important;
+  backdrop-filter:blur(12px);
+}
+body.v73-app-design .content{
+  width:min(1240px,100%);
+  margin:0 auto;
+  padding:22px clamp(16px,2.6vw,32px) 52px!important;
+}
+
+/* Small auto-save indicator, modeled on the reference header */
+.v73-save-state{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  margin-left:auto;
+  padding:6px 9px;
+  border:1px solid transparent;
+  border-radius:999px;
+  color:var(--v73-green-text);
+  background:rgba(19,45,29,.55);
+  font-size:11px;
+  font-weight:750;
+  white-space:nowrap;
+}
+.v73-save-state::before{
+  content:'✓';
+  width:16px;height:16px;
+  display:grid;place-items:center;
+  border-radius:50%;
+  background:var(--v73-green);
+  color:#07140B;
+  font-size:10px;
+  font-weight:1000;
+}
+.v73-save-state.saving{color:var(--v73-blue-text);background:rgba(26,58,92,.55)}
+.v73-save-state.saving::before{content:'•';background:var(--v73-blue);color:white}
+
+/* Page orientation */
+body.v73-app-design .page-head,
+body.v73-app-design .v49-page-head,
+.v73-page-head{
+  position:relative;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:end;
+  gap:8px 18px;
+  margin:0 0 18px!important;
+  padding:0 0 17px!important;
+  border-bottom:1px solid var(--v73-line)!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.v73-page-copy{min-width:0}
+.v73-page-eyebrow{
+  display:block;
+  margin:0 0 5px;
+  color:#60A5FA;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.11em;
+  text-transform:uppercase;
+}
+body.v73-app-design .page-head h1,
+body.v73-app-design .page-head h2,
+body.v73-app-design .v49-page-head h1,
+body.v73-app-design .v49-page-head h2,
+.v73-page-head h1,
+.v73-page-head h2{
+  margin:0!important;
+  color:var(--v73-text)!important;
+  font-size:clamp(22px,2.5vw,31px)!important;
+  line-height:1.15!important;
+  letter-spacing:-.025em;
+}
+.v73-page-purpose{
+  max-width:760px;
+  margin:7px 0 0;
+  color:var(--v73-muted);
+  font-size:13px;
+  line-height:1.55;
+}
+.v73-page-actions{
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.v73-page-guide{
+  display:inline-flex;align-items:center;gap:7px;
+  min-height:36px;
+  padding:8px 11px;
+  border:1px solid var(--v73-line-strong);
+  border-radius:8px;
+  background:var(--v73-panel-soft);
+  color:#D7E5F7;
+  font-size:11px;
+  font-weight:800;
+  cursor:pointer;
+}
+.v73-page-guide::before{content:'?';width:17px;height:17px;display:grid;place-items:center;border-radius:5px;background:var(--v73-blue-soft);color:var(--v73-blue-text);font-size:10px}
+.v73-page-guide:hover{border-color:var(--v73-blue);background:var(--v73-blue-soft);color:white}
+
+/* Cards and sections */
+body.v73-app-design .card,
+body.v73-app-design .creator-row-v14,
+body.v73-app-design .creator-row-v13,
+body.v73-app-design .creator-row,
+body.v73-app-design .video-card,
+body.v73-app-design .calendar-card,
+body.v73-app-design .upcoming-panel{
+  border:1px solid var(--v73-line)!important;
+  border-radius:var(--v73-radius)!important;
+  background:var(--v73-panel)!important;
+  box-shadow:var(--v73-shadow)!important;
+}
+body.v73-app-design .card{padding:16px!important}
+body.v73-app-design .card .card{background:var(--v73-panel-soft)!important;box-shadow:none!important}
+.v73-work-card{
+  overflow:hidden;
+  padding:0 16px 16px!important;
+}
+.v73-card-heading,
+.v73-work-card > header:first-child,
+.v73-work-card > .section-title:first-child{
+  display:flex!important;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin:0 -16px 15px!important;
+  padding:12px 15px!important;
+  border-bottom:1px solid rgba(147,197,253,.25)!important;
+  background:linear-gradient(135deg,#235FCB 0%,#3B82F6 100%)!important;
+  color:white!important;
+  border-radius:11px 11px 0 0;
+}
+.v73-card-heading{font-size:14px!important;line-height:1.3!important}
+.v73-card-heading *{color:inherit!important}
+.v73-card-heading + p,
+.v73-work-card > header:first-child + p{color:var(--v73-muted)}
+body.v73-app-design h1,
+body.v73-app-design h2,
+body.v73-app-design h3,
+body.v73-app-design h4{color:var(--v73-text)}
+body.v73-app-design p,
+body.v73-app-design .muted,
+body.v73-app-design small{color:var(--v73-muted)}
+body.v73-app-design hr{border:0;border-top:1px solid var(--v73-line)}
+
+/* Semantic cards make coach work, approvals and warnings scannable */
+.v73-coach-note{
+  border-color:rgba(59,130,246,.45)!important;
+  background:linear-gradient(135deg,rgba(26,58,92,.65),var(--v73-panel))!important;
+  box-shadow:inset 4px 0 0 var(--v73-blue),var(--v73-shadow)!important;
+}
+.v73-coach-note .v73-card-heading{background:transparent!important;color:var(--v73-blue-text)!important;border-bottom-color:rgba(59,130,246,.22)!important}
+.v73-approved-card{
+  border-color:rgba(63,185,80,.42)!important;
+  background:linear-gradient(135deg,rgba(19,45,29,.72),var(--v73-panel))!important;
+  box-shadow:inset 4px 0 0 var(--v73-green),var(--v73-shadow)!important;
+}
+.v73-approved-card .v73-card-heading{background:transparent!important;color:var(--v73-green-text)!important;border-bottom-color:rgba(63,185,80,.22)!important}
+.v73-warning-card{
+  border-color:rgba(245,158,11,.46)!important;
+  background:linear-gradient(135deg,rgba(61,52,21,.72),var(--v73-panel))!important;
+  box-shadow:inset 4px 0 0 var(--v73-amber),var(--v73-shadow)!important;
+}
+.v73-warning-card .v73-card-heading{background:transparent!important;color:var(--v73-amber-text)!important;border-bottom-color:rgba(245,158,11,.22)!important}
+.v73-danger-card{
+  border-color:rgba(248,81,73,.48)!important;
+  background:linear-gradient(135deg,rgba(59,29,29,.74),var(--v73-panel))!important;
+  box-shadow:inset 4px 0 0 var(--v73-red),var(--v73-shadow)!important;
+}
+.v73-danger-card .v73-card-heading{background:transparent!important;color:var(--v73-red-text)!important;border-bottom-color:rgba(248,81,73,.22)!important}
+
+/* Inputs */
+body.v73-app-design label{color:#C8D4E3;font-size:12px;font-weight:750}
+body.v73-app-design input,
+body.v73-app-design textarea,
+body.v73-app-design select{
+  min-height:40px;
+  border:1px solid var(--v73-line)!important;
+  border-radius:8px!important;
+  background:#0D1117!important;
+  color:var(--v73-text)!important;
+  font:inherit;
+  box-shadow:none!important;
+}
+body.v73-app-design textarea{min-height:92px;line-height:1.55;resize:vertical}
+body.v73-app-design input::placeholder,
+body.v73-app-design textarea::placeholder{color:#66717D}
+body.v73-app-design input:hover,
+body.v73-app-design textarea:hover,
+body.v73-app-design select:hover{border-color:var(--v73-line-strong)!important}
+body.v73-app-design input:focus,
+body.v73-app-design textarea:focus,
+body.v73-app-design select:focus{border-color:var(--v73-blue)!important;box-shadow:0 0 0 3px rgba(59,130,246,.16)!important;outline:0!important}
+.v73-field-help{margin:5px 0 0;color:var(--v73-muted);font-size:11px;line-height:1.45}
+
+/* Buttons */
+body.v73-app-design button,
+body.v73-app-design .button{font-family:inherit}
+body.v73-app-design .button,
+body.v73-app-design button.button{
+  min-height:38px;
+  padding:8px 13px!important;
+  border:1px solid var(--v73-blue)!important;
+  border-radius:8px!important;
+  background:var(--v73-blue)!important;
+  color:white!important;
+  font-size:12px!important;
+  font-weight:800!important;
+  box-shadow:0 7px 18px rgba(59,130,246,.16);
+  transition:transform .12s ease,filter .12s ease,background .12s ease;
+}
+body.v73-app-design .button:hover{filter:brightness(1.08);transform:translateY(-1px)}
+body.v73-app-design .button.secondary,
+body.v73-app-design .button.ghost,
+body.v73-app-design button.secondary{
+  border-color:var(--v73-line-strong)!important;
+  background:var(--v73-panel-soft)!important;
+  color:var(--v73-text)!important;
+  box-shadow:none!important;
+}
+body.v73-app-design .button.ghost{background:transparent!important;color:var(--v73-muted)!important}
+body.v73-app-design .button.danger,
+body.v73-app-design [data-danger]{border-color:var(--v73-red)!important;background:var(--v73-red-soft)!important;color:var(--v73-red-text)!important;box-shadow:none!important}
+body.v73-app-design button:disabled,
+body.v73-app-design .button:disabled{opacity:.48;cursor:not-allowed;transform:none}
+
+/* Status pills */
+.v73-status{
+  display:inline-flex!important;
+  align-items:center;
+  gap:5px;
+  min-height:24px;
+  padding:4px 8px!important;
+  border:1px solid var(--v73-line)!important;
+  border-radius:999px!important;
+  background:var(--v73-panel-soft)!important;
+  color:#B8C3CF!important;
+  font-size:10px!important;
+  font-weight:850!important;
+  line-height:1!important;
+  white-space:nowrap;
+}
+.v73-status::before{content:'';width:6px;height:6px;border-radius:50%;background:#77818D}
+.v73-status-blue{border-color:rgba(59,130,246,.48)!important;background:var(--v73-blue-soft)!important;color:var(--v73-blue-text)!important}.v73-status-blue::before{background:var(--v73-blue)}
+.v73-status-green{border-color:rgba(63,185,80,.48)!important;background:var(--v73-green-soft)!important;color:var(--v73-green-text)!important}.v73-status-green::before{background:var(--v73-green)}
+.v73-status-amber{border-color:rgba(245,158,11,.52)!important;background:var(--v73-amber-soft)!important;color:var(--v73-amber-text)!important}.v73-status-amber::before{background:var(--v73-amber)}
+.v73-status-red{border-color:rgba(248,81,73,.52)!important;background:var(--v73-red-soft)!important;color:var(--v73-red-text)!important}.v73-status-red::before{background:var(--v73-red)}
+
+/* Creator management */
+body.v73-app-design .creator-row-v14,
+body.v73-app-design .creator-row-v13,
+body.v73-app-design .creator-row{
+  position:relative;
+  padding:14px 15px!important;
+  transition:border-color .16s ease,transform .16s ease,background .16s ease;
+}
+body.v73-app-design .creator-row-v14:hover,
+body.v73-app-design .creator-row-v13:hover,
+body.v73-app-design .creator-row:hover{border-color:#46515D!important;background:var(--v73-panel-raised)!important;transform:translateY(-1px)}
+body.v73-app-design [data-v70-card-attention]{
+  border-color:rgba(245,158,11,.5)!important;
+  background:var(--v73-amber-soft)!important;
+  color:var(--v73-amber-text)!important;
+}
+.v73-creator-avatar{
+  width:36px;height:36px;
+  display:grid;place-items:center;
+  border-radius:10px;
+  background:var(--v73-blue-soft);
+  color:var(--v73-blue-text);
+  font-size:12px;font-weight:900;
+}
+
+/* Calendar and tables */
+body.v73-app-design table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--v73-line);border-radius:10px;overflow:hidden;background:var(--v73-panel)}
+body.v73-app-design th{padding:10px 11px!important;background:#1A3A5C!important;color:var(--v73-blue-text)!important;border-bottom:1px solid rgba(59,130,246,.48)!important;font-size:10px!important;text-align:left;text-transform:uppercase;letter-spacing:.07em}
+body.v73-app-design td{padding:10px 11px!important;border-bottom:1px solid var(--v73-line)!important;color:#D4DEE8;font-size:12px;vertical-align:top}
+body.v73-app-design tr:last-child td{border-bottom:0!important}
+body.v73-app-design tr:hover td{background:rgba(33,38,45,.75)}
+body.v73-app-design .calendar-card{overflow:hidden}
+body.v73-app-design .calendar-grid{border-color:var(--v73-line)!important;background:var(--v73-panel)!important}
+body.v73-app-design .calendar-grid button,
+body.v73-app-design [data-calendar-day]{border-color:var(--v73-line)!important;background:#10151B!important;color:#C8D4E3!important}
+body.v73-app-design .calendar-grid button:hover,
+body.v73-app-design [data-calendar-day]:hover{border-color:var(--v73-blue)!important;background:var(--v73-blue-soft)!important}
+
+/* Disclosures and accordions outside the V72 video phase system */
+body.v73-app-design details:not([data-v49-section]){
+  border:1px solid var(--v73-line);
+  border-radius:10px;
+  background:var(--v73-panel);
+  overflow:hidden;
+}
+body.v73-app-design details:not([data-v49-section]) > summary{
+  min-height:44px;
+  padding:11px 13px;
+  color:#DCE6F0;
+  background:var(--v73-panel-soft);
+  font-weight:800;
+  cursor:pointer;
+}
+body.v73-app-design details:not([data-v49-section])[open] > summary{border-bottom:1px solid var(--v73-line)}
+body.v73-app-design details:not([data-v49-section]) > :not(summary){margin-left:13px;margin-right:13px}
+
+/* Reminders and empty states */
+body.v73-app-design .v70-reminder,
+.v73-reminder{
+  border:1px solid rgba(245,158,11,.38)!important;
+  border-radius:10px!important;
+  background:linear-gradient(135deg,rgba(61,52,21,.72),var(--v73-panel))!important;
+  color:var(--v73-text)!important;
+}
+.v73-empty-state{
+  display:grid;
+  justify-items:center;
+  gap:7px;
+  padding:28px 18px!important;
+  border:1px dashed #3C4651!important;
+  border-radius:12px!important;
+  background:rgba(22,27,34,.72)!important;
+  color:var(--v73-muted)!important;
+  text-align:center;
+}
+.v73-empty-state::before{
+  content:'+';
+  width:34px;height:34px;
+  display:grid;place-items:center;
+  border-radius:10px;
+  background:var(--v73-panel-soft);
+  color:var(--v73-blue-text);
+  font-size:20px;
+}
+
+/* Modals, coaching calls and drawers */
+body.v73-app-design [role="dialog"],
+body.v73-app-design .modal,
+body.v73-app-design .dialog,
+body.v73-app-design [class*="modal-card"],
+.v73-call-workspace{
+  border:1px solid var(--v73-line)!important;
+  border-radius:14px!important;
+  background:var(--v73-panel)!important;
+  color:var(--v73-text)!important;
+  box-shadow:0 26px 90px rgba(0,0,0,.52)!important;
+}
+body.v73-app-design .modal-backdrop,
+body.v73-app-design [class*="overlay"]{backdrop-filter:blur(5px)}
+.v73-call-workspace{
+  overflow:hidden;
+}
+.v73-call-workspace::before{
+  content:'Live coaching call';
+  display:block;
+  margin:-16px -16px 16px;
+  padding:14px 16px;
+  border-bottom:1px solid rgba(147,197,253,.28);
+  background:linear-gradient(135deg,#235FCB,#3B82F6);
+  color:white;
+  font-size:15px;
+  font-weight:900;
+}
+.v73-call-workspace [data-session-bind]{background:#0D1117!important}
+.v73-call-workspace .button:last-child{box-shadow:0 8px 20px rgba(59,130,246,.2)}
+
+/* Consistent guide drawer across every page */
+body.v73-app-design .v72-guide-backdrop{background:rgba(0,0,0,.76);backdrop-filter:blur(4px)}
+body.v73-app-design .v72-guide-drawer{background:var(--v73-panel);border-left-color:var(--v73-line);box-shadow:-26px 0 80px rgba(0,0,0,.55)}
+body.v73-app-design .v72-guide-head{background:var(--v73-panel);border-bottom-color:var(--v73-line)}
+body.v73-app-design .v72-guide-content{max-width:760px;margin:0 auto;padding:20px}
+
+/* Low sensory load: old large guide layers do not compete with the working page */
+body.v73-app-design .page-guide,
+body.v73-app-design .v70-job-guide,
+body.v73-app-design .v70-planner-guide,
+body.v73-app-design .v70-learn-guide,
+body.v73-app-design .v69-map{display:none!important}
+
+/* Responsive */
+@media(max-width:900px){
+  body.v73-app-design .content{padding:18px 14px 42px!important}
+  body.v73-app-design .page-head,
+  body.v73-app-design .v49-page-head,
+  .v73-page-head{grid-template-columns:1fr;align-items:start}
+  .v73-page-actions{justify-content:flex-start}
+  .v73-save-state{font-size:0;padding:6px}.v73-save-state::before{font-size:10px}
+}
+@media(max-width:640px){
+  body.v73-app-design{font-size:13px}
+  body.v73-app-design .card{padding:13px!important}
+  .v73-work-card{padding:0 13px 13px!important}
+  .v73-card-heading,.v73-work-card > header:first-child,.v73-work-card > .section-title:first-child{margin:0 -13px 13px!important;padding:11px 12px!important}
+  body.v73-app-design .page-head h1,body.v73-app-design .page-head h2,.v73-page-head h1,.v73-page-head h2{font-size:23px!important}
+  .v73-page-purpose{font-size:12px}
+  body.v73-app-design table{display:block;overflow-x:auto}
+}
