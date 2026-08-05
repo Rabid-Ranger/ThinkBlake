@@ -7,16 +7,19 @@ const decodedPath = path.join(root, 'decoded-source.html');
 const basePath = path.join(root, 'base-source-v67.html');
 const patchPath = path.join(root, 'patches', 'v68-coach-flow.html');
 const contextPatchPath = path.join(root, 'patches', 'v69-context-layer.html');
+const clarityPatchPath = path.join(root, 'patches', 'v70-coaching-clarity.html');
 const indexPath = path.join(root, 'index.html');
 
 if (!fs.existsSync(decodedPath)) throw new Error('decoded-source.html is missing.');
 if (!fs.existsSync(patchPath)) throw new Error('patches/v68-coach-flow.html is missing.');
 if (!fs.existsSync(contextPatchPath)) throw new Error('patches/v69-context-layer.html is missing.');
+if (!fs.existsSync(clarityPatchPath)) throw new Error('patches/v70-coaching-clarity.html is missing.');
 if (!fs.existsSync(basePath)) fs.copyFileSync(decodedPath, basePath);
 
 let source = fs.readFileSync(basePath, 'utf8');
 const patch = fs.readFileSync(patchPath, 'utf8').trim();
 const contextPatch = fs.readFileSync(contextPatchPath, 'utf8').trim();
+const clarityPatch = fs.readFileSync(clarityPatchPath, 'utf8').trim();
 
 function replaceOnce(label, search, replacement) {
   const count = source.split(search).length - 1;
@@ -55,14 +58,15 @@ replaceOnce(
 );
 
 source = source
-  .replace(/<meta content="Accelerator OS V30\.3:[^"]+" name="description"\/>/, '<meta content="Accelerator OS V52.1 V68.1: guided workflow with always-visible creator strategy context." name="description"/>')
-  .replace('<title>Accelerator OS V36 Clarity System</title>', '<title>Accelerator OS V52.1 Coach Flow V68.1</title>');
+  .replace(/<meta content="Accelerator OS V30\.3:[^"]+" name="description"\/>/, '<meta content="Accelerator OS V52.1 V70: guided coaching workflow with visible reminders and simplified video decisions." name="description"/>')
+  .replace('<title>Accelerator OS V36 Clarity System</title>', '<title>Accelerator OS V52.1 Coaching Clarity V70</title>');
 
 if (source.includes('id="v68-coach-flow-fixes"')) throw new Error('The V68 patch is already present in the V67 base.');
 if (source.includes('id="v69-context-layer-styles"')) throw new Error('The V69 context patch is already present in the V67 base.');
+if (source.includes('id="v70-coaching-clarity-styles"')) throw new Error('The V70 clarity patch is already present in the V67 base.');
 const closingBody = source.lastIndexOf('</body>');
 if (closingBody < 0) throw new Error('Closing body tag is missing.');
-source = `${source.slice(0, closingBody)}${patch}\n${contextPatch}\n${source.slice(closingBody)}`;
+source = `${source.slice(0, closingBody)}${patch}\n${contextPatch}\n${clarityPatch}\n${source.slice(closingBody)}`;
 
 fs.writeFileSync(decodedPath, source);
 
@@ -72,7 +76,7 @@ const wrapper = `<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="accelerator-build" content="V52.1-coach-flow-v68.1">
+<meta name="accelerator-build" content="V52.1-coach-flow-v70">
 <title>Accelerator OS V52.1</title>
 <style>html,body{margin:0;min-height:100%;background:#081116;color:#f4f7f8;font-family:Inter,system-ui,sans-serif}body{display:grid;place-items:center}.load{text-align:center;padding:24px}.load p{color:#9fb3bd}</style>
 </head>
@@ -91,4 +95,4 @@ document.open();document.write(html);document.close();
 </body>
 </html>`;
 fs.writeFileSync(indexPath, wrapper);
-console.log(JSON.stringify({ sourceCharacters: source.length, wrapperCharacters: wrapper.length, build: 'V52.1-coach-flow-v68.1' }, null, 2));
+console.log(JSON.stringify({ sourceCharacters: source.length, wrapperCharacters: wrapper.length, build: 'V52.1-coach-flow-v70' }, null, 2));
