@@ -1,4 +1,4 @@
-name: Rebuild and verify Accelerator V68
+name: Rebuild and verify Accelerator V70
 
 on:
   push:
@@ -7,8 +7,10 @@ on:
       - scripts/rebuild-v68.js
       - patches/v68-coach-flow.html
       - patches/v69-context-layer.html
+      - patches/v70-coaching-clarity.html
       - tests/v68-smoke.js
       - tests/v69-context.js
+      - tests/v70-clarity.js
       - .github/workflows/rebuild-v68.yml
 
 permissions:
@@ -29,7 +31,7 @@ jobs:
         with:
           node-version: 22
 
-      - name: Rebuild V68.1 source and wrapper
+      - name: Rebuild V70 source and wrapper
         run: node scripts/rebuild-v68.js
 
       - name: Validate every inline script
@@ -75,7 +77,7 @@ jobs:
           path = Path('tests/v68-smoke.js')
           text = path.read_text()
           old_build = "assert(build === 'V52.1-coach-flow-v68', 'The decoded app identifies itself as the V68 coach-flow build.');"
-          new_build = "assert(/^V52\\.1-coach-flow-v68(?:\\.|$)/.test(build), 'The decoded app identifies itself as a V68 coach-flow build.');"
+          new_build = "assert(/^V52\\.1-coach-flow-v(?:68(?:\\.|$)|70$)/.test(build), 'The decoded app identifies itself as a compatible guided coach-flow build.');"
           if old_build not in text:
             raise SystemExit('The V68 build assertion was not found.')
           text = text.replace(old_build, new_build, 1)
@@ -101,7 +103,7 @@ jobs:
           PY
           node tests/v68-smoke.js
 
-      - name: Verify creator strategy context and recommendation explanations
+      - name: Verify creator strategy context
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -115,15 +117,18 @@ jobs:
           PY
           node tests/v69-context.js
 
+      - name: Verify reminders planner calendar learning and live calls
+        run: node tests/v70-clarity.js
+
       - name: Commit verified production build
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add base-source-v67.html decoded-source.html index.html qa/v68-report.json qa/v68-final-screen.png qa/v69-context-report.json qa/v69-context-screen.png
+          git add base-source-v67.html decoded-source.html index.html qa/v68-report.json qa/v68-final-screen.png qa/v69-context-report.json qa/v69-context-screen.png qa/v70-clarity-report.json qa/v70-clarity-screen.png
           if git diff --cached --quiet; then
             echo "Verified build is already current."
           else
-            git commit -m "Publish verified V68.1 creator context flow"
+            git commit -m "Publish verified V70 coaching clarity flow"
             git push
           fi
