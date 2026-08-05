@@ -7,6 +7,7 @@ const clean=value=>String(value??'').replace(/\s+/g,' ').trim();
 const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const appState=()=>{try{return typeof state!=='undefined'?state:null}catch{return null}};
 const pageRoot=()=>document.querySelector('.content')||document.querySelector('main')||document.body;
+const setText=(node,value)=>{if(node&&node.textContent!==value)node.textContent=value};
 
 const pageDefinitions={
   overview:{eyebrow:'Creator workspace',purpose:'See what needs attention, run the next coaching step, and leave with one clear commitment.',guideTitle:'Using Creator Home',guideSubtitle:'Orient yourself first, then open only the work that needs attention.'},
@@ -93,7 +94,7 @@ const guideContent={
 
 function currentView(){
   const app=appState();
-  if(app?.currentView==='overview'&&app?.v67DiagnosisReview)return 'diagnosis';
+  if(app?.currentView==='overview'&&app?.v67DiagnosisReview)return'diagnosis';
   return app?.currentView||'overview';
 }
 
@@ -118,10 +119,8 @@ function diagnosisGuide(){
 function renderGuide(key){
   const guide=key==='diagnosis'?diagnosisGuide():guideContent[key]||guideContent.overview;
   let html=`<div class="v72-guide-intro"><p>${escapeHtml(guide.intro||'')}</p></div>`;
-  if(guide.table){
-    html+=`<table class="v72-guide-table"><thead><tr><th>Video job</th><th>Purpose</th><th>Research</th></tr></thead><tbody>${guide.table.map(row=>`<tr>${row.map(cell=>`<td>${escapeHtml(cell)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
-  }
-  for(const section of guide.sections||[]){html+=`<section class="v72-guide-section"><h3>${escapeHtml(section[0])}</h3><p>${escapeHtml(section[1])}</p></section>`}
+  if(guide.table)html+=`<table class="v72-guide-table"><thead><tr><th>Video job</th><th>Purpose</th><th>Research</th></tr></thead><tbody>${guide.table.map(row=>`<tr>${row.map(cell=>`<td>${escapeHtml(cell)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  for(const section of guide.sections||[])html+=`<section class="v72-guide-section"><h3>${escapeHtml(section[0])}</h3><p>${escapeHtml(section[1])}</p></section>`;
   if(guide.tip)html+=`<div class="v72-guide-tip"><strong>Useful check:</strong> ${escapeHtml(guide.tip)}</div>`;
   if(guide.warning)html+=`<div class="v72-guide-warning"><strong>Watch for this:</strong> ${escapeHtml(guide.warning)}</div>`;
   return html;
@@ -129,25 +128,23 @@ function renderGuide(key){
 
 function openPageGuide(){
   const view=currentView();
-  const key=view==='diagnosis'?'diagnosis':view;
   const definition=pageDefinition();
   const backdrop=document.querySelector('#v72-guide-backdrop');
   if(!backdrop)return;
-  const eyebrow=document.querySelector('#v72-guide-eyebrow');
-  const title=document.querySelector('#v72-guide-title');
-  const subtitle=document.querySelector('#v72-guide-subtitle');
+  setText(document.querySelector('#v72-guide-eyebrow'),'Workspace guide');
+  setText(document.querySelector('#v72-guide-title'),definition.guideTitle);
+  setText(document.querySelector('#v72-guide-subtitle'),definition.guideSubtitle);
   const content=document.querySelector('#v72-guide-content');
-  if(eyebrow)eyebrow.textContent='Workspace guide';
-  if(title)title.textContent=definition.guideTitle;
-  if(subtitle)subtitle.textContent=definition.guideSubtitle;
-  if(content)content.innerHTML=renderGuide(key);
+  const html=renderGuide(view==='diagnosis'?'diagnosis':view);
+  if(content&&content.innerHTML!==html)content.innerHTML=html;
   backdrop.classList.add('open');
   backdrop.setAttribute('aria-hidden','false');
 }
 
-function clearViewClasses(){
-  [...document.body.classList].filter(name=>name.startsWith('v73-view-')).forEach(name=>document.body.classList.remove(name));
-  document.body.classList.add(`v73-view-${currentView()}`);
+function setViewClass(){
+  const desired=`v73-view-${currentView()}`;
+  for(const name of [...document.body.classList])if(name.startsWith('v73-view-')&&name!==desired)document.body.classList.remove(name);
+  if(!document.body.classList.contains(desired))document.body.classList.add(desired);
 }
 
 function findPageHead(){
@@ -161,74 +158,64 @@ function decoratePageHead(){
   const root=pageRoot();
   const head=findPageHead();
   if(!head||head.closest('[role="dialog"],.modal,.v72-guide-drawer'))return;
-  head.classList.add('v73-page-head');
+  if(!head.classList.contains('v73-page-head'))head.classList.add('v73-page-head');
   const title=head.querySelector('h1,h2');
   if(!title)return;
   let copy=head.querySelector(':scope > .v73-page-copy');
   if(!copy){
-    copy=document.createElement('div');
-    copy.className='v73-page-copy';
-    title.parentNode.insertBefore(copy,title);
-    copy.appendChild(title);
+    copy=document.createElement('div');copy.className='v73-page-copy';
+    title.parentNode.insertBefore(copy,title);copy.appendChild(title);
   }
   const definition=pageDefinition();
   let eyebrow=copy.querySelector('.v73-page-eyebrow');
   if(!eyebrow){eyebrow=document.createElement('span');eyebrow.className='v73-page-eyebrow';copy.insertBefore(eyebrow,copy.firstChild)}
-  eyebrow.textContent=definition.eyebrow;
+  setText(eyebrow,definition.eyebrow);
   let purpose=copy.querySelector('.v73-page-purpose');
   if(!purpose){purpose=document.createElement('p');purpose.className='v73-page-purpose';copy.appendChild(purpose)}
-  purpose.textContent=definition.purpose;
-
+  setText(purpose,definition.purpose);
   let actions=head.querySelector(':scope > .v73-page-actions');
   if(!actions){actions=document.createElement('div');actions.className='v73-page-actions';head.appendChild(actions)}
   const directActions=[...head.children].filter(node=>node!==copy&&node!==actions&&(node.matches?.('button,.button,a.button')||node.classList?.contains('actions')));
   directActions.forEach(node=>actions.appendChild(node));
   if(!actions.querySelector('[data-v73-page-guide]')){
-    const button=document.createElement('button');
-    button.type='button';button.className='v73-page-guide';button.dataset.v73PageGuide='1';button.textContent='View Guide';
-    actions.appendChild(button);
+    const button=document.createElement('button');button.type='button';button.className='v73-page-guide';button.dataset.v73PageGuide='1';button.textContent='View Guide';actions.appendChild(button);
   }
-  root.dataset.v73Page=view;
+  if(root.dataset.v73Page!==view)root.dataset.v73Page=view;
 }
 
 function ensureSaveState(){
   const topbar=document.querySelector('.topbar');
   if(!topbar||topbar.querySelector('.v73-save-state'))return;
-  const stateNode=document.createElement('span');
-  stateNode.className='v73-save-state';
-  stateNode.textContent='Auto-saved';
-  stateNode.setAttribute('aria-live','polite');
-  const actions=topbar.querySelector('.topbar-actions,.actions,[class*="topbar-right"]');
-  (actions||topbar).appendChild(stateNode);
+  const node=document.createElement('span');node.className='v73-save-state';node.textContent='Auto-saved';node.setAttribute('aria-live','polite');
+  (topbar.querySelector('.topbar-actions,.actions,[class*="topbar-right"]')||topbar).appendChild(node);
 }
 
 let saveTimer=0;
 function showSaving(){
-  const node=document.querySelector('.v73-save-state');
-  if(!node)return;
-  node.classList.add('saving');node.textContent='Saving';
-  clearTimeout(saveTimer);
-  saveTimer=setTimeout(()=>{node.classList.remove('saving');node.textContent='Auto-saved'},650);
+  const node=document.querySelector('.v73-save-state');if(!node)return;
+  if(!node.classList.contains('saving'))node.classList.add('saving');setText(node,'Saving');
+  clearTimeout(saveTimer);saveTimer=setTimeout(()=>{node.classList.remove('saving');setText(node,'Auto-saved')},650);
 }
 
-function ownHeading(card){
-  return[...card.querySelectorAll('h2,h3,h4')].find(heading=>heading.closest('.card')===card)||null;
+function ownHeading(card){return[...card.querySelectorAll('h2,h3,h4')].find(heading=>heading.closest('.card')===card)||null}
+function semanticCardClass(label){
+  if(/coach note|coach feedback|coach recommendation|coaching note/.test(label))return'v73-coach-note';
+  if(/approved|final selection|confirmed|complete handoff|ready to execute/.test(label))return'v73-approved-card';
+  if(/needs attention|changes requested|due|review needed|watch/.test(label))return'v73-warning-card';
+  if(/blocked|error|missing|required before/.test(label))return'v73-danger-card';
+  return'';
 }
 
 function decorateCards(){
-  const root=pageRoot();
-  const cards=[...root.querySelectorAll('.card')].filter(card=>!card.closest('.v72-guide-drawer')&&!card.closest('.card .card'));
+  const semantic=['v73-coach-note','v73-approved-card','v73-warning-card','v73-danger-card'];
+  const cards=[...pageRoot().querySelectorAll('.card')].filter(card=>!card.closest('.v72-guide-drawer')&&!card.closest('.card .card'));
   for(const card of cards){
-    const heading=ownHeading(card);
-    if(!heading)continue;
-    const label=clean(heading.textContent).toLowerCase();
-    card.classList.add('v73-work-card');
-    heading.classList.add('v73-card-heading');
-    card.classList.remove('v73-coach-note','v73-approved-card','v73-warning-card','v73-danger-card');
-    if(/coach note|coach feedback|coach recommendation|coaching note/.test(label))card.classList.add('v73-coach-note');
-    else if(/approved|final selection|confirmed|complete handoff|ready to execute/.test(label))card.classList.add('v73-approved-card');
-    else if(/needs attention|changes requested|due|review needed|watch/.test(label))card.classList.add('v73-warning-card');
-    else if(/blocked|error|missing|required before/.test(label))card.classList.add('v73-danger-card');
+    const heading=ownHeading(card);if(!heading)continue;
+    if(!card.classList.contains('v73-work-card'))card.classList.add('v73-work-card');
+    if(!heading.classList.contains('v73-card-heading'))heading.classList.add('v73-card-heading');
+    const desired=semanticCardClass(clean(heading.textContent).toLowerCase());
+    for(const name of semantic)if(name!==desired&&card.classList.contains(name))card.classList.remove(name);
+    if(desired&&!card.classList.contains(desired))card.classList.add(desired);
   }
 }
 
@@ -241,79 +228,58 @@ function statusTone(label){
 }
 
 function decorateStatuses(){
-  const root=pageRoot();
-  const nodes=[...root.querySelectorAll('span,small,em,button')].filter(node=>{
+  const tones=['v73-status-blue','v73-status-green','v73-status-amber','v73-status-red'];
+  const nodes=[...pageRoot().querySelectorAll('span,small,em,button')].filter(node=>{
     if(node.closest('.v72-guide-drawer,.v72-phase-tabs,.sidebar,.v73-page-actions'))return false;
     if(node.matches('.button')||node.querySelector('input,textarea,select'))return false;
-    const label=clean(node.textContent).toLowerCase();
-    if(!label||label.length>42)return false;
+    const label=clean(node.textContent).toLowerCase();if(!label||label.length>42)return false;
     const className=String(node.className||'').toLowerCase();
     return/(badge|chip|pill|status|attention|due)/.test(className)||/^(approved|complete|completed|confirmed|saved|ready|active|in progress|draft|scheduled|planned|changes requested|needs attention|due|overdue|blocked|error|missing|not started|not reviewed)$/i.test(label);
   });
   for(const node of nodes){
-    node.classList.remove('v73-status-blue','v73-status-green','v73-status-amber','v73-status-red');
-    node.classList.add('v73-status');
-    const tone=statusTone(clean(node.textContent).toLowerCase());
-    if(tone)node.classList.add(`v73-status-${tone}`);
+    if(!node.classList.contains('v73-status'))node.classList.add('v73-status');
+    const tone=statusTone(clean(node.textContent).toLowerCase());const desired=tone?`v73-status-${tone}`:'';
+    for(const name of tones)if(name!==desired&&node.classList.contains(name))node.classList.remove(name);
+    if(desired&&!node.classList.contains(desired))node.classList.add(desired);
   }
 }
 
 function decorateCreatorRows(){
   for(const row of document.querySelectorAll('.creator-row-v14,.creator-row-v13,.creator-row')){
     if(row.querySelector('.v73-creator-avatar'))continue;
-    const name=row.querySelector('h2,h3,h4,strong,b,[class*="name"]');
-    const label=clean(name?.textContent||row.textContent);
-    if(!label)return;
-    const avatar=document.createElement('span');
-    avatar.className='v73-creator-avatar';
-    avatar.textContent=label.split(/\s+/).slice(0,2).map(word=>word[0]||'').join('').toUpperCase();
-    row.insertBefore(avatar,row.firstChild);
+    const name=row.querySelector('h2,h3,h4,strong,b,[class*="name"]');const label=clean(name?.textContent||row.textContent);if(!label)continue;
+    const avatar=document.createElement('span');avatar.className='v73-creator-avatar';avatar.textContent=label.split(/\s+/).slice(0,2).map(word=>word[0]||'').join('').toUpperCase();row.insertBefore(avatar,row.firstChild);
   }
 }
 
 function decorateEmptyStates(){
-  const root=pageRoot();
-  for(const node of root.querySelectorAll('p,div')){
+  for(const node of pageRoot().querySelectorAll('p,div')){
     if(node.children.length>1||node.closest('.v72-guide-drawer,.sidebar,.topbar'))continue;
     const label=clean(node.textContent).toLowerCase();
-    if(label.length<5||label.length>110)continue;
-    if(/^(no .* yet|nothing scheduled|no upcoming|no videos|no reviews|no events|nothing here)/.test(label))node.classList.add('v73-empty-state');
+    if(label.length>=5&&label.length<=110&&/^(no .* yet|nothing scheduled|no upcoming|no videos|no reviews|no events|nothing here)/.test(label)&&!node.classList.contains('v73-empty-state'))node.classList.add('v73-empty-state');
   }
 }
 
 function decorateCallWorkspace(){
-  const field=document.querySelector('[data-session-bind]');
-  if(!field)return;
-  const workspace=field.closest('[role="dialog"],.modal,.card,form,section');
-  workspace?.classList.add('v73-call-workspace');
+  const field=document.querySelector('[data-session-bind]');if(!field)return;
+  field.closest('[role="dialog"],.modal,.card,form,section')?.classList.add('v73-call-workspace');
 }
-
-function decorateVideoPage(){
-  if(currentView()!=='video')return;
-  const head=findPageHead();
-  head?.classList.add('v73-page-head');
-}
+function decorateVideoPage(){if(currentView()==='video')findPageHead()?.classList.add('v73-page-head')}
 
 let enhancing=false;
+let observer=null;
+let frame=0;
+function observe(){observer?.observe(document.documentElement,{subtree:true,childList:true})}
 function enhance(){
   if(enhancing)return;
-  enhancing=true;
+  enhancing=true;observer?.disconnect();
   try{
-    document.body.classList.add('v73-app-design');
-    clearViewClasses();
-    ensureSaveState();
-    decoratePageHead();
-    decorateVideoPage();
-    decorateCards();
-    decorateStatuses();
-    decorateCreatorRows();
-    decorateEmptyStates();
-    decorateCallWorkspace();
-    document.title='Accelerator OS V52.1 App Design V73';
-  }catch(error){console.error('V73 app design failed',error)}finally{enhancing=false}
+    if(!document.body.classList.contains('v73-app-design'))document.body.classList.add('v73-app-design');
+    setViewClass();ensureSaveState();decoratePageHead();decorateVideoPage();decorateCards();decorateStatuses();decorateCreatorRows();decorateEmptyStates();decorateCallWorkspace();
+    if(document.title!=='Accelerator OS V52.1 App Design V73')document.title='Accelerator OS V52.1 App Design V73';
+  }catch(error){console.error('V73 app design failed',error)}finally{enhancing=false;observe()}
 }
-
-function scheduleEnhance(){requestAnimationFrame(enhance)}
+function scheduleEnhance(){if(frame)return;frame=requestAnimationFrame(()=>{frame=0;enhance()})}
 
 document.addEventListener('click',event=>{
   if(event.target.closest?.('[data-v73-page-guide]')){event.preventDefault();event.stopPropagation();openPageGuide();return}
@@ -322,12 +288,8 @@ document.addEventListener('click',event=>{
 document.addEventListener('input',showSaving,true);
 document.addEventListener('change',showSaving,true);
 
-const observer=new MutationObserver(()=>scheduleEnhance());
-observer.observe(document.documentElement,{subtree:true,childList:true});
-
+observer=new MutationObserver(scheduleEnhance);observe();
 const previousRender=window.render;
-if(typeof previousRender==='function'){
-  window.render=function(...args){const result=previousRender.apply(this,args);enhance();setTimeout(enhance,0);setTimeout(enhance,120);return result};
-}
+if(typeof previousRender==='function')window.render=function(...args){observer?.disconnect();const result=previousRender.apply(this,args);enhance();setTimeout(enhance,0);setTimeout(enhance,120);return result};
 enhance();
 })();
