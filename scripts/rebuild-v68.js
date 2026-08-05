@@ -9,6 +9,7 @@ const patchPath = path.join(root, 'patches', 'v68-coach-flow.html');
 const contextPatchPath = path.join(root, 'patches', 'v69-context-layer.html');
 const clarityPatchPath = path.join(root, 'patches', 'v70-coaching-clarity.html');
 const creatorAttentionFixPath = path.join(root, 'patches', 'v70-creator-attention-fix.html');
+const videoJobGuideFixPath = path.join(root, 'patches', 'v70-video-job-guide-fix.html');
 const indexPath = path.join(root, 'index.html');
 
 if (!fs.existsSync(decodedPath)) throw new Error('decoded-source.html is missing.');
@@ -16,6 +17,7 @@ if (!fs.existsSync(patchPath)) throw new Error('patches/v68-coach-flow.html is m
 if (!fs.existsSync(contextPatchPath)) throw new Error('patches/v69-context-layer.html is missing.');
 if (!fs.existsSync(clarityPatchPath)) throw new Error('patches/v70-coaching-clarity.html is missing.');
 if (!fs.existsSync(creatorAttentionFixPath)) throw new Error('patches/v70-creator-attention-fix.html is missing.');
+if (!fs.existsSync(videoJobGuideFixPath)) throw new Error('patches/v70-video-job-guide-fix.html is missing.');
 if (!fs.existsSync(basePath)) fs.copyFileSync(decodedPath, basePath);
 
 let source = fs.readFileSync(basePath, 'utf8');
@@ -23,6 +25,7 @@ const patch = fs.readFileSync(patchPath, 'utf8').trim();
 const contextPatch = fs.readFileSync(contextPatchPath, 'utf8').trim();
 const clarityPatch = fs.readFileSync(clarityPatchPath, 'utf8').trim();
 const creatorAttentionFix = fs.readFileSync(creatorAttentionFixPath, 'utf8').trim();
+const videoJobGuideFix = fs.readFileSync(videoJobGuideFixPath, 'utf8').trim();
 
 function replaceOnce(label, search, replacement) {
   const count = source.split(search).length - 1;
@@ -68,9 +71,10 @@ if (source.includes('id="v68-coach-flow-fixes"')) throw new Error('The V68 patch
 if (source.includes('id="v69-context-layer-styles"')) throw new Error('The V69 context patch is already present in the V67 base.');
 if (source.includes('id="v70-coaching-clarity-styles"')) throw new Error('The V70 clarity patch is already present in the V67 base.');
 if (source.includes('id="v70-creator-attention-fix-styles"')) throw new Error('The V70 creator attention fix is already present in the V67 base.');
+if (source.includes('id="v70-video-job-guide-fix-script"')) throw new Error('The V70 video job guide fix is already present in the V67 base.');
 const closingBody = source.lastIndexOf('</body>');
 if (closingBody < 0) throw new Error('Closing body tag is missing.');
-source = `${source.slice(0, closingBody)}${patch}\n${contextPatch}\n${clarityPatch}\n${creatorAttentionFix}\n${source.slice(closingBody)}`;
+source = `${source.slice(0, closingBody)}${patch}\n${contextPatch}\n${clarityPatch}\n${creatorAttentionFix}\n${videoJobGuideFix}\n${source.slice(closingBody)}`;
 
 fs.writeFileSync(decodedPath, source);
 
