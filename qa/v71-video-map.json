@@ -1,0 +1,530 @@
+{
+  "details": [
+    {
+      "i": 0,
+      "open": false,
+      "visible": true,
+      "summary": "✓ Viewer and Outcome Choose the exact viewer, click moment, problem, desired change, and one-sentence promise. COMPLETE · REVIEW",
+      "attrs": {
+        "class": "v49-section complete ",
+        "data-v49-section": "video-purpose",
+        "data-v51-bound": "1"
+      },
+      "parentDetails": null,
+      "visibleButtons": [
+        "ReachEarn discovery and the right click.",
+        "TrustBuild belief, proof, and preference.",
+        "ConvertHelp a ready viewer make one decision.",
+        "Use creator setup",
+        "Continue"
+      ]
+    },
+    {
+      "i": 1,
+      "open": false,
+      "visible": true,
+      "summary": "DVideo-job diagnosisRecommended: ReachUses the viewer need, readiness, and active monthly outcome.Diagnose",
+      "attrs": {
+        "class": "v50-diagnosis",
+        "data-v51-helper-key": "video-purpose|video-job-diagnosis",
+        "data-v51-bound": "1"
+      },
+      "parentDetails": 0,
+      "visibleButtons": [
+        "ReachEarn discovery and the right click.",
+        "TrustBuild belief, proof, and preference.",
+        "ConvertHelp a ready viewer make one decision."
+      ]
+    },
+    {
+      "i": 2,
+      "open": false,
+      "visible": true,
+      "summary": "✓ Reach Strategy and Research Use the job-specific evidence and approach instead of treating every video the same. COMPLETE · REVIEW",
+      "attrs": {
+        "class": "v49-section complete ",
+        "data-v49-section": "video-strategy",
+        "data-v51-bound": "1"
+      },
+      "parentDetails": null,
+      "visibleButtons": [
+        "Explain or teachTeach the reason and the fix",
+        "Demonstrate a processShow the work on screen",
+        "Show a real result or caseUse a real outcome as evidence",
+        "Compare options or tradeoffsHelp the viewer choose",
+        "Tell a relevant storyUse a story to create meaning",
+        "Investigate or testAnswer through an experiment",
+        "Interview or conversationBuild around guided questions",
+        "Use format",
+        "Use this",
+        "Use this",
+        "Use this",
+        "Save as focus",
+        "How-toTeach the steps to reach one specific result.",
+        "MistakesShow the common wrong moves, why they fail, and what replaces them.",
+        "ComparisonHelp the viewer choose between options using clear criteria.",
+        "Warning signsReveal signals that the problem is happening before it gets worse.",
+        "Myth-bustChallenge a common belief, then replace it with a more useful truth.",
+        "Why it is not workingDiagnose the hidden reason the viewer’s current attempt keeps failing.",
+        "Continue"
+      ]
+    },
+    {
+      "i": 3,
+      "open": false,
+      "visible": true,
+      "summary": "DResearch readiness + video approachTeaching breakdown with examplesThe idea needs more validation before heavy productionDiagnose",
+      "attrs": {
+        "class": "v50-diagnosis",
+        "data-v51-helper-key": "video-strategy|research-and-format-diagnosis",
+        "data-v51-bound": "1",
+        "data-v58-enhanced": "true"
+      },
+      "parentDetails": 2,
+      "visibleButtons": [
+        "Explain or teachTeach the reason and the fix",
+        "Demonstrate a processShow the work on screen",
+        "Show a real result or caseUse a real outcome as evidence",
+        "Compare options or tradeoffsHelp the viewer choose",
+        "Tell a relevant storyUse a story to create meaning",
+        "Investigate or testAnswer through an experiment",
+        "Interview or conversationBuild around guided questions",
+        "Use format",
+        "Use this",
+        "Use this",
+        "Use this",
+        "Save as focus"
+      ]
+    },
+    {
+      "i": 4,
+      "open": false,
+      "visible": true,
+      "summary": "✓ Title and Thumbnail Choose one honest package that earns the right click and can be paid off immediately. COMPLETE · REVIEW",
+      "attrs": {
+        "class": "v49-section complete ",
+        "data-v49-section": "video-package",
+        "data-v51-bound": "1"
+      },
+      "parentDetails": null,
+      "visibleButtons": [
+        "Use directions",
+        "Use this",
+        "Use this",
+        "Use this",
+        "Continue"
+      ]
+    },
+    {
+      "i": 5,
+      "open": false,
+      "visible": true,
+      "summary": "DPackage diagnosisComparison or decision + Split contrastChoose the communication mechanism before writing five variations.Diagnose",
+      "attrs": {
+        "class": "v50-diagnosis",
+        "data-v51-helper-key": "video-package|package-diagnosis",
+        "data-v51-bound": "1"
+      },
+      "parentDetails": 4,
+      "visibleButtons": [
+        "Use directions",
+        "Use this",
+        "Use this",
+        "Use this"
+      ]
+    },
+    {
+      "i": 6,
+      "open": false,
+      "visible": true,
+      "summary": "Optional thumbnail links (Drive, Figma, Canva, or image URL)",
+      "attrs": {
+        "class": "v50-compare"
+      },
+      "parentDetails": 5,
+      "visibleButtons": []
+    },
+    {
+      "i": 7,
+      "open": false,
+      "visible": true,
+      "summary": "Compare title mechanisms",
+      "attrs": {
+        "class": "v50-compare"
+      },
+      "parentDetails": 5,
+      "visibleButtons": []
+    },
+    {
+      "i": 8,
+      "open": false,
+      "visible": true,
+      "summary": "✓ Story, Hook and Pacing Choose the structure, opening mechanism, pacing, beats, proof, and ending bridge. COMPLETE · REVIEW",
+      "attrs": {
+        "class": "v49-section complete ",
+        "data-v49-section": "video-experience",
+        "data-v51-bound": "1"
+      },
+      "parentDetails": null,
+      "visibleButtons": [
+        "Choose this",
+        "Choose this",
+        "Choose this",
+        "See 1 more option",
+        "Preview the recommended beats",
+        "Build these beats in the outline",
+        "OptionBold ClaimMake a specific, intriguing statement that demands proof.",
+        "OptionQuestionAsk something the viewer genuinely needs answered.",
+        "Best fitProof FirstLead with the result, evidence, demonstration, or credibility.",
+        "See 5 more options",
+        "Use this as the hook starter",
+        "Change pacing",
+        "Continue"
+      ]
+    },
+    {
+      "i": 9,
+      "open": false,
+      "visible": true,
+      "summary": "Optional guidesAdvanced referenceOpen only when the recommendation does not fit and you need to compare the full library.",
+      "attrs": {
+        "class": "v57-guides"
+      },
+      "parentDetails": 8,
+      "visibleButtons": []
+    },
+    {
+      "i": 10,
+      "open": false,
+      "visible": true,
+      "summary": "Hook guide: when to use each type",
+      "attrs": {},
+      "parentDetails": 9,
+      "visibleButtons": []
+    },
+    {
+      "i": 11,
+      "open": false,
+      "visible": true,
+      "summary": "Story structure guide: match the structure to the video",
+      "attrs": {},
+      "parentDetails": 9,
+      "visibleButtons": []
+    },
+    {
+      "i": 12,
+      "open": false,
+      "visible": true,
+      "summary": "Pacing guide: meaningful change, not random cuts",
+      "attrs": {},
+      "parentDetails": 9,
+      "visibleButtons": []
+    },
+    {
+      "i": 13,
+      "open": false,
+      "visible": true,
+      "summary": "Pre-record retention audit 10 checks",
+      "attrs": {
+        "class": "v303-retention-audit"
+      },
+      "parentDetails": 8,
+      "visibleButtons": []
+    },
+    {
+      "i": 14,
+      "open": false,
+      "visible": true,
+      "summary": "✓ Edit, Publish and Tracking Review the draft, choose the CTA, schedule publishing, and protect the 24-hour, 7-day, and 28-day checks. COMPLETE · REVIEW",
+      "attrs": {
+        "class": "v49-section complete ",
+        "data-v49-section": "video-publish",
+        "data-v51-bound": "1"
+      },
+      "parentDetails": null,
+      "visibleButtons": [
+        "Use destination",
+        "Use this",
+        "Use this",
+        "Use this",
+        "Add suggested dates to calendar",
+        "Delete video",
+        "Continue"
+      ]
+    },
+    {
+      "i": 15,
+      "open": false,
+      "visible": true,
+      "summary": "DCTA and publishing diagnosisAnother video or playlistThe next action follows the video job, viewer readiness, and monthly outcome.Diagnose",
+      "attrs": {
+        "class": "v50-diagnosis",
+        "data-v51-helper-key": "video-publish|cta-and-publishing-diagnosis",
+        "data-v51-bound": "1"
+      },
+      "parentDetails": 14,
+      "visibleButtons": [
+        "Use destination",
+        "Use this",
+        "Use this",
+        "Use this"
+      ]
+    },
+    {
+      "i": 16,
+      "open": true,
+      "visible": true,
+      "summary": "✓ Complete Video Handoff Review the whole plan and give it to the creator, production team, coach, or AI. COMPLETE · REVIEW",
+      "attrs": {
+        "class": "v49-section complete current",
+        "data-v49-section": "video-handoff",
+        "data-v51-bound": "1"
+      },
+      "parentDetails": null,
+      "visibleButtons": [
+        "Open video handoff",
+        "Download PDF",
+        "Copy for AI",
+        "Open execution calendar"
+      ]
+    }
+  ],
+  "major": [
+    {
+      "i": 0,
+      "tag": "SECTION",
+      "visible": true,
+      "attrs": {
+        "class": "v70-job-guide v70-current-job"
+      },
+      "heading": "Earn attention from the right new viewer.",
+      "directButtons": []
+    },
+    {
+      "i": 2,
+      "tag": "DETAILS",
+      "visible": true,
+      "attrs": {
+        "class": "v49-section complete ",
+        "data-v49-section": "video-purpose",
+        "data-v51-bound": "1"
+      },
+      "heading": "✓ Viewer and Outcome Choose the exact viewer, click moment, problem, desired change, and one-sentence promise. COMPLETE · REVIEW",
+      "directButtons": []
+    },
+    {
+      "i": 3,
+      "tag": "ARTICLE",
+      "visible": true,
+      "attrs": {
+        "class": "card"
+      },
+      "heading": "Who is this video helping, and what must it do?",
+      "directButtons": []
+    },
+    {
+      "i": 4,
+      "tag": "DETAILS",
+      "visible": true,
+      "attrs": {
+        "class": "v49-section complete ",
+        "data-v49-section": "video-strategy",
+        "data-v51-bound": "1"
+      },
+      "heading": "✓ Reach Strategy and Research Use the job-specific evidence and approach instead of treating every video the same. COMPLETE · REVIEW",
+      "directButtons": []
+    },
+    {
+      "i": 6,
+      "tag": "ARTICLE",
+      "visible": true,
+      "attrs": {
+        "class": "card"
+      },
+      "heading": "Bring the right new people into the channel.",
+      "directButtons": []
+    },
+    {
+      "i": 7,
+      "tag": "DETAILS",
+      "visible": true,
+      "attrs": {
+        "class": "v49-section complete ",
+        "data-v49-section": "video-package",
+        "data-v51-bound": "1"
+      },
+      "heading": "✓ Title and Thumbnail Choose one honest package that earns the right click and can be paid off immediately. COMPLETE · REVIEW",
+      "directButtons": []
+    },
+    {
+      "i": 9,
+      "tag": "ARTICLE",
+      "visible": true,
+      "attrs": {
+        "class": "card"
+      },
+      "heading": "Build the click",
+      "directButtons": []
+    },
+    {
+      "i": 10,
+      "tag": "SECTION",
+      "visible": true,
+      "attrs": {
+        "class": "v58-upload-card v62-primary-uploads"
+      },
+      "heading": "Upload up to 3 thumbnail options",
+      "directButtons": []
+    },
+    {
+      "i": 11,
+      "tag": "DETAILS",
+      "visible": true,
+      "attrs": {
+        "class": "v49-section complete ",
+        "data-v49-section": "video-experience",
+        "data-v51-bound": "1"
+      },
+      "heading": "✓ Story, Hook and Pacing Choose the structure, opening mechanism, pacing, beats, proof, and ending bridge. COMPLETE · REVIEW",
+      "directButtons": []
+    },
+    {
+      "i": 12,
+      "tag": "SECTION",
+      "visible": true,
+      "attrs": {
+        "class": "v57-planner-flow"
+      },
+      "heading": "Make three viewer-experience decisions",
+      "directButtons": []
+    },
+    {
+      "i": 13,
+      "tag": "SECTION",
+      "visible": true,
+      "attrs": {
+        "class": "v57-choice-section"
+      },
+      "heading": "How should the viewer move from problem to payoff?",
+      "directButtons": [
+        "See 1 more option"
+      ]
+    },
+    {
+      "i": 14,
+      "tag": "SECTION",
+      "visible": true,
+      "attrs": {
+        "class": "v57-choice-section"
+      },
+      "heading": "What is the fastest honest way to confirm the click?",
+      "directButtons": [
+        "See 5 more options"
+      ]
+    },
+    {
+      "i": 15,
+      "tag": "SECTION",
+      "visible": true,
+      "attrs": {
+        "class": "v57-choice-section"
+      },
+      "heading": "Use the recommendation unless the video clearly needs a different rhythm.",
+      "directButtons": []
+    },
+    {
+      "i": 16,
+      "tag": "ARTICLE",
+      "visible": true,
+      "attrs": {
+        "class": "card"
+      },
+      "heading": "Turn the choices above into the actual opening, beats, proof, and ending",
+      "directButtons": []
+    },
+    {
+      "i": 17,
+      "tag": "SECTION",
+      "visible": true,
+      "attrs": {
+        "class": "v303-block"
+      },
+      "heading": "1Hook + first 30 seconds",
+      "directButtons": []
+    },
+    {
+      "i": 18,
+      "tag": "SECTION",
+      "visible": true,
+      "attrs": {
+        "class": "v303-block"
+      },
+      "heading": "2Main beats / sections",
+      "directButtons": []
+    },
+    {
+      "i": 19,
+      "tag": "SECTION",
+      "visible": true,
+      "attrs": {
+        "class": "v303-block v62-retention-practical"
+      },
+      "heading": "3Payoff + proof + retention plan",
+      "directButtons": []
+    },
+    {
+      "i": 20,
+      "tag": "SECTION",
+      "visible": true,
+      "attrs": {
+        "class": "v303-block"
+      },
+      "heading": "4Ending bridge",
+      "directButtons": []
+    },
+    {
+      "i": 21,
+      "tag": "DETAILS",
+      "visible": true,
+      "attrs": {
+        "class": "v49-section complete ",
+        "data-v49-section": "video-publish",
+        "data-v51-bound": "1"
+      },
+      "heading": "✓ Edit, Publish and Tracking Review the draft, choose the CTA, schedule publishing, and protect the 24-hour, 7-day, and 28-day checks. COMPLETE · REVIEW",
+      "directButtons": []
+    },
+    {
+      "i": 23,
+      "tag": "ARTICLE",
+      "visible": true,
+      "attrs": {
+        "class": "card"
+      },
+      "heading": "Connect the video to the business and the calendar",
+      "directButtons": []
+    },
+    {
+      "i": 24,
+      "tag": "DETAILS",
+      "visible": true,
+      "attrs": {
+        "class": "v49-section complete current",
+        "data-v49-section": "video-handoff",
+        "data-v51-bound": "1"
+      },
+      "heading": "✓ Complete Video Handoff Review the whole plan and give it to the creator, production team, coach, or AI. COMPLETE · REVIEW",
+      "directButtons": []
+    },
+    {
+      "i": 25,
+      "tag": "SECTION",
+      "visible": true,
+      "attrs": {
+        "class": "v49-handoff"
+      },
+      "heading": "5 Mistakes New Managers Make in Their First 30 Days",
+      "directButtons": []
+    }
+  ]
+}
