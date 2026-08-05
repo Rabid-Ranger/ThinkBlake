@@ -9,25 +9,25 @@ cp.execFileSync(process.execPath,[path.join(__dirname,'apply-v71-postfix.js')],{
 
 const decodedPath=path.join(root,'decoded-source.html');
 const indexPath=path.join(root,'index.html');
-const cssPath=path.join(root,'patches','v72-reference-ui.css');
-const jsPath=path.join(root,'patches','v72-reference-ui.js');
-const fixPath=path.join(root,'patches','v72-reference-ui-fix.js');
-for(const file of [decodedPath,cssPath,jsPath,fixPath])if(!fs.existsSync(file))throw new Error(`${path.relative(root,file)} is missing.`);
+const inputs=[
+  ['v72-reference-ui-styles','style',path.join(root,'patches','v72-reference-ui.css')],
+  ['v72-reference-ui-script','script',path.join(root,'patches','v72-reference-ui.js')],
+  ['v72-reference-ui-fix-script','script',path.join(root,'patches','v72-reference-ui-fix.js')],
+  ['v73-app-design-system-styles','style',path.join(root,'patches','v73-app-design-system.css')],
+  ['v73-app-design-system-script','script',path.join(root,'patches','v73-app-design-system.js')]
+];
+for(const [, ,file] of inputs)if(!fs.existsSync(file))throw new Error(`${path.relative(root,file)} is missing.`);
 
 let source=fs.readFileSync(decodedPath,'utf8');
-const css=fs.readFileSync(cssPath,'utf8').trim();
-const js=fs.readFileSync(jsPath,'utf8').trim();
-const fix=fs.readFileSync(fixPath,'utf8').trim();
-const styleMarker='v72-reference-ui-styles';
-const scriptMarker='v72-reference-ui-script';
-const fixMarker='v72-reference-ui-fix-script';
-if(source.includes(`id="${styleMarker}"`)||source.includes(`id="${scriptMarker}"`)||source.includes(`id="${fixMarker}"`))throw new Error('V72 reference UI is already present.');
+for(const [marker] of inputs)if(source.includes(`id="${marker}"`))throw new Error(`${marker} is already present.`);
 source=source
-  .replace(/<meta content="Accelerator OS V52\.1 V71:[^"]+" name="description"\/>/,'<meta content="Accelerator OS V52.1 V72: a reference-led coaching workspace with clear phases and pop-out guides." name="description"/>')
-  .replace('<title>Accelerator OS V52.1 Simplified Coaching V71</title>','<title>Accelerator OS V52.1 Reference UI V72</title>');
+  .replace(/<meta content="Accelerator OS V52\.1 V71:[^"]+" name="description"\/>/,'<meta content="Accelerator OS V52.1 V73: an app-wide reference-led coaching workspace with clear hierarchy, semantic states, and pop-out guides." name="description"/>')
+  .replace('<title>Accelerator OS V52.1 Simplified Coaching V71</title>','<title>Accelerator OS V52.1 App Design V73</title>');
+
 const closing=source.lastIndexOf('</body>');
 if(closing<0)throw new Error('Closing body tag is missing.');
-source=`${source.slice(0,closing)}<style id="${styleMarker}">${css}</style>\n<script id="${scriptMarker}">${js}</script>\n<script id="${fixMarker}">${fix}</script>\n${source.slice(closing)}`;
+const additions=inputs.map(([marker,type,file])=>`<${type} id="${marker}">${fs.readFileSync(file,'utf8').trim()}</${type}>`).join('\n');
+source=`${source.slice(0,closing)}${additions}\n${source.slice(closing)}`;
 fs.writeFileSync(decodedPath,source);
 
 const payload=zlib.gzipSync(Buffer.from(source,'utf8'),{level:9}).toString('base64');
@@ -36,7 +36,7 @@ const wrapper=`<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="accelerator-build" content="V52.1-reference-ui-v72">
+<meta name="accelerator-build" content="V52.1-reference-ui-v73">
 <title>Accelerator OS V52.1</title>
 <style>html,body{margin:0;min-height:100%;background:#0D1117;color:#E6EDF3;font-family:Inter,system-ui,sans-serif}body{display:grid;place-items:center}.load{text-align:center;padding:24px}.load p{color:#8B949E}</style>
 </head>
@@ -55,4 +55,4 @@ document.open();document.write(html);document.close();
 </body>
 </html>`;
 fs.writeFileSync(indexPath,wrapper);
-console.log(JSON.stringify({build:'V52.1-reference-ui-v72',sourceCharacters:source.length,wrapperCharacters:wrapper.length},null,2));
+console.log(JSON.stringify({build:'V52.1-reference-ui-v73',sourceCharacters:source.length,wrapperCharacters:wrapper.length},null,2));
