@@ -58,16 +58,32 @@ const assert=(v,m)=>{if(!v){report.errors.push(m);throw new Error(m)}pass(m)};
   assert(visibleCounts.paceVisible===0,'The full pacing library stays hidden until the coach asks to change pacing.');
   assert(await page.locator('.v69-card-why').count()===0,'Recommendation reasons are visible compact text instead of nested dropdowns.');
 
-  const visibleCard=page.locator('.v57-choice-card').filter({visible:true}).nth(1);
+  const visibleCards=page.locator('[data-v49-section="video-experience"] .v57-choice-card').filter({visible:true});
+  const visibleCard=visibleCards.nth(1);
   const visibleStory=visibleCard.locator('[data-v57-structure]');
+  const clickedValue=await visibleStory.getAttribute('data-v57-structure');
   await visibleStory.scrollIntoViewIfNeeded();
   await page.waitForTimeout(80);
-  const before=await page.evaluate(()=>{const card=[...document.querySelectorAll('.v57-choice-card')].filter(node=>{const r=node.getBoundingClientRect(),s=getComputedStyle(node);return r.width>0&&r.height>0&&s.display!=='none'})[1],section=document.querySelector('[data-v49-section="video-experience"]');return {open:section?.open,top:card?.getBoundingClientRect().top??null}});
+  const before=await page.evaluate(value=>{
+   const visible=node=>{const r=node.getBoundingClientRect(),s=getComputedStyle(node);return r.width>0&&r.height>0&&s.display!=='none'&&s.visibility!=='hidden'};
+   const section=document.querySelector('[data-v49-section="video-experience"]');
+   const control=[...section.querySelectorAll('[data-v57-structure]')].find(node=>node.getAttribute('data-v57-structure')===value);
+   const card=control?.closest('.v57-choice-card');
+   return {open:section?.open,top:card?.getBoundingClientRect().top??null,values:[...section.querySelectorAll('.v57-choice-card')].filter(visible).map(card=>card.querySelector('[data-v57-structure]')?.getAttribute('data-v57-structure')).filter(Boolean)};
+  },clickedValue);
   await visibleStory.click();
-  await page.waitForTimeout(850);
-  const after=await page.evaluate(()=>{const card=document.querySelector('.v57-choice-card.selected'),section=document.querySelector('[data-v49-section="video-experience"]');return {open:section?.open,top:card?.getBoundingClientRect().top??null}});
+  await page.waitForTimeout(1000);
+  const after=await page.evaluate(value=>{
+   const visible=node=>{const r=node.getBoundingClientRect(),s=getComputedStyle(node);return r.width>0&&r.height>0&&s.display!=='none'&&s.visibility!=='hidden'};
+   const section=document.querySelector('[data-v49-section="video-experience"]');
+   const control=[...section.querySelectorAll('[data-v57-structure]')].find(node=>node.getAttribute('data-v57-structure')===value);
+   const card=control?.closest('.v57-choice-card');
+   return {open:section?.open,top:card?.getBoundingClientRect().top??null,selected:card?.classList.contains('selected')||false,values:[...section.querySelectorAll('.v57-choice-card')].filter(visible).map(card=>card.querySelector('[data-v57-structure]')?.getAttribute('data-v57-structure')).filter(Boolean)};
+  },clickedValue);
   assert(before.open&&after.open,'Choosing a story option does not close the Story, Hook and Pacing section.');
-  assert(before.top!==null&&after.top!==null&&Math.abs(after.top-before.top)<60,'Choosing a planner option keeps the selected choice in the same place on screen.');
+  assert(JSON.stringify(before.values)===JSON.stringify(after.values),'Choosing a story option does not change which three choices are visible.');
+  assert(after.selected,'The exact clicked story choice becomes selected.');
+  assert(before.top!==null&&after.top!==null&&Math.abs(after.top-before.top)<60,'Choosing a planner option keeps the clicked choice in the same place on screen.');
 
   await page.evaluate(()=>{state.currentView='calendar';render()});
   await page.waitForTimeout(250);
