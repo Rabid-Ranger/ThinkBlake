@@ -11,20 +11,23 @@ const decodedPath=path.join(root,'decoded-source.html');
 const indexPath=path.join(root,'index.html');
 const cssPath=path.join(root,'patches','v72-reference-ui.css');
 const jsPath=path.join(root,'patches','v72-reference-ui.js');
-for(const file of [decodedPath,cssPath,jsPath])if(!fs.existsSync(file))throw new Error(`${path.relative(root,file)} is missing.`);
+const fixPath=path.join(root,'patches','v72-reference-ui-fix.js');
+for(const file of [decodedPath,cssPath,jsPath,fixPath])if(!fs.existsSync(file))throw new Error(`${path.relative(root,file)} is missing.`);
 
 let source=fs.readFileSync(decodedPath,'utf8');
 const css=fs.readFileSync(cssPath,'utf8').trim();
 const js=fs.readFileSync(jsPath,'utf8').trim();
+const fix=fs.readFileSync(fixPath,'utf8').trim();
 const styleMarker='v72-reference-ui-styles';
 const scriptMarker='v72-reference-ui-script';
-if(source.includes(`id="${styleMarker}"`)||source.includes(`id="${scriptMarker}"`))throw new Error('V72 reference UI is already present.');
+const fixMarker='v72-reference-ui-fix-script';
+if(source.includes(`id="${styleMarker}"`)||source.includes(`id="${scriptMarker}"`)||source.includes(`id="${fixMarker}"`))throw new Error('V72 reference UI is already present.');
 source=source
   .replace(/<meta content="Accelerator OS V52\.1 V71:[^"]+" name="description"\/>/,'<meta content="Accelerator OS V52.1 V72: a reference-led coaching workspace with clear phases and pop-out guides." name="description"/>')
   .replace('<title>Accelerator OS V52.1 Simplified Coaching V71</title>','<title>Accelerator OS V52.1 Reference UI V72</title>');
 const closing=source.lastIndexOf('</body>');
 if(closing<0)throw new Error('Closing body tag is missing.');
-source=`${source.slice(0,closing)}<style id="${styleMarker}">${css}</style>\n<script id="${scriptMarker}">${js}</script>\n${source.slice(closing)}`;
+source=`${source.slice(0,closing)}<style id="${styleMarker}">${css}</style>\n<script id="${scriptMarker}">${js}</script>\n<script id="${fixMarker}">${fix}</script>\n${source.slice(closing)}`;
 fs.writeFileSync(decodedPath,source);
 
 const payload=zlib.gzipSync(Buffer.from(source,'utf8'),{level:9}).toString('base64');
