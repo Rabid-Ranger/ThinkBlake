@@ -82,6 +82,14 @@ jobs:
           if video_assert not in text:
             raise SystemExit('The video readiness assertion was not found.')
           text = text.replace(video_assert, video_diagnostic, 1)
+          story_anchor = "const beforeOrder = await page.locator('.v57-choice-card h5').allTextContents();"
+          story_open = """await page.evaluate(() => {\n      const section=document.querySelector('[data-v49-section=\"video-experience\"]');\n      const stack=section?.closest('.v49-accordion-stack');\n      stack?.querySelectorAll(':scope > .v49-section').forEach(item=>{item.open=item===section;});\n    });\n    await page.waitForTimeout(100);\n    const beforeOrder = await page.locator('.v57-choice-card h5').allTextContents();"""
+          if story_anchor not in text:
+            raise SystemExit('The story planner assertion anchor was not found.')
+          text = text.replace(story_anchor, story_open, 1)
+          selection_assert = "assert(await page.locator('.v57-choice-card.selected').count() === 1, 'The selected story structure is highlighted instead of moved.');"
+          selection_with_open = selection_assert + "\n    assert(await page.locator('[data-v49-section=\"video-experience\"]').getAttribute('open') !== null, 'Selecting a story structure does not collapse the Story, Hook and Pacing section.');"
+          text = text.replace(selection_assert, selection_with_open, 1)
           path.write_text(text)
           PY
           node tests/v68-smoke.js
