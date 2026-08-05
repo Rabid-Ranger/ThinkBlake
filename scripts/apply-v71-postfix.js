@@ -41,10 +41,19 @@ function ensureVideoFocus(){
  if(!anchor)return;
  anchor.insertAdjacentHTML('afterend',\`<section class="v71-video-focus"><div><span>\${escapeHtml(job)} video</span><strong>\${escapeHtml(info.purpose)}</strong><p><b>Research:</b> \${escapeHtml(info.research)}</p><p><b>Topic:</b> \${escapeHtml(topic)} &nbsp; <b>Click frame:</b> \${escapeHtml(clickFrame)}</p></div><div class="v71-video-focus-actions"><button class="v71-compact-button" data-v71-jobs>How video jobs differ</button><button class="v71-compact-button" data-v69-open-strategy>Creator Strategy</button></div></section>\`);
 }
+function ensurePackagingExplanation(){
+ const app=appState();
+ if(app?.currentView!=='video')return;
+ const section=document.querySelector('details[data-v49-section="video-package"]');
+ if(!section||section.querySelector(':scope > .v71-package-note'))return;
+ const summary=section.querySelector(':scope > summary');
+ summary?.insertAdjacentHTML('afterend','<div class="v71-package-note"><b>Topic</b> is what the video is about. <b>Click frame</b> is the honest reason the right viewer clicks now, such as a mistake, proof, comparison, warning or useful reframe. It guides the title and thumbnail. It does not choose the story or pacing.</div>');
+}
 const clean=()=>{
  const app=appState();
  if(app?.currentView==='setup')document.querySelectorAll('.v69-map').forEach(node=>node.remove());
  ensureVideoFocus();
+ ensurePackagingExplanation();
 };
 const observer=new MutationObserver(clean);
 observer.observe(document.documentElement,{childList:true,subtree:true});
