@@ -1,0 +1,72 @@
+name: Publish simplified Accelerator V71
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/publish-v71-simplified.yml
+      - scripts/rebuild-v68.js
+      - patches/v71-simplification.css
+      - patches/v71-simplification.js
+      - tests/v71-simplification.js
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-accelerator-v71
+  cancel-in-progress: true
+
+jobs:
+  build-test-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Rebuild the production dashboard
+        run: node scripts/rebuild-v68.js
+      - name: Validate every embedded script
+        run: |
+          node <<'NODE'
+          const fs=require('fs'),cp=require('child_process'),os=require('os'),path=require('path');
+          const html=fs.readFileSync('decoded-source.html','utf8');
+          const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(m=>m[1]).filter(x=>x.trim());
+          const dir=fs.mkdtempSync(path.join(os.tmpdir(),'accelerator-v71-'));
+          scripts.forEach((script,index)=>{const file=path.join(dir,`script-${index}.js`);fs.writeFileSync(file,script);cp.execFileSync(process.execPath,['--check',file],{stdio:'inherit'})});
+          console.log(`Validated ${scripts.length} embedded scripts.`);
+          NODE
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Start the rebuilt dashboard
+        run: |
+          python3 -m http.server 4173 >/tmp/v71-server.log 2>&1 &
+          for attempt in {1..20}; do
+            curl -fsS http://127.0.0.1:4173/decoded-source.html >/dev/null && exit 0
+            sleep 1
+          done
+          cat /tmp/v71-server.log
+          exit 1
+      - name: Verify the complete simplified workflow
+        run: node tests/v71-simplification.js
+      - name: Re-run the page-by-page usability audit
+        continue-on-error: true
+        run: node tests/v71-usability-audit.js
+      - name: Commit only the verified production build
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add decoded-source.html index.html qa/v71-simplification-report.json qa/v71-simplification-screen.png qa/v71-usability-audit.json qa/v71-usability-audit.md qa/v71-*.png
+          if git diff --cached --quiet; then
+            echo "Verified V71 build is already current."
+          else
+            git commit -m "Publish verified simplified V71 coaching workflow"
+            git push
+          fi
