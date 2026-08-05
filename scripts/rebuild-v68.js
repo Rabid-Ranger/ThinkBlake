@@ -36,7 +36,7 @@ replaceOnce(
 replaceOnce(
   'real video-plan gate',
   "function videosDone67(c){return (c.videos||[]).length>0;}",
-  "function videoPlanReady67(v){\n    if(typeof readiness!=='function')return false;\n    const result=readiness(v);\n    return Array.isArray(result?.checks)&&result.checks.filter(item=>item.key!=='publish').every(item=>item.done);\n  }\n  function videosDone67(c){const list=c.videos||[];return list.length>0&&list.some(videoPlanReady67);}"
+  "function videoPlanReady67(v){\n    const titleCount=(v.packaging?.titles||[]).filter(has67).length;\n    const thumbCount=(v.packaging?.thumbnailIdeas||[]).filter(has67).length;\n    const purpose=[v.exactViewer,v.viewerMoment,v.surfaceProblem,v.promise].filter(has67).length>=3;\n    const evidence=[v.angle,v.format,v.research?.platformEvidence,v.research?.referenceVideos,v.research?.openGap||v.research?.beliefShift||v.research?.objection].filter(has67).length>=3;\n    const packaging=(titleCount>=3||has67(v.packaging?.selectedTitle))&&(thumbCount>=1||has67(v.packaging?.selectedThumbnail)||has67(v.packaging?.thumbnailImage));\n    const structure=[v.structure?.hook,v.structure?.first30,v.structure?.beats||v.structure?.storyProblem,v.structure?.firstPayoff].filter(has67).length>=3;\n    return purpose&&evidence&&packaging&&structure;\n  }\n  function videosDone67(c){const list=c.videos||[];return list.length>0&&list.some(videoPlanReady67);}"
 );
 
 replaceOnce(
