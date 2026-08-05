@@ -1,6 +1,6 @@
 {
   "build": "V52.1-coach-flow-v71",
-  "checkedAt": "2026-08-05T21:47:37.843Z",
+  "checkedAt": "2026-08-05T21:49:20.754Z",
   "runtimeErrors": [],
   "pages": [
     {
@@ -302,15 +302,21 @@
         "Use this as the hook starter",
         "More opening moves",
         "Change pacing",
-        "Continue"
+        "Continue",
+        "How video jobs differ",
+        "Creator Strategy"
       ],
       "textCharacters": 6511,
-      "visibleButtons": 22,
+      "visibleButtons": 24,
       "visibleCards": 7,
       "visibleDetails": 6,
       "openDetails": 1,
       "visibleGuides": 0,
       "duplicateLabels": [
+        [
+          "creator strategy",
+          2
+        ],
         [
           "choose this",
           3

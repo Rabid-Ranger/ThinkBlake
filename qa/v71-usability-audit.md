@@ -1,7 +1,7 @@
 # V71 Usability Audit
 
 Build: V52.1-coach-flow-v71
-Checked: 2026-08-05T21:47:37.843Z
+Checked: 2026-08-05T21:49:20.754Z
 
 ## Page inventory
 
@@ -51,7 +51,7 @@ Checked: 2026-08-05T21:47:37.843Z
 - Main headings: Jordan Lee · Monthly Plan | Monthly Plan · August 2026 | Current mix | 5 Mistakes New Managers Make in Their First 30 Days | What to Do in Your First Week as a Manager | The Leadership Conversation I Avoided for Too Long | Is Leadership Coaching Worth It for a New Director? | Open commitments | Upcoming automatic and manual dates | August 2026: Publish two Reach videos, one Trust video, and one Convert video; produce 180 qualified lead-magnet visits and identify one repeatable opening pattern
 
 ### Video planner
-- Visible controls: 22
+- Visible controls: 24
 - Visible cards: 7
 - Visible disclosure sections: 6 (1 open)
 - Separate guide panels: 0

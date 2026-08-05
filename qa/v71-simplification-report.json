@@ -10,10 +10,22 @@
     "The diagnosis reminder opens the actual diagnosis-review workflow.",
     "The all-creators page marks creators who need attention.",
     "Foundation no longer repeats the full journey map.",
-    "Creator Strategy remains available from Foundation."
+    "Creator Strategy remains available from Foundation.",
+    "The video page starts with one compact purpose and research summary.",
+    "The planner separates the topic from the click frame.",
+    "The video planner has six clear working stages.",
+    "Old guide layers are removed from the default planner view.",
+    "Each planner stage has one visible summary.",
+    "Story and opening opens without leaving the page.",
+    "Only one video-planning stage is open at a time.",
+    "Story planning shows only two or three useful starting choices.",
+    "Opening planning shows only two or three useful starting choices.",
+    "The open Story and opening stage stays under twenty visible controls.",
+    "A visible story choice is available.",
+    "Choosing a story option keeps the stage open."
   ],
   "errors": [
-    "The video page starts with one compact purpose and research summary."
+    "Title and thumbnail explains topic versus click frame where the choice is made."
   ],
-  "checkedAt": "2026-08-05T21:47:34.606Z"
+  "checkedAt": "2026-08-05T21:49:16.508Z"
 }
