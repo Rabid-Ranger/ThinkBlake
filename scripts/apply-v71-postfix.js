@@ -23,7 +23,7 @@ const jobs={
 function ensureVideoFocus(){
  if(window.state?.currentView!=='video'||document.querySelector('.v71-video-focus'))return;
  let current=null;
- try{current=typeof window.video==='function'?window.video():null}catch{}
+ try{current=typeof video==='function'?video():null}catch{}
  if(!current)return;
  const job=first(current.job,'Reach');
  const info=jobs[job]||jobs.Reach;
