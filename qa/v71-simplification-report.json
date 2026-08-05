@@ -8,10 +8,12 @@
     "Creator Strategy keeps branding, funnel and cadence available.",
     "The reminder list includes diagnosis and video reviews.",
     "The diagnosis reminder opens the actual diagnosis-review workflow.",
-    "The all-creators page marks creators who need attention."
+    "The all-creators page marks creators who need attention.",
+    "Foundation no longer repeats the full journey map.",
+    "Creator Strategy remains available from Foundation."
   ],
   "errors": [
-    "Foundation no longer repeats the full journey map."
+    "The video page starts with one compact purpose and research summary."
   ],
-  "checkedAt": "2026-08-05T21:38:43.591Z"
+  "checkedAt": "2026-08-05T21:41:07.890Z"
 }
