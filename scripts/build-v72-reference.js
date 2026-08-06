@@ -24,7 +24,8 @@ const fileInputs=[
   ['v74-reference-ui-corrections-script','script',path.join(root,'patches','v74-reference-ui-corrections.js')],
   ['v74-video-anchor-fix','script',path.join(root,'patches','v74-video-anchor-fix.js')],
   ['v74-phase-controller','script',path.join(root,'patches','v74-phase-controller.js')],
-  ['v74-accordion-controller','script',path.join(root,'patches','v74-accordion-controller.js')]
+  ['v74-accordion-controller','script',path.join(root,'patches','v74-accordion-controller.js')],
+  ['v74-guide-controller','script',path.join(root,'patches','v74-guide-controller.js')]
 ];
 const hooksPayloadPath=path.join(root,'patches','v74-guide-hooks.b64');
 for(const [, ,file] of fileInputs)if(!fs.existsSync(file))throw new Error(`${path.relative(root,file)} is missing.`);
