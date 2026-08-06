@@ -1,0 +1,68 @@
+{
+  "build": "V52.1-reference-ui-v74",
+  "checkedAt": "2026-08-06T15:06:49.748Z",
+  "passed": [
+    "The rebuilt app identifies the V74 source-faithful UI.",
+    "All eight original source guides are loaded.",
+    "The video page has one stable workflow header.",
+    "The workflow has four phase tabs.",
+    "No older V72 phase interface remains.",
+    "The phase tabs sit above the video sections, not below them.",
+    "Plan is the default phase.",
+    "Plan shows only Viewer and Goal, Strategy, and Package sections.",
+    "Every visible video section starts collapsed.",
+    "Clicking a section opens it.",
+    "Clicking a second section opens it.",
+    "Opening a second section closes the first one.",
+    "The Research guide preserves all five original research methods.",
+    "The drawer uses the original Research Strategies guide.",
+    "The Research guide contains all five original method headers.",
+    "The full guide preserves source tables.",
+    "The full guide preserves source tip components.",
+    "The full guide preserves the original warning component.",
+    "Package opens the full Title, Thumbnail Tips, and Thumbnail Strategies guide set.",
+    "Package guide tabs preserve the original guide names.",
+    "The thumbnail strategy guide includes all 12 source methods.",
+    "Changing phases does not jump the page.",
+    "Script shows the Viewer Experience section.",
+    "Script also starts collapsed.",
+    "Viewer Experience includes the complete Hook, Story, and Retention source guides.",
+    "The Reach, Trust, and Convert control is present.",
+    "Changing Reach, Trust, or Convert does not shoot the page to the bottom.",
+    "Rerendering after a job change does not duplicate the phase UI.",
+    "Workspace, Team, Saved, YouTube, creator, and menu controls are aligned to the right.",
+    "The duplicated V73 Saved indicator is gone.",
+    "The YouTube button is red.",
+    "Calendar includes a visible event-color legend.",
+    "Calendar events retain multiple distinct colors by work type.",
+    "Coaching calls and publishing remain visually distinct.",
+    "No runtime errors occur in the V74 walkthrough. "
+  ],
+  "errors": [],
+  "measurements": {
+    "phasePositions": {
+      "tabsTop": 241.984375,
+      "firstTop": 419.828125,
+      "tabsBefore": true
+    },
+    "phaseScrollDelta": 0,
+    "jobChangeScrollDelta": 0,
+    "header": {
+      "rightGap": 18,
+      "youtubeBackground": "rgb(229, 45, 39)",
+      "youtubeColor": "rgb(255, 255, 255)",
+      "extraSaved": 0,
+      "cloudTools": 0
+    },
+    "calendarColors": [
+      "rgb(32, 91, 62)",
+      "rgb(90, 69, 31)",
+      "rgb(36, 83, 111)",
+      "rgb(96, 69, 33)",
+      "rgb(73, 52, 122)",
+      "rgb(87, 52, 110)",
+      "rgb(23, 73, 86)",
+      "rgb(106, 48, 56)"
+    ]
+  }
+}

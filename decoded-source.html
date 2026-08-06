@@ -8,8 +8,8 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
 <meta content="#0b1014" name="theme-color"/>
-<meta content="Accelerator OS V52.1 V73: an app-wide reference-led coaching workspace with clear hierarchy, semantic states, and pop-out guides." name="description"/>
-<title>Accelerator OS V52.1 App Design V73</title>
+<meta content="Accelerator OS V52.1 V74: source-faithful planner UI, complete guides, stable accordions, and semantic calendar colors." name="description"/>
+<title>Accelerator OS V52.1 Reference UI V74</title>
 <style>:root {
   color-scheme: dark;
   --bg: #0b1014;
@@ -14118,1427 +14118,394 @@ window.render=function(...args){normalizeDiagnosisRoute();const result=previous.
 clean();
 })();
 </script>
-<style id="v72-reference-ui-styles">/* V72 reference-led UI, based on the supplied planner's clear phase flow and pop-out guides. */
+<style id="v74-reference-ui-corrections-style">/* V74: use the supplied vidIQ planner as the actual UI system, not only its palette. */
 :root{
-  --bg:#0D1117;
-  --panel:#161B22;
-  --panel-2:#21262D;
-  --panel-3:#30363D;
-  --line:#30363D;
-  --text:#E6EDF3;
-  --muted:#8B949E;
-  --brand:#3B82F6;
-  --brand-2:#93C5FD;
-  --green:#3FB950;
-  --amber:#F59E0B;
-  --red:#F85149;
-  --purple:#A855F7;
+  --v74-dark:#0D1117;
+  --v74-card:#161B22;
+  --v74-card-2:#21262D;
+  --v74-border:#30363D;
+  --v74-text:#E6EDF3;
+  --v74-muted:#8B949E;
+  --v74-blue:#3B82F6;
+  --v74-blue-2:#60A5FA;
+  --v74-green:#3FB950;
+  --v74-amber:#F59E0B;
+  --v74-red:#F85149;
+  --v74-purple:#A855F7;
 }
-body.v72-reference-ui{background:#0D1117;color:#E6EDF3}
-body.v72-reference-ui .sidebar{background:#0D1117;border-color:#30363D}
-body.v72-reference-ui .topbar{background:rgba(22,27,34,.96);border-color:#30363D}
-body.v72-reference-ui .card,
-body.v72-reference-ui .creator-row-v14,
-body.v72-reference-ui .creator-row-v13,
-body.v72-reference-ui .creator-row,
-body.v72-reference-ui .video-card{background:#161B22;border-color:#30363D;box-shadow:0 8px 28px rgba(0,0,0,.16)}
-body.v72-reference-ui .button{background:#3B82F6;color:#fff;border-color:#3B82F6}
-body.v72-reference-ui .button.secondary{background:#21262D;color:#E6EDF3;border-color:#30363D}
-body.v72-reference-ui .button.ghost{background:transparent;color:#8B949E;border-color:#30363D}
-body.v72-reference-ui input,
-body.v72-reference-ui textarea,
-body.v72-reference-ui select{background:#0D1117!important;color:#E6EDF3!important;border-color:#30363D!important}
-body.v72-reference-ui input:focus,
-body.v72-reference-ui textarea:focus,
-body.v72-reference-ui select:focus{border-color:#3B82F6!important;box-shadow:0 0 0 3px rgba(59,130,246,.18)!important}
-
-.v72-video-shell{max-width:1120px;margin:0 auto}
-.v72-flow-note{display:flex;align-items:flex-start;gap:10px;margin:0 0 14px;padding:12px 14px;border:1px solid rgba(59,130,246,.35);border-radius:10px;background:#1A2332;color:#C8DAF8;font-size:12px;line-height:1.5}
-.v72-flow-note strong{color:#93C5FD}
-.v72-flow-note-icon{width:24px;height:24px;display:grid;place-items:center;flex:0 0 auto;border-radius:7px;background:#233A5B;color:#93C5FD;font-weight:900}
-.v72-phase-tabs{display:flex;gap:8px;margin:0 0 18px;padding-bottom:3px;overflow-x:auto;scrollbar-width:thin}
-.v72-phase-tab{border:1px solid #30363D;background:#21262D;color:#8B949E;border-radius:9px;padding:9px 13px;font-size:12px;font-weight:800;white-space:nowrap;transition:.18s}
-.v72-phase-tab:hover{background:#30363D;color:#E6EDF3}
-.v72-phase-tab.active{background:#3B82F6;border-color:#3B82F6;color:#fff;box-shadow:0 8px 22px rgba(59,130,246,.22)}
-.v72-phase-tab.complete:not(.active){border-color:#2F6B43;color:#86EFAC;background:#132D1D}
-.v72-phase-tab span{opacity:.72;margin-right:5px}
-.v72-phase-hidden{display:none!important}
-
-body.v72-video-flow .v71-video-focus{border-color:#30363D;background:#161B22;border-radius:10px;margin-bottom:12px}
-body.v72-video-flow .v71-video-focus span{color:#60A5FA}
-body.v72-video-flow .v71-compact-button,
-body.v72-video-flow .v71-more{background:#21262D;border-color:#30363D;color:#D7E5F7}
-body.v72-video-flow details[data-v49-section]{border:1px solid #30363D!important;border-radius:12px!important;background:#161B22!important;margin:0 0 14px!important;overflow:visible!important;box-shadow:0 8px 24px rgba(0,0,0,.14)}
-body.v72-video-flow details[data-v49-section]>summary{grid-template-columns:28px minmax(0,1fr) auto auto!important;gap:10px!important;min-height:68px!important;padding:12px 14px!important;background:linear-gradient(135deg,#2563EB 0%,#60A5FA 100%)!important;border-radius:11px!important;color:#fff!important}
-body.v72-video-flow details[data-v49-section][open]>summary{border-radius:11px 11px 0 0!important}
-body.v72-video-flow details[data-v49-section]>summary .v71-step-number{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.28);color:#fff}
-body.v72-video-flow details[data-v49-section]>summary .v71-step-copy b{color:#fff;font-size:14px}
-body.v72-video-flow details[data-v49-section]>summary .v71-step-copy small{color:#DBEAFE;font-size:11px;line-height:1.35}
-body.v72-video-flow details[data-v49-section]>summary .v71-step-state{background:rgba(13,17,23,.2);color:#EFF6FF;border:1px solid rgba(255,255,255,.2)}
-.v72-guide-button{border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.16);color:#fff;border-radius:7px;padding:6px 9px;font-size:10px;font-weight:800;white-space:nowrap}
-.v72-guide-button:hover{background:rgba(255,255,255,.26)}
-body.v72-video-flow details[data-v49-section]>:not(summary){margin-left:14px;margin-right:14px}
-body.v72-video-flow details[data-v49-section]>summary+*{margin-top:14px}
-body.v72-video-flow details[data-v49-section]>:last-child{margin-bottom:14px}
-body.v72-video-flow .v71-package-summary-help{display:none!important}
-body.v72-video-flow .v71-package-note{border-left-color:#3B82F6;background:#1A2332;color:#C8D4E3}
-body.v72-video-flow .v71-pacing-row{background:#1A2332;border-color:#3B82F640}
-
-.v72-review-phase{display:none;border:1px solid #30363D;background:#161B22;border-radius:12px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.14)}
-.v72-review-phase.active{display:block}
-.v72-review-head{padding:15px 17px;background:linear-gradient(135deg,#2563EB 0%,#60A5FA 100%)}
-.v72-review-head h3{margin:0;color:#fff;font-size:16px}
-.v72-review-head p{margin:5px 0 0;color:#DBEAFE;font-size:12px}
-.v72-review-body{padding:16px}
-.v72-review-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}
-.v72-review-card{padding:13px;border:1px solid #30363D;border-radius:10px;background:#0D1117}
-.v72-review-card span{display:block;color:#60A5FA;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em}
-.v72-review-card strong{display:block;margin-top:5px;color:#E6EDF3;font-size:13px}
-.v72-review-card p{margin:5px 0 0;color:#8B949E;font-size:11px;line-height:1.45}
-.v72-review-actions{display:flex;gap:8px;flex-wrap:wrap}
-
-.v72-guide-backdrop{position:fixed;inset:0;z-index:100400;display:none;background:rgba(0,0,0,.72)}
-.v72-guide-backdrop.open{display:block}
-.v72-guide-drawer{position:absolute;top:0;right:0;width:min(720px,100%);height:100%;overflow:auto;background:#161B22;border-left:1px solid #30363D;box-shadow:-24px 0 70px rgba(0,0,0,.45)}
-.v72-guide-head{position:sticky;top:0;z-index:2;display:flex;justify-content:space-between;gap:14px;align-items:flex-start;padding:16px 18px;background:#161B22;border-bottom:1px solid #30363D}
-.v72-guide-head span{display:block;color:#60A5FA;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.1em}
-.v72-guide-head h2{margin:4px 0 0;color:#E6EDF3;font-size:20px}
-.v72-guide-head p{margin:5px 0 0;color:#8B949E;font-size:12px;line-height:1.4}
-.v72-guide-close{width:36px;height:36px;border:1px solid #30363D;border-radius:9px;background:#21262D;color:#8B949E;font-size:20px}
-.v72-guide-content{padding:18px}
-.v72-guide-intro{padding:14px;border:1px solid #30363D;border-radius:10px;background:linear-gradient(135deg,#161B22 0%,#1A2332 100%);margin-bottom:16px}
-.v72-guide-intro p{margin:0;color:#D6E2F0;font-size:13px;line-height:1.65}
-.v72-guide-section{border-left:4px solid #3B82F6;padding:13px 14px;margin:16px 0;background:linear-gradient(90deg,rgba(59,130,246,.09),transparent);border-radius:0 9px 9px 0}
-.v72-guide-section h3{margin:0 0 7px;color:#60A5FA;font-size:14px}
-.v72-guide-section p,.v72-guide-section li{color:#C8D4E3;font-size:12px;line-height:1.6}
-.v72-guide-section ul,.v72-guide-section ol{margin:7px 0 0;padding-left:18px}
-.v72-guide-tip{padding:12px 14px;margin:14px 0;border-left:4px solid #3FB950;border-radius:0 9px 9px 0;background:#132D1D;color:#A8E6A8;font-size:12px;line-height:1.55}
-.v72-guide-warning{padding:12px 14px;margin:14px 0;border-left:4px solid #F59E0B;border-radius:0 9px 9px 0;background:#3D3415;color:#FCD34D;font-size:12px;line-height:1.55}
-.v72-guide-table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid #30363D;border-radius:9px;overflow:hidden;font-size:11px}
-.v72-guide-table th{padding:9px 10px;text-align:left;background:#1A3A5C;color:#93C5FD;border-bottom:1px solid #3B82F6;text-transform:uppercase;letter-spacing:.06em}
-.v72-guide-table td{padding:10px;border-bottom:1px solid #30363D;color:#D6E2F0;vertical-align:top;line-height:1.5}
-.v72-guide-table tr:last-child td{border-bottom:0}
-
-.v72-status-ready{border-color:#3B82F6!important;background:#1A3A5C!important;color:#93C5FD!important}
-.v72-status-changes{border-color:#F59E0B!important;background:#3D3415!important;color:#FCD34D!important}
-.v72-status-approved{border-color:#3FB950!important;background:#132D1D!important;color:#86EFAC!important}
-
-@media(max-width:760px){
-  .v72-phase-tabs{margin-left:-2px;margin-right:-2px}
-  .v72-phase-tab{padding:8px 10px;font-size:11px}
-  body.v72-video-flow details[data-v49-section]>summary{grid-template-columns:26px minmax(0,1fr) auto!important}
-  body.v72-video-flow details[data-v49-section]>summary .v71-step-state{display:none}
-  .v72-guide-button{padding:5px 7px;font-size:9px}
-  .v72-review-grid{grid-template-columns:1fr}
-  .v72-guide-drawer{width:100%}
-}</style>
-<script id="v72-reference-ui-script">(()=>{
-if(window.__v72ReferenceUiInstalled)return;
-window.__v72ReferenceUiInstalled=true;
-window.__acceleratorBuild='V52.1-reference-ui-v72';
-
-const clean=value=>String(value??'').replace(/\s+/g,' ').trim();
-const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-const appState=()=>{try{return typeof state!=='undefined'?state:null}catch{return null}};
-const currentCreator=()=>{
-  const app=appState();
-  return (app?.creators||[]).find(item=>item.id===app.currentCreatorId)||(app?.creators||[])[0]||null;
-};
-const currentVideo=()=>{
-  const app=appState();
-  const creator=currentCreator();
-  const videos=creator?.videos||[];
-  return videos.find(item=>item.id===app?.currentVideoId)||videos[0]||null;
-};
-const first=(...values)=>values.find(value=>clean(value))||'';
-
-const phases=[
-  {id:'plan',number:'1',label:'Plan',sections:['video-purpose','video-strategy','video-package']},
-  {id:'script',number:'2',label:'Script',sections:['video-experience']},
-  {id:'produce',number:'3',label:'Produce & Publish',sections:['video-publish','video-handoff']},
-  {id:'review',number:'4',label:'Review & Learn',sections:[]}
-];
-
-const guides={
-  'video-purpose':{
-    eyebrow:'Phase 1 guide',
-    title:'Viewer and goal',
-    subtitle:'Decide who the video is for and what must change for them.',
-    intro:'This section should leave you with one specific viewer, one immediate problem, one useful promise, and one measurable definition of success.',
-    sections:[
-      ['Choose the video job','Reach brings the right new people in. Trust changes a belief and builds preference. Convert helps a ready viewer decide or act. The job is not the format.'],
-      ['Narrow the viewer','Write for one viewer in one moment. Avoid broad audience descriptions that could fit almost anyone.'],
-      ['Define the promise','Describe what the viewer will understand, decide, or be able to do differently after watching.']
-    ],
-    tip:'You should be able to read the viewer and promise aloud in one breath.'
-  },
-  'video-strategy':{
-    eyebrow:'Phase 1 guide',
-    title:'Research and approach',
-    subtitle:'Find the evidence first, then choose the format that carries it best.',
-    intro:'Research changes by video job. Do not force every video through the same outlier process.',
-    table:[
-      ['Reach','Demand, repeated problems, outliers, searches and click patterns.','Fast relevance, clear promise and early payoff.'],
-      ['Trust','Doubts, misconceptions, objections, proof and stories.','Old belief, evidence, new belief and application.'],
-      ['Convert','Fit, buyer questions, risk, alternatives and decision criteria.','Fit, tradeoffs, proof and one clear next step.']
-    ],
-    sections:[
-      ['Choose format after evidence','Use a how-to when the viewer needs a process. Use comparison when they need criteria and tradeoffs. Use a case study when proof is the main asset. Use a story when the belief shift depends on lived experience.'],
-      ['What best fit means','Best fit is the strongest starting recommendation from the saved strategy and evidence. It is not a mandatory answer.']
-    ],
-    warning:'Do not choose a format because it is familiar. Choose it because it makes the evidence easiest to understand.'
-  },
-  'video-package':{
-    eyebrow:'Phase 1 guide',
-    title:'Title and thumbnail',
-    subtitle:'Make the topic clear and give the right viewer an honest reason to click now.',
-    intro:'The topic is what the video is about. The click frame is why this version of the topic feels urgent, useful, surprising, risky, or emotionally relevant.',
-    sections:[
-      ['Common click frames','Mistake, proof, comparison, warning, tension, result, useful reframe, or a strong unanswered question.'],
-      ['Title and thumbnail relationship','They should work together, not repeat each other. The title can carry context while the thumbnail carries proof, emotion, contrast, or the visual question.'],
-      ['One-second test','A viewer should understand the main visual and emotional direction before reading every word.']
-    ],
-    tip:'A click frame guides the title and thumbnail. It does not choose the story structure or pacing.'
-  },
-  'video-experience':{
-    eyebrow:'Phase 2 guide',
-    title:'Story and opening',
-    subtitle:'Confirm the click immediately, then move the viewer toward the promised payoff.',
-    intro:'Choose one viewer flow and one opening move. Keep pacing at the recommended default unless the evidence clearly calls for something different.',
-    sections:[
-      ['Viewer flow','Use problem to cause to solution when the viewer needs understanding. Use problem to attempt to solution when failed effort matters. Use story to lesson to application when lived experience carries the proof.'],
-      ['Opening move','The first seconds should confirm the title and thumbnail, name the stakes, and make the next step feel worth watching.'],
-      ['Pacing','Pacing is the timing of proof, tension and payoff. It is not a separate creative concept that needs to be reinvented for every video.']
-    ],
-    warning:'Do not open with background information that the viewer did not click for.'
-  },
-  'video-publish':{
-    eyebrow:'Phase 3 guide',
-    title:'CTA and publishing',
-    subtitle:'Connect the video to the next useful action and schedule the review points.',
-    intro:'The CTA should feel like the natural next step from the video, not an interruption pasted onto the ending.',
-    sections:[
-      ['Match CTA to the job','Reach often points to another video or subscription path. Trust can point to a deeper resource. Convert can point to the offer, lead magnet, consultation, or decision step.'],
-      ['Set review dates','Use the calendar to schedule the 24-hour, 7-day and 28-day reviews that actually matter for this video.'],
-      ['Keep the ending open','Transition into the next action. Avoid dropping energy with a long conclusion.']
-    ],
-    tip:'One clear CTA is usually stronger than several competing next steps.'
-  },
-  'video-handoff':{
-    eyebrow:'Phase 3 guide',
-    title:'Handoff',
-    subtitle:'Make the plan usable by the creator, editor and coach without another explanation meeting.',
-    intro:'The handoff is complete when the approved title, thumbnail direction, opening, main beats, CTA, owner and dates are clear.',
-    sections:[
-      ['What must be visible','Final title direction, thumbnail concept, opening, structure, proof assets, CTA, due dates and ownership.'],
-      ['What does not belong here','Long strategy teaching, every rejected option, or unresolved brainstorming that will confuse execution.'],
-      ['Coach check','Ask whether another person could execute this plan without guessing what you meant.']
-    ],
-    warning:'Do not mark the plan ready while the title, thumbnail or opening still depend on a future decision.'
-  }
-};
-
-function guideMarkup(guide){
-  let html=`<div class="v72-guide-intro"><p>${escapeHtml(guide.intro||'')}</p></div>`;
-  if(guide.table){
-    html+=`<table class="v72-guide-table"><thead><tr><th>Video job</th><th>Research</th><th>Structure</th></tr></thead><tbody>${guide.table.map(row=>`<tr>${row.map(cell=>`<td>${escapeHtml(cell)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
-  }
-  for(const section of guide.sections||[]){
-    html+=`<section class="v72-guide-section"><h3>${escapeHtml(section[0])}</h3><p>${escapeHtml(section[1])}</p></section>`;
-  }
-  if(guide.tip)html+=`<div class="v72-guide-tip"><strong>Useful check:</strong> ${escapeHtml(guide.tip)}</div>`;
-  if(guide.warning)html+=`<div class="v72-guide-warning"><strong>Watch for this:</strong> ${escapeHtml(guide.warning)}</div>`;
-  return html;
-}
-
-function ensureGuideDrawer(){
-  if(document.querySelector('#v72-guide-backdrop'))return;
-  document.body.insertAdjacentHTML('beforeend',`<div class="v72-guide-backdrop" id="v72-guide-backdrop" aria-hidden="true"><aside class="v72-guide-drawer" role="dialog" aria-modal="true"><header class="v72-guide-head"><div><span id="v72-guide-eyebrow">Guide</span><h2 id="v72-guide-title">Guide</h2><p id="v72-guide-subtitle"></p></div><button type="button" class="v72-guide-close" data-v72-close-guide aria-label="Close guide">×</button></header><div class="v72-guide-content" id="v72-guide-content"></div></aside></div>`);
-}
-
-function openGuide(key){
-  const guide=guides[key];
-  if(!guide)return;
-  ensureGuideDrawer();
-  document.querySelector('#v72-guide-eyebrow').textContent=guide.eyebrow||'Guide';
-  document.querySelector('#v72-guide-title').textContent=guide.title||'Guide';
-  document.querySelector('#v72-guide-subtitle').textContent=guide.subtitle||'';
-  document.querySelector('#v72-guide-content').innerHTML=guideMarkup(guide);
-  const backdrop=document.querySelector('#v72-guide-backdrop');
-  backdrop.classList.add('open');
-  backdrop.setAttribute('aria-hidden','false');
-}
-
-function closeGuide(){
-  const backdrop=document.querySelector('#v72-guide-backdrop');
-  backdrop?.classList.remove('open');
-  backdrop?.setAttribute('aria-hidden','true');
-}
-
-function phaseStorageKey(){
-  const creator=currentCreator();
-  const video=currentVideo();
-  return `accelerator-v72-phase-${creator?.id||'creator'}-${video?.id||'video'}`;
-}
-
-function currentPhase(){
-  try{return localStorage.getItem(phaseStorageKey())||'plan'}catch{return 'plan'}
-}
-
-function savePhase(id){
-  try{localStorage.setItem(phaseStorageKey(),id)}catch{}
-}
-
-function phaseIsComplete(phase){
-  if(phase.id==='review')return false;
-  return phase.sections.length>0&&phase.sections.every(id=>document.querySelector(`details[data-v49-section="${id}"]`)?.classList.contains('complete'));
-}
-
-function ensureReviewPanel(){
-  if(document.querySelector('.v72-review-phase'))return;
-  const anchor=document.querySelector('details[data-v49-section="video-handoff"]');
-  if(!anchor)return;
-  anchor.insertAdjacentHTML('afterend',`<section class="v72-review-phase"><header class="v72-review-head"><h3>Review and learn from the video</h3><p>Use this phase after the video is published and a scheduled review is due.</p></header><div class="v72-review-body"><div class="v72-review-grid"><article class="v72-review-card"><span>24 hours</span><strong>Packaging and opening</strong><p>Check early click response, first-minute behavior and obvious launch issues.</p></article><article class="v72-review-card"><span>7 days</span><strong>Viewer journey</strong><p>Review retention, traffic sources, comments and whether the promise held.</p></article><article class="v72-review-card"><span>28 days</span><strong>Strategic learning</strong><p>Decide what this video should change in future planning and packaging.</p></article></div><div class="v72-review-actions"><button type="button" class="button" data-v72-open-review>Open Review & Learn</button><button type="button" class="button secondary" data-v72-open-calendar>Open review calendar</button><button type="button" class="v72-guide-button" data-v72-review-guide>View Guide</button></div></div></section>`);
-}
-
-function ensureFlowUi(){
-  if(appState()?.currentView!=='video')return;
-  document.body.classList.add('v72-video-flow');
-  const existing=document.querySelector('.v72-phase-tabs');
-  if(!existing){
-    const focus=document.querySelector('.v71-video-focus');
-    const anchor=focus||document.querySelector('.content .page-head');
-    if(!anchor)return;
-    anchor.insertAdjacentHTML('afterend',`<div class="v72-video-shell"><div class="v72-flow-note"><span class="v72-flow-note-icon">i</span><div><strong>Work one phase at a time.</strong> The page tells you what to complete. Use View Guide only when you need the teaching or examples.</div></div><nav class="v72-phase-tabs" aria-label="Video workflow phases">${phases.map(phase=>`<button type="button" class="v72-phase-tab" data-v72-phase="${phase.id}"><span>${phase.number}.</span>${escapeHtml(phase.label)}</button>`).join('')}</nav></div>`);
-  }
-  ensureReviewPanel();
-  decorateSections();
-  applyPhase(currentPhase());
-}
-
-function decorateSections(){
-  for(const phase of phases){
-    for(const id of phase.sections){
-      const detail=document.querySelector(`details[data-v49-section="${id}"]`);
-      const summary=detail?.querySelector(':scope>summary');
-      if(!detail||!summary)continue;
-      detail.dataset.v72Phase=phase.id;
-      if(!summary.querySelector('[data-v72-guide]')){
-        summary.insertAdjacentHTML('beforeend',`<button type="button" class="v72-guide-button" data-v72-guide="${id}">View Guide</button>`);
-      }
-    }
-  }
-}
-
-function applyPhase(id){
-  const phase=phases.find(item=>item.id===id)||phases[0];
-  savePhase(phase.id);
-  document.querySelectorAll('.v72-phase-tab').forEach(button=>{
-    const target=phases.find(item=>item.id===button.dataset.v72Phase);
-    button.classList.toggle('active',button.dataset.v72Phase===phase.id);
-    button.classList.toggle('complete',Boolean(target&&phaseIsComplete(target)));
-  });
-  document.querySelectorAll('details[data-v49-section]').forEach(detail=>{
-    const visible=phase.sections.includes(detail.dataset.v49Section);
-    detail.classList.toggle('v72-phase-hidden',!visible);
-    if(!visible)detail.open=false;
-  });
-  const review=document.querySelector('.v72-review-phase');
-  review?.classList.toggle('active',phase.id==='review');
-  if(phase.sections.length){
-    const visible=phase.sections.map(sectionId=>document.querySelector(`details[data-v49-section="${sectionId}"]`)).filter(Boolean);
-    if(!visible.some(detail=>detail.open))visible[0].open=true;
-  }
-  document.querySelector('.v72-phase-tabs')?.scrollIntoView({block:'nearest'});
-}
-
-function applyGlobalUi(){
-  document.body.classList.add('v72-reference-ui');
-  if(appState()?.currentView!=='video')document.body.classList.remove('v72-video-flow');
-}
-
-function showReviewGuide(){
-  openGuide('video-publish');
-  document.querySelector('#v72-guide-eyebrow').textContent='Phase 4 guide';
-  document.querySelector('#v72-guide-title').textContent='Review and learn';
-  document.querySelector('#v72-guide-subtitle').textContent='Turn performance evidence into one future decision.';
-  document.querySelector('#v72-guide-content').innerHTML=`<div class="v72-guide-intro"><p>Do not review a video just to describe the numbers. Record what happened, interpret what it probably means, and choose the one future decision this evidence should change.</p></div><section class="v72-guide-section"><h3>24-hour review</h3><p>Look for launch problems, packaging response, first-minute behavior and whether the right viewers arrived.</p></section><section class="v72-guide-section"><h3>7-day review</h3><p>Study the full viewer journey, retention shape, traffic sources, comments and promise delivery.</p></section><section class="v72-guide-section"><h3>28-day review</h3><p>Decide whether the topic, click frame, opening, structure or CTA produced a repeatable learning.</p></section><div class="v72-guide-tip"><strong>Useful check:</strong> End every review with one sentence beginning, “Because of this video, next time we will...”</div>`;
-}
-
-function enhance(){
-  applyGlobalUi();
-  ensureGuideDrawer();
-  ensureFlowUi();
-  document.title='Accelerator OS V52.1 Reference UI V72';
-}
-
-document.addEventListener('click',event=>{
-  const guideButton=event.target.closest?.('[data-v72-guide]');
-  if(guideButton){
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation();
-    openGuide(guideButton.dataset.v72Guide);
-    return;
-  }
-  const phaseButton=event.target.closest?.('[data-v72-phase]');
-  if(phaseButton){
-    event.preventDefault();
-    applyPhase(phaseButton.dataset.v72Phase);
-    return;
-  }
-  if(event.target.closest?.('[data-v72-close-guide]')||event.target.id==='v72-guide-backdrop'){
-    event.preventDefault();
-    closeGuide();
-    return;
-  }
-  if(event.target.closest?.('[data-v72-review-guide]')){
-    event.preventDefault();
-    showReviewGuide();
-    return;
-  }
-  if(event.target.closest?.('[data-v72-open-review]')){
-    event.preventDefault();
-    const app=appState();
-    if(app){app.currentView='results';render()}
-    return;
-  }
-  if(event.target.closest?.('[data-v72-open-calendar]')){
-    event.preventDefault();
-    const app=appState();
-    if(app){app.currentView='calendar';render()}
-  }
-},true);
-
-document.addEventListener('keydown',event=>{if(event.key==='Escape')closeGuide()});
-
-const previousRender=window.render;
-window.render=function(...args){
-  const result=previousRender.apply(this,args);
-  const run=()=>{try{enhance()}catch(error){console.error('V72 reference UI failed',error)}};
-  run();
-  setTimeout(run,0);
-  setTimeout(run,120);
-  setTimeout(run,320);
-  return result;
-};
-
-enhance();
-})();</script>
-<script id="v72-reference-ui-fix-script">(()=>{
-if(window.__v72PhaseAttributeFixInstalled)return;
-window.__v72PhaseAttributeFixInstalled=true;
-function repairPhaseAttributes(){
-  document.querySelectorAll('details[data-v72-phase]').forEach(detail=>{
-    detail.dataset.v72PhaseSection=detail.dataset.v72Phase;
-    detail.removeAttribute('data-v72-phase');
-  });
-}
-const observer=new MutationObserver(repairPhaseAttributes);
-observer.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['data-v72-phase']});
-repairPhaseAttributes();
-setTimeout(repairPhaseAttributes,0);
-setTimeout(repairPhaseAttributes,200);
-})();</script>
-<style id="v73-app-design-system-styles">/* V73 app-wide reference design system.
-   The working page stays focused. Teaching, examples and explanation live in drawers. */
-:root{
-  --v73-bg:#0D1117;
-  --v73-panel:#161B22;
-  --v73-panel-raised:#1C222B;
-  --v73-panel-soft:#21262D;
-  --v73-line:#30363D;
-  --v73-line-strong:#3D4652;
-  --v73-text:#E6EDF3;
-  --v73-muted:#8B949E;
-  --v73-blue:#3B82F6;
-  --v73-blue-soft:#1A3A5C;
-  --v73-blue-text:#93C5FD;
-  --v73-green:#3FB950;
-  --v73-green-soft:#132D1D;
-  --v73-green-text:#86EFAC;
-  --v73-amber:#F59E0B;
-  --v73-amber-soft:#3D3415;
-  --v73-amber-text:#FCD34D;
-  --v73-red:#F85149;
-  --v73-red-soft:#3B1D1D;
-  --v73-red-text:#FDA4AF;
-  --v73-purple:#A855F7;
-  --v73-radius:12px;
-  --v73-radius-small:9px;
-  --v73-shadow:0 10px 32px rgba(0,0,0,.18);
-}
-
-html{background:var(--v73-bg)}
-body.v73-app-design{
-  background:var(--v73-bg)!important;
-  color:var(--v73-text)!important;
-  font-size:14px;
-  line-height:1.5;
-}
-body.v73-app-design *{scrollbar-color:#3D4652 #0D1117}
-body.v73-app-design *:focus-visible{outline:2px solid var(--v73-blue)!important;outline-offset:2px}
-
-/* Global frame */
-body.v73-app-design .app,
-body.v73-app-design .app-shell,
-body.v73-app-design .shell{background:var(--v73-bg)!important}
-body.v73-app-design .sidebar{
-  background:#0B0F14!important;
-  border-right:1px solid var(--v73-line)!important;
-  box-shadow:none!important;
-}
-body.v73-app-design .sidebar .brand,
-body.v73-app-design .sidebar-brand{
-  border-bottom:1px solid var(--v73-line)!important;
-  padding-bottom:14px!important;
-}
-body.v73-app-design .sidebar nav,
-body.v73-app-design .nav-list{padding:10px!important}
-body.v73-app-design .sidebar button,
-body.v73-app-design .sidebar a,
-body.v73-app-design [data-view]{
-  min-height:38px;
-  border-radius:8px!important;
-  color:#AAB4C0;
-  transition:background .16s ease,color .16s ease,border-color .16s ease;
-}
-body.v73-app-design .sidebar button:hover,
-body.v73-app-design .sidebar a:hover,
-body.v73-app-design [data-view]:hover{background:var(--v73-panel-soft)!important;color:var(--v73-text)!important}
-body.v73-app-design .sidebar .active,
-body.v73-app-design [data-view].active,
-body.v73-app-design [aria-current="page"]{
-  background:var(--v73-blue-soft)!important;
-  color:var(--v73-blue-text)!important;
-  border-color:rgba(59,130,246,.45)!important;
-  box-shadow:inset 3px 0 0 var(--v73-blue);
-}
-body.v73-app-design .topbar{
-  min-height:58px;
-  background:rgba(22,27,34,.96)!important;
-  border-bottom:1px solid var(--v73-line)!important;
-  box-shadow:0 4px 18px rgba(0,0,0,.13)!important;
-  backdrop-filter:blur(12px);
-}
-body.v73-app-design .content{
-  width:min(1240px,100%);
-  margin:0 auto;
-  padding:22px clamp(16px,2.6vw,32px) 52px!important;
-}
-
-/* Small auto-save indicator, modeled on the reference header */
-.v73-save-state{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  margin-left:auto;
-  padding:6px 9px;
-  border:1px solid transparent;
-  border-radius:999px;
-  color:var(--v73-green-text);
-  background:rgba(19,45,29,.55);
-  font-size:11px;
-  font-weight:750;
-  white-space:nowrap;
-}
-.v73-save-state::before{
-  content:'✓';
-  width:16px;height:16px;
-  display:grid;place-items:center;
-  border-radius:50%;
-  background:var(--v73-green);
-  color:#07140B;
-  font-size:10px;
-  font-weight:1000;
-}
-.v73-save-state.saving{color:var(--v73-blue-text);background:rgba(26,58,92,.55)}
-.v73-save-state.saving::before{content:'•';background:var(--v73-blue);color:white}
-
-/* Page orientation */
-body.v73-app-design .page-head,
-body.v73-app-design .v49-page-head,
-.v73-page-head{
-  position:relative;
-  display:grid!important;
-  grid-template-columns:minmax(0,1fr) auto;
-  align-items:end;
-  gap:8px 18px;
-  margin:0 0 18px!important;
-  padding:0 0 17px!important;
-  border-bottom:1px solid var(--v73-line)!important;
-  background:transparent!important;
-  box-shadow:none!important;
-}
-.v73-page-copy{min-width:0}
-.v73-page-eyebrow{
-  display:block;
-  margin:0 0 5px;
-  color:#60A5FA;
-  font-size:10px;
-  font-weight:900;
-  letter-spacing:.11em;
-  text-transform:uppercase;
-}
-body.v73-app-design .page-head h1,
-body.v73-app-design .page-head h2,
-body.v73-app-design .v49-page-head h1,
-body.v73-app-design .v49-page-head h2,
-.v73-page-head h1,
-.v73-page-head h2{
-  margin:0!important;
-  color:var(--v73-text)!important;
-  font-size:clamp(22px,2.5vw,31px)!important;
-  line-height:1.15!important;
-  letter-spacing:-.025em;
-}
-.v73-page-purpose{
-  max-width:760px;
-  margin:7px 0 0;
-  color:var(--v73-muted);
-  font-size:13px;
-  line-height:1.55;
-}
-.v73-page-actions{
-  display:flex;
-  justify-content:flex-end;
-  align-items:center;
-  gap:8px;
-  flex-wrap:wrap;
-}
-.v73-page-guide{
-  display:inline-flex;align-items:center;gap:7px;
-  min-height:36px;
-  padding:8px 11px;
-  border:1px solid var(--v73-line-strong);
-  border-radius:8px;
-  background:var(--v73-panel-soft);
-  color:#D7E5F7;
-  font-size:11px;
-  font-weight:800;
-  cursor:pointer;
-}
-.v73-page-guide::before{content:'?';width:17px;height:17px;display:grid;place-items:center;border-radius:5px;background:var(--v73-blue-soft);color:var(--v73-blue-text);font-size:10px}
-.v73-page-guide:hover{border-color:var(--v73-blue);background:var(--v73-blue-soft);color:white}
-
-/* Cards and sections */
-body.v73-app-design .card,
-body.v73-app-design .creator-row-v14,
-body.v73-app-design .creator-row-v13,
-body.v73-app-design .creator-row,
-body.v73-app-design .video-card,
-body.v73-app-design .calendar-card,
-body.v73-app-design .upcoming-panel{
-  border:1px solid var(--v73-line)!important;
-  border-radius:var(--v73-radius)!important;
-  background:var(--v73-panel)!important;
-  box-shadow:var(--v73-shadow)!important;
-}
-body.v73-app-design .card{padding:16px!important}
-body.v73-app-design .card .card{background:var(--v73-panel-soft)!important;box-shadow:none!important}
-.v73-work-card{
-  overflow:hidden;
-  padding:0 16px 16px!important;
-}
-.v73-card-heading,
-.v73-work-card > header:first-child,
-.v73-work-card > .section-title:first-child{
-  display:flex!important;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  margin:0 -16px 15px!important;
-  padding:12px 15px!important;
-  border-bottom:1px solid rgba(147,197,253,.25)!important;
-  background:linear-gradient(135deg,#235FCB 0%,#3B82F6 100%)!important;
-  color:white!important;
-  border-radius:11px 11px 0 0;
-}
-.v73-card-heading{font-size:14px!important;line-height:1.3!important}
-.v73-card-heading *{color:inherit!important}
-.v73-card-heading + p,
-.v73-work-card > header:first-child + p{color:var(--v73-muted)}
-body.v73-app-design h1,
-body.v73-app-design h2,
-body.v73-app-design h3,
-body.v73-app-design h4{color:var(--v73-text)}
-body.v73-app-design p,
-body.v73-app-design .muted,
-body.v73-app-design small{color:var(--v73-muted)}
-body.v73-app-design hr{border:0;border-top:1px solid var(--v73-line)}
-
-/* Semantic cards make coach work, approvals and warnings scannable */
-.v73-coach-note{
-  border-color:rgba(59,130,246,.45)!important;
-  background:linear-gradient(135deg,rgba(26,58,92,.65),var(--v73-panel))!important;
-  box-shadow:inset 4px 0 0 var(--v73-blue),var(--v73-shadow)!important;
-}
-.v73-coach-note .v73-card-heading{background:transparent!important;color:var(--v73-blue-text)!important;border-bottom-color:rgba(59,130,246,.22)!important}
-.v73-approved-card{
-  border-color:rgba(63,185,80,.42)!important;
-  background:linear-gradient(135deg,rgba(19,45,29,.72),var(--v73-panel))!important;
-  box-shadow:inset 4px 0 0 var(--v73-green),var(--v73-shadow)!important;
-}
-.v73-approved-card .v73-card-heading{background:transparent!important;color:var(--v73-green-text)!important;border-bottom-color:rgba(63,185,80,.22)!important}
-.v73-warning-card{
-  border-color:rgba(245,158,11,.46)!important;
-  background:linear-gradient(135deg,rgba(61,52,21,.72),var(--v73-panel))!important;
-  box-shadow:inset 4px 0 0 var(--v73-amber),var(--v73-shadow)!important;
-}
-.v73-warning-card .v73-card-heading{background:transparent!important;color:var(--v73-amber-text)!important;border-bottom-color:rgba(245,158,11,.22)!important}
-.v73-danger-card{
-  border-color:rgba(248,81,73,.48)!important;
-  background:linear-gradient(135deg,rgba(59,29,29,.74),var(--v73-panel))!important;
-  box-shadow:inset 4px 0 0 var(--v73-red),var(--v73-shadow)!important;
-}
-.v73-danger-card .v73-card-heading{background:transparent!important;color:var(--v73-red-text)!important;border-bottom-color:rgba(248,81,73,.22)!important}
-
-/* Inputs */
-body.v73-app-design label{color:#C8D4E3;font-size:12px;font-weight:750}
-body.v73-app-design input,
-body.v73-app-design textarea,
-body.v73-app-design select{
-  min-height:40px;
-  border:1px solid var(--v73-line)!important;
-  border-radius:8px!important;
-  background:#0D1117!important;
-  color:var(--v73-text)!important;
-  font:inherit;
-  box-shadow:none!important;
-}
-body.v73-app-design textarea{min-height:92px;line-height:1.55;resize:vertical}
-body.v73-app-design input::placeholder,
-body.v73-app-design textarea::placeholder{color:#66717D}
-body.v73-app-design input:hover,
-body.v73-app-design textarea:hover,
-body.v73-app-design select:hover{border-color:var(--v73-line-strong)!important}
-body.v73-app-design input:focus,
-body.v73-app-design textarea:focus,
-body.v73-app-design select:focus{border-color:var(--v73-blue)!important;box-shadow:0 0 0 3px rgba(59,130,246,.16)!important;outline:0!important}
-.v73-field-help{margin:5px 0 0;color:var(--v73-muted);font-size:11px;line-height:1.45}
-
-/* Buttons */
-body.v73-app-design button,
-body.v73-app-design .button{font-family:inherit}
-body.v73-app-design .button,
-body.v73-app-design button.button{
-  min-height:38px;
-  padding:8px 13px!important;
-  border:1px solid var(--v73-blue)!important;
-  border-radius:8px!important;
-  background:var(--v73-blue)!important;
-  color:white!important;
-  font-size:12px!important;
-  font-weight:800!important;
-  box-shadow:0 7px 18px rgba(59,130,246,.16);
-  transition:transform .12s ease,filter .12s ease,background .12s ease;
-}
-body.v73-app-design .button:hover{filter:brightness(1.08);transform:translateY(-1px)}
-body.v73-app-design .button.secondary,
-body.v73-app-design .button.ghost,
-body.v73-app-design button.secondary{
-  border-color:var(--v73-line-strong)!important;
-  background:var(--v73-panel-soft)!important;
-  color:var(--v73-text)!important;
-  box-shadow:none!important;
-}
-body.v73-app-design .button.ghost{background:transparent!important;color:var(--v73-muted)!important}
-body.v73-app-design .button.danger,
-body.v73-app-design [data-danger]{border-color:var(--v73-red)!important;background:var(--v73-red-soft)!important;color:var(--v73-red-text)!important;box-shadow:none!important}
-body.v73-app-design button:disabled,
-body.v73-app-design .button:disabled{opacity:.48;cursor:not-allowed;transform:none}
-
-/* Status pills */
-.v73-status{
-  display:inline-flex!important;
-  align-items:center;
-  gap:5px;
-  min-height:24px;
-  padding:4px 8px!important;
-  border:1px solid var(--v73-line)!important;
-  border-radius:999px!important;
-  background:var(--v73-panel-soft)!important;
-  color:#B8C3CF!important;
-  font-size:10px!important;
-  font-weight:850!important;
-  line-height:1!important;
-  white-space:nowrap;
-}
-.v73-status::before{content:'';width:6px;height:6px;border-radius:50%;background:#77818D}
-.v73-status-blue{border-color:rgba(59,130,246,.48)!important;background:var(--v73-blue-soft)!important;color:var(--v73-blue-text)!important}.v73-status-blue::before{background:var(--v73-blue)}
-.v73-status-green{border-color:rgba(63,185,80,.48)!important;background:var(--v73-green-soft)!important;color:var(--v73-green-text)!important}.v73-status-green::before{background:var(--v73-green)}
-.v73-status-amber{border-color:rgba(245,158,11,.52)!important;background:var(--v73-amber-soft)!important;color:var(--v73-amber-text)!important}.v73-status-amber::before{background:var(--v73-amber)}
-.v73-status-red{border-color:rgba(248,81,73,.52)!important;background:var(--v73-red-soft)!important;color:var(--v73-red-text)!important}.v73-status-red::before{background:var(--v73-red)}
-
-/* Creator management */
-body.v73-app-design .creator-row-v14,
-body.v73-app-design .creator-row-v13,
-body.v73-app-design .creator-row{
-  position:relative;
-  padding:14px 15px!important;
-  transition:border-color .16s ease,transform .16s ease,background .16s ease;
-}
-body.v73-app-design .creator-row-v14:hover,
-body.v73-app-design .creator-row-v13:hover,
-body.v73-app-design .creator-row:hover{border-color:#46515D!important;background:var(--v73-panel-raised)!important;transform:translateY(-1px)}
-body.v73-app-design [data-v70-card-attention]{
-  border-color:rgba(245,158,11,.5)!important;
-  background:var(--v73-amber-soft)!important;
-  color:var(--v73-amber-text)!important;
-}
-.v73-creator-avatar{
-  width:36px;height:36px;
-  display:grid;place-items:center;
-  border-radius:10px;
-  background:var(--v73-blue-soft);
-  color:var(--v73-blue-text);
-  font-size:12px;font-weight:900;
-}
-
-/* Calendar and tables */
-body.v73-app-design table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--v73-line);border-radius:10px;overflow:hidden;background:var(--v73-panel)}
-body.v73-app-design th{padding:10px 11px!important;background:#1A3A5C!important;color:var(--v73-blue-text)!important;border-bottom:1px solid rgba(59,130,246,.48)!important;font-size:10px!important;text-align:left;text-transform:uppercase;letter-spacing:.07em}
-body.v73-app-design td{padding:10px 11px!important;border-bottom:1px solid var(--v73-line)!important;color:#D4DEE8;font-size:12px;vertical-align:top}
-body.v73-app-design tr:last-child td{border-bottom:0!important}
-body.v73-app-design tr:hover td{background:rgba(33,38,45,.75)}
-body.v73-app-design .calendar-card{overflow:hidden}
-body.v73-app-design .calendar-grid{border-color:var(--v73-line)!important;background:var(--v73-panel)!important}
-body.v73-app-design .calendar-grid button,
-body.v73-app-design [data-calendar-day]{border-color:var(--v73-line)!important;background:#10151B!important;color:#C8D4E3!important}
-body.v73-app-design .calendar-grid button:hover,
-body.v73-app-design [data-calendar-day]:hover{border-color:var(--v73-blue)!important;background:var(--v73-blue-soft)!important}
-
-/* Disclosures and accordions outside the V72 video phase system */
-body.v73-app-design details:not([data-v49-section]){
-  border:1px solid var(--v73-line);
-  border-radius:10px;
-  background:var(--v73-panel);
-  overflow:hidden;
-}
-body.v73-app-design details:not([data-v49-section]) > summary{
-  min-height:44px;
-  padding:11px 13px;
-  color:#DCE6F0;
-  background:var(--v73-panel-soft);
-  font-weight:800;
-  cursor:pointer;
-}
-body.v73-app-design details:not([data-v49-section])[open] > summary{border-bottom:1px solid var(--v73-line)}
-body.v73-app-design details:not([data-v49-section]) > :not(summary){margin-left:13px;margin-right:13px}
-
-/* Reminders and empty states */
-body.v73-app-design .v70-reminder,
-.v73-reminder{
-  border:1px solid rgba(245,158,11,.38)!important;
-  border-radius:10px!important;
-  background:linear-gradient(135deg,rgba(61,52,21,.72),var(--v73-panel))!important;
-  color:var(--v73-text)!important;
-}
-.v73-empty-state{
-  display:grid;
-  justify-items:center;
-  gap:7px;
-  padding:28px 18px!important;
-  border:1px dashed #3C4651!important;
-  border-radius:12px!important;
-  background:rgba(22,27,34,.72)!important;
-  color:var(--v73-muted)!important;
-  text-align:center;
-}
-.v73-empty-state::before{
-  content:'+';
-  width:34px;height:34px;
-  display:grid;place-items:center;
-  border-radius:10px;
-  background:var(--v73-panel-soft);
-  color:var(--v73-blue-text);
-  font-size:20px;
-}
-
-/* Modals, coaching calls and drawers */
-body.v73-app-design [role="dialog"],
-body.v73-app-design .modal,
-body.v73-app-design .dialog,
-body.v73-app-design [class*="modal-card"],
-.v73-call-workspace{
-  border:1px solid var(--v73-line)!important;
-  border-radius:14px!important;
-  background:var(--v73-panel)!important;
-  color:var(--v73-text)!important;
-  box-shadow:0 26px 90px rgba(0,0,0,.52)!important;
-}
-body.v73-app-design .modal-backdrop,
-body.v73-app-design [class*="overlay"]{backdrop-filter:blur(5px)}
-.v73-call-workspace{
-  overflow:hidden;
-}
-.v73-call-workspace::before{
-  content:'Live coaching call';
-  display:block;
-  margin:-16px -16px 16px;
-  padding:14px 16px;
-  border-bottom:1px solid rgba(147,197,253,.28);
-  background:linear-gradient(135deg,#235FCB,#3B82F6);
-  color:white;
-  font-size:15px;
-  font-weight:900;
-}
-.v73-call-workspace [data-session-bind]{background:#0D1117!important}
-.v73-call-workspace .button:last-child{box-shadow:0 8px 20px rgba(59,130,246,.2)}
-
-/* Consistent guide drawer across every page */
-body.v73-app-design .v72-guide-backdrop{background:rgba(0,0,0,.76);backdrop-filter:blur(4px)}
-body.v73-app-design .v72-guide-drawer{background:var(--v73-panel);border-left-color:var(--v73-line);box-shadow:-26px 0 80px rgba(0,0,0,.55)}
-body.v73-app-design .v72-guide-head{background:var(--v73-panel);border-bottom-color:var(--v73-line)}
-body.v73-app-design .v72-guide-content{max-width:760px;margin:0 auto;padding:20px}
-
-/* Low sensory load: old large guide layers do not compete with the working page */
-body.v73-app-design .page-guide,
-body.v73-app-design .v70-job-guide,
-body.v73-app-design .v70-planner-guide,
-body.v73-app-design .v70-learn-guide,
-body.v73-app-design .v69-map{display:none!important}
-
-/* Responsive */
-@media(max-width:900px){
-  body.v73-app-design .content{padding:18px 14px 42px!important}
-  body.v73-app-design .page-head,
-  body.v73-app-design .v49-page-head,
-  .v73-page-head{grid-template-columns:1fr;align-items:start}
-  .v73-page-actions{justify-content:flex-start}
-  .v73-save-state{font-size:0;padding:6px}.v73-save-state::before{font-size:10px}
-}
-@media(max-width:640px){
-  body.v73-app-design{font-size:13px}
-  body.v73-app-design .card{padding:13px!important}
-  .v73-work-card{padding:0 13px 13px!important}
-  .v73-card-heading,.v73-work-card > header:first-child,.v73-work-card > .section-title:first-child{margin:0 -13px 13px!important;padding:11px 12px!important}
-  body.v73-app-design .page-head h1,body.v73-app-design .page-head h2,.v73-page-head h1,.v73-page-head h2{font-size:23px!important}
-  .v73-page-purpose{font-size:12px}
-  body.v73-app-design table{display:block;overflow-x:auto}
-}</style>
-<script id="v73-app-design-system-script">(()=>{
-if(window.__v73AppDesignInstalled)return;
-window.__v73AppDesignInstalled=true;
-window.__acceleratorBuild='V52.1-reference-ui-v73';
-
-const clean=value=>String(value??'').replace(/\s+/g,' ').trim();
-const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-const appState=()=>{try{return typeof state!=='undefined'?state:null}catch{return null}};
-const pageRoot=()=>document.querySelector('.content')||document.querySelector('main')||document.body;
-const setText=(node,value)=>{if(node&&node.textContent!==value)node.textContent=value};
-
-const pageDefinitions={
-  overview:{eyebrow:'Creator workspace',purpose:'See what needs attention, run the next coaching step, and leave with one clear commitment.',guideTitle:'Using Creator Home',guideSubtitle:'Orient yourself first, then open only the work that needs attention.'},
-  creators:{eyebrow:'Creator management',purpose:'Scan every creator, address due work, and open the right workspace without hunting across the app.',guideTitle:'Managing creator attention',guideSubtitle:'Use due work and coaching cadence to decide where your attention belongs.'},
-  setup:{eyebrow:'Foundation',purpose:'Define the audience, message, offer, and operating constraints once, then update them only when strategy changes.',guideTitle:'Building the creator foundation',guideSubtitle:'Create the strategic source of truth that every plan and video should inherit.'},
-  plan:{eyebrow:'Monthly planning',purpose:'Choose the month’s priorities and Reach, Trust, and Convert mix before planning individual videos.',guideTitle:'Planning the month',guideSubtitle:'Make a few strategic decisions that reduce choices later in the video workflow.'},
-  video:{eyebrow:'Video workflow',purpose:'Work one phase at a time. Use the pop-out guides only when you need teaching or examples.',guideTitle:'Planning a video',guideSubtitle:'Move from viewer and evidence to packaging, story, publishing, and learning.'},
-  calendar:{eyebrow:'Operating calendar',purpose:'See planning, publishing, review, and coaching commitments in one place.',guideTitle:'Using the calendar',guideSubtitle:'Schedule only the milestones that change what the coach or creator must do.'},
-  results:{eyebrow:'Review and learn',purpose:'Open this when a review is due, then turn performance evidence into one future decision.',guideTitle:'Reviewing a video',guideSubtitle:'Describe what happened, interpret why, and route one lesson forward.'},
-  session:{eyebrow:'Live coaching call',purpose:'Capture decisions while the call is happening. Save permanent history only when the session is complete.',guideTitle:'Running the coaching call',guideSubtitle:'Keep the conversation focused on evidence, decisions, ownership, and the next commitment.'}
-};
-
-const guideContent={
-  overview:{
-    intro:'Creator Home is the orientation screen. It should answer what needs attention, why it matters now, and where to go next without making you inspect every page.',
-    sections:[
-      ['Start with due work','Use the visible attention state to choose the next coaching action. Do not reopen completed strategy work unless new evidence requires it.'],
-      ['Use the journey as orientation','Foundation, diagnosis, the 90-day plan, monthly planning, videos, and reviews are a sequence. They are not six competing dashboards.'],
-      ['End with one commitment','A useful coaching session should finish with one owner, one next action, and one date.']
-    ],
-    tip:'When nothing is due, use the next scheduled coaching call or review as the default next action.'
-  },
-  creators:{
-    intro:'This page is for scanning the whole roster. It should help you find exceptions, not force you to reopen every creator.',
-    sections:[
-      ['Look for attention states','Prioritize overdue diagnosis, planning, review, or coaching work. Healthy creators should stay visually quiet.'],
-      ['Open one creator at a time','Use Creator Home as the detailed workspace after choosing who needs attention.'],
-      ['Protect coaching capacity','Due work should reflect the agreed cadence, not create artificial urgency for every creator.']
-    ],
-    warning:'Do not turn every incomplete optional field into a warning. Attention should mean the coach must make or facilitate a decision.'
-  },
-  setup:{
-    intro:'Foundation is the creator’s strategic source of truth. Complete it during onboarding, confirm it, and revise it only when the business or audience actually changes.',
-    sections:[
-      ['Audience','Define the specific person, situation, problem, desired change, and language the viewer already uses.'],
-      ['Message and brand','Clarify the creator’s point of view, promise, proof, tone, and the ideas they want to become known for.'],
-      ['Business and funnel','Connect content to the offer, lead path, conversion mechanism, and the next useful viewer action.'],
-      ['Capacity and cadence','Record what the creator and team can realistically publish, produce, review, and sustain.']
-    ],
-    tip:'If a future video decision conflicts with Foundation, either the video is wrong or Foundation needs an explicit strategic update.'
-  },
-  plan:{
-    intro:'Monthly planning converts the 90-day direction into a realistic set of video jobs and priorities. It should reduce decisions inside each individual video plan.',
-    table:[
-      ['Reach','Bring the right new viewers in.','Demand, repeated problems, outliers, search language, and click patterns.'],
-      ['Trust','Change a belief and build preference.','Doubts, objections, misconceptions, stories, and proof.'],
-      ['Convert','Help a ready viewer decide or act.','Fit, alternatives, risk, buyer questions, and decision criteria.']
-    ],
-    sections:[
-      ['Choose the month’s outcome','Name the business or audience movement the month is meant to create.'],
-      ['Choose the mix','Set a Reach, Trust, and Convert mix that fits the current bottleneck, rather than defaulting to the same content every month.'],
-      ['Respect capacity','Plan the number of videos the creator can execute well, not the number that looks ambitious in a dashboard.']
-    ],
-    warning:'Video job is not video format. A how-to, story, comparison, or case study can serve any job.'
-  },
-  calendar:{
-    intro:'The calendar is the operating layer. It should show when decisions, production, publishing, reviews, and coaching commitments happen.',
-    sections:[
-      ['Put the calendar first','The month view should orient you before the upcoming-work list.'],
-      ['Schedule meaningful reviews','Use 24-hour, 7-day, and 28-day checkpoints when they will produce a useful decision.'],
-      ['Keep ownership visible','Every milestone should make clear who owns the next action and whether it is complete.']
-    ],
-    tip:'If a calendar item does not change someone’s next action, it probably does not need to be on the operating calendar.'
-  },
-  results:{
-    intro:'Review and Learn is not an analytics archive. It is where evidence becomes one practical change to future planning, packaging, structure, or conversion.',
-    sections:[
-      ['Observe','Record what happened without explaining it away. Use the metrics, retention shape, traffic sources, comments, and relevant context.'],
-      ['Interpret','Choose the most plausible explanation supported by the evidence. Separate signal from assumptions.'],
-      ['Route','End with one sentence: Because of this video, next time we will…']
-    ],
-    tip:'A review is complete when a future decision changes, not when every metric has been described.'
-  },
-  session:{
-    intro:'The live call workspace is temporary working space. It helps the coach capture evidence, decisions, ownership, and commitments while the conversation is happening.',
-    sections:[
-      ['Before the call','Open the creator’s due work and recent evidence. Do not prepare by rereading every page.'],
-      ['During the call','Capture the decision, why it was made, who owns the next step, and the due date.'],
-      ['After the call','Save the final session record. Unfinished drafts should remain drafts and should not become permanent history.']
-    ],
-    warning:'Do not use the call form as a second strategy dashboard. Link or route decisions back to the page where they belong.'
-  }
-};
-
-function currentView(){
-  const app=appState();
-  if(app?.currentView==='overview'&&app?.v67DiagnosisReview)return'diagnosis';
-  return app?.currentView||'overview';
-}
-
-function pageDefinition(){
-  const view=currentView();
-  if(view==='diagnosis')return{eyebrow:'90-day diagnosis',purpose:'Review the creator’s current signals, identify the real bottleneck, and decide what the next 90 days must change.',guideTitle:'Running the 90-day diagnosis',guideSubtitle:'Use evidence to choose the bottleneck before choosing tactics.'};
-  return pageDefinitions[view]||{eyebrow:'Creator workspace',purpose:'Complete the work on this page, then return to Creator Home for the next decision.',guideTitle:'Using this workspace',guideSubtitle:'Keep the working page focused and open guidance only when needed.'};
-}
-
-function diagnosisGuide(){
-  return{
-    intro:'The diagnosis is a periodic strategic review. It should explain where the creator is now, what is preventing progress, and which bottleneck deserves the next 90 days of attention.',
-    sections:[
-      ['Read the evidence','Use recent videos, channel movement, audience response, execution capacity, and business signals.'],
-      ['Name the bottleneck','Choose the constraint that most limits progress now. Avoid solving five secondary symptoms at once.'],
-      ['Route the decision','Update the 90-day direction, monthly plan, or creator strategy only where the diagnosis requires a change.']
-    ],
-    warning:'A diagnosis is not a list of everything that could improve. It is a decision about what matters most next.'
+body.v74-reference-ui{background:var(--v74-dark)!important;color:var(--v74-text)!important}
+body.v74-reference-ui .content{width:min(1152px,100%)!important;max-width:1152px!important;padding:22px 18px 72px!important}
+body.v74-reference-ui .topbar{display:grid!important;grid-template-columns:minmax(170px,1fr) auto!important;align-items:center!important;min-height:64px!important;padding:10px 18px!important;gap:18px!important;background:rgba(22,27,34,.98)!important;border-bottom:1px solid var(--v74-border)!important}
+body.v74-reference-ui .topbar>div:first-child{min-width:0!important;justify-self:start!important}
+body.v74-reference-ui .top-actions{display:flex!important;align-items:center!important;justify-content:flex-end!important;flex-wrap:nowrap!important;gap:7px!important;min-width:0!important;margin-left:auto!important;justify-self:end!important}
+body.v74-reference-ui .cloud-tools{display:flex!important;align-items:center!important;justify-content:flex-end!important;flex-wrap:nowrap!important;gap:6px!important;min-width:0!important;order:1}
+body.v74-reference-ui .top-actions .v58-youtube{order:2}
+body.v74-reference-ui .top-actions .creator-select{order:3}
+body.v74-reference-ui .top-actions>.icon-button{order:4}
+body.v74-reference-ui .v73-save-state{display:none!important}
+body.v74-reference-ui .cloud-workspace-select-wrap{display:block!important;min-width:0!important}
+body.v74-reference-ui .cloud-workspace-select-wrap>span{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important}
+body.v74-reference-ui .cloud-workspace-select-wrap select,body.v74-reference-ui .creator-select{height:38px!important;border:1px solid var(--v74-border)!important;border-radius:8px!important;background:var(--v74-dark)!important;color:var(--v74-text)!important;font-size:12px!important;box-shadow:none!important}
+body.v74-reference-ui .cloud-workspace-select-wrap select{width:164px!important;max-width:164px!important;padding:0 30px 0 10px!important}
+body.v74-reference-ui .creator-select{width:138px!important;max-width:138px!important;padding:0 30px 0 10px!important}
+body.v74-reference-ui .cloud-tools [data-cloud-team],body.v74-reference-ui .top-actions>.icon-button{height:38px!important;min-height:38px!important;border:1px solid var(--v74-border)!important;border-radius:8px!important;background:var(--v74-card-2)!important;color:var(--v74-text)!important;box-shadow:none!important}
+body.v74-reference-ui .cloud-sync-label{background:transparent!important;border:0!important;padding:0 5px!important;color:#86EFAC!important;font-size:11px!important;white-space:nowrap!important}
+body.v74-reference-ui .top-actions .v58-youtube.button,body.v74-reference-ui .top-actions a[href*="youtube.com"].button,body.v74-reference-ui .top-actions a[href*="youtu.be"].button{height:38px!important;min-height:38px!important;padding:0 11px!important;background:#E52D27!important;border-color:#FF5B55!important;color:#fff!important;border-radius:8px!important;box-shadow:0 6px 16px rgba(229,45,39,.18)!important}
+body.v74-reference-ui .top-actions .v58-youtube.button:hover{background:#F0443E!important;filter:none!important}
+body.v74-reference-ui .page-head,body.v74-reference-ui .v49-page-head,body.v74-reference-ui .v73-page-head{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:end!important;margin:0 0 18px!important;padding:0 0 15px!important;border-bottom:1px solid var(--v74-border)!important;background:transparent!important}
+body.v74-reference-ui .page-head h1,body.v74-reference-ui .page-head h2,body.v74-reference-ui .v49-page-head h1,body.v74-reference-ui .v49-page-head h2{font-size:27px!important;line-height:1.15!important;margin:0!important}
+body.v74-reference-ui .v73-page-purpose{font-size:13px!important;line-height:1.5!important;margin-top:6px!important}
+body.v74-reference-ui .card,body.v74-reference-ui .video-card,body.v74-reference-ui .calendar-card,body.v74-reference-ui .upcoming-panel,body.v74-reference-ui .v73-generic-work-panel{background:var(--v74-card)!important;border:1px solid var(--v74-border)!important;border-radius:9px!important;box-shadow:none!important}
+body.v74-reference-ui input,body.v74-reference-ui textarea,body.v74-reference-ui select{border:1px solid var(--v74-border)!important;border-radius:7px!important;background:var(--v74-dark)!important;color:var(--v74-text)!important;box-shadow:none!important}
+body.v74-reference-ui input:focus,body.v74-reference-ui textarea:focus,body.v74-reference-ui select:focus{border-color:var(--v74-blue)!important;box-shadow:0 0 0 3px rgba(59,130,246,.2)!important}
+body.v74-reference-ui .button{border-radius:7px!important;box-shadow:none!important}
+body.v74-reference-ui.v74-video-page details[data-v49-section]{display:block!important;margin:0 0 14px!important;padding:0!important;overflow:hidden!important;border:1px solid var(--v74-border)!important;border-radius:9px!important;background:var(--v74-card)!important;box-shadow:none!important}
+body.v74-reference-ui.v74-video-page details[data-v49-section]>summary{display:grid!important;grid-template-columns:28px minmax(0,1fr) auto auto!important;align-items:center!important;gap:10px!important;min-height:62px!important;margin:0!important;padding:11px 13px!important;list-style:none!important;border:0!important;border-radius:8px!important;background:linear-gradient(135deg,var(--v74-blue) 0%,var(--v74-blue-2) 100%)!important;color:#fff!important;cursor:pointer!important}
+body.v74-reference-ui.v74-video-page details[data-v49-section][open]>summary{border-radius:8px 8px 0 0!important}
+body.v74-reference-ui.v74-video-page details[data-v49-section]>summary::-webkit-details-marker{display:none!important}
+body.v74-reference-ui.v74-video-page details[data-v49-section]>summary::after{content:'▾';font-size:17px;color:#fff;transition:transform .2s ease}
+body.v74-reference-ui.v74-video-page details[data-v49-section]:not([open])>summary::after{transform:rotate(-90deg)}
+body.v74-reference-ui.v74-video-page details[data-v49-section]>summary .v71-step-copy b{color:#fff!important;font-size:14px!important}
+body.v74-reference-ui.v74-video-page details[data-v49-section]>summary .v71-step-copy small{color:#DBEAFE!important;font-size:11px!important}
+body.v74-reference-ui.v74-video-page details[data-v49-section]>summary .v71-step-number,body.v74-reference-ui.v74-video-page details[data-v49-section]>summary .v71-step-state{background:rgba(13,17,23,.2)!important;border-color:rgba(255,255,255,.25)!important;color:#fff!important}
+body.v74-reference-ui.v74-video-page details[data-v49-section]>:not(summary){margin-left:14px!important;margin-right:14px!important}
+body.v74-reference-ui.v74-video-page details[data-v49-section]>summary+*{margin-top:14px!important}
+body.v74-reference-ui.v74-video-page details[data-v49-section]>:last-child{margin-bottom:14px!important}
+.v74-section-guide{border:1px solid rgba(255,255,255,.32)!important;background:rgba(255,255,255,.17)!important;color:#fff!important;border-radius:6px!important;padding:6px 9px!important;font-size:10px!important;font-weight:850!important;white-space:nowrap!important}
+.v74-section-guide:hover{background:rgba(255,255,255,.27)!important}
+.v74-video-flow{margin:0 0 16px}
+.v74-flow-note{display:flex;gap:10px;align-items:flex-start;margin:0 0 12px;padding:11px 13px;border:1px solid rgba(59,130,246,.32);border-radius:8px;background:#1A2332;color:#C8DAF8;font-size:12px;line-height:1.5}
+.v74-flow-note-icon{width:23px;height:23px;display:grid;place-items:center;flex:0 0 auto;border-radius:6px;background:#233A5B;color:#93C5FD;font-weight:900}
+.v74-phase-tabs{display:flex;gap:8px;overflow-x:auto;padding:0 0 3px;margin:0;scrollbar-width:thin}
+.v74-phase-tab{flex:0 0 auto;min-height:38px;padding:8px 12px;border:1px solid var(--v74-border);border-radius:7px;background:var(--v74-card-2);color:var(--v74-muted);font-size:12px;font-weight:800;white-space:nowrap}
+.v74-phase-tab:hover{background:var(--v74-border);color:var(--v74-text)}
+.v74-phase-tab.active{background:var(--v74-blue);border-color:var(--v74-blue);color:#fff}
+.v74-phase-tab.complete:not(.active){background:#132D1D;border-color:#2F6B43;color:#86EFAC}
+.v74-phase-hidden{display:none!important}
+.v74-review-phase{display:none;border:1px solid var(--v74-border);border-radius:9px;background:var(--v74-card);overflow:hidden}
+.v74-review-phase.active{display:block}
+.v74-review-head{padding:14px 16px;background:linear-gradient(135deg,var(--v74-blue),var(--v74-blue-2))}
+.v74-review-head h3{margin:0;color:#fff}.v74-review-head p{margin:4px 0 0;color:#DBEAFE;font-size:12px}
+.v74-review-body{padding:15px}.v74-review-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.v74-review-card{padding:12px;border:1px solid var(--v74-border);border-radius:8px;background:var(--v74-dark)}
+.v74-review-card span{color:#93C5FD;font-size:10px;font-weight:900;text-transform:uppercase}.v74-review-card strong{display:block;margin:4px 0}.v74-review-card p{margin:0;font-size:11px}
+.v74-review-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.v74-guide-backdrop{position:fixed;inset:0;z-index:10050;display:none;background:rgba(0,0,0,.88);backdrop-filter:blur(4px)}
+.v74-guide-backdrop.open{display:block}
+.v74-guide-drawer{position:absolute;top:0;right:0;width:min(780px,94vw);height:100%;display:grid;grid-template-rows:auto auto minmax(0,1fr);background:var(--v74-card);border-left:1px solid var(--v74-border);box-shadow:-24px 0 70px rgba(0,0,0,.5)}
+.v74-guide-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:17px 19px;border-bottom:1px solid var(--v74-border);background:var(--v74-card)}
+.v74-guide-head span{display:block;color:#60A5FA;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.09em}.v74-guide-head h2{margin:4px 0 3px;font-size:22px}.v74-guide-head p{margin:0;color:var(--v74-muted);font-size:12px}
+.v74-guide-close{width:36px;height:36px;border:1px solid var(--v74-border);border-radius:8px;background:var(--v74-card-2);color:var(--v74-text);font-size:22px}
+.v74-guide-tabs{display:flex;gap:6px;padding:10px 18px;overflow-x:auto;border-bottom:1px solid var(--v74-border);background:#11171D}
+.v74-guide-tab{flex:0 0 auto;padding:7px 10px;border:1px solid var(--v74-border);border-radius:7px;background:var(--v74-card-2);color:var(--v74-muted);font-size:11px;font-weight:800;white-space:nowrap}
+.v74-guide-tab.active{background:var(--v74-blue);border-color:var(--v74-blue);color:#fff}
+.v74-guide-content{overflow:auto;padding:18px 22px 40px;overscroll-behavior:contain}
+.v74-guide-content p{line-height:1.7;color:var(--v74-text)}
+.v74-guide-content .guide-section{border-left:4px solid #3B82F6;padding:1.25rem;margin:2rem 0;background:linear-gradient(90deg,rgba(59,130,246,.08) 0%,transparent 100%);border-radius:0 .75rem .75rem 0}
+.v74-guide-content .guide-section h4{color:#60A5FA;font-weight:700;margin:0 0 .75rem;font-size:1.1rem;letter-spacing:.5px;display:flex;align-items:center;gap:.5rem}
+.v74-guide-content .guide-section h4::before{content:'';display:inline-block;width:8px;height:8px;background:#3B82F6;border-radius:50%}
+.v74-guide-content .guide-divider{height:1px;background:linear-gradient(90deg,#30363D 0%,transparent 100%);margin:2.5rem 0}
+.v74-guide-content .guide-table{width:100%;border-collapse:separate;border-spacing:0;margin:1rem 0;font-size:.875rem;border-radius:.5rem;overflow:hidden;border:1px solid #30363D}
+.v74-guide-content .guide-table th{text-align:left;padding:.75rem 1rem;background:linear-gradient(135deg,#1A3A5C 0%,#21262D 100%);border-bottom:2px solid #3B82F6;color:#93C5FD;font-weight:600;text-transform:uppercase;font-size:.75rem;letter-spacing:.5px}
+.v74-guide-content .guide-table td{padding:.75rem 1rem;border-bottom:1px solid #30363D;vertical-align:top;color:#E6EDF3;line-height:1.6;background:transparent!important}
+.v74-guide-content .guide-table tr:nth-child(even) td{background:rgba(33,38,45,.5)!important}.v74-guide-content .guide-table tr:last-child td{border-bottom:0}.v74-guide-content .guide-table tr:hover td{background:rgba(59,130,246,.1)!important}
+.v74-guide-content .guide-list{margin:.75rem 0;padding-left:0;color:#E6EDF3;list-style:none}
+.v74-guide-content .guide-list li{margin:.75rem 0;line-height:1.7;padding-left:1.75rem;position:relative}
+.v74-guide-content ul.guide-list li::before{content:'▸';position:absolute;left:0;color:#3B82F6;font-weight:bold}
+.v74-guide-content ol.guide-list{counter-reset:item}.v74-guide-content ol.guide-list li::before{content:counter(item);counter-increment:item;background:#3B82F6;color:#fff;width:1.25rem;height:1.25rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:600;position:absolute;left:0;top:.15rem}
+.v74-guide-content .guide-tip{background:linear-gradient(135deg,#1A2332 0%,#1E293B 100%);border-left:4px solid #3B82F6;border-radius:0 .75rem .75rem 0;padding:1rem 1.25rem;margin:1.5rem 0;font-size:.9rem;color:#E6EDF3;box-shadow:0 2px 8px rgba(59,130,246,.1)}
+.v74-guide-content .guide-warning{background:linear-gradient(135deg,#3D1F1F 0%,#4A2020 100%);border-left:4px solid #F85149;border-radius:0 .75rem .75rem 0;padding:1rem 1.25rem;margin:1.5rem 0;font-size:.9rem;color:#FFA8A8;box-shadow:0 2px 8px rgba(248,81,73,.1)}
+.v74-guide-content .guide-example{background:linear-gradient(135deg,#1F2D1F 0%,#243524 100%);border-left:4px solid #3FB950;border-radius:0 .75rem .75rem 0;padding:1rem 1.25rem;margin:1.5rem 0;font-size:.9rem;color:#A8E6A8;box-shadow:0 2px 8px rgba(63,185,80,.1)}
+.v74-guide-content .guide-badge{display:inline-block;padding:.25rem .75rem;border-radius:1rem;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-right:.5rem}
+.v74-guide-content .guide-badge-blue{background:#1A3A5C;color:#93C5FD;border:1px solid #3B82F6}.v74-guide-content .guide-badge-purple{background:#2D1F4E;color:#C4B5FD;border:1px solid #A855F7}.v74-guide-content .guide-badge-green{background:#132D1D;color:#86EFAC;border:1px solid #3FB950}.v74-guide-content .guide-badge-red{background:#3D1F1F;color:#FFA8A8;border:1px solid #F85149}
+.v74-guide-content .method-header{background:linear-gradient(135deg,#21262D 0%,#30363D 100%);padding:1rem 1.25rem;border-radius:.5rem;margin:2rem 0 1rem;border:1px solid #30363D}.v74-guide-content .method-header h4{margin:0;display:flex;align-items:center;gap:.75rem;color:#E6EDF3;font-weight:700;font-size:1.1rem}.v74-guide-content .method-number{background:linear-gradient(135deg,#3B82F6 0%,#60A5FA 100%);color:#fff;padding:.25rem .75rem;border-radius:.25rem;font-size:.75rem;font-weight:700;letter-spacing:.5px}
+body.v74-reference-ui .calendar-grid .event-chip,body.v74-reference-ui .event-chip{border:1px solid transparent!important;color:#F3F7FA!important;box-shadow:none!important;font-weight:750!important}
+body.v74-reference-ui .event-chip.type-coaching-call{background:#49347A!important;border-color:#7658B8!important}
+body.v74-reference-ui .event-chip.type-assignment{background:#5A451F!important;border-color:#8D6D32!important}
+body.v74-reference-ui .event-chip.type-research{background:#174956!important;border-color:#2E7483!important}
+body.v74-reference-ui .event-chip.type-title-and-thumbnail{background:#57346E!important;border-color:#8A54A8!important}
+body.v74-reference-ui .event-chip.type-outline{background:#294B62!important;border-color:#477694!important}
+body.v74-reference-ui .event-chip.type-record{background:#6A3038!important;border-color:#A34A55!important}
+body.v74-reference-ui .event-chip.type-edit{background:#604521!important;border-color:#96703B!important}
+body.v74-reference-ui .event-chip.type-publish{background:#205B3E!important;border-color:#338B5F!important}
+body.v74-reference-ui .event-chip.type-24-hour-check,body.v74-reference-ui .event-chip.type-7-day-check,body.v74-reference-ui .event-chip.type-28-day-check{background:#24536F!important;border-color:#3C7EA2!important}
+body.v74-reference-ui .event-chip.type-other{background:#37434C!important;border-color:#56656F!important}
+.v74-calendar-legend{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 11px;padding:9px 10px;border:1px solid var(--v74-border);border-radius:8px;background:var(--v74-card)}
+.v74-calendar-key{display:inline-flex;align-items:center;gap:5px;color:#B7C2CC;font-size:10px;font-weight:750}.v74-calendar-key::before{content:'';width:9px;height:9px;border-radius:3px;background:var(--key)}
+body.v74-reference-ui .page-guide,body.v74-reference-ui .v70-job-guide,body.v74-reference-ui .v70-planner-guide,body.v74-reference-ui .v70-learn-guide,body.v74-reference-ui .v69-map{display:none!important}
+@media(max-width:1050px){body.v74-reference-ui .cloud-workspace-select-wrap select{width:145px!important;max-width:145px!important}body.v74-reference-ui .creator-select{width:120px!important;max-width:120px!important}body.v74-reference-ui .cloud-sync-label{font-size:0!important}.v74-review-grid{grid-template-columns:1fr}}
+@media(max-width:760px){body.v74-reference-ui .topbar{display:flex!important;padding:8px 10px!important}.topbar>div:first-child{flex:1}body.v74-reference-ui .cloud-tools [data-cloud-team],body.v74-reference-ui .cloud-sync-label{display:none!important}body.v74-reference-ui .cloud-workspace-select-wrap select{width:118px!important;max-width:118px!important}body.v74-reference-ui .creator-select{width:104px!important;max-width:104px!important}body.v74-reference-ui .top-actions .v58-youtube span{display:none}body.v74-reference-ui .content{padding:16px 12px 76px!important}.v74-guide-drawer{width:100vw}.v74-guide-content{padding:15px 14px 32px}.v74-guide-content .guide-table{display:block;overflow-x:auto}body.v74-reference-ui.v74-video-page details[data-v49-section]>summary{grid-template-columns:25px minmax(0,1fr) auto!important}.v74-section-guide{grid-column:2/4;justify-self:start}}</style>
+<style id="v74-phase-visibility-fix-style">body.v74-reference-ui.v74-video-page details[data-v49-section].v74-phase-hidden,
+body.v74-reference-ui.v74-video-page details[data-v49-section][hidden]{display:none!important}
+body.v74-reference-ui.v74-video-page .v74-review-phase[hidden]{display:none!important}</style>
+<script id="v74-guide-research">window.V74_SOURCE_GUIDES=window.V74_SOURCE_GUIDES||{};window.V74_SOURCE_GUIDES["research"]={"title":"🔍 Research Strategies","content":"\n<div class=\"guide-tip\">💡 <strong>30 minutes of research beats 30 hours on the wrong video.</strong></div>\n\n<div class=\"guide-section\">\n<h4>THE TRUTH</h4>\n<p>Most creators pick video ideas based on: \"I think this would be cool\"</p>\n<p>Then they spend 20+ hours making it. Then it flops. Then they blame the algorithm.</p>\n<p><strong>The fix is simple:</strong> Check if people want it BEFORE you make it.</p>\n</div>\n\n<div class=\"guide-section\">\n<h4>WHAT YOU'RE HUNTING FOR</h4>\n<table class=\"guide-table\">\n<tr><th style=\"width:20%\">Target</th><th>What It Means</th></tr>\n<tr><td><strong>1. OUTLIERS</strong></td><td>Videos that crushed it from channels YOUR size. Proof the topic can work for YOU. Not MrBeast numbers. Channels with 5k subs getting 500k views. That's signal.</td></tr>\n<tr><td><strong>2. VPH (Views Per Hour)</strong></td><td>Is the topic still alive? A video with 1M views but 0 VPH = dead topic, you missed it. A video with 50k views and 200 VPH = topic is HOT right now. Get in.</td></tr>\n<tr><td><strong>3. PATTERNS</strong></td><td>One outlier is luck. Five outliers with \"mistake\" in the title? That's a formula. Look for what's REPEATING across winners.</td></tr>\n<tr><td><strong>4. GAPS</strong></td><td>What are people asking for in comments that nobody's making? What angle hasn't been tried yet?</td></tr>\n</table>\n</div>\n\n<div class=\"guide-section\">\n</div>\n<div class=\"guide-divider\"></div>\n<div class=\"method-header\"><h4><span class=\"method-number\">METHOD 1</span> VIDIQ OUTLIERS</h4></div>\n<div class=\"guide-section\">\n<h4>VIDIQ OUTLIERS</h4>\n<p>The fastest way to find proof. This is your primary weapon.</p>\n<p><strong>Where:</strong> app.vidiq.com → Click 'Outliers' in the left sidebar</p>\n<p><strong>Step by Step:</strong></p>\n<ol class=\"guide-list\">\n<li><strong>Search your topic</strong> — Type what you're thinking about making: \"how to edit video\" or \"morning routine\" or whatever</li>\n<li><strong>Set SUBSCRIBERS filter</strong> — Set the max to 2-3x your size. Why: You want to see what's possible for channels like YOURS. A 10M sub channel getting views means nothing to you. A 5k sub channel getting 500k views? THAT'S proof you can do it too.</li>\n<li><strong>Set OUTLIER SCORE</strong> — Set minimum to 10x. Why: 10x means the video got 10x more views than that channel normally gets. That's signal, not noise.</li>\n</ol>\n<p><strong>WHAT YOU'RE WALKING AWAY WITH:</strong> 3-5 proof videos. Screenshot the titles, thumbnails, and stats. You now know this topic CAN work. Not might work. Can.</p>\n</div>\n\n<div class=\"guide-warning\">\n<strong>TRAPS TO AVOID</strong>\n<ul class=\"guide-list\">\n<li>Looking at channels 100x your size (not relevant to you)</li>\n<li>Ignoring VPH (old viral videos don't help)</li>\n<li>Copying exact titles (you need YOUR angle)</li>\n<li>Stopping at one outlier (find patterns, not flukes)</li>\n<li>Assuming one outlier means the topic is saturated (it means it's proven)</li>\n</ul>\n</div>\n\n<div class=\"guide-section\">\n</div>\n<div class=\"guide-divider\"></div>\n<div class=\"method-header\"><h4><span class=\"method-number\">METHOD 2</span> YOUTUBE RESEARCH TAB</h4></div>\n<div class=\"guide-section\">\n<h4>YOUTUBE RESEARCH TAB</h4>\n<p><strong>Where:</strong> YouTube Studio → Analytics → Research tab</p>\n<p><strong>What you'll see:</strong></p>\n<ul class=\"guide-list\">\n<li><strong>Searches your viewers make</strong> — What questions are YOUR subscribers asking YouTube?</li>\n<li><strong>Content gaps</strong> — Topics with searches but few videos (opportunity)</li>\n<li><strong>What similar channels are making</strong> — Proof of what works in your niche</li>\n</ul>\n<p><strong>HOW TO USE IT:</strong> Filter by high search volume + low content. That's the sweet spot.</p>\n<p><strong>HEADS UP:</strong> This data is specific to YOUR channel. If you're new, this won't help until you have some history.</p>\n</div>\n\n<div class=\"guide-section\">\n</div>\n<div class=\"guide-divider\"></div>\n<div class=\"method-header\"><h4><span class=\"method-number\">METHOD 3</span> GOOGLE TRENDS</h4></div>\n<div class=\"guide-section\">\n<h4>GOOGLE TRENDS</h4>\n<p><strong>Where:</strong> trends.google.com</p>\n<p><strong>CRITICAL FIRST STEP:</strong> Change the dropdown from \"Web\" to \"YouTube Search\" at the top. Most people miss this.</p>\n<p><strong>What the graph tells you:</strong></p>\n<ul class=\"guide-list\">\n<li><strong>Up arrow</strong> = Interest growing (NOW is the time to make it)</li>\n<li><strong>Down arrow</strong> = Interest dying (skip it)</li>\n<li><strong>Flat line</strong> = Stable interest (safe, but less explosive potential)</li>\n<li><strong>Seasonal peaks</strong> = Predictable (back-to-school, holidays, etc.)</li>\n</ul>\n<p><strong>POWER MOVE: COMPARE TOPICS</strong> — Type multiple ideas and see which is gaining momentum.</p>\n<p><strong>CHECK RELATED QUERIES</strong> — Scroll down to see what people are searching FOR related to your topic. That's your outline.</p>\n</div>\n\n<div class=\"guide-section\">\n</div>\n<div class=\"guide-divider\"></div>\n<div class=\"method-header\"><h4><span class=\"method-number\">METHOD 4</span> YOUTUBE AUTOCOMPLETE</h4></div>\n<div class=\"guide-section\">\n<h4>YOUTUBE AUTOCOMPLETE</h4>\n<p><strong>HOW:</strong></p>\n<ol class=\"guide-list\">\n<li>Go to YouTube.com (not YouTube Studio)</li>\n<li>Start typing your topic in the search bar</li>\n<li>Watch what YouTube suggests</li>\n<li>These are actual searches people do</li>\n</ol>\n<p><strong>THE ALPHABET TRICK:</strong> Type your topic + each letter of the alphabet. \"how to edit video a\", \"how to edit video b\", etc. YouTube will fill in real searches. This reveals hidden demand.</p>\n</div>\n\n<div class=\"guide-section\">\n</div>\n<div class=\"guide-divider\"></div>\n<div class=\"method-header\"><h4><span class=\"method-number\">METHOD 5</span> COMMENT MINING</h4></div>\n<div class=\"guide-section\">\n<h4>COMMENT MINING</h4>\n<p>Your next video idea is hiding in the comments.</p>\n<p><strong>Where to look:</strong> Your own top videos, competitor videos, outlier videos from your research</p>\n<p><strong>What to look for:</strong></p>\n<ul class=\"guide-list\">\n<li><strong>Questions:</strong> \"Can you make a video about...\" or \"How do you...\"</li>\n<li><strong>Frustrations:</strong> \"I tried this but...\" or \"This doesn't work when...\"</li>\n<li><strong>Requests:</strong> Direct asks for content (\"Please make a video on...\")</li>\n<li><strong>Language:</strong> What words do they use? That's your title language.</li>\n</ul>\n<p><strong>HOW TO DO IT:</strong></p>\n<ol class=\"guide-list\">\n<li>Open a top performer from your niche (or a competitor)</li>\n<li>Sort comments by \"top comments\"</li>\n<li>Read through 50+ comments</li>\n<li>Screenshot patterns you notice</li>\n<li>This is your content goldmine</li>\n</ol>\n</div>\n\n<div class=\"guide-section\">\n<h4>BEFORE YOU MAKE ANYTHING</h4>\n<p><strong>Research Checklist:</strong></p>\n<ul class=\"guide-list\">\n<li>Found 3+ outliers proving this topic works</li>\n<li>Confirmed VPH shows it's still hot (not dying)</li>\n<li>Have a unique angle (not copying the outliers)</li>\n<li>Identified the gap I'm filling</li>\n<li>Can name the problem/promise in one sentence</li>\n<li>Know exactly who this is for</li>\n<li>Confirmed people are actually searching for this</li>\n</ul>\n</div>\n"};</script>
+<script id="v74-guide-titles">window.V74_SOURCE_GUIDES=window.V74_SOURCE_GUIDES||{};window.V74_SOURCE_GUIDES["titles"]={"title":"🔥 Title Formulas","content":"\n<div class=\"guide-tip\">💡 <strong>Your title's job: Create a gap the viewer needs to close.</strong> The hook is visual. The title is psychological.</div>\n\n<div class=\"guide-section\">\n<h4>THE ONLY RULES THAT MATTER</h4>\n<table class=\"guide-table\">\n<tr><td><strong>Under 50-60 characters</strong></td><td>Longer gets cut off. Front-load the important words.</td></tr>\n<tr><td><strong>Create a gap</strong></td><td>Title poses question/problem → Video answers it.</td></tr>\n<tr><td><strong>Specific > vague</strong></td><td>\"$2,347\" beats \"a lot of money.\" \"7 days\" beats \"quickly.\"</td></tr>\n<tr><td><strong>Emotion wins</strong></td><td>Curiosity, fear, desire, urgency. Pick one and lean in.</td></tr>\n<tr><td><strong>Don't repeat thumbnail</strong></td><td>They work together. Title says what thumb can't show.</td></tr>\n<tr><td><strong>Would YOU click?</strong></td><td>Read it out loud. If you hesitate, rewrite it.</td></tr>\n</table>\n</div>\n\n<div class=\"guide-section\">\n<h4><span class=\"guide-badge guide-badge-blue\">8 FORMULAS</span> CURIOSITY GAP</h4>\n<p>The brain hates not knowing. Use these to make them need to click.</p>\n<ul class=\"guide-list\">\n<li><strong>This [Unexpected Claim]</strong> — \"This $5 Tool Replaces Adobe\"</li>\n<li><strong>The [Number] [Topic] Nobody Talks About</strong> — \"The 3 Mistakes Nobody Talks About\"</li>\n<li><strong>I Spent [Time/Money] to Find [Outcome]</strong> — \"I Spent $10,000 to Find the Best...\"</li>\n<li><strong>Everyone's Wrong About [Topic]</strong> — \"Everyone's Wrong About Morning Routines\"</li>\n<li><strong>[Famous Person] Does [Unexpected Thing]</strong> — \"MrBeast Does His Videos in 2 Hours\"</li>\n<li><strong>What [Group] Doesn't Want You to Know</strong> — \"What Big Tech Doesn't Want You to Know\"</li>\n<li><strong>[Number] Creators Tested [Thing]. Here's What Won</strong> — \"5 Creators Tested Thumbnails. Here's What Won\"</li>\n<li><strong>I Tried [Celebrity] [Method] for [Time]</strong> — \"I Tried Andrew Huberman's Sleep Method for 30 Days\"</li>\n</ul>\n</div>\n\n<div class=\"guide-section\">\n<h4><span class=\"guide-badge guide-badge-red\">8 FORMULAS</span> FEAR & URGENCY</h4>\n<p>People move toward pleasure and away from pain. Use these when relevant.</p>\n<ul class=\"guide-list\">\n<li><strong>Stop [Bad Thing] Before It's Too Late</strong> — \"Stop Oversaturating Before It's Too Late\"</li>\n<li><strong>If You're [Struggling], You're [Consequence]</strong> — \"If You're Still Editing Manually, You're Wasting 10 Hours/Week\"</li>\n<li><strong>[Number] Creators Are [Negative], But You Don't Have To</strong> — \"90% of Creators Fail in Year One. But You Don't Have To\"</li>\n<li><strong>The Last [Time Period] to [Opportunity]</strong> — \"The Last Chance to Grab This Domain\"</li>\n<li><strong>Avoid [Mistake] or Else [Consequence]</strong> — \"Avoid These 5 Mistakes or Else YouTube Kills Your Channel\"</li>\n<li><strong>[Problem] Is Destroying [Group]. Here's Why</strong> — \"Burnout Is Destroying Creators. Here's the Fix\"</li>\n<li><strong>You're Probably Making This [Mistake]</strong> — \"You're Probably Making This Lighting Mistake\"</li>\n<li><strong>Don't Get Left Behind on [Topic]</strong> — \"Don't Get Left Behind on Short-Form Video\"</li>\n</ul>\n</div>\n\n<div class=\"guide-section\">\n<h4><span class=\"guide-badge guide-badge-green\">8 FORMULAS</span> CLEAR VALUE & HOW-TO</h4>\n<p>Straightforward promises. People LOVE knowing what they'll get.</p>\n<ul class=\"guide-list\">\n<li><strong>How to [Achieve Outcome] in [Time]</strong> — \"How to Edit 10 Videos in 5 Hours\"</li>\n<li><strong>[Number] Ways to [Desired Result]</strong> — \"7 Ways to Get 1000 Subscribers in 90 Days\"</li>\n<li><strong>The Complete Guide to [Topic]</strong> — \"The Complete Guide to YouTube Thumbnails\"</li>\n<li><strong>[Number] [Topic] Tips That Actually Work</strong> — \"5 Hook Tips That Actually Work\"</li>\n<li><strong>[Specific Result] Using [Method]</strong> — \"$50k in 6 Months Using YouTube Shorts\"</li>\n<li><strong>[Number] Proven Strategies for [Goal]</strong> — \"3 Proven Strategies for Channel Growth\"</li>\n<li><strong>Everything You Need to Know About [Topic]</strong> — \"Everything You Need to Know About Burnout\"</li>\n<li><strong>The Fastest Way to [Outcome]</strong> — \"The Fastest Way to 1M Views\"</li>\n</ul>\n</div>\n\n<div class=\"guide-section\">\n<h4><span class=\"guide-badge guide-badge-purple\">8 FORMULAS</span> STORY & TRANSFORMATION</h4>\n<p>People connect to stories, not facts. These work especially well for vlogs/personal content.</p>\n<ul class=\"guide-list\">\n<li><strong>The Day [Dramatic Event]</strong> — \"The Day My Channel Got Deleted\"</li>\n<li><strong>A [Unexpected Person] Taught Me [Surprising Lesson]</strong> — \"A Janitor Taught Me Everything About YouTube\"</li>\n<li><strong>Why I [Made Controversial Decision]</strong> — \"Why I Deleted 100 Videos\"</li>\n<li><strong>Inside [Exclusive Place]</strong> — \"Inside YouTube's Algorithm Lab\"</li>\n<li><strong>I Tried [Celebrity's] Routine for [Time]</strong> — \"I Tried Elon's Routine for 30 Days\"</li>\n<li><strong>From [Bad] to [Good]: My [Time Period] Journey</strong> — \"From 0 to 100K: My 6-Month Journey\"</li>\n<li><strong>The [Time Period] I [Major Action]</strong> — \"The Month I Quit My Job\"</li>\n<li><strong>What [Failure/Loss] Taught Me</strong> — \"What My First Video Failure Taught Me\"</li>\n</ul>\n</div>\n\n<div class=\"guide-section\">\n<h4>POWER WORDS (Use These)</h4>\n<table class=\"guide-table\">\n<tr><th>Category</th><th>Words</th></tr>\n<tr><td><strong>Curiosity</strong></td><td>Untold, Hidden, Exposed, Revealed, Secret, Shocking, Surprising, Unknown</td></tr>\n<tr><td><strong>Fear/Urgency</strong></td><td>Before, Warning, Avoid, STOP, Don't, Dying, Vanishing, Last chance</td></tr>\n<tr><td><strong>Value/Desire</strong></td><td>Simple, Easy, Free, Fast, Fastest, Best, Genius, Hack, Trick, Shortcut</td></tr>\n<tr><td><strong>Credibility</strong></td><td>Tested, Proven, Real, Actual, True, Honest, Real, Confirmed</td></tr>\n<tr><td><strong>Numbers</strong></td><td>Specific beats vague. \"$47\" beats \"a lot.\" \"7 days\" beats \"quickly.\"</td></tr>\n</table>\n</div>\n"};</script>
+<script id="v74-guide-thumbtips">window.V74_SOURCE_GUIDES=window.V74_SOURCE_GUIDES||{};window.V74_SOURCE_GUIDES["thumbtips"]={"title":"🖼️ Thumbnail Tips","content":"\n<div class=\"guide-tip\">💡 <strong>3-second test: Could someone understand your entire video from just the thumbnail?</strong></div>\n\n<div class=\"guide-section\">\n<h4>THE 3-SECOND REALITY CHECK</h4>\n<p>Viewers have 1-3 seconds to decide. Your thumbnail needs to answer:</p>\n<ul class=\"guide-list\">\n<li><strong>What's the topic?</strong> — Clear, no guessing</li>\n<li><strong>Why should I care?</strong> — Emotion or curiosity</li>\n<li><strong>Is this worth my time?</strong> — Proof or promise</li>\n<li><strong>Can I see it on mobile?</strong> — Not blurry or too small</li>\n<li><strong>Do I click or scroll?</strong> — Decision made</li>\n</ul>\n</div>\n\n<div class=\"guide-section\">\n<h4>WHAT WORKS NOW (2026)</h4>\n<ul class=\"guide-list\">\n<li><strong>Close-up faces with genuine emotion</strong> — Surprised, shocked, proud, confused. Real beats polished.</li>\n<li><strong>High contrast</strong> — Bright colors pop. Dark text on light. Light text on dark.</li>\n<li><strong>Simple composition</strong> — One focal point. Not cluttered.</li>\n<li><strong>Bold text (3-5 words max)</strong> — Readable on small screens</li>\n<li><strong>Visual proof</strong> — Screenshots, numbers, before/after</li>\n<li><strong>Arrows & circles pointing to important element</strong> — Guides the eye</li>\n<li><strong>Authenticity over polish</strong> — Phone screenshots and real clips beat over-designed stuff</li>\n</ul>\n</div>\n\n<div class=\"guide-section\">\n<h4>WHAT'S PLAYED OUT</h4>\n<ul class=\"guide-list\">\n<li><strong>Generic stock photos</strong> — Looks like every other tutorial</li>\n<li><strong>Blurry faces</strong> — You need to see the emotion</li>\n<li><strong>Too much text</strong> — Can't read it on mobile</li>\n<li><strong>Multiple focal points</strong> — Confuses the viewer</li>\n<li><strong>Bright neon colors everywhere</strong> — Hurts the eyes</li>\n<li><strong>Mystery boxes</strong> — \"WAIT UNTIL THE END\" (nobody cares)</li>\n<li><strong>Fake shocked faces</strong> — Viewers can tell, and they hate it</li>\n</ul>\n</div>\n\n<div class=\"guide-section\">\n<h4>FACES: THE REAL RULES</h4>\n<ul class=\"guide-list\">\n<li><strong>Show it</strong> — Don't hide your face to \"create mystery.\" It kills CTR.</li>\n<li><strong>Real emotion > fake expression</strong> — Genuinely surprised beats forced shocked face</li>\n<li><strong>Close-up > wide shot</strong> — Fill 50%+ of the thumbnail with your face</li>\n<li><strong>Eyes looking at something or at viewer</strong> — Creates focus and engagement</li>\n<li><strong>Avoid sunglasses</strong> — People need to see your eyes</li>\n<li><strong>Multiple faces work if they're reacting differently</strong> — \"Before/after\" on your face, or genuine reactions from others</li>\n</ul>\n</div>\n\n<div class=\"guide-section\">\n<h4>DESIGN FOR MOBILE</h4>\n<ul class=\"guide-list\">\n<li><strong>Test on phone</strong> — How does it look when tiny?</li>\n<li><strong>Readable text from 3 inches away</strong> — Bold, large, high contrast</li>\n<li><strong>One main focal point</strong> — Viewer's eye should go there first</li>\n<li><strong>Avoid tiny details</strong> — They disappear on mobile</li>\n</ul>\n</div>\n\n<div class=\"guide-section\">\n<h4>A/B TESTING (Critical)</h4>\n<ul class=\"guide-list\">\n<li><strong>Test ONE variable at a time</strong> — Only change the face or only change the text. Not both. Otherwise you don't know what moved the needle.</li>\n<li><strong>Let it run 24-48 hours minimum</strong> — Need enough impressions to see the pattern</li>\n<li><strong>Look at CTR, not just views</strong> — CTR tells you if the thumbnail is appealing. Views tell you if the video is good.</li>\n</ul>\n</div>\n\n<div class=\"guide-section\">\n<h4>THUMBNAIL STYLES BY VIDEO TYPE</h4>\n<table class=\"guide-table\">\n<tr><th>Type</th><th>What Works</th></tr>\n<tr><td><strong>Tutorial</strong></td><td>Before/after split, clear steps, close-up of the tool/result</td></tr>\n<tr><td><strong>Story/Vlog</strong></td><td>Your genuine face reacting, the setting/event, emotional expression</td></tr>\n<tr><td><strong>Listicle</strong></td><td>Numbers (\"7\" works better than \"5\"), key image, your face reacting</td></tr>\n<tr><td><strong>Review</strong></td><td>Product centered, your honest reaction face, price/verdict visible</td></tr>\n<tr><td><strong>Challenge</strong></td><td>High energy expression, the challenge prop, score/result</td></tr>\n<tr><td><strong>Educational/Explainer</strong></td><td>Key concept visually, your face, simple icon/graphic</td></tr>\n<tr><td><strong>Reaction/Commentary</strong></td><td>Your reaction face dominant, what you're reacting to in corner, text calling out your take</td></tr>\n<tr><td><strong>Transformation</strong></td><td>Before/after side-by-side, your confident after-face, the transformation metric</td></tr>\n</table>\n</div>\n"};</script>
+<script id="v74-guide-thumbstrategies">window.V74_SOURCE_GUIDES=window.V74_SOURCE_GUIDES||{};window.V74_SOURCE_GUIDES["thumbstrategies"]={"title":"🎨 Thumbnail Strategies (12 Methods)","content":"\n<div class=\"guide-section\">\n</div>\n<div class=\"guide-divider\"></div>\n<div class=\"method-header\"><h4><span class=\"method-number\">1</span> TRENDS</h4></div>\n<div class=\"guide-section\">\n<h4>TRENDS</h4>\n<p>Whatever is working in your niche RIGHT NOW, try your own version. Don't copy. Study the pattern and recreate it with your unique angle.</p>\n</div>\n\n<div class=\"guide-section\">\n</div>\n<div class=\"guide-divider\"></div>\n<div class=\"method-header\"><h4><span class=\"method-number\">2</span> MINIMALIST</h4></div>\n<div class=\"guide-section\">\n<h4>MINIMALIST</h4>\n<p><strong>How to make it:</strong> Solid background color (usually bright/saturated) + one bold text + one focal point image</p>\n<p><strong>Experiment with:</strong> Different background colors, white vs colored text, position of focal image</p>\n<p><strong>Best for:</strong> Educational content, productivity, how-tos, tips. When the message matters more than flash.</p>\n<p><strong>Examples to study:</strong> Ali Abdaal, Thomas Frank, MKBHD</p>\n</div>\n\n<div class=\"guide-section\">\n</div>\n<div class=\"guide-divider\"></div>\n<div class=\"method-header\"><h4><span class=\"method-number\">3</span> THE QUESTION</h4></div>\n<div class=\"guide-section\">\n<h4>THE QUESTION</h4>\n<p><strong>How to make it:</strong> Bold question text + your face confused/thinking + optional: answer hint in small text</p>\n<p><strong>Experiment with:</strong> Question format (rhetorical vs genuine), your expression intensity, text size</p>\n<p><strong>Best for:</strong> Any format. Questions beg to be answered. Innately clickable.</p>\n<p><strong>Examples to study:</strong> Ali Abdaal (\"Is it worth?\"), MrBeast (\"Can we...?\"), Veritasium</p>\n</div>\n\n<div class=\"guide-section\">\n</div>\n<div class=\"guide-divider\"></div>\n<div class=\"method-header\"><h4><span class=\"method-number\">4</span> CINEMATIC / MOVIE STILL</h4></div>\n<div class=\"guide-section\">\n<h4>CINEMATIC / MOVIE STILL</h4>\n<p><strong>How to make it:</strong> High-quality image from your video (or filmed specifically) + minimal text (1-3 words) + color grading/filter</p>\n<p><strong>Experiment with:</strong> Different frames from your footage, color overlays, text placement</p>\n<p><strong>Best for:</strong> Cinematic/storytelling content, vlogs, behind-the-scenes, travel. When the production value IS the appeal.</p>\n<p><strong>Examples to study:</strong> Casey Neistat, Peter McKinnon, Marques Brownlee</p>\n</div>\n\n<div class=\"guide-section\">\n</div>\n<div class=\"guide-divider\"></div>\n<div class=\"method-header\"><h4><span class=\"method-number\">5</span> TEXT-ONLY PUNCHLINE</h4></div>\n<div class=\"guide-section\">\n<h4>TEXT-ONLY PUNCHLINE</h4>\n<p><strong>How to make it:</strong> Bold background + text that IS the hook (no image needed)</p>\n<p><strong>Experiment with:</strong> Background colors, text styles, humor level</p>\n<p><strong>Best for:</strong> Headlines, humor, controversial takes, quote videos. When the text itself is the attraction.</p>\n<p><strong>Examples to study:</strong> Overthinking content creators, meme compilations, podcast clips</p>\n</div>\n\n<div class=\"guide-section\">\n</div>\n<div class=\"guide-divider\"></div>\n<div class=\"method-header\"><h4><span class=\"method-number\">6</span> SPLIT TRANSFORMATION</h4></div>\n<div class=\"guide-section\">\n<h4>SPLIT TRANSFORMATION</h4>\n<p><strong>How to make it:</strong> Before | After (two halves, contrasting states)</p>\n<p><strong>Experiment with:</strong> What represents \"before\" vs \"after\", your expression change, colors (dull→bright)</p>\n<p><strong>Best for:</strong> Fitness, productivity, skill acquisition, lifestyle changes. Inherently shows progress.</p>\n<p><strong>Examples to study:</strong> Fitness channels, self-improvement, productivity, makeovers</p>\n</div>\n\n<div class=\"guide-section\">\n</div>\n<div class=\"guide-divider\"></div>\n<div class=\"method-header\"><h4><span class=\"method-number\">7</span> VS BATTLE</h4></div>\n<div class=\"guide-section\">\n<h4>VS BATTLE</h4>\n<p><strong>How to make it:</strong> Two contrasting sides: [Option A] vs [Option B] + your face reacting to one</p>\n<p><strong>Experiment with:</strong> Which side wins, your expression, color differentiation</p>\n<p><strong>Best for:</strong> Comparisons, tests, \"which is better\", product reviews, hacks vs real methods</p>\n<p><strong>Examples to study:</strong> \"Expensive vs Cheap\", \"AI vs Human\", comparison channels</p>\n</div>\n\n<div class=\"guide-section\">\n</div>\n<div class=\"guide-divider\"></div>\n<div class=\"method-header\"><h4><span class=\"method-number\">8</span> BLUR THE MYSTERY</h4></div>\n<div class=\"guide-section\">\n<h4>BLUR THE MYSTERY</h4>\n<p><strong>How to make it:</strong> Blurred image/object + your intrigued face + text \"Wait for it\" or similar</p>\n<p><strong>Experiment with:</strong> Blur intensity, what's blurred, your expression intensity</p>\n<p><strong>Best for:</strong> Reveals, unboxing, first looks, mystery content. Creates curiosity gap.</p>\n<p><strong>Examples to study:</strong> Unboxing channels, tech first-looks, surprise reveals</p>\n</div>\n\n<div class=\"guide-section\">\n</div>\n<div class=\"guide-divider\"></div>\n<div class=\"method-header\"><h4><span class=\"method-number\">9</span> GIANT OBJECT</h4></div>\n<div class=\"guide-section\">\n<h4>GIANT OBJECT</h4>\n<p><strong>How to make it:</strong> Huge product/object filling frame + your small face in corner looking amazed/confused</p>\n<p><strong>Experiment with:</strong> Object size ratio, your placement, background color</p>\n<p><strong>Best for:</strong> Products, huge claims, extremes. Makes things feel bigger/more important.</p>\n<p><strong>Examples to study:</strong> Tech reviewers, challenge channels, product showcases</p>\n</div>\n\n<div class=\"guide-section\">\n</div>\n<div class=\"guide-divider\"></div>\n<div class=\"method-header\"><h4><span class=\"method-number\">10</span> PROOF / RECEIPT</h4></div>\n<div class=\"guide-section\">\n<h4>PROOF / RECEIPT</h4>\n<p><strong>How to make it:</strong> Screenshot of result (earnings, views, followers, price, score) + your confident face</p>\n<p><strong>Experiment with:</strong> Result prominence, your expression, annotation/arrows pointing to the proof</p>\n<p><strong>Best for:</strong> How-to-make-money, growth hacks, results-oriented content. Proof is credibility.</p>\n<p><strong>Examples to study:</strong> Dropshipping channels, earnings updates, growth hacks</p>\n</div>\n\n<div class=\"guide-section\">\n</div>\n<div class=\"guide-divider\"></div>\n<div class=\"method-header\"><h4><span class=\"method-number\">11</span> EXPOSED / DOWNFALL</h4></div>\n<div class=\"guide-section\">\n<h4>EXPOSED / DOWNFALL</h4>\n<p><strong>How to make it:</strong> Your serious/disappointed face + red X or downward arrow + the thing being \"exposed\"</p>\n<p><strong>Experiment with:</strong> Your expression severity, what's being exposed, use of red/warning colors</p>\n<p><strong>Best for:</strong> Myth-busting, criticism, why something failed, taking down bs</p>\n<p><strong>Examples to study:</strong> Myth-busting channels, skeptical reviews, critical content</p>\n</div>\n\n<div class=\"guide-section\">\n</div>\n<div class=\"guide-divider\"></div>\n<div class=\"method-header\"><h4><span class=\"method-number\">12</span> CLOSE-UP EMOTION</h4></div>\n<div class=\"guide-section\">\n<h4>CLOSE-UP EMOTION</h4>\n<p><strong>How to make it:</strong> Your face = 80% of thumbnail, authentic emotional expression, minimal text/background</p>\n<p><strong>Experiment with:</strong> Which emotion (shock, joy, confusion, pride), background color, text if any</p>\n<p><strong>Best for:</strong> Personal stories, reactions, emotional moments, your personality-driven content</p>\n<p><strong>Examples to study:</strong> Vloggers, reaction channels, personal stories</p>\n</div>\n\n<div class=\"guide-section\">\n</div>\n<div class=\"guide-divider\"></div>\n<div class=\"method-header\"><h4><span class=\"method-number\">BONUS</span> POINTING / ARROWS</h4></div>\n<div class=\"guide-section\">\n<h4>POINTING / ARROWS</h4>\n<p><strong>How to make it:</strong> Clear focal point (face, object, text) + arrow/hand pointing to it</p>\n<p><strong>Experiment with:</strong> Arrow direction, color, what's being pointed to, pointer style (arrow, hand, circle)</p>\n<p><strong>Best for:</strong> ANY FORMAT. Arrows guide attention. People's eyes follow.</p>\n<p><strong>Examples to study:</strong> Any successful channel. This is universal.</p>\n</div>\n\n<div class=\"guide-section\">\n<h4>QUICK TEST CHECKLIST</h4>\n<ul class=\"guide-list\">\n<li>Hold it 3 feet away. Can you still understand it?</li>\n<li>Is there one clear focal point?</li>\n<li>Can you read the text from 3 inches away?</li>\n<li>Does it stand out in a grid of other thumbnails?</li>\n<li>Does it match your channel's visual style?</li>\n<li>Does it avoid misleading the viewer? (false promise = bad CTR + watch time)</li>\n</ul>\n</div>\n"};</script>
+<script id="v74-guide-story">window.V74_SOURCE_GUIDES=window.V74_SOURCE_GUIDES||{};window.V74_SOURCE_GUIDES["story"]={"title":"📖 Story Structures (5 Proven Frameworks)","content":"\n<div class=\"guide-tip\">💡 <strong>Structure beats originality. A structured story beats an unstructured masterpiece.</strong></div>\n\n<div class=\"guide-section\">\n</div>\n<div class=\"guide-divider\"></div>\n<div class=\"method-header\"><h4><span class=\"method-number\">FRAMEWORK 1</span> PROBLEM → AGITATE → SOLUTION (PAS)</h4></div>\n<div class=\"guide-section\">\n<h4>PROBLEM → AGITATE → SOLUTION (PAS)</h4>\n<p><em>Best for: Tutorials, how-to, reviews, self-improvement. Anything with a clear problem and answer.</em></p>\n<table class=\"guide-table\">\n<tr><th>Beat</th><th>What It Does</th><th>Script Hint</th></tr>\n<tr><td><strong>PROBLEM</strong></td><td>State it clearly. Make it relatable.</td><td>\"Most people struggle with X...\" or \"If you've ever tried X, you know it sucks...\"</td></tr>\n<tr><td><strong>AGITATE</strong></td><td>Make the pain REAL. Why does this problem hurt?</td><td>\"You've probably tried A, B, C and none of it worked. Here's why...\" — dig into WHY the problem exists</td></tr>\n<tr><td><strong>SOLUTION</strong></td><td>Your actual answer. The meat.</td><td>\"Here's what actually works...\" — deliver the value. This is the bulk of your video.</td></tr>\n<tr><td><strong>RESULT</strong></td><td>Show the transformation. What's possible.</td><td>\"Now you can finally...\" — paint the after picture. What changes for them?</td></tr>\n</table>\n<p><strong>MKBHD Example:</strong> <a href=\"https://www.youtube.com/watch?v=UpqaQR4ikig\" target=\"_blank\" style=\"color: #60A5FA;\">Does Fast Charging ACTUALLY Ruin Your Battery?</a> - Tech reviews follow this perfectly. Problem (do we need another camera?) → Agitate (what makes cameras complicated) → Solution (here's why this one is different) → Result (here's what you can do with it)</p>\n</div>\n\n<div class=\"guide-section\">\n</div>\n<div class=\"guide-divider\"></div>\n<div class=\"method-header\"><h4><span class=\"method-number\">FRAMEWORK 2</span> QUESTION → JOURNEY → DISCOVERY (QJD)</h4></div>\n<div class=\"guide-section\">\n<h4>QUESTION → JOURNEY → DISCOVERY (QJD)</h4>\n<p><em>Best for: Explainers, experiments, documentaries, mysteries. When you're uncovering something.</em></p>\n<table class=\"guide-table\">\n<tr><th>Beat</th><th>What It Does</th><th>Script Hint</th></tr>\n<tr><td><strong>QUESTION</strong></td><td>Pose an intriguing question</td><td>\"What would happen if...?\" or \"Why does X actually work?\"</td></tr>\n<tr><td><strong>JOURNEY</strong></td><td>The investigation. Show your process. Let them follow along.</td><td>\"So I tried...\" \"I researched...\" \"Here's what I found...\" — take them on the hunt</td></tr>\n<tr><td><strong>DISCOVERY</strong></td><td>The answer (ideally unexpected or counterintuitive)</td><td>\"It turns out...\" — reveal what you learned. Especially powerful if it surprises them.</td></tr>\n</table>\n<p><strong>Mark Rober Example:</strong> <a href=\"https://www.youtube.com/watch?v=hFZFjoX2cGg\" target=\"_blank\" style=\"color: #60A5FA;\">Backyard Squirrel Maze 1.0- Ninja Warrior Course</a> - \"Can slime beat an egg drop?\" His videos are literally the journey of discovering answers.</p>\n</div>\n\n<div class=\"guide-section\">\n</div>\n<div class=\"guide-divider\"></div>\n<div class=\"method-header\"><h4><span class=\"method-number\">FRAMEWORK 3</span> OLD STORY → TURN → NEW STORY (OSN)</h4></div>\n<div class=\"guide-section\">\n<h4>OLD STORY → TURN → NEW STORY (OSN)</h4>\n<p><em>Best for: Personal stories, transformations, before/after narratives. Emotional, relatable content.</em></p>\n<table class=\"guide-table\">\n<tr><th>Beat</th><th>What It Does</th><th>Script Hint</th></tr>\n<tr><td><strong>OLD STORY</strong></td><td>The before. How things were. Set the stakes.</td><td>\"I used to...\" or \"For years I believed...\" — make it relatable. Most of your audience was \"you before\"</td></tr>\n<tr><td><strong>THE TURN</strong></td><td>The pivotal moment. What changed. The inciting incident.</td><td>\"Then one day...\" or \"Everything changed when...\" — this is the moment. Be specific.</td></tr>\n<tr><td><strong>NEW STORY</strong></td><td>The after. The transformation. What's possible now.</td><td>\"Now I...\" — show the new reality and how people can get there too. This IS your value.</td></tr>\n</table>\n<p><strong>Emma Chamberlain Example:</strong> <a href=\"https://www.youtube.com/watch?v=TY5xA7-JPAY\" target=\"_blank\" style=\"color: #60A5FA;\">the one thing i hate about coffee...</a> - \"I was anxious and awkward... then I started making videos... now look at me\" (extremely simplified, but that's the structure)</p>\n</div>\n\n<div class=\"guide-section\">\n</div>\n<div class=\"guide-divider\"></div>\n<div class=\"method-header\"><h4><span class=\"method-number\">FRAMEWORK 4</span> 3 ACT STRUCTURE</h4></div>\n<div class=\"guide-section\">\n<h4>3 ACT STRUCTURE</h4>\n<p><em>Best for: Documentaries, case studies, complex narratives. When you need to build tension and resolve it.</em></p>\n<table class=\"guide-table\">\n<tr><th>Act</th><th>What It Does</th><th>Script Hint</th></tr>\n<tr><td><strong>ACT 1: SETUP</strong></td><td>Introduce situation, characters, stakes. Why should we care?</td><td>Who/what is this about? Why should we care? What's at stake? What's the goal?</td></tr>\n<tr><td><strong>ACT 2: CONFLICT</strong></td><td>The struggle. Obstacles. Tension. Things get harder.</td><td>The journey. Problems arise. Things get harder before they get better. Show the real struggle.</td></tr>\n<tr><td><strong>ACT 3: RESOLUTION</strong></td><td>Climax and conclusion</td><td>How does it end? What's the lesson? What's different now? (Not just \"the end\" — show what changed)</td></tr>\n</table>\n<p><strong>Casey Neistat Example:</strong> <a href=\"https://www.youtube.com/watch?v=bzE-IMaegzQ\" target=\"_blank\" style=\"color: #60A5FA;\">Bike Lanes</a> - Sets up a challenge (Act 1) → shows the struggle and failures (Act 2) → reveals the outcome and lesson (Act 3)</p>\n</div>\n\n<div class=\"guide-section\">\n</div>\n<div class=\"guide-divider\"></div>\n<div class=\"method-header\"><h4><span class=\"method-number\">FRAMEWORK 5</span> HERO'S JOURNEY (Simplified)</h4></div>\n<div class=\"guide-section\">\n<h4>HERO'S JOURNEY (Simplified)</h4>\n<p><em>Best for: Personal challenges, transformations, growth stories. Very cinematic.</em></p>\n<table class=\"guide-table\">\n<tr><th>Beat</th><th>What It Does</th><th>Script Hint</th></tr>\n<tr><td><strong>1. ORDINARY WORLD</strong></td><td>Your starting point. The normal state.</td><td>\"Here's where I was...\" — relatable starting state</td></tr>\n<tr><td><strong>2. THE CALL</strong></td><td>Something disrupts the normal. The inciting incident.</td><td>\"Then this happened...\" — the moment everything changed</td></tr>\n<tr><td><strong>3. THE STRUGGLE</strong></td><td>Challenges, failures, learning. The real journey.</td><td>\"I tried... I failed... I learned...\" — show the real work</td></tr>\n<tr><td><strong>4. THE RETURN</strong></td><td>Transformation and wisdom. What viewers can take away.</td><td>\"Now I know...\" — what changed and what viewers can learn from this</td></tr>\n</table>\n<p><strong>Michelle Khare Example:</strong> <a href=\"https://www.youtube.com/watch?v=Zak_e_QB4OU\" target=\"_blank\" style=\"color: #60A5FA;\">I Tried Marine Bootcamp</a> - Attempts impossible challenges using this structure — shows her growth and learning in real time</p>\n</div>\n\n<div class=\"guide-section\">\n<h4>HOW TO USE THIS</h4>\n<ul class=\"guide-list\">\n<li>Pick the structure that matches your video type</li>\n<li>Map your content to the beats</li>\n<li>Use these as guardrails, not rigid rules</li>\n<li>A strong structure makes editing easier</li>\n<li>A clear structure = better audience retention</li>\n<li>Match your hook to your structure choice</li>\n</ul>\n</div>\n"};</script>
+<script id="v74-guide-retention">window.V74_SOURCE_GUIDES=window.V74_SOURCE_GUIDES||{};window.V74_SOURCE_GUIDES["retention"]={"title":"🔄 Retention Strategies","content":"\n<div class=\"guide-tip\">💡 <strong>AVD (Average View Duration) is the metric that matters. YouTube's #1 ranking signal.</strong></div>\n\n<div class=\"guide-section\">\n<h4>WHY RETENTION IS EVERYTHING</h4>\n<table class=\"guide-table\">\n<tr><td><strong>YouTube's #1 ranking factor</strong></td><td>Videos with higher AVD get pushed more. Period. It's not about views, it's about watch time.</td></tr>\n<tr><td><strong>Retention compounds</strong></td><td>High retention → more impressions → more views → more watch time → even more impressions. It's a cycle.</td></tr>\n<tr><td><strong>The 10-second cliff</strong></td><td>Most viewers decide to stay or leave in the first 10 seconds. Win those seconds and you win the video.</td></tr>\n<tr><td><strong>Every 2-3 minutes, attention fades</strong></td><td>You need to RE-HOOK them throughout, not just at the start.</td></tr>\n<tr><td><strong>Ending retention matters as much as beginning</strong></td><td>People who stay to the end are your real fans. Keep them engaged all the way.</td></tr>\n</table>\n</div>\n\n<div class=\"guide-section\">\n<h4>OPEN LOOPS</h4>\n<p><em>Create curiosity gaps that DEMAND closure</em></p>\n<p><strong>What it is:</strong> Start a thought, delay the payoff. The brain craves closure — they'll stay to get it.</p>\n<p><strong>How to use:</strong> Open 2-3 loops in the first 60 seconds. Close them throughout the video. Stack them so there's always something unresolved waiting.</p>\n<div class=\"guide-example\">\n<strong>Scripts:</strong><br>\n• <strong>Early tease:</strong> \"I'll show you the biggest mistake in a minute, but first, you need to understand why this matters...\"<br>\n• <strong>Mid-video loop:</strong> \"There's one thing nobody tells you about this. We'll get there, but first...\"<br>\n• <strong>Stacked loops:</strong> \"I'm going to show you 3 things. The third one changed everything for me. But let's start with the first...\"<br>\n• <strong>The callback:</strong> \"Remember when I said this would blow your mind? Here's why...\"<br>\n• <strong>The promise:</strong> \"By the end of this, you'll understand something 99% of people miss. Let me show you...\"\n</div>\n</div>\n\n<div class=\"guide-section\">\n<h4>PATTERN INTERRUPTS</h4>\n<p><em>Break the monotony before they tune out</em></p>\n<p><strong>Why it works:</strong> The brain notices CHANGE. Same shot for 3+ minutes = tune out. Novelty triggers attention.</p>\n<p><strong>How often:</strong> Every 2-3 minutes MINIMUM. Shorter for younger audiences. When YOU feel your energy dipping, they already left.</p>\n<table class=\"guide-table\">\n<tr><th>Type</th><th>Examples</th></tr>\n<tr><td><strong>Camera changes</strong></td><td>Cut to different angle, zoom in/out, switch to B-roll, change location, reaction cam</td></tr>\n<tr><td><strong>Visual overlays</strong></td><td>Text on screen, graphics, images, screen recordings, animations, lower thirds</td></tr>\n<tr><td><strong>Audio shifts</strong></td><td>Music change, sound effect, change in vocal pace/energy/tone, silence then loud</td></tr>\n<tr><td><strong>Format shifts</strong></td><td>Switch from talking to demo, demo to story, explanation to example, voiceover to on-camera</td></tr>\n<tr><td><strong>Pacing changes</strong></td><td>Fast cuts (2-3 seconds per shot) vs longer scenes, slow-mo vs regular speed</td></tr>\n<tr><td><strong>Emotional tone shift</strong></td><td>Serious to funny, excited to intimate, energy dip then spike</td></tr>\n</table>\n</div>\n\n<div class=\"guide-section\">\n<h4>COMING UP TEASES</h4>\n<p><strong>What it is:</strong> \"In 30 seconds, I'm going to show you how to...\" or \"Wait until you see what happens next\"</p>\n<p><strong>When to use:</strong> Right before a slower section or transition. Gives people a reason to stick around.</p>\n<div class=\"guide-example\">\n<strong>Scripts:</strong><br>\n• <strong>The preview:</strong> \"In just a moment, I'm going to show you the exact formula that changed my life...\"<br>\n• <strong>The teaser:</strong> \"You're not going to believe what happens when I try this...\"<br>\n• <strong>The promise:</strong> \"The best part is coming up. Stick with me.\"<br>\n• <strong>The countdown:</strong> \"In 60 seconds, everything is going to make sense.\"<br>\n• <strong>The intrigue:</strong> \"What I'm about to show you, nobody's done it like this before...\"\n</div>\n</div>\n\n<div class=\"guide-section\">\n<h4>RE-ENGAGEMENT PHRASES</h4>\n<p><strong>When to use:</strong> When you notice retention dropping (check YouTube Analytics). After slower sections. To remind them why they're watching.</p>\n<div class=\"guide-example\">\n<strong>Phrases that work:</strong><br>\n1. \"But here's the thing...\"<br>\n2. \"This is where it gets interesting...\"<br>\n3. \"Most people don't realize...\"<br>\n4. \"And this is why it matters...\"<br>\n5. \"So here's what I did instead...\"<br>\n6. \"Now pay attention because this next part...\"<br>\n7. \"You're going to want to hear this...\"<br>\n8. \"This is the part everyone misses...\"<br>\n9. \"And it completely changed how I think about...\"\n</div>\n</div>\n\n<div class=\"guide-section\">\n<h4>MINI CLIFFHANGERS</h4>\n<p><strong>What it is:</strong> Brief moments of tension or curiosity before moving to the next segment</p>\n<div class=\"guide-example\">\n<strong>Scripts:</strong><br>\n• \"Let me show you what happens when...\" (pause for reaction)<br>\n• \"You'll see this doesn't work because...\" (show the failure)<br>\n• \"But when I tried this approach, everything changed...\" (let the audience think, then show)<br>\n• \"The worst part is...\" (pause, build tension)<br>\n• \"And then something unexpected happened...\" (show it)\n</div>\n</div>\n\n<div class=\"guide-section\">\n<h4>PREVENTING DROP-OFFS (6 Critical Moments)</h4>\n<table class=\"guide-table\">\n<tr><th>Moment</th><th>What Happens</th><th>Solution</th></tr>\n<tr><td><strong>30 seconds in</strong></td><td>People decide if hook was worth it. Decision point.</td><td>Deliver on the hook promise. Show progress or value immediately.</td></tr>\n<tr><td><strong>2-minute mark</strong></td><td>First attention fade. They're checking other videos.</td><td>Pattern interrupt. Change angle, switch to B-roll, shift tone. Something new.</td></tr>\n<tr><td><strong>Mid-video (50% mark)</strong></td><td>Biggest drop-off point. \"Is this worth my time?\"</td><td>Re-establish why they're watching. Remind them of the payoff. Use \"coming up\" teases.</td></tr>\n<tr><td><strong>At a transition</strong></td><td>Moving between ideas = people leave</td><td>Don't have dead air. Bridge transitions with your voice or visual movement.</td></tr>\n<tr><td><strong>When you're visibly tired/boring</strong></td><td>Your energy drops = they drop</td><td>Edit out slow moments. If you're not engaged, they won't be.</td></tr>\n<tr><td><strong>Final 30 seconds (outro)</strong></td><td>People leave right before CTA</td><td>Build energy into the CTA. Don't wind down. Transition, don't conclude.</td></tr>\n</table>\n</div>\n\n<div class=\"guide-section\">\n<h4>RETENTION KILLERS (Avoid These)</h4>\n<ul class=\"guide-list\">\n<li><strong>Long intros/outros</strong> — Logo animations, channel trailers, \"Don't forget to subscribe\" speeches</li>\n<li><strong>Dead air</strong> — Silence, long pauses, nothing happening on screen</li>\n<li><strong>Unfulfilled promises</strong> — Title says something, video doesn't deliver</li>\n<li><strong>Repetitive content</strong> — Saying the same thing multiple ways</li>\n<li><strong>Losing energy</strong> — Your enthusiasm dropping signals \"This video is ending\"</li>\n<li><strong>Slow pacing</strong> — Taking 5 minutes to say what could take 2. Tighten it.</li>\n<li><strong>Clickbait that misleads</strong> — People click, realize it's not what they wanted, leave (and don't click next time)</li>\n<li><strong>No context for authority</strong> — Who are you? Why should I trust you? Establish credentials early.</li>\n</ul>\n</div>\n\n<div class=\"guide-section\">\n<h4>PRE-PUBLISH RETENTION CHECK</h4>\n<ul class=\"guide-list\">\n<li>Does the hook deliver within 10 seconds?</li>\n<li>Is there a pattern interrupt every 2-3 minutes?</li>\n<li>Do I have 2-3 open loops stacked?</li>\n<li>Is there a \"coming up\" tease before slow sections?</li>\n<li>Does my energy stay high throughout?</li>\n<li>Are transitions smooth (no dead air)?</li>\n<li>Does the CTA feel like opening something new, not closing?</li>\n<li>Would I watch this if I didn't make it?</li>\n</ul>\n</div>\n"};</script>
+<script id="v74-guide-cta">window.V74_SOURCE_GUIDES=window.V74_SOURCE_GUIDES||{};window.V74_SOURCE_GUIDES["cta"]={"title":"🎯 Call To Action (CTA Mastery)","content":"\n<div class=\"guide-tip\">💡 <strong>CTA depends on your goal. Pick ONE per video and transition INTO it naturally.</strong></div>\n\n<div class=\"guide-section\">\n<h4>WHAT'S YOUR GOAL?</h4>\n<table class=\"guide-table\">\n<tr><td><strong>Growing views & subs</strong></td><td>→ CTA to another VIDEO or PLAYLIST<br><em>Extends session time. YouTube rewards keeping people on platform. Higher watch time = better algorithm push.</em></td></tr>\n<tr><td><strong>Growing sales & leads</strong></td><td>→ CTA to website, product, lead magnet<br><em>Use sparingly. Leading off-platform too often hurts your reach. Balance is key.</em></td></tr>\n<tr><td><strong>Growing community</strong></td><td>→ CTA to COMMENTS + engage there<br><em>Builds connection. Reply to comments to keep the conversation going. Algorithm loves engagement.</em></td></tr>\n</table>\n</div>\n\n<div class=\"guide-section\">\n<h4>VIDEO/PLAYLIST CTA</h4>\n<p><strong>Why it works:</strong> Keeps people watching. More watch time = YouTube pushes your videos more. Builds your subscriber base.</p>\n<p><strong>When to use:</strong> When your goal is views, subs, or watch time (most of the time for creators building).</p>\n<p><strong>Pick strategically:</strong> Don't just link to any video. Link to your NEXT logical video. If someone watches \"How to Edit,\" they probably want \"Editing Tools\" or \"Edit Mistakes.\"</p>\n</div>\n\n<div class=\"guide-section\">\n<h4>LEAD MAGNET / SALES CTA</h4>\n<p><strong>Why it works:</strong> Direct path to your business goals (emails, customers, revenue).</p>\n<p><strong>When to use:</strong> When you've built enough trust and the timing feels natural. Mid-video can work too.</p>\n<p><strong>WARNING:</strong> Overuse kills your algorithm. YouTube notices when you send people off-platform. Use strategically, not on every video.</p>\n</div>\n\n<div class=\"guide-section\">\n<h4>COMMENT CTA</h4>\n<p><strong>Why it works:</strong> Comments = engagement. Engagement = algorithm boost. Also builds community.</p>\n<p><strong>When to use:</strong> When you genuinely want to hear from your audience. When you'll actually reply.</p>\n<p><strong>Make it specific:</strong> Not \"leave a comment\" — \"In the comments, tell me: what's YOUR biggest editing struggle?\"</p>\n<p><strong>Actually engage:</strong> Reply to the top comments. People see their reply got a response and come back.</p>\n</div>\n\n<div class=\"guide-section\">\n<h4>TRANSITION SCRIPTS (Not Conclusions!)</h4>\n<p><strong>The key:</strong> These should feel like you're OPENING something new, not closing. Energy UP, not down.</p>\n<div class=\"guide-example\">\n<strong>VIDEO CTA - The continuation:</strong> \"...and that's exactly what I break down in THIS video [point to screen]. It picks up right where we left off — watch it.\"<br><br>\n<strong>VIDEO CTA - The missing piece:</strong> \"But here's the thing nobody talks about — I made a whole video on it because it changes everything. Check it out.\"<br><br>\n<strong>VIDEO CTA - The next step:</strong> \"Now that you know HOW to do this, the next step is understanding WHEN to do it. I'll link that video below.\"<br><br>\n<strong>LEAD CTA - The resource:</strong> \"I actually put together a [free template/guide/checklist] that walks you through this step by step — link's in the description if you want it.\"<br><br>\n<strong>LEAD CTA - The offer:</strong> \"If you want to go deeper with this, I created a [course/workshop/program] that breaks it all down. Details in the description.\"<br><br>\n<strong>COMMENT CTA - The question:</strong> \"I'm curious — what's the biggest thing holding you back with [topic]? Drop it in the comments, I read every single one.\"<br><br>\n<strong>COMMENT CTA - The debate:</strong> \"What do you think? [Controversial take]. Let me know in the comments — I'm reading everything.\"\n</div>\n</div>\n\n<div class=\"guide-section\">\n<h4>END SCREEN EXECUTION</h4>\n<ul class=\"guide-list\">\n<li><strong>Position matter</strong> — Don't cover important content in the last 20 seconds</li>\n<li><strong>Minimum 20 seconds</strong> — People need time to react and click</li>\n<li><strong>Top-right is clickable</strong> — Put your next video link there (YouTube's default)</li>\n<li><strong>Consistency helps</strong> — Same placement every video trains viewers where to look</li>\n<li><strong>Audio CTA + visual CTA</strong> — Say it AND show it. Don't rely on just one.</li>\n</ul>\n</div>\n\n<div class=\"guide-section\">\n<h4>WHAT KILLS YOUR CTA</h4>\n<ul class=\"guide-list\">\n<li><strong>\"That's all for today\"</strong> — You just gave them permission to leave.</li>\n<li><strong>\"Don't forget to subscribe\"</strong> — Weak. No reason. They'll forget.</li>\n<li><strong>Dropping your energy</strong> — If you sound like you're wrapping up, they feel it and leave.</li>\n<li><strong>Multiple CTAs at once</strong> — Pick ONE. Confusion = no action.</li>\n<li><strong>Asking before delivering value</strong> — Earn it first. CTA comes after you've proven yourself.</li>\n</ul>\n</div>\n\n<div class=\"guide-section\">\n<h4>WHAT ACTUALLY MATTERS</h4>\n<ul class=\"guide-list\">\n<li><strong>Authenticity</strong> — Don't recommend videos you haven't linked to. Don't promote products you don't use. People sense it.</li>\n<li><strong>Relevance</strong> — Link to the NEXT logical video, not just your most popular one.</li>\n<li><strong>Energy</strong> — Your CTA should feel like the beginning of something, not the end.</li>\n</ul>\n</div>\n"};</script>
+<script id="v74-guide-hooks">window.V74_SOURCE_GUIDES=window.V74_SOURCE_GUIDES||{};window.V74_SOURCE_GUIDES["hooks"]={"title":"🎣 Hook Strategies","content":"\n<div class=\"guide-tip\">💡 <strong>The hook isn't a sales pitch. It's a curiosity gap you need to close.</strong></div>\n\n<div class=\"guide-section\">\n<h4>THE BRUTAL TRUTH</h4>\n<ul class=\"guide-list\">\n<li><strong>First 3 seconds matter most</strong> — If they don't see value or curiosity in the first 3 seconds, you lost them</li>\n<li><strong>No one owes you their attention</strong> — Thousands of videos compete for it. You have 10 seconds to make the case</li>\n<li><strong>A perfect hook + mediocre content = one-time viewer</strong> — But a great hook + good content = subscriber</li>\n<li><strong>Hook retention is different from overall retention</strong> — You can win the first 10 seconds and still lose them at minute 2. Both matter.</li>\n</ul>\n</div>\n\n<div class=\"guide-section\">\n<h4>HOOK TYPES THAT WORK (8 Types)</h4>\n<table class=\"guide-table\">\n<tr><th>Type</th><th>Example</th></tr>\n<tr><td><strong>The Bold Claim</strong></td><td>\"I made $10,000 in 48 hours. Here's exactly how.\"</td></tr>\n<tr><td><strong>The Question</strong></td><td>\"What if I told you you've been editing wrong this whole time?\"</td></tr>\n<tr><td><strong>The Contrast</strong></td><td>\"Everyone says grow slow. I did it in 90 days.\"</td></tr>\n<tr><td><strong>The Story Open</strong></td><td>\"I was about to quit YouTube when I discovered this...\"</td></tr>\n<tr><td><strong>The Problem Call-Out</strong></td><td>\"If you're still manually editing, you're wasting 10 hours a week.\"</td></tr>\n<tr><td><strong>The Result Tease</strong></td><td>\"By the end of this video, you'll understand why 99% fail.\"</td></tr>\n<tr><td><strong>The Pattern Interrupt</strong></td><td>Do something unexpected visually or verbally that breaks the scroll</td></tr>\n<tr><td><strong>The Proof First</strong></td><td>Show the result immediately, then explain how</td></tr>\n</table>\n</div>\n\n<div class=\"guide-section\">\n<h4>VISUAL HOOKS (First 3 Seconds)</h4>\n<p>What people SEE matters as much as what they hear.</p>\n<ul class=\"guide-list\">\n<li><strong>Motion/cut quickly</strong> — Don't stay on one shot more than 2-3 seconds</li>\n<li><strong>Your face if you're on camera</strong> — Genuine emotion. Not forced.</li>\n<li><strong>The result/payoff immediately</strong> — Show what they're getting before explaining</li>\n<li><strong>Text on screen supporting your words</strong> — Reinforces the message</li>\n<li><strong>Surprising imagery</strong> — Something unexpected that makes them pause</li>\n<li><strong>Pattern interrupt via B-roll</strong> — Sudden location change, visual effect, or new angle</li>\n</ul>\n</div>\n\n<div class=\"guide-section\">\n<h4>HOOK SCRIPTS BY VIDEO TYPE</h4>\n<table class=\"guide-table\">\n<tr><th>Type</th><th>Hook Framework</th></tr>\n<tr><td><strong>Tutorial</strong></td><td>State the problem (pain they feel) → Show the solution (simple version) → \"Here's the step-by-step\"</td></tr>\n<tr><td><strong>Story/Vlog</strong></td><td>Start mid-action or with the emotion (not the backstory) → \"Here's what happened\"</td></tr>\n<tr><td><strong>Listicle</strong></td><td>Number + the promise (\"5 ways to do X\") OR Start with the most interesting item</td></tr>\n<tr><td><strong>Myth-busting</strong></td><td>State the myth → contradict it → \"Here's the truth\"</td></tr>\n<tr><td><strong>Review</strong></td><td>Your verdict first → \"Here's why\"</td></tr>\n<tr><td><strong>Challenge</strong></td><td>What you're attempting → Why it's hard/interesting → \"Let's try it\"</td></tr>\n<tr><td><strong>Educational</strong></td><td>The question people ask OR The problem people have → \"I'm about to answer that\"</td></tr>\n<tr><td><strong>Reaction/Commentary</strong></td><td>What you're reacting to + your instant opinion → \"Let me explain why I think...\"</td></tr>\n</table>\n</div>\n\n<div class=\"guide-section\">\n<h4>HOOK KILLERS (Avoid These)</h4>\n<ul class=\"guide-list\">\n<li><strong>Apologizing or disclaiming</strong> — \"Sorry this is long\" OR \"I know you haven't seen me in a while\" — YOU LOST THEM</li>\n<li><strong>Long slow build-up</strong> — \"So this story started 5 years ago...\" Nope. Start with the moment that matters.</li>\n<li><strong>Repeating your title</strong> — Title already said it. Hook needs to ADD value or emotion.</li>\n<li><strong>Asking them to subscribe before delivering value</strong> — Earn it first</li>\n<li><strong>Intro longer than 5 seconds</strong> — No logos, animations, or studio shots before the hook lands</li>\n<li><strong>Audio problems</strong> — Bad mic, echo, lag, background noise = instant leave</li>\n<li><strong>Soft opening \"Hey guys\"</strong> — Wake them up. Don't whisper.</li>\n<li><strong>Wasting time talking about the video instead of delivering it</strong> — \"Today we're talking about...\" vs \"Here's the mistake everyone makes...\"</li>\n</ul>\n</div>\n\n<div class=\"guide-section\">\n<h4>HOOK CHECKLIST</h4>\n<ul class=\"guide-list\">\n<li>Is the hook clear within 3 seconds?</li>\n<li>Does it answer \"Why should I care?\"</li>\n<li>Is there curiosity or emotion that makes them want to stay?</li>\n<li>Does it match the thumbnail/title promise?</li>\n<li>Would I click this if I didn't know me?</li>\n<li>Is the first shot engaging (not boring)?</li>\n<li>Does it deliver on the promise before asking for engagement?</li>\n</ul>\n</div>\n"};</script>
+<script id="v74-guide-loader">window.V74_SOURCE_GUIDES=window.V74_SOURCE_GUIDES||{};
+window.V74_GUIDES_READY=Promise.resolve(window.V74_SOURCE_GUIDES);</script>
+<script id="v74-observer-preflight">(()=>{
+  const NativeMutationObserver=window.MutationObserver;
+  window.MutationObserver=class V74NoopMutationObserver{
+    constructor(){this.records=[]}
+    observe(){}
+    disconnect(){}
+    takeRecords(){return this.records}
   };
-}
-
-function renderGuide(key){
-  const guide=key==='diagnosis'?diagnosisGuide():guideContent[key]||guideContent.overview;
-  let html=`<div class="v72-guide-intro"><p>${escapeHtml(guide.intro||'')}</p></div>`;
-  if(guide.table)html+=`<table class="v72-guide-table"><thead><tr><th>Video job</th><th>Purpose</th><th>Research</th></tr></thead><tbody>${guide.table.map(row=>`<tr>${row.map(cell=>`<td>${escapeHtml(cell)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
-  for(const section of guide.sections||[])html+=`<section class="v72-guide-section"><h3>${escapeHtml(section[0])}</h3><p>${escapeHtml(section[1])}</p></section>`;
-  if(guide.tip)html+=`<div class="v72-guide-tip"><strong>Useful check:</strong> ${escapeHtml(guide.tip)}</div>`;
-  if(guide.warning)html+=`<div class="v72-guide-warning"><strong>Watch for this:</strong> ${escapeHtml(guide.warning)}</div>`;
-  return html;
-}
-
-function openPageGuide(){
-  const view=currentView();
-  const definition=pageDefinition();
-  const backdrop=document.querySelector('#v72-guide-backdrop');
-  if(!backdrop)return;
-  setText(document.querySelector('#v72-guide-eyebrow'),'Workspace guide');
-  setText(document.querySelector('#v72-guide-title'),definition.guideTitle);
-  setText(document.querySelector('#v72-guide-subtitle'),definition.guideSubtitle);
-  const content=document.querySelector('#v72-guide-content');
-  const html=renderGuide(view==='diagnosis'?'diagnosis':view);
-  if(content&&content.innerHTML!==html)content.innerHTML=html;
-  backdrop.classList.add('open');
-  backdrop.setAttribute('aria-hidden','false');
-}
-
-function setViewClass(){
-  const desired=`v73-view-${currentView()}`;
-  for(const name of [...document.body.classList])if(name.startsWith('v73-view-')&&name!==desired)document.body.classList.remove(name);
-  if(!document.body.classList.contains(desired))document.body.classList.add(desired);
-}
-
-function findPageHead(){
-  const root=pageRoot();
-  return root.querySelector(':scope > .page-head,:scope > .v49-page-head,.page-head,.v49-page-head')||root.querySelector('h1,h2')?.parentElement||null;
-}
-
-function decoratePageHead(){
-  const view=currentView();
-  if(view==='video')return;
-  const root=pageRoot();
-  const head=findPageHead();
-  if(!head||head.closest('[role="dialog"],.modal,.v72-guide-drawer'))return;
-  if(!head.classList.contains('v73-page-head'))head.classList.add('v73-page-head');
-  const title=head.querySelector('h1,h2');
-  if(!title)return;
-  let copy=head.querySelector(':scope > .v73-page-copy');
-  if(!copy){
-    copy=document.createElement('div');copy.className='v73-page-copy';
-    title.parentNode.insertBefore(copy,title);copy.appendChild(title);
-  }
-  const definition=pageDefinition();
-  let eyebrow=copy.querySelector('.v73-page-eyebrow');
-  if(!eyebrow){eyebrow=document.createElement('span');eyebrow.className='v73-page-eyebrow';copy.insertBefore(eyebrow,copy.firstChild)}
-  setText(eyebrow,definition.eyebrow);
-  let purpose=copy.querySelector('.v73-page-purpose');
-  if(!purpose){purpose=document.createElement('p');purpose.className='v73-page-purpose';copy.appendChild(purpose)}
-  setText(purpose,definition.purpose);
-  let actions=head.querySelector(':scope > .v73-page-actions');
-  if(!actions){actions=document.createElement('div');actions.className='v73-page-actions';head.appendChild(actions)}
-  const directActions=[...head.children].filter(node=>node!==copy&&node!==actions&&(node.matches?.('button,.button,a.button')||node.classList?.contains('actions')));
-  directActions.forEach(node=>actions.appendChild(node));
-  if(!actions.querySelector('[data-v73-page-guide]')){
-    const button=document.createElement('button');button.type='button';button.className='v73-page-guide';button.dataset.v73PageGuide='1';button.textContent='View Guide';actions.appendChild(button);
-  }
-  if(root.dataset.v73Page!==view)root.dataset.v73Page=view;
-}
-
-function ensureSaveState(){
-  const topbar=document.querySelector('.topbar');
-  if(!topbar||topbar.querySelector('.v73-save-state'))return;
-  const node=document.createElement('span');node.className='v73-save-state';node.textContent='Auto-saved';node.setAttribute('aria-live','polite');
-  (topbar.querySelector('.topbar-actions,.actions,[class*="topbar-right"]')||topbar).appendChild(node);
-}
-
-let saveTimer=0;
-function showSaving(){
-  const node=document.querySelector('.v73-save-state');if(!node)return;
-  if(!node.classList.contains('saving'))node.classList.add('saving');setText(node,'Saving');
-  clearTimeout(saveTimer);saveTimer=setTimeout(()=>{node.classList.remove('saving');setText(node,'Auto-saved')},650);
-}
-
-function ownHeading(card){return[...card.querySelectorAll('h2,h3,h4')].find(heading=>heading.closest('.card')===card)||null}
-function semanticCardClass(label){
-  if(/coach note|coach feedback|coach recommendation|coaching note/.test(label))return'v73-coach-note';
-  if(/approved|final selection|confirmed|complete handoff|ready to execute/.test(label))return'v73-approved-card';
-  if(/needs attention|changes requested|due|review needed|watch/.test(label))return'v73-warning-card';
-  if(/blocked|error|missing|required before/.test(label))return'v73-danger-card';
-  return'';
-}
-
-function decorateCards(){
-  const semantic=['v73-coach-note','v73-approved-card','v73-warning-card','v73-danger-card'];
-  const cards=[...pageRoot().querySelectorAll('.card')].filter(card=>!card.closest('.v72-guide-drawer')&&!card.closest('.card .card'));
-  for(const card of cards){
-    const heading=ownHeading(card);if(!heading)continue;
-    if(!card.classList.contains('v73-work-card'))card.classList.add('v73-work-card');
-    if(!heading.classList.contains('v73-card-heading'))heading.classList.add('v73-card-heading');
-    const desired=semanticCardClass(clean(heading.textContent).toLowerCase());
-    for(const name of semantic)if(name!==desired&&card.classList.contains(name))card.classList.remove(name);
-    if(desired&&!card.classList.contains(desired))card.classList.add(desired);
-  }
-}
-
-function statusTone(label){
-  if(/approved|complete|completed|confirmed|saved|healthy|on track|ready to execute/.test(label))return'green';
-  if(/changes requested|needs attention|attention|due|overdue|review needed|not reviewed|warning|waiting/.test(label))return'amber';
-  if(/blocked|error|failed|missing|critical|cannot|incomplete required/.test(label))return'red';
-  if(/ready|active|in progress|current|review|draft|scheduled|planned/.test(label))return'blue';
-  return'';
-}
-
-function decorateStatuses(){
-  const tones=['v73-status-blue','v73-status-green','v73-status-amber','v73-status-red'];
-  const nodes=[...pageRoot().querySelectorAll('span,small,em,button')].filter(node=>{
-    if(node.closest('.v72-guide-drawer,.v72-phase-tabs,.sidebar,.v73-page-actions'))return false;
-    if(node.matches('.button')||node.querySelector('input,textarea,select'))return false;
-    const label=clean(node.textContent).toLowerCase();if(!label||label.length>42)return false;
-    const className=String(node.className||'').toLowerCase();
-    return/(badge|chip|pill|status|attention|due)/.test(className)||/^(approved|complete|completed|confirmed|saved|ready|active|in progress|draft|scheduled|planned|changes requested|needs attention|due|overdue|blocked|error|missing|not started|not reviewed)$/i.test(label);
-  });
-  for(const node of nodes){
-    if(!node.classList.contains('v73-status'))node.classList.add('v73-status');
-    const tone=statusTone(clean(node.textContent).toLowerCase());const desired=tone?`v73-status-${tone}`:'';
-    for(const name of tones)if(name!==desired&&node.classList.contains(name))node.classList.remove(name);
-    if(desired&&!node.classList.contains(desired))node.classList.add(desired);
-  }
-}
-
-function decorateCreatorRows(){
-  for(const row of document.querySelectorAll('.creator-row-v14,.creator-row-v13,.creator-row')){
-    if(row.querySelector('.v73-creator-avatar'))continue;
-    const name=row.querySelector('h2,h3,h4,strong,b,[class*="name"]');const label=clean(name?.textContent||row.textContent);if(!label)continue;
-    const avatar=document.createElement('span');avatar.className='v73-creator-avatar';avatar.textContent=label.split(/\s+/).slice(0,2).map(word=>word[0]||'').join('').toUpperCase();row.insertBefore(avatar,row.firstChild);
-  }
-}
-
-function decorateEmptyStates(){
-  for(const node of pageRoot().querySelectorAll('p,div')){
-    if(node.children.length>1||node.closest('.v72-guide-drawer,.sidebar,.topbar'))continue;
-    const label=clean(node.textContent).toLowerCase();
-    if(label.length>=5&&label.length<=110&&/^(no .* yet|nothing scheduled|no upcoming|no videos|no reviews|no events|nothing here)/.test(label)&&!node.classList.contains('v73-empty-state'))node.classList.add('v73-empty-state');
-  }
-}
-
-function decorateCallWorkspace(){
-  const field=document.querySelector('[data-session-bind]');if(!field)return;
-  field.closest('[role="dialog"],.modal,.card,form,section')?.classList.add('v73-call-workspace');
-}
-function decorateVideoPage(){if(currentView()==='video')findPageHead()?.classList.add('v73-page-head')}
-
-let enhancing=false;
-let observer=null;
-let frame=0;
-function observe(){observer?.observe(document.documentElement,{subtree:true,childList:true})}
-function enhance(){
-  if(enhancing)return;
-  enhancing=true;observer?.disconnect();
-  try{
-    if(!document.body.classList.contains('v73-app-design'))document.body.classList.add('v73-app-design');
-    setViewClass();ensureSaveState();decoratePageHead();decorateVideoPage();decorateCards();decorateStatuses();decorateCreatorRows();decorateEmptyStates();decorateCallWorkspace();
-    if(document.title!=='Accelerator OS V52.1 App Design V73')document.title='Accelerator OS V52.1 App Design V73';
-  }catch(error){console.error('V73 app design failed',error)}finally{enhancing=false;observe()}
-}
-function scheduleEnhance(){if(frame)return;frame=requestAnimationFrame(()=>{frame=0;enhance()})}
-
+  setTimeout(()=>{window.MutationObserver=NativeMutationObserver},0);
+})();</script>
+<script id="v74-accordion-controller">(()=>{
+if(window.__v74AccordionControllerInstalled)return;
+window.__v74AccordionControllerInstalled=true;
 document.addEventListener('click',event=>{
-  if(event.target.closest?.('[data-v73-page-guide]')){event.preventDefault();event.stopPropagation();openPageGuide();return}
-  setTimeout(scheduleEnhance,0);
-});
-document.addEventListener('input',showSaving,true);
-document.addEventListener('change',showSaving,true);
-
-observer=new MutationObserver(scheduleEnhance);observe();
-const previousRender=window.render;
-if(typeof previousRender==='function')window.render=function(...args){observer?.disconnect();const result=previousRender.apply(this,args);enhance();setTimeout(enhance,0);setTimeout(enhance,120);return result};
-enhance();
+ const summary=event.target.closest?.('details[data-v49-section] > summary');
+ if(!summary||event.target.closest('button,a,input,select,textarea'))return;
+ const detail=summary.parentElement;
+ if(detail.hidden||detail.classList.contains('v74-phase-hidden'))return;
+ event.preventDefault();
+ event.stopPropagation();
+ event.stopImmediatePropagation();
+ const next=!detail.open;
+ document.querySelectorAll('details[data-v49-section]').forEach(item=>{
+  if(item!==detail)item.open=false;
+ });
+ detail.open=next;
+},true);
 })();</script>
-<style id="v73-creator-card-fix-styles">/* Apply the shared creator-card treatment to every roster wrapper used by Accelerator. */
-body.v73-app-design [data-creator-item],
-body.v73-app-design .v303-creator-row,
-body.v73-app-design .v16-creator-row,
-body.v73-app-design .creator-card,
-body.v73-app-design article.v73-creator-card{
-  position:relative;
-  display:grid;
-  grid-template-columns:auto minmax(0,1fr);
-  align-items:start;
-  gap:11px;
-  padding:14px 15px!important;
-  border:1px solid var(--v73-line)!important;
-  border-radius:var(--v73-radius)!important;
-  background:var(--v73-panel)!important;
-  box-shadow:var(--v73-shadow)!important;
-  transition:border-color .16s ease,transform .16s ease,background .16s ease;
+<script id="v74-guide-controller">(()=>{
+if(window.__v74GuideControllerInstalled)return;
+window.__v74GuideControllerInstalled=true;
+const map={'video-purpose':['research'],'video-strategy':['research'],'video-package':['titles','thumbtips','thumbstrategies'],'video-experience':['hooks','story','retention'],'video-publish':['cta'],'video-handoff':['cta']};
+function drawer(){
+ let root=document.querySelector('#v74-guide-backdrop');
+ if(root)return root;
+ document.body.insertAdjacentHTML('beforeend','<div class="v74-guide-backdrop" id="v74-guide-backdrop" aria-hidden="true"><aside class="v74-guide-drawer" role="dialog" aria-modal="true"><header class="v74-guide-head"><div><span id="v74-guide-eyebrow">Source guide</span><h2 id="v74-guide-title">Guide</h2><p id="v74-guide-subtitle">Complete teaching copied from the supplied vidIQ planner.</p></div><button type="button" class="v74-guide-close" data-v74-close-guide aria-label="Close guide">×</button></header><nav class="v74-guide-tabs" id="v74-guide-tabs"></nav><div class="v74-guide-content" id="v74-guide-content"></div></aside></div>');
+ return document.querySelector('#v74-guide-backdrop');
 }
-body.v73-app-design [data-creator-item]:hover,
-body.v73-app-design .v303-creator-row:hover,
-body.v73-app-design .v16-creator-row:hover,
-body.v73-app-design .creator-card:hover,
-body.v73-app-design article.v73-creator-card:hover{
-  border-color:#46515D!important;
-  background:var(--v73-panel-raised)!important;
-  transform:translateY(-1px);
+function showTab(key){
+ const guide=window.V74_SOURCE_GUIDES?.[key];
+ if(!guide)return;
+ document.querySelectorAll('.v74-guide-tab').forEach(tab=>tab.classList.toggle('active',tab.dataset.v74GuideTab===key));
+ document.querySelector('#v74-guide-title').textContent=guide.title;
+ const content=document.querySelector('#v74-guide-content');
+ content.innerHTML=guide.content;
+ content.scrollTop=0;
 }
-body.v73-app-design [data-creator-item] > .v73-creator-avatar,
-body.v73-app-design .v303-creator-row > .v73-creator-avatar,
-body.v73-app-design .v16-creator-row > .v73-creator-avatar,
-body.v73-app-design .creator-card > .v73-creator-avatar,
-body.v73-app-design article.v73-creator-card > .v73-creator-avatar{
-  grid-column:1;
-  grid-row:1 / span 2;
+function open(keys){
+ const available=keys.filter(key=>window.V74_SOURCE_GUIDES?.[key]);
+ if(!available.length)return;
+ const root=drawer();
+ document.querySelector('#v74-guide-tabs').innerHTML=available.map(key=>`<button type="button" class="v74-guide-tab" data-v74-guide-tab="${key}">${window.V74_SOURCE_GUIDES[key].title}</button>`).join('');
+ showTab(available[0]);
+ root.classList.add('open');
+ root.setAttribute('aria-hidden','false');
 }
-body.v73-app-design [data-creator-item] > :not(.v73-creator-avatar),
-body.v73-app-design .v303-creator-row > :not(.v73-creator-avatar),
-body.v73-app-design .v16-creator-row > :not(.v73-creator-avatar),
-body.v73-app-design .creator-card > :not(.v73-creator-avatar),
-body.v73-app-design article.v73-creator-card > :not(.v73-creator-avatar){grid-column:2}
-@media(max-width:640px){
-  body.v73-app-design [data-creator-item],
-  body.v73-app-design .v303-creator-row,
-  body.v73-app-design .v16-creator-row,
-  body.v73-app-design .creator-card,
-  body.v73-app-design article.v73-creator-card{padding:12px!important;gap:9px}
-}</style>
-<script id="v73-creator-card-fix-script">(()=>{
-if(window.__v73CreatorCardFixInstalled)return;
-window.__v73CreatorCardFixInstalled=true;
-const text=value=>String(value??'').replace(/\s+/g,' ').trim();
-function rosterRows(){
-  const rows=new Set(document.querySelectorAll('.creator-row-v14,.creator-row-v13,.creator-row,.v303-creator-row,.v16-creator-row,.creator-card,[data-creator-item]'));
-  document.querySelectorAll('[data-open-creator]').forEach(open=>{
-    const host=open.closest('[data-creator-item],article,.creator-row-v14,.creator-row-v13,.creator-row,.v303-creator-row,.v16-creator-row,.creator-card,li,section');
-    if(host)rows.add(host);
-  });
-  return[...rows].filter(row=>row.closest('.content')&&!row.closest('.v70-portfolio-attention,.v72-guide-drawer,[role="dialog"]'));
-}
-function decorate(){
-  for(const row of rosterRows()){
-    if(row.tagName==='ARTICLE')row.classList.add('v73-creator-card');
-    if(row.querySelector(':scope > .v73-creator-avatar'))continue;
-    const name=row.querySelector('h2,h3,h4,[class*="creator-name"],[class*="name"],strong,b');
-    const label=text(name?.textContent||row.querySelector('[data-open-creator]')?.textContent||'');
-    if(!label)continue;
-    const words=label.split(/\s+/).filter(Boolean);
-    const avatar=document.createElement('span');
-    avatar.className='v73-creator-avatar';
-    avatar.setAttribute('aria-hidden','true');
-    avatar.textContent=words.slice(0,2).map(word=>word[0]||'').join('').toUpperCase();
-    row.insertBefore(avatar,row.firstChild);
-  }
-}
-let frame=0;
-const schedule=()=>{if(frame)return;frame=requestAnimationFrame(()=>{frame=0;decorate()})};
-const observer=new MutationObserver(schedule);observer.observe(document.documentElement,{subtree:true,childList:true});
-const prior=window.render;if(typeof prior==='function')window.render=function(...args){const result=prior.apply(this,args);decorate();setTimeout(decorate,0);return result};
-decorate();
+function close(){const root=document.querySelector('#v74-guide-backdrop');root?.classList.remove('open');root?.setAttribute('aria-hidden','true')}
+document.addEventListener('click',event=>{
+ const guide=event.target.closest?.('[data-v74-section-guide]');
+ if(guide){event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();open(map[guide.dataset.v74SectionGuide]||['research']);return}
+ const tab=event.target.closest?.('[data-v74-guide-tab]');
+ if(tab){event.preventDefault();event.stopPropagation();showTab(tab.dataset.v74GuideTab);return}
+ if(event.target.closest?.('[data-v74-close-guide]')||event.target.id==='v74-guide-backdrop'){event.preventDefault();close()}
+},true);
+document.addEventListener('keydown',event=>{if(event.key==='Escape')close()});
 })();</script>
-<style id="v73-workspace-panel-fix-styles">/* Custom Foundation and Monthly Plan panels share the same reference-led work-card language. */
-body.v73-app-design .v73-generic-work-panel{
-  overflow:hidden;
-  margin:0 0 14px!important;
-  padding:0 15px 15px!important;
-  border:1px solid var(--v73-line)!important;
-  border-radius:var(--v73-radius)!important;
-  background:var(--v73-panel)!important;
-  box-shadow:var(--v73-shadow)!important;
-}
-body.v73-app-design details.v73-generic-work-panel{padding:0 15px 15px!important}
-body.v73-app-design .v73-generic-work-panel > summary,
-body.v73-app-design .v73-generic-work-panel > .v73-generic-panel-head,
-body.v73-app-design .v73-generic-work-panel > header:first-child,
-body.v73-app-design .v73-generic-work-panel > .section-title:first-child{
-  display:flex!important;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  min-height:50px;
-  margin:0 -15px 14px!important;
-  padding:11px 14px!important;
-  border:0!important;
-  border-bottom:1px solid rgba(147,197,253,.28)!important;
-  border-radius:11px 11px 0 0!important;
-  background:linear-gradient(135deg,#235FCB 0%,#3B82F6 100%)!important;
-  color:#fff!important;
-  font-weight:850!important;
-  cursor:pointer;
-}
-body.v73-app-design .v73-generic-work-panel > summary *,
-body.v73-app-design .v73-generic-panel-head *{color:inherit!important}
-body.v73-app-design .v73-generic-work-panel > .v73-card-heading{
-  margin:0 -15px 14px!important;
-  padding:11px 14px!important;
-  border-radius:11px 11px 0 0!important;
-}
-body.v73-app-design .v73-generic-work-panel > :last-child{margin-bottom:0}
-body.v73-app-design .v73-generic-work-panel .card{
-  border-color:#39434E!important;
-  background:var(--v73-panel-soft)!important;
-  box-shadow:none!important;
-}
-@media(max-width:640px){
-  body.v73-app-design .v73-generic-work-panel{padding:0 12px 12px!important}
-  body.v73-app-design .v73-generic-work-panel > summary,
-  body.v73-app-design .v73-generic-work-panel > .v73-generic-panel-head,
-  body.v73-app-design .v73-generic-work-panel > header:first-child,
-  body.v73-app-design .v73-generic-work-panel > .section-title:first-child,
-  body.v73-app-design .v73-generic-work-panel > .v73-card-heading{margin:0 -12px 12px!important;padding:10px 12px!important}
-}</style>
-<script id="v73-workspace-panel-fix-script">(()=>{
-if(window.__v73WorkspacePanelFixInstalled)return;
-window.__v73WorkspacePanelFixInstalled=true;
-const text=value=>String(value??'').replace(/\s+/g,' ').trim();
-const stateNow=()=>{try{return typeof state!=='undefined'?state:null}catch{return null}};
-function candidateFor(heading,root){
-  const explicit=heading.closest('details,section,article,.card,[class*="foundation"],[class*="setup"],[class*="stage"],[class*="panel"],[class*="section"]');
-  if(explicit&&explicit!==root&&!explicit.classList.contains('page-head')&&!explicit.classList.contains('v73-page-head'))return explicit;
-  let node=heading.parentElement;
-  while(node&&node.parentElement&&node.parentElement!==root){
-    if(node.querySelector('input,textarea,select,button,[contenteditable="true"]'))return node;
-    node=node.parentElement;
-  }
-  return node&&node!==root?node:null;
-}
-function markPanel(panel,heading=null){
-  if(!panel||panel.classList.contains('v73-generic-work-panel'))return;
-  panel.classList.add('v73-work-card','v73-generic-work-panel');
-  if(panel.tagName==='DETAILS')return;
-  const directHeader=heading?.closest('header,.section-title');
-  if(directHeader&&directHeader.parentElement===panel)directHeader.classList.add('v73-generic-panel-head');
-  else heading?.classList.add('v73-card-heading');
-}
-function decorate(){
-  const view=stateNow()?.currentView;
-  if(view!=='setup'&&view!=='plan')return;
-  const root=document.querySelector('.content');if(!root)return;
-
-  if(view==='setup'){
-    root.querySelectorAll('details.v67-foundation-section,[data-v67-foundation]').forEach(panel=>markPanel(panel));
-  }
-
-  const seen=new Set();
-  for(const heading of root.querySelectorAll('h2,h3,h4')){
-    if(heading.closest('.v73-page-head,.page-head,.v72-guide-drawer,[role="dialog"],summary,.v73-work-card'))continue;
-    const label=text(heading.textContent);if(!label||label.length>110)continue;
-    const panel=candidateFor(heading,root);
-    if(!panel||seen.has(panel)||panel.closest('.v72-guide-drawer,[role="dialog"]'))continue;
-    if(panel===root||panel.contains(root.querySelector('.v73-page-head')))continue;
-    const hasWork=panel.querySelector('input,textarea,select,button,[contenteditable="true"],details');
-    if(!hasWork)continue;
-    seen.add(panel);markPanel(panel,heading);
-  }
-}
-let frame=0;
-const schedule=()=>{if(frame)return;frame=requestAnimationFrame(()=>{frame=0;decorate()})};
-const observer=new MutationObserver(schedule);observer.observe(document.documentElement,{subtree:true,childList:true});
-const prior=window.render;if(typeof prior==='function')window.render=function(...args){const result=prior.apply(this,args);decorate();setTimeout(decorate,0);return result};
-decorate();
+<script id="v74-reference-ui-corrections-script">(()=>{
+if(window.__v74ReferenceUiInstalled)return;
+window.__v74ReferenceUiInstalled=true;
+window.__acceleratorBuild='V52.1-reference-ui-v74';
+const clean=value=>String(value??'').replace(/\s+/g,' ').trim();
+const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+const appState=()=>{try{return typeof state!=='undefined'?state:null}catch{return null}};
+const creator=()=>{const s=appState();return(s?.creators||[]).find(item=>item.id===s.currentCreatorId)||(s?.creators||[])[0]||null};
+const video=()=>{const s=appState(),c=creator(),items=c?.videos||[];return items.find(item=>item.id===s?.currentVideoId)||items[0]||null};
+const guides=()=>window.V74_SOURCE_GUIDES||{};
+const phases=[{id:'plan',number:'1',label:'Plan',sections:['video-purpose','video-strategy','video-package']},{id:'script',number:'2',label:'Script',sections:['video-experience']},{id:'produce',number:'3',label:'Produce & Publish',sections:['video-publish','video-handoff']},{id:'review',number:'4',label:'Review & Learn',sections:[]}];
+const sectionGuides={'video-purpose':['research'],'video-strategy':['research'],'video-package':['titles','thumbtips','thumbstrategies'],'video-experience':['hooks','story','retention'],'video-publish':['cta'],'video-handoff':['cta']};
+const pageGuides={overview:['research','titles','thumbtips','thumbstrategies','hooks','story','retention','cta'],creators:['research'],setup:['research'],plan:['research','titles','thumbtips','thumbstrategies'],calendar:['research'],results:['retention','cta']};
+const pageGuideCopy={overview:['Complete video-planning guide library','The full teaching library from the supplied planner.'],creators:['Research Strategies','Use the full research system when deciding what deserves attention.'],setup:['Research Strategies','Use the source guide while defining the audience and content direction.'],plan:['Planning and Packaging Guides','Full research, title, and thumbnail teaching from the supplied planner.'],calendar:['Research Strategies','The full source guide remains available without taking over the calendar.'],results:['Retention and CTA Guides','Use the original retention and CTA teaching when interpreting results.']};
+function phaseKey(){return`accelerator-v74-phase-${creator()?.id||'creator'}-${video()?.id||'video'}`}
+function openKey(phase){return`accelerator-v74-open-${creator()?.id||'creator'}-${video()?.id||'video'}-${phase}`}
+function getStored(key,fallback=''){try{return localStorage.getItem(key)||fallback}catch{return fallback}}
+function setStored(key,value){try{if(value)localStorage.setItem(key,value);else localStorage.removeItem(key)}catch{}}
+function activePhase(){return phases.some(item=>item.id===getStored(phaseKey()))?getStored(phaseKey()):'plan'}
+function currentView(){return appState()?.currentView||'overview'}
+function ensureGuideDrawer(){if(document.querySelector('#v74-guide-backdrop'))return;document.body.insertAdjacentHTML('beforeend',`<div class="v74-guide-backdrop" id="v74-guide-backdrop" aria-hidden="true"><aside class="v74-guide-drawer" role="dialog" aria-modal="true" aria-labelledby="v74-guide-title"><header class="v74-guide-head"><div><span id="v74-guide-eyebrow">Source guide</span><h2 id="v74-guide-title">Guide</h2><p id="v74-guide-subtitle"></p></div><button type="button" class="v74-guide-close" data-v74-close-guide aria-label="Close guide">×</button></header><nav class="v74-guide-tabs" id="v74-guide-tabs" aria-label="Guide topics"></nav><div class="v74-guide-content" id="v74-guide-content"></div></aside></div>`)}
+function closeGuide(){const node=document.querySelector('#v74-guide-backdrop');node?.classList.remove('open');node?.setAttribute('aria-hidden','true')}
+function renderGuideTab(key){const guide=guides()[key];if(!guide)return;document.querySelectorAll('.v74-guide-tab').forEach(tab=>tab.classList.toggle('active',tab.dataset.v74GuideTab===key));const title=document.querySelector('#v74-guide-title'),content=document.querySelector('#v74-guide-content');if(title)title.textContent=guide.title;if(content){content.innerHTML=guide.content;content.scrollTop=0}}
+async function openGuides(keys,heading='',subtitle=''){if(window.V74_GUIDES_READY)await window.V74_GUIDES_READY;ensureGuideDrawer();const available=(keys||[]).filter(key=>guides()[key]);if(!available.length)return;const tabs=document.querySelector('#v74-guide-tabs');tabs.innerHTML=available.map(key=>`<button type="button" class="v74-guide-tab" data-v74-guide-tab="${key}">${escapeHtml(guides()[key].title)}</button>`).join('');document.querySelector('#v74-guide-eyebrow').textContent=heading||'Source guide';document.querySelector('#v74-guide-subtitle').textContent=subtitle||'Complete teaching copied from the supplied vidIQ planner.';renderGuideTab(available[0]);const node=document.querySelector('#v74-guide-backdrop');node.classList.add('open');node.setAttribute('aria-hidden','false')}
+function normalizeTopbar(){const topbar=document.querySelector('.topbar'),actions=topbar?.querySelector('.top-actions');if(!topbar||!actions)return;topbar.classList.add('v74-topbar');actions.classList.add('v74-top-actions');document.querySelectorAll('.v73-save-state').forEach(node=>node.remove());const content=document.querySelector('.content');topbar.querySelectorAll('.v63-attention,.v70-reminder,[data-v70-reminder]').forEach(node=>{if(content&&!content.contains(node))content.insertBefore(node,content.firstChild)});const cloud=actions.querySelector('.cloud-tools');const youtube=[...actions.querySelectorAll('a')].find(link=>link.classList.contains('v58-youtube')||/youtu(?:be\.com|\.be)/i.test(link.href));const select=actions.querySelector('.creator-select');const menus=[...actions.children].filter(node=>node.matches('.icon-button,[data-action="more"],[data-action="data-menu"]'));if(cloud)actions.appendChild(cloud);if(youtube)actions.appendChild(youtube);if(select)actions.appendChild(select);menus.forEach(node=>actions.appendChild(node))}
+const eventTypes=[['coaching-call','Coaching call','#49347A'],['assignment','Assignment','#5A451F'],['research','Research','#174956'],['title-and-thumbnail','Title & thumbnail','#57346E'],['outline','Outline','#294B62'],['record','Record','#6A3038'],['edit','Edit','#604521'],['publish','Publish','#205B3E'],['24-hour-check','Reviews','#24536F'],['other','Other','#37434C']];
+function eventClassFromText(node){const text=`${node.className} ${node.dataset.type||''} ${node.textContent||''}`.toLowerCase();if(/coaching/.test(text))return'coaching-call';if(/assignment/.test(text))return'assignment';if(/research/.test(text))return'research';if(/title.*thumbnail|thumbnail.*title/.test(text))return'title-and-thumbnail';if(/outline/.test(text))return'outline';if(/record/.test(text))return'record';if(/edit/.test(text))return'edit';if(/publish/.test(text))return'publish';if(/24-hour|7-day|28-day|analytics check|review/.test(text))return'24-hour-check';return'other'}
+function enhanceCalendar(){if(currentView()!=='calendar')return;document.querySelectorAll('.event-chip').forEach(node=>{if(![...node.classList].some(name=>name.startsWith('type-')))node.classList.add(`type-${eventClassFromText(node)}`)});const stack=document.querySelector('.calendar-stack,.calendar-layout,.content');if(!stack||stack.querySelector('.v74-calendar-legend'))return;const legend=document.createElement('div');legend.className='v74-calendar-legend';legend.setAttribute('aria-label','Calendar event colors');legend.innerHTML=eventTypes.map(([,label,color])=>`<span class="v74-calendar-key" style="--key:${color}">${label}</span>`).join('');const calendar=stack.querySelector('.calendar-card,.calendar-grid')?.closest('.card,.calendar-card')||stack.firstElementChild;if(calendar)calendar.parentNode.insertBefore(legend,calendar);else stack.prepend(legend)}
+function phaseComplete(phase){return phase.id!=='review'&&phase.sections.length>0&&phase.sections.every(id=>document.querySelector(`details[data-v49-section="${id}"]`)?.classList.contains('complete'))}
+function ensureReviewPanel(anchor){let panel=document.querySelector('.v74-review-phase');if(panel)return panel;panel=document.createElement('section');panel.className='v74-review-phase';panel.innerHTML=`<header class="v74-review-head"><h3>Review and learn from the video</h3><p>Use this only after the video is published and a scheduled review is due.</p></header><div class="v74-review-body"><div class="v74-review-grid"><article class="v74-review-card"><span>24 hours</span><strong>Packaging and opening</strong><p>Check click response, first-minute behavior, and launch problems.</p></article><article class="v74-review-card"><span>7 days</span><strong>Viewer journey</strong><p>Review retention, traffic sources, comments, and promise delivery.</p></article><article class="v74-review-card"><span>28 days</span><strong>Strategic learning</strong><p>Choose what this video changes in future planning, packaging, structure, or CTA.</p></article></div><div class="v74-review-actions"><button type="button" class="button" data-v74-open-review>Open Review & Learn</button><button type="button" class="button secondary" data-v74-open-calendar>Open calendar</button><button type="button" class="button secondary" data-v74-review-guide>View Full Guides</button></div></div>`;anchor?.insertAdjacentElement('afterend',panel);return panel}
+function decorateVideoSections(){for(const phase of phases){for(const id of phase.sections){const detail=document.querySelector(`details[data-v49-section="${id}"]`),summary=detail?.querySelector(':scope>summary');if(!detail||!summary)continue;detail.dataset.v74Phase=phase.id;summary.querySelectorAll('[data-v72-guide],.v72-guide-button,.v74-section-guide').forEach(node=>node.remove());const button=document.createElement('button');button.type='button';button.className='v74-section-guide';button.dataset.v74SectionGuide=id;button.textContent='View Guide';const after=summary.querySelector('.v71-step-state');after?.insertAdjacentElement('afterend',button)||summary.appendChild(button)}}}
+function applyPhase(id,{restore=true}={}){const phase=phases.find(item=>item.id===id)||phases[0];setStored(phaseKey(),phase.id);document.querySelectorAll('.v74-phase-tab').forEach(button=>{const target=phases.find(item=>item.id===button.dataset.v74Phase);button.classList.toggle('active',button.dataset.v74Phase===phase.id);button.classList.toggle('complete',Boolean(target&&phaseComplete(target)))});document.querySelectorAll('details[data-v49-section]').forEach(detail=>{const visible=phase.sections.includes(detail.dataset.v49Section);detail.classList.toggle('v74-phase-hidden',!visible);if(!visible)detail.open=false});document.querySelector('.v74-review-phase')?.classList.toggle('active',phase.id==='review');if(restore&&phase.sections.length){const stored=getStored(openKey(phase.id));for(const id2 of phase.sections){const detail=document.querySelector(`details[data-v49-section="${id2}"]`);if(detail)detail.open=id2===stored}}}
+function ensureVideoFlow(){document.body.classList.toggle('v74-video-page',currentView()==='video');if(currentView()!=='video')return;document.querySelectorAll('.v72-video-shell,.v72-phase-tabs,.v72-review-phase,.v74-video-flow').forEach(node=>node.remove());const root=document.querySelector('.content'),head=root?.querySelector(':scope>.page-head,:scope>.v49-page-head,.page-head,.v49-page-head');if(!root||!head)return;const flow=document.createElement('section');flow.className='v74-video-flow';flow.innerHTML=`<div class="v74-flow-note"><span class="v74-flow-note-icon">i</span><div><strong>Work one phase at a time.</strong> Every section starts closed. Open only the section you are actively working in, and use View Guide for the complete source teaching.</div></div><nav class="v74-phase-tabs" aria-label="Video workflow phases">${phases.map(phase=>`<button type="button" class="v74-phase-tab" data-v74-phase="${phase.id}"><span>${phase.number}.</span> ${escapeHtml(phase.label)}</button>`).join('')}</nav>`;head.insertAdjacentElement('afterend',flow);decorateVideoSections();const anchor=document.querySelector('details[data-v49-section="video-handoff"]')||[...document.querySelectorAll('details[data-v49-section]')].at(-1);ensureReviewPanel(anchor);applyPhase(activePhase(),{restore:true})}
+function ensurePageGuide(){if(currentView()==='video'||currentView()==='session')return;const keys=pageGuides[currentView()];if(!keys)return;const head=document.querySelector('.content .page-head,.content .v49-page-head');if(!head)return;let actions=head.querySelector('.page-actions,.v74-page-actions');if(!actions){actions=document.createElement('div');actions.className='page-actions v74-page-actions';head.appendChild(actions)}if(actions.querySelector('[data-v74-page-guide]'))return;const button=document.createElement('button');button.type='button';button.className='button secondary';button.dataset.v74PageGuide=currentView();button.textContent='View Guide';actions.appendChild(button)}
+let enhancing=false;
+function enhance(){if(enhancing)return;enhancing=true;try{document.body.classList.add('v74-reference-ui');document.body.classList.remove('v72-reference-ui','v73-app-design');normalizeTopbar();ensureGuideDrawer();ensureVideoFlow();ensurePageGuide();enhanceCalendar();document.querySelectorAll('.page-guide,.v70-job-guide,.v70-planner-guide,.v70-learn-guide,.v69-map').forEach(node=>node.style.display='none');document.title='Accelerator OS V52.1 Reference UI V74'}catch(error){console.error('V74 reference UI failed',error)}finally{enhancing=false}}
+let pendingScroll=null;
+function markScrollRestore(event){if(!event.target.closest?.('[data-v57-structure],[data-v58-signal],[data-v49-job],[data-v49-choice],[data-v57-choice],.v58-choice,[data-bind],[data-v74-phase],details[data-v49-section]>summary'))return;pendingScroll={view:currentView(),x:window.scrollX,y:window.scrollY,at:Date.now()}}
+function restoreScrollAfterRender(snapshot){if(!snapshot||snapshot.view!==currentView()||Date.now()-snapshot.at>1800)return;const restore=()=>{if(snapshot.view===currentView())window.scrollTo(snapshot.x,snapshot.y)};requestAnimationFrame(restore);setTimeout(restore,40);setTimeout(restore,140);setTimeout(restore,360)}
+document.addEventListener('pointerdown',markScrollRestore,true);
+document.addEventListener('click',event=>{const phase=event.target.closest?.('[data-v74-phase]');if(phase){event.preventDefault();event.stopPropagation();applyPhase(phase.dataset.v74Phase,{restore:true});return}const guide=event.target.closest?.('[data-v74-section-guide]');if(guide){event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();const id=guide.dataset.v74SectionGuide;void openGuides(sectionGuides[id]||['research'],'Video planning guide','Complete source teaching from the supplied vidIQ planner.');return}const pageGuide=event.target.closest?.('[data-v74-page-guide]');if(pageGuide){event.preventDefault();const view=pageGuide.dataset.v74PageGuide,copy=pageGuideCopy[view]||['Guide','Complete source teaching.'];void openGuides(pageGuides[view]||['research'],copy[0],copy[1]);return}const tab=event.target.closest?.('[data-v74-guide-tab]');if(tab){event.preventDefault();renderGuideTab(tab.dataset.v74GuideTab);return}if(event.target.closest?.('[data-v74-close-guide]')||event.target.id==='v74-guide-backdrop'){event.preventDefault();closeGuide();return}if(event.target.closest?.('[data-v74-review-guide]')){event.preventDefault();void openGuides(['retention','cta'],'Review and learning guides','Full retention and CTA teaching from the supplied planner.');return}if(event.target.closest?.('[data-v74-open-review]')){event.preventDefault();const s=appState();if(s){s.currentView='results';render()}return}if(event.target.closest?.('[data-v74-open-calendar]')){event.preventDefault();const s=appState();if(s){s.currentView='calendar';render()}return}const summary=event.target.closest?.('details[data-v49-section]>summary');if(summary&&!event.target.closest('button,a,input,select,textarea')){event.preventDefault();const detail=summary.parentElement,phaseId=detail.dataset.v74Phase||activePhase(),willOpen=!detail.open;document.querySelectorAll(`details[data-v74-phase="${phaseId}"]`).forEach(item=>{if(item!==detail)item.open=false});detail.open=willOpen;setStored(openKey(phaseId),willOpen?detail.dataset.v49Section:'')}},true);
+document.addEventListener('toggle',event=>{const detail=event.target;if(!(detail instanceof HTMLDetailsElement)||!detail.matches('details[data-v49-section]'))return;const phase=detail.dataset.v74Phase;if(!phase)return;if(detail.open){document.querySelectorAll(`details[data-v74-phase="${phase}"]`).forEach(item=>{if(item!==detail)item.open=false});setStored(openKey(phase),detail.dataset.v49Section)}else if(getStored(openKey(phase))===detail.dataset.v49Section)setStored(openKey(phase),'')},true);
+document.addEventListener('keydown',event=>{if(event.key==='Escape')closeGuide()});
+const baseRender=window.render;if(typeof baseRender==='function')window.render=function(...args){const snapshot=pendingScroll;pendingScroll=null;const result=baseRender.apply(this,args);enhance();restoreScrollAfterRender(snapshot);return result};
+const observer=new MutationObserver(()=>requestAnimationFrame(enhance));observer.observe(document.documentElement,{subtree:true,childList:true});enhance();
 })();</script>
-<script id="v73-page-head-fix-script">(()=>{
-if(window.__v73PageHeadFixInstalled)return;
-window.__v73PageHeadFixInstalled=true;
-const stateNow=()=>{try{return typeof state!=='undefined'?state:null}catch{return null}};
-const definitions={
- overview:['Creator workspace','See what needs attention, run the next coaching step, and leave with one clear commitment.'],
- creators:['Creator management','Scan every creator, address due work, and open the right workspace without hunting across the app.'],
- setup:['Foundation','Define the audience, message, offer, and operating constraints once, then update them only when strategy changes.'],
- plan:['Monthly planning','Choose the month’s priorities and Reach, Trust, and Convert mix before planning individual videos.'],
- calendar:['Operating calendar','See planning, publishing, review, and coaching commitments in one place.'],
- results:['Review and learn','Open this when a review is due, then turn performance evidence into one future decision.']
+<script id="v74-video-anchor-fix">(()=>{
+if(window.__v74VideoAnchorFixInstalled)return;
+window.__v74VideoAnchorFixInstalled=true;
+const phaseMarkup=`<section class="v74-video-flow"><div class="v74-flow-note"><span class="v74-flow-note-icon">i</span><div><strong>Work one phase at a time.</strong> Every section starts closed. Open only the section you are actively working in, and use View Guide for the complete source teaching.</div></div><nav class="v74-phase-tabs" aria-label="Video workflow phases"><button type="button" class="v74-phase-tab" data-v74-phase="plan"><span>1.</span> Plan</button><button type="button" class="v74-phase-tab" data-v74-phase="script"><span>2.</span> Script</button><button type="button" class="v74-phase-tab" data-v74-phase="produce"><span>3.</span> Produce &amp; Publish</button><button type="button" class="v74-phase-tab" data-v74-phase="review"><span>4.</span> Review &amp; Learn</button></nav></section>`;
+const guideMap={'video-purpose':'research','video-strategy':'research','video-package':'titles','video-experience':'hooks','video-publish':'cta','video-handoff':'cta'};
+function ensure(){
+  try{
+    if(typeof state==='undefined'||state.currentView!=='video')return;
+    document.body.classList.add('v74-reference-ui','v74-video-page');
+    let flow=document.querySelector('.v74-video-flow');
+    if(!flow){
+      const firstSection=document.querySelector('.content details[data-v49-section]');
+      const anchor=document.querySelector('.content .v49-video-top,.content .v49-video-head,.content .v49-page-head,.content .page-head')||firstSection?.closest('.v49-accordion-stack')?.previousElementSibling||firstSection?.parentElement?.previousElementSibling;
+      if(!anchor)return;
+      anchor.insertAdjacentHTML('afterend',phaseMarkup);
+      flow=document.querySelector('.v74-video-flow');
+    }
+    const sections=[...document.querySelectorAll('.content details[data-v49-section]')];
+    sections.forEach(detail=>{
+      const id=detail.dataset.v49Section;
+      const phase=['video-purpose','video-strategy','video-package'].includes(id)?'plan':id==='video-experience'?'script':['video-publish','video-handoff'].includes(id)?'produce':'';
+      detail.removeAttribute('data-v74-phase');
+      if(phase)detail.dataset.v74PhaseSection=phase;else delete detail.dataset.v74PhaseSection;
+      const summary=detail.querySelector(':scope > summary');
+      if(summary&&!summary.querySelector('[data-v74-section-guide]')&&guideMap[id]){
+        const button=document.createElement('button');
+        button.type='button';button.className='v74-section-guide';button.dataset.v74SectionGuide=id;button.textContent='View Guide';
+        const stateNode=summary.querySelector('.v71-step-state');stateNode?.insertAdjacentElement('afterend',button)||summary.appendChild(button);
+      }
+    });
+    if(!flow.dataset.v74Initialized){
+      flow.dataset.v74Initialized='1';
+      const storageKey=`accelerator-v74-phase-${state.currentCreatorId||'creator'}-${state.currentVideoId||'video'}`;
+      const selected=flow.querySelector(`button[data-v74-phase="${localStorage.getItem(storageKey)||'plan'}"]`)||flow.querySelector('button[data-v74-phase="plan"]');
+      selected?.click();
+    }
+  }catch(error){console.error('V74 video anchor fix failed',error)}
+}
+const previous=window.render;
+if(typeof previous==='function')window.render=function(...args){const result=previous.apply(this,args);ensure();requestAnimationFrame(ensure);return result};
+ensure();
+})();</script>
+<script id="v74-phase-controller">(()=>{
+if(window.__v74PhaseControllerInstalled)return;
+window.__v74PhaseControllerInstalled=true;
+const sections={plan:['video-purpose','video-strategy','video-package'],script:['video-experience'],produce:['video-publish','video-handoff'],review:[]};
+const key=()=>`accelerator-v74-phase-${state?.currentCreatorId||'creator'}-${state?.currentVideoId||'video'}`;
+function cleanSectionAttributes(){
+ document.querySelectorAll('.content details[data-v49-section]').forEach(detail=>{
+  const id=detail.dataset.v49Section;
+  const phase=sections.plan.includes(id)?'plan':sections.script.includes(id)?'script':sections.produce.includes(id)?'produce':'';
+  detail.removeAttribute('data-v74-phase');
+  if(phase)detail.dataset.v74PhaseSection=phase;else delete detail.dataset.v74PhaseSection;
+ });
+}
+function reviewPanel(){
+ let panel=document.querySelector('.v74-review-phase');
+ if(panel)return panel;
+ const anchor=document.querySelector('details[data-v49-section="video-handoff"]');
+ if(!anchor)return null;
+ panel=document.createElement('section');
+ panel.className='v74-review-phase';
+ panel.innerHTML='<header class="v74-review-head"><h3>Review and learn from the video</h3><p>Use this after the video is published and a review is due.</p></header><div class="v74-review-body"><div class="v74-review-grid"><article class="v74-review-card"><span>24 hours</span><strong>Packaging and opening</strong><p>Check click response, first-minute behavior, and launch problems.</p></article><article class="v74-review-card"><span>7 days</span><strong>Viewer journey</strong><p>Review retention, traffic sources, comments, and promise delivery.</p></article><article class="v74-review-card"><span>28 days</span><strong>Strategic learning</strong><p>Choose what this changes in future planning, packaging, structure, or CTA.</p></article></div><div class="v74-review-actions"><button type="button" class="button" data-v74-open-review>Open Review & Learn</button><button type="button" class="button secondary" data-v74-open-calendar>Open calendar</button><button type="button" class="button secondary" data-v74-review-guide>View Full Guides</button></div></div>';
+ anchor.insertAdjacentElement('afterend',panel);
+ return panel;
+}
+function apply(id='plan'){
+ if(!sections[id])id='plan';
+ cleanSectionAttributes();
+ try{localStorage.setItem(key(),id)}catch{}
+ document.querySelectorAll('.v74-phase-tab').forEach(button=>button.classList.toggle('active',button.dataset.v74Phase===id));
+ document.querySelectorAll('.content details[data-v49-section]').forEach(detail=>{
+  const show=sections[id].includes(detail.dataset.v49Section);
+  detail.hidden=!show;
+  detail.classList.toggle('v74-phase-hidden',!show);
+  detail.open=false;
+ });
+ const panel=reviewPanel();
+ if(panel){panel.hidden=id!=='review';panel.classList.toggle('active',id==='review')}
+}
+function ensure(){
+ if(typeof state==='undefined'||state.currentView!=='video')return;
+ if(!document.querySelector('.v74-video-flow'))return;
+ cleanSectionAttributes();
+ const active=document.querySelector('.v74-phase-tab.active')?.dataset.v74Phase;
+ apply(active||localStorage.getItem(key())||'plan');
+}
+document.addEventListener('click',event=>{
+ const button=event.target.closest?.('button.v74-phase-tab[data-v74-phase]');
+ if(!button)return;
+ event.preventDefault();
+ event.stopPropagation();
+ event.stopImmediatePropagation();
+ apply(button.dataset.v74Phase);
+},true);
+const previous=window.render;
+if(typeof previous==='function')window.render=function(...args){const result=previous.apply(this,args);cleanSectionAttributes();ensure();requestAnimationFrame(()=>{cleanSectionAttributes();ensure()});return result};
+cleanSectionAttributes();
+ensure();
+})();</script>
+<script id="v74-scroll-stability">(()=>{
+if(window.__v74ScrollStabilityInstalled)return;
+window.__v74ScrollStabilityInstalled=true;
+let pending=null;
+let restoreTimers=[];
+function isVideoControl(target){
+ return Boolean(target?.closest?.('details[data-v49-section]')&&target.matches?.('input,select,textarea,[contenteditable="true"]'));
+}
+function capture(target){
+ if(typeof state==='undefined'||state.currentView!=='video'||!isVideoControl(target))return;
+ const section=target.closest('details[data-v49-section]');
+ pending={
+  view:'video',
+  x:window.scrollX,
+  y:window.scrollY,
+  sectionId:section?.dataset.v49Section||'',
+  sectionTop:section?.getBoundingClientRect().top??null,
+  at:Date.now()
+ };
+}
+function clearTimers(){restoreTimers.forEach(clearTimeout);restoreTimers=[]}
+function restore(snapshot){
+ if(!snapshot||snapshot.view!=='video'||typeof state==='undefined'||state.currentView!=='video'||Date.now()-snapshot.at>2500)return;
+ clearTimers();
+ const apply=()=>{
+  if(typeof state==='undefined'||state.currentView!=='video')return;
+  window.scrollTo(snapshot.x,snapshot.y);
+  const section=snapshot.sectionId?document.querySelector(`details[data-v49-section="${snapshot.sectionId}"]`):null;
+  if(section&&snapshot.sectionTop!==null){
+   const drift=section.getBoundingClientRect().top-snapshot.sectionTop;
+   if(Math.abs(drift)>1)window.scrollBy(0,drift);
+  }
+ };
+ requestAnimationFrame(()=>{apply();requestAnimationFrame(apply)});
+ [0,40,120,260,500,800].forEach(delay=>restoreTimers.push(setTimeout(apply,delay)));
+}
+document.addEventListener('pointerdown',event=>capture(event.target),true);
+document.addEventListener('input',event=>capture(event.target),true);
+document.addEventListener('change',event=>capture(event.target),true);
+const previous=window.render;
+if(typeof previous==='function')window.render=function(...args){
+ const snapshot=pending;
+ pending=null;
+ const result=previous.apply(this,args);
+ restore(snapshot);
+ return result;
 };
-function definition(){
- const app=stateNow();
- if(app?.currentView==='overview'&&app?.v67DiagnosisReview)return['90-day diagnosis','Review the creator’s current signals, identify the real bottleneck, and decide what the next 90 days must change.'];
- return definitions[app?.currentView]||['Creator workspace','Complete the work on this page, then return to Creator Home for the next decision.'];
-}
-function unwrap(node){
- const parent=node.parentNode;if(!parent)return;
- while(node.firstChild)parent.insertBefore(node.firstChild,node);
- node.remove();
-}
-function stabilize(){
- const view=stateNow()?.currentView;
- if(view==='video')return;
- const head=document.querySelector('.content .v73-page-head');if(!head)return;
- const title=head.querySelector('h1,h2');if(!title)return;
- let direct=head.querySelector(':scope > .v73-page-copy');
- if(!direct){direct=document.createElement('div');direct.className='v73-page-copy';head.insertBefore(direct,head.firstChild)}
- if(title.parentElement!==direct)direct.appendChild(title);
- for(const copy of [...head.querySelectorAll('.v73-page-copy')])if(copy!==direct)unwrap(copy);
- head.querySelectorAll('.v73-page-eyebrow,.v73-page-purpose').forEach(node=>node.remove());
- const [eyebrowText,purposeText]=definition();
- const eyebrow=document.createElement('span');eyebrow.className='v73-page-eyebrow';eyebrow.textContent=eyebrowText;direct.insertBefore(eyebrow,direct.firstChild);
- const purpose=document.createElement('p');purpose.className='v73-page-purpose';purpose.textContent=purposeText;direct.appendChild(purpose);
- const actionGroups=[...head.querySelectorAll(':scope > .v73-page-actions')];
- let actions=actionGroups.shift();
- if(!actions){actions=document.createElement('div');actions.className='v73-page-actions';head.appendChild(actions)}
- for(const duplicate of actionGroups){while(duplicate.firstChild)actions.appendChild(duplicate.firstChild);duplicate.remove()}
- const guides=[...actions.querySelectorAll('[data-v73-page-guide]')];guides.slice(1).forEach(node=>node.remove());
-}
-let frame=0;
-const schedule=()=>{if(frame)return;frame=requestAnimationFrame(()=>{frame=0;stabilize()})};
-const observer=new MutationObserver(schedule);observer.observe(document.documentElement,{subtree:true,childList:true});
-const prior=window.render;if(typeof prior==='function')window.render=function(...args){const result=prior.apply(this,args);stabilize();setTimeout(stabilize,0);return result};
-stabilize();
 })();</script>
 </body>
 </html>
