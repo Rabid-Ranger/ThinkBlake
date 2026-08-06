@@ -1,0 +1,51 @@
+name: Verify V75 app-wide reference system
+on:
+  push:
+    branches: [v75-full-reference-system]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  build-test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v75-full-reference-system
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build V75
+        run: node scripts/build-v72-reference.js
+      - name: Validate embedded scripts
+        run: |
+          node <<'NODE'
+          const fs=require('fs'),cp=require('child_process'),os=require('os'),path=require('path');
+          const html=fs.readFileSync('decoded-source.html','utf8');
+          const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(m=>m[1]).filter(Boolean);
+          const dir=fs.mkdtempSync(path.join(os.tmpdir(),'v75-'));
+          scripts.forEach((code,i)=>{const file=path.join(dir,`s-${i}.js`);fs.writeFileSync(file,code);cp.execFileSync(process.execPath,['--check',file],{stdio:'inherit'})});
+          console.log(`Validated ${scripts.length} scripts`);
+          NODE
+      - name: Install Chromium
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Start app
+        run: |
+          python3 -m http.server 4173 >/tmp/v75-server.log 2>&1 &
+          for attempt in {1..20}; do curl -fsS http://127.0.0.1:4173/decoded-source.html >/dev/null && exit 0; sleep 1; done
+          cat /tmp/v75-server.log
+          exit 1
+      - name: Verify all major pages
+        run: node tests/v75-full-reference-system.js
+      - name: Publish verified preview and evidence
+        if: success() && github.event_name == 'push'
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add decoded-source.html index.html qa/v75-*.png qa/v75-reference-system-report.json
+          git diff --cached --quiet || git commit -m "Publish verified V75 app-wide reference system"
+          git push origin HEAD:v75-full-reference-system
