@@ -9,30 +9,46 @@ cp.execFileSync(process.execPath,[path.join(__dirname,'apply-v71-postfix.js')],{
 
 const decodedPath=path.join(root,'decoded-source.html');
 const indexPath=path.join(root,'index.html');
-const inputs=[
-  ['v72-reference-ui-styles','style',path.join(root,'patches','v72-reference-ui.css')],
-  ['v72-reference-ui-script','script',path.join(root,'patches','v72-reference-ui.js')],
-  ['v72-reference-ui-fix-script','script',path.join(root,'patches','v72-reference-ui-fix.js')],
-  ['v73-app-design-system-styles','style',path.join(root,'patches','v73-app-design-system.css')],
-  ['v73-app-design-system-script','script',path.join(root,'patches','v73-app-design-system.js')],
-  ['v73-creator-card-fix-styles','style',path.join(root,'patches','v73-creator-card-fix.css')],
-  ['v73-creator-card-fix-script','script',path.join(root,'patches','v73-creator-card-fix.js')],
-  ['v73-workspace-panel-fix-styles','style',path.join(root,'patches','v73-workspace-panel-fix.css')],
-  ['v73-workspace-panel-fix-script','script',path.join(root,'patches','v73-workspace-panel-fix.js')],
-  ['v73-page-head-fix-script','script',path.join(root,'patches','v73-page-head-fix.js')]
+const fileInputs=[
+  ['v74-reference-ui-corrections-style','style',path.join(root,'patches','v74-reference-ui-corrections.css')],
+  ['v74-phase-visibility-fix-style','style',path.join(root,'patches','v74-phase-visibility-fix.css')],
+  ['v74-guide-research','script',path.join(root,'patches','v74-guide-research.js')],
+  ['v74-guide-titles','script',path.join(root,'patches','v74-guide-titles.js')],
+  ['v74-guide-thumbtips','script',path.join(root,'patches','v74-guide-thumbtips.js')],
+  ['v74-guide-thumbstrategies','script',path.join(root,'patches','v74-guide-thumbstrategies.js')],
+  ['v74-guide-story','script',path.join(root,'patches','v74-guide-story.js')],
+  ['v74-guide-retention','script',path.join(root,'patches','v74-guide-retention.js')],
+  ['v74-guide-cta','script',path.join(root,'patches','v74-guide-cta.js')],
+  ['v74-guide-loader','script',path.join(root,'patches','v74-guide-loader.js')],
+  ['v74-observer-preflight','script',path.join(root,'patches','v74-observer-preflight.js')],
+  ['v74-accordion-controller','script',path.join(root,'patches','v74-accordion-controller.js')],
+  ['v74-guide-controller','script',path.join(root,'patches','v74-guide-controller.js')],
+  ['v74-reference-ui-corrections-script','script',path.join(root,'patches','v74-reference-ui-corrections.js')],
+  ['v74-video-anchor-fix','script',path.join(root,'patches','v74-video-anchor-fix.js')],
+  ['v74-phase-controller','script',path.join(root,'patches','v74-phase-controller.js')],
+  ['v74-scroll-stability','script',path.join(root,'patches','v74-scroll-stability.js')]
 ];
-for(const [, ,file] of inputs)if(!fs.existsSync(file))throw new Error(`${path.relative(root,file)} is missing.`);
+const hooksPayloadPath=path.join(root,'patches','v74-guide-hooks.b64');
+for(const [, ,file] of fileInputs)if(!fs.existsSync(file))throw new Error(`${path.relative(root,file)} is missing.`);
+if(!fs.existsSync(hooksPayloadPath))throw new Error('patches/v74-guide-hooks.b64 is missing.');
+const hooksCode=Buffer.from(fs.readFileSync(hooksPayloadPath,'utf8').trim(),'base64').toString('utf8');
+if(!hooksCode.includes('V74_SOURCE_GUIDES["hooks"]'))throw new Error('The Hook Strategies guide payload is invalid.');
 
 let source=fs.readFileSync(decodedPath,'utf8');
-for(const [marker] of inputs)if(source.includes(`id="${marker}"`))throw new Error(`${marker} is already present.`);
+const markers=fileInputs.map(([marker])=>marker).concat('v74-guide-hooks');
+for(const marker of markers)if(source.includes(`id="${marker}"`))throw new Error(`${marker} is already present.`);
 source=source
-  .replace(/<meta content="Accelerator OS V52\.1 V71:[^"]+" name="description"\/>/,'<meta content="Accelerator OS V52.1 V73: an app-wide reference-led coaching workspace with clear hierarchy, semantic states, and pop-out guides." name="description"/>')
-  .replace('<title>Accelerator OS V52.1 Simplified Coaching V71</title>','<title>Accelerator OS V52.1 App Design V73</title>');
+  .replace(/<meta content="Accelerator OS V52\.1 V71:[^"]+" name="description"\/>/,'<meta content="Accelerator OS V52.1 V74: source-faithful planner UI, complete guides, stable accordions, and semantic calendar colors." name="description"/>')
+  .replace('<title>Accelerator OS V52.1 Simplified Coaching V71</title>','<title>Accelerator OS V52.1 Reference UI V74</title>');
 
 const closing=source.lastIndexOf('</body>');
 if(closing<0)throw new Error('Closing body tag is missing.');
-const additions=inputs.map(([marker,type,file])=>`<${type} id="${marker}">${fs.readFileSync(file,'utf8').trim()}</${type}>`).join('\n');
-source=`${source.slice(0,closing)}${additions}\n${source.slice(closing)}`;
+const additions=[];
+for(const [marker,type,file] of fileInputs){
+  if(marker==='v74-guide-loader')additions.push(`<script id="v74-guide-hooks">${hooksCode.trim()}</script>`);
+  additions.push(`<${type} id="${marker}">${fs.readFileSync(file,'utf8').trim()}</${type}>`);
+}
+source=`${source.slice(0,closing)}${additions.join('\n')}\n${source.slice(closing)}`;
 fs.writeFileSync(decodedPath,source);
 
 const payload=zlib.gzipSync(Buffer.from(source,'utf8'),{level:9}).toString('base64');
@@ -41,7 +57,7 @@ const wrapper=`<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="accelerator-build" content="V52.1-reference-ui-v73">
+<meta name="accelerator-build" content="V52.1-reference-ui-v74">
 <title>Accelerator OS V52.1</title>
 <style>html,body{margin:0;min-height:100%;background:#0D1117;color:#E6EDF3;font-family:Inter,system-ui,sans-serif}body{display:grid;place-items:center}.load{text-align:center;padding:24px}.load p{color:#8B949E}</style>
 </head>
@@ -60,4 +76,4 @@ document.open();document.write(html);document.close();
 </body>
 </html>`;
 fs.writeFileSync(indexPath,wrapper);
-console.log(JSON.stringify({build:'V52.1-reference-ui-v73',sourceCharacters:source.length,wrapperCharacters:wrapper.length},null,2));
+console.log(JSON.stringify({build:'V52.1-reference-ui-v74',sourceCharacters:source.length,wrapperCharacters:wrapper.length,guides:8},null,2));

@@ -1,37 +1,47 @@
-name: Verify V73 app-wide reference UI
+name: Verify V74 source-faithful reference UI
 
 on:
   workflow_dispatch:
   push:
-    branches: [v72-reference-led-ui]
+    branches: [v74-reference-ui-corrections]
     paths:
       - .github/workflows/verify-v72-reference-ui.yml
-      - patches/v72-reference-ui.css
-      - patches/v72-reference-ui.js
-      - patches/v72-reference-ui-fix.js
-      - patches/v73-app-design-system.css
-      - patches/v73-app-design-system.js
+      - patches/v74-reference-ui-corrections.css
+      - patches/v74-guide-chunk-1.js
+      - patches/v74-guide-chunk-2.js
+      - patches/v74-guide-chunk-3.js
+      - patches/v74-guide-chunk-4.js
+      - patches/v74-guide-chunk-5.js
+      - patches/v74-guide-loader.js
+      - patches/v74-observer-preflight.js
+      - patches/v74-reference-ui-corrections.js
+      - patches/v74-video-anchor-fix.js
       - scripts/build-v72-reference.js
-      - tests/v72-reference-ui.js
-      - tests/v73-app-design-system.js
+      - tests/v74-diagnostic.js
+      - tests/v74-reference-ui-corrections.js
   pull_request:
     branches: [main]
     paths:
       - .github/workflows/verify-v72-reference-ui.yml
-      - patches/v72-reference-ui.css
-      - patches/v72-reference-ui.js
-      - patches/v72-reference-ui-fix.js
-      - patches/v73-app-design-system.css
-      - patches/v73-app-design-system.js
+      - patches/v74-reference-ui-corrections.css
+      - patches/v74-guide-chunk-1.js
+      - patches/v74-guide-chunk-2.js
+      - patches/v74-guide-chunk-3.js
+      - patches/v74-guide-chunk-4.js
+      - patches/v74-guide-chunk-5.js
+      - patches/v74-guide-loader.js
+      - patches/v74-observer-preflight.js
+      - patches/v74-reference-ui-corrections.js
+      - patches/v74-video-anchor-fix.js
       - scripts/build-v72-reference.js
-      - tests/v72-reference-ui.js
-      - tests/v73-app-design-system.js
+      - tests/v74-diagnostic.js
+      - tests/v74-reference-ui-corrections.js
 
 permissions:
   contents: write
 
 concurrency:
-  group: verify-v73-reference-led-ui-${{ github.event.pull_request.number || github.ref }}
+  group: verify-v74-reference-ui-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -41,12 +51,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'pull_request' && github.head_ref || 'v72-reference-led-ui' }}
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || 'v74-reference-ui-corrections' }}
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Build the reviewable V73 dashboard
+      - name: Build the V74 dashboard
         run: node scripts/build-v72-reference.js
       - name: Validate embedded scripts
         run: |
@@ -54,7 +64,7 @@ jobs:
           const fs=require('fs'),cp=require('child_process'),os=require('os'),path=require('path');
           const html=fs.readFileSync('decoded-source.html','utf8');
           const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(match=>match[1]).filter(code=>code.trim());
-          const dir=fs.mkdtempSync(path.join(os.tmpdir(),'accelerator-v73-'));
+          const dir=fs.mkdtempSync(path.join(os.tmpdir(),'accelerator-v74-'));
           scripts.forEach((code,index)=>{const file=path.join(dir,`script-${index}.js`);fs.writeFileSync(file,code);cp.execFileSync(process.execPath,['--check',file],{stdio:'inherit'})});
           console.log(`Validated ${scripts.length} embedded scripts.`);
           NODE
@@ -64,26 +74,26 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Start the rebuilt dashboard
         run: |
-          python3 -m http.server 4173 >/tmp/v73-server.log 2>&1 &
+          python3 -m http.server 4173 >/tmp/v74-server.log 2>&1 &
           for attempt in {1..20}; do
             curl -fsS http://127.0.0.1:4173/decoded-source.html >/dev/null && exit 0
             sleep 1
           done
-          cat /tmp/v73-server.log
+          cat /tmp/v74-server.log
           exit 1
-      - name: Verify video phase flow and guide drawer
-        run: node tests/v72-reference-ui.js
-      - name: Verify the app-wide design system
-        run: node tests/v73-app-design-system.js
-      - name: Commit the verified preview and evidence
+      - name: Diagnose the V74 video render
+        run: node tests/v74-diagnostic.js
+      - name: Verify source UI, guides, colors, and interaction stability
+        run: node tests/v74-reference-ui-corrections.js
+      - name: Commit the verified V74 preview and evidence
         if: github.event_name == 'push'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add decoded-source.html index.html qa/v72-reference-ui-report.json qa/v72-reference-ui-screen.png qa/v73-app-design-report.json qa/v73-*.png
+          git add decoded-source.html index.html qa/v74-reference-ui-report.json qa/v74-*.png
           if git diff --cached --quiet; then
-            echo "Verified V73 preview is already current."
+            echo "Verified V74 preview is already current."
           else
-            git commit -m "Publish verified V73 app-wide reference UI preview"
-            git push origin HEAD:v72-reference-led-ui
+            git commit -m "Publish verified V74 source-faithful reference UI preview"
+            git push origin HEAD:v74-reference-ui-corrections
           fi
