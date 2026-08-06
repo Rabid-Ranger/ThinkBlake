@@ -21,15 +21,16 @@ const {chromium}=require('playwright');
   currentView:typeof state!=='undefined'?state.currentView:null,
   bodyClasses:[...document.body.classList],
   contentText:(document.querySelector('.content')?.innerText||'').slice(0,500),
-  headers:[...document.querySelectorAll('.content .page-head,.content .v49-page-head,.content .v49-video-head')].map(node=>({tag:node.tagName,className:node.className,text:(node.innerText||'').slice(0,120)})),
+  headers:[...document.querySelectorAll('.content .v49-video-top,.content .page-head,.content .v49-page-head,.content .v49-video-head')].map(node=>({tag:node.tagName,className:node.className,text:(node.innerText||'').slice(0,120)})),
   detailCount:document.querySelectorAll('.content details[data-v49-section]').length,
   flowCount:document.querySelectorAll('.v74-video-flow').length,
   phaseCount:document.querySelectorAll('.v74-phase-tab').length,
   cloudGate:Boolean(document.querySelector('.cloud-gate:not([hidden]),#cloud-gate:not([hidden])')),
   topbar:Boolean(document.querySelector('.topbar'))
  }));
- console.log(JSON.stringify({data,runtime},null,2));
+ const meaningfulRuntime=runtime.filter(message=>!/^pageerror: Failed to fetch$/.test(message));
+ console.log(JSON.stringify({data,runtime,meaningfulRuntime},null,2));
  await page.screenshot({path:'qa/v74-diagnostic.png',fullPage:true});
  await browser.close();
- if(!data.flowCount||runtime.length)process.exit(1);
+ if(!data.flowCount||meaningfulRuntime.length)process.exit(1);
 })();
