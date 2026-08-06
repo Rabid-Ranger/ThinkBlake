@@ -28,7 +28,8 @@ const fileInputs=[
   ['v74-phase-controller','script',path.join(root,'patches','v74-phase-controller.js')],
   ['v74-scroll-stability','script',path.join(root,'patches','v74-scroll-stability.js')],
   ['v75-full-reference-system-style','style',path.join(root,'patches','v75-full-reference-system.css')],
-  ['v75-full-reference-system-script','script',path.join(root,'patches','v75-full-reference-system.js')]
+  ['v75-full-reference-system-script','script',path.join(root,'patches','v75-full-reference-system.js')],
+  ['v75-structure-safety','script',path.join(root,'patches','v75-structure-safety.js')]
 ];
 const hooksPayloadPath=path.join(root,'patches','v74-guide-hooks.b64');
 for(const [, ,file] of fileInputs)if(!fs.existsSync(file))throw new Error(`${path.relative(root,file)} is missing.`);
