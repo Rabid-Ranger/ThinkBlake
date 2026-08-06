@@ -15,7 +15,9 @@ on:
       - patches/v74-guide-loader.js
       - patches/v74-observer-preflight.js
       - patches/v74-reference-ui-corrections.js
+      - patches/v74-video-anchor-fix.js
       - scripts/build-v72-reference.js
+      - tests/v74-diagnostic.js
       - tests/v74-reference-ui-corrections.js
   pull_request:
     branches: [main]
@@ -30,7 +32,9 @@ on:
       - patches/v74-guide-loader.js
       - patches/v74-observer-preflight.js
       - patches/v74-reference-ui-corrections.js
+      - patches/v74-video-anchor-fix.js
       - scripts/build-v72-reference.js
+      - tests/v74-diagnostic.js
       - tests/v74-reference-ui-corrections.js
 
 permissions:
@@ -77,6 +81,8 @@ jobs:
           done
           cat /tmp/v74-server.log
           exit 1
+      - name: Diagnose the V74 video render
+        run: node tests/v74-diagnostic.js
       - name: Verify source UI, guides, colors, and interaction stability
         run: node tests/v74-reference-ui-corrections.js
       - name: Commit the verified V74 preview and evidence
