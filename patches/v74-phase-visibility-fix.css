@@ -1,0 +1,3 @@
+body.v74-reference-ui.v74-video-page details[data-v49-section].v74-phase-hidden,
+body.v74-reference-ui.v74-video-page details[data-v49-section][hidden]{display:none!important}
+body.v74-reference-ui.v74-video-page .v74-review-phase[hidden]{display:none!important}
