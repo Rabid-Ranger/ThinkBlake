@@ -19,7 +19,8 @@ function ensure(){
     sections.forEach(detail=>{
       const id=detail.dataset.v49Section;
       const phase=['video-purpose','video-strategy','video-package'].includes(id)?'plan':id==='video-experience'?'script':['video-publish','video-handoff'].includes(id)?'produce':'';
-      if(phase)detail.dataset.v74Phase=phase;
+      detail.removeAttribute('data-v74-phase');
+      if(phase)detail.dataset.v74PhaseSection=phase;else delete detail.dataset.v74PhaseSection;
       const summary=detail.querySelector(':scope > summary');
       if(summary&&!summary.querySelector('[data-v74-section-guide]')&&guideMap[id]){
         const button=document.createElement('button');
@@ -30,7 +31,7 @@ function ensure(){
     if(!flow.dataset.v74Initialized){
       flow.dataset.v74Initialized='1';
       const storageKey=`accelerator-v74-phase-${state.currentCreatorId||'creator'}-${state.currentVideoId||'video'}`;
-      const selected=flow.querySelector(`[data-v74-phase="${localStorage.getItem(storageKey)||'plan'}"]`)||flow.querySelector('[data-v74-phase="plan"]');
+      const selected=flow.querySelector(`button[data-v74-phase="${localStorage.getItem(storageKey)||'plan'}"]`)||flow.querySelector('button[data-v74-phase="plan"]');
       selected?.click();
     }
   }catch(error){console.error('V74 video anchor fix failed',error)}
