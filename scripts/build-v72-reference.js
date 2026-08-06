@@ -11,6 +11,7 @@ const decodedPath=path.join(root,'decoded-source.html');
 const indexPath=path.join(root,'index.html');
 const fileInputs=[
   ['v74-reference-ui-corrections-style','style',path.join(root,'patches','v74-reference-ui-corrections.css')],
+  ['v74-phase-visibility-fix-style','style',path.join(root,'patches','v74-phase-visibility-fix.css')],
   ['v74-guide-research','script',path.join(root,'patches','v74-guide-research.js')],
   ['v74-guide-titles','script',path.join(root,'patches','v74-guide-titles.js')],
   ['v74-guide-thumbtips','script',path.join(root,'patches','v74-guide-thumbtips.js')],
