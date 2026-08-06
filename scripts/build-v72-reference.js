@@ -11,11 +11,7 @@ const decodedPath=path.join(root,'decoded-source.html');
 const indexPath=path.join(root,'index.html');
 const inputs=[
   ['v74-reference-ui-corrections-style','style',path.join(root,'patches','v74-reference-ui-corrections.css')],
-  ['v74-guide-chunk-1','script',path.join(root,'patches','v74-guide-chunk-1.js')],
-  ['v74-guide-chunk-2','script',path.join(root,'patches','v74-guide-chunk-2.js')],
-  ['v74-guide-chunk-3','script',path.join(root,'patches','v74-guide-chunk-3.js')],
-  ['v74-guide-chunk-4','script',path.join(root,'patches','v74-guide-chunk-4.js')],
-  ['v74-guide-chunk-5','script',path.join(root,'patches','v74-guide-chunk-5.js')],
+  ['v74-guide-library','script',path.join(root,'patches','v74-guide-chunk-1.js')],
   ['v74-guide-loader','script',path.join(root,'patches','v74-guide-loader.js')],
   ['v74-observer-preflight','script',path.join(root,'patches','v74-observer-preflight.js')],
   ['v74-reference-ui-corrections-script','script',path.join(root,'patches','v74-reference-ui-corrections.js')],
