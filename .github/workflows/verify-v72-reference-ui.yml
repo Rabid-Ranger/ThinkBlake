@@ -1,3 +1,4 @@
+# V75 verification gate. This existing workflow path is retained so pull request synchronization triggers reliably.
 name: Verify V75 full reference UI rebuild
 
 on:
