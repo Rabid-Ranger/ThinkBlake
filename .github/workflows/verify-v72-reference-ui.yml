@@ -73,6 +73,8 @@ jobs:
         run: node tests/v75-dom-snapshot.js
       - name: Verify V75 app-wide design and behavior
         run: node tests/v75-full-reference-ui.js
+      - name: Verify page copy, guide actions, and accordion hierarchy
+        run: node tests/v75-polish-check.js
       - name: Commit verified preview and evidence
         if: github.event_name == 'push'
         run: |
