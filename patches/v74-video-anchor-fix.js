@@ -9,7 +9,8 @@ function ensure(){
     document.body.classList.add('v74-reference-ui','v74-video-page');
     let flow=document.querySelector('.v74-video-flow');
     if(!flow){
-      const anchor=document.querySelector('.content .v49-video-head,.content .v49-page-head,.content .page-head')||document.querySelector('.content details[data-v49-section]')?.previousElementSibling;
+      const firstSection=document.querySelector('.content details[data-v49-section]');
+      const anchor=document.querySelector('.content .v49-video-top,.content .v49-video-head,.content .v49-page-head,.content .page-head')||firstSection?.closest('.v49-accordion-stack')?.previousElementSibling||firstSection?.parentElement?.previousElementSibling;
       if(!anchor)return;
       anchor.insertAdjacentHTML('afterend',phaseMarkup);
       flow=document.querySelector('.v74-video-flow');
@@ -28,7 +29,8 @@ function ensure(){
     });
     if(!flow.dataset.v74Initialized){
       flow.dataset.v74Initialized='1';
-      const selected=flow.querySelector(`[data-v74-phase="${localStorage.getItem(`accelerator-v74-phase-${state.currentCreatorId||'creator'}-${state.currentVideoId||'video'}`)||'plan'}"]`)||flow.querySelector('[data-v74-phase="plan"]');
+      const storageKey=`accelerator-v74-phase-${state.currentCreatorId||'creator'}-${state.currentVideoId||'video'}`;
+      const selected=flow.querySelector(`[data-v74-phase="${localStorage.getItem(storageKey)||'plan'}"]`)||flow.querySelector('[data-v74-phase="plan"]');
       selected?.click();
     }
   }catch(error){console.error('V74 video anchor fix failed',error)}
