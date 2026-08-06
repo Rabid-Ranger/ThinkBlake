@@ -9,6 +9,7 @@ on:
       - patches/v74-*
       - patches/v75-*
       - scripts/build-v72-reference.js
+      - scripts/apply-v75-full-reference-ui.js
       - tests/v74-*
       - tests/v75-*
   pull_request:
@@ -18,6 +19,7 @@ on:
       - patches/v74-*
       - patches/v75-*
       - scripts/build-v72-reference.js
+      - scripts/apply-v75-full-reference-ui.js
       - tests/v74-*
       - tests/v75-*
 
@@ -40,8 +42,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Build the dashboard
-        run: node scripts/build-v72-reference.js
+      - name: Build the V74 base and apply V75
+        run: |
+          node scripts/build-v72-reference.js
+          node scripts/apply-v75-full-reference-ui.js
       - name: Validate embedded scripts
         run: |
           node <<'NODE'
@@ -65,19 +69,19 @@ jobs:
           done
           cat /tmp/v75-server.log
           exit 1
-      - name: Capture the current app structure
+      - name: Capture the rebuilt app structure
         run: node tests/v75-dom-snapshot.js
-      - name: Verify the retained V74 behavior
-        run: node tests/v74-reference-ui-corrections.js
-      - name: Commit diagnostic evidence
+      - name: Verify V75 app-wide design and behavior
+        run: node tests/v75-full-reference-ui.js
+      - name: Commit verified preview and evidence
         if: github.event_name == 'push'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add decoded-source.html index.html qa/v74-reference-ui-report.json qa/v74-*.png qa/v75-dom-snapshots.json qa/v75-dom-*.png
+          git add decoded-source.html index.html qa/v75-*.json qa/v75-*.png
           if git diff --cached --quiet; then
-            echo "Diagnostic evidence is already current."
+            echo "Verified V75 preview is already current."
           else
-            git commit -m "Capture V75 rebuild baseline and DOM evidence"
+            git commit -m "Publish verified V75 full reference UI rebuild"
             git push origin HEAD:v75-full-reference-ui-rebuild
           fi
