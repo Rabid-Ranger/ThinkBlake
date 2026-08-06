@@ -17,6 +17,7 @@ const inputs=[
   ['v74-guide-chunk-4','script',path.join(root,'patches','v74-guide-chunk-4.js')],
   ['v74-guide-chunk-5','script',path.join(root,'patches','v74-guide-chunk-5.js')],
   ['v74-guide-loader','script',path.join(root,'patches','v74-guide-loader.js')],
+  ['v74-observer-preflight','script',path.join(root,'patches','v74-observer-preflight.js')],
   ['v74-reference-ui-corrections-script','script',path.join(root,'patches','v74-reference-ui-corrections.js')]
 ];
 for(const [, ,file] of inputs)if(!fs.existsSync(file))throw new Error(`${path.relative(root,file)} is missing.`);
