@@ -1,19 +1,19 @@
 const crypto = require('crypto');
 const zlib = require('zlib');
 
-const EXPECTED_SHA256 = 'f87958f7f60c23a03da8ed6395fd1baf3af51f23bce0d48ac0dd7abc9802b4b9';
-const EXPECTED_BYTES = 774382;
+const EXPECTED_SHA256 = 'f5b9385dc5083b47b11df24302aa6994db7cd02ce6d41450536d092c82ecc428';
+const EXPECTED_BYTES = 774429;
 const encoded = [
-  require('../bundles/v16236/v16_0'),
-  require('../bundles/v16236/v16_1'),
-  require('../bundles/v16236/v16_2'),
-  require('../bundles/v16236/v16_3'),
-  require('../bundles/v16236/v16_4'),
-  require('../bundles/v16236/v16_5'),
-  require('../bundles/v16236/v16_6'),
-  require('../bundles/v16236/v16_7'),
-  require('../bundles/v16236/v16_8'),
-  require('../bundles/v16236/v16_9'),
+  require('../bundles/v16237/v16_0'),
+  require('../bundles/v16237/v16_1'),
+  require('../bundles/v16237/v16_2'),
+  require('../bundles/v16237/v16_3'),
+  require('../bundles/v16237/v16_4'),
+  require('../bundles/v16237/v16_5'),
+  require('../bundles/v16237/v16_6'),
+  require('../bundles/v16237/v16_7'),
+  require('../bundles/v16237/v16_8'),
+  require('../bundles/v16237/v16_9'),
 ].join('');
 
 let verifiedSource;
@@ -34,7 +34,7 @@ module.exports = function handler(_req, res) {
     const html = source();
     res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300');
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('X-Accelerator-Build', 'V16.2.3.6');
+    res.setHeader('X-Accelerator-Build', 'V16.2.3.7');
     res.setHeader('X-Accelerator-Source-Length', String(EXPECTED_BYTES));
     res.setHeader('X-Accelerator-Source-SHA256', EXPECTED_SHA256);
     res.status(200).send(html);
