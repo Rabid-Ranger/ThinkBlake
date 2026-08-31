@@ -72,13 +72,77 @@ const PERSISTENCE_BRIDGE = String.raw`
     return false;
   }
 
+  function isPlainObject(value) {
+    return !!value && typeof value === 'object' && !Array.isArray(value);
+  }
+
+  function emptyShape(value) {
+    if (Array.isArray(value)) return [];
+    if (!isPlainObject(value)) {
+      if (typeof value === 'string') return '';
+      if (typeof value === 'number') return 0;
+      if (typeof value === 'boolean') return false;
+      return value == null ? null : value;
+    }
+    const out = {};
+    for (const key of Object.keys(value)) out[key] = emptyShape(value[key]);
+    return out;
+  }
+
+  function deepMerge(base, incoming) {
+    if (Array.isArray(incoming)) return incoming.map(item => {
+      if (isPlainObject(item)) return deepMerge({}, item);
+      return item;
+    });
+    if (!isPlainObject(incoming)) return incoming;
+    const out = isPlainObject(base) ? { ...base } : {};
+    for (const [key, value] of Object.entries(incoming)) {
+      if (isPlainObject(value)) out[key] = deepMerge(out[key], value);
+      else if (Array.isArray(value)) out[key] = value.map(item => isPlainObject(item) ? deepMerge({}, item) : item);
+      else out[key] = value;
+    }
+    return out;
+  }
+
+  function normalizeLoadedState(current, next) {
+    if (!isPlainObject(next)) return next;
+
+    // Preserve the current build's schema/defaults while overlaying persisted values.
+    // This makes older saved workspaces forward-compatible with newer UI fields.
+    const normalized = deepMerge(current, next);
+
+    if (Array.isArray(next.creators)) {
+      const currentCreators = Array.isArray(current && current.creators) ? current.creators : [];
+      const genericCreatorShape = currentCreators.length ? emptyShape(currentCreators[0]) : {};
+      normalized.creators = next.creators.map((savedCreator) => {
+        if (!isPlainObject(savedCreator)) return savedCreator;
+        const sameCreator = currentCreators.find((candidate) => candidate && candidate.id === savedCreator.id);
+        const schemaBase = sameCreator || genericCreatorShape;
+        return deepMerge(schemaBase, savedCreator);
+      });
+    }
+
+    const creators = Array.isArray(normalized.creators) ? normalized.creators.filter(Boolean) : [];
+    if (creators.length) {
+      const requestedId = normalized.currentCreatorId;
+      const hasRequestedCreator = creators.some((creator) => creator && creator.id === requestedId);
+      if (!hasRequestedCreator) normalized.currentCreatorId = creators[0].id;
+    } else {
+      normalized.currentCreatorId = null;
+      normalized.currentVideoId = null;
+    }
+
+    return normalized;
+  }
+
   function replaceState(next) {
     const current = appState();
     if (!current || !next || typeof next !== 'object') return false;
     applying = true;
     try {
+      const normalized = normalizeLoadedState(current, JSON.parse(JSON.stringify(next)));
       for (const key of Object.keys(current)) delete current[key];
-      Object.assign(current, JSON.parse(JSON.stringify(next)));
+      Object.assign(current, normalized);
       lastSerialized = JSON.stringify(current);
       localStorage.setItem(LOCAL_KEY, lastSerialized);
       localStorage.setItem(LOCAL_META_KEY, JSON.stringify({ savedAt: Date.now(), source: 'restore' }));
@@ -255,7 +319,7 @@ module.exports = function handler(_req, res) {
     const html = injectPersistence(source());
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('X-Accelerator-Build', 'V16.3.1-persistence-fix-1');
+    res.setHeader('X-Accelerator-Build', 'V16.3.1-persistence-fix-2');
     res.setHeader('X-Accelerator-Source-Length', String(EXPECTED_BYTES));
     res.setHeader('X-Accelerator-Source-SHA256', EXPECTED_SHA256);
     res.status(200).send(html);
