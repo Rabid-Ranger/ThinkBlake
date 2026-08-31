@@ -65,9 +65,6 @@ const PERSISTENCE_BRIDGE = String.raw`
     return JSON.parse(JSON.stringify(value));
   }
 
-  // V16.3.1 already contains the authoritative schema normalizer. Always use it.
-  // The earlier bridge attempted to infer the schema from the current sample state,
-  // which could leave persisted creators/videos partially shaped and break renderers.
   function normalizeWithApp(value) {
     if (!value || typeof value !== 'object') return value;
     try {
@@ -135,19 +132,12 @@ const PERSISTENCE_BRIDGE = String.raw`
     }
   }
 
-  // Normalize before every V16 render too. This keeps old/incomplete records from
-  // ever reaching a renderer after an edit, navigation change, or cloud restore.
   function installRenderGuard() {
     try {
       const original = readBinding('render');
       if (typeof original !== 'function' || window.__acceleratorNativeRender) return;
       window.__acceleratorNativeRender = original;
-      (0, eval)(String.raw\`
-        render = function acceleratorSafeRender(){
-          try { if (typeof normalize === 'function') state = normalize(state); } catch (_) {}
-          return window.__acceleratorNativeRender.apply(this, arguments);
-        };
-      \`);
+      (0, eval)("render = function acceleratorSafeRender(){ try { if (typeof normalize === 'function') state = normalize(state); } catch (_) {} return window.__acceleratorNativeRender.apply(this, arguments); };");
     } catch (_) {}
   }
 
@@ -201,6 +191,36 @@ const PERSISTENCE_BRIDGE = String.raw`
     }
   }
 
+  async function saveRemote(serialized) {
+    if (!workspaceId || !accessToken || !serialized) return false;
+    let parsed;
+    try { parsed = normalizeWithApp(JSON.parse(serialized)); } catch (_) { return false; }
+
+    let result = await rpc('save_workspace_state', {
+      p_workspace_id: workspaceId,
+      p_expected_version: remoteVersion,
+      p_state: parsed
+    });
+    if (!result.ok || !Array.isArray(result.data) || !result.data.length) return false;
+
+    let row = result.data[0];
+    if (row.conflict) {
+      remoteVersion = Number(row.version || remoteVersion || 0);
+      result = await rpc('save_workspace_state', {
+        p_workspace_id: workspaceId,
+        p_expected_version: remoteVersion,
+        p_state: parsed
+      });
+      if (!result.ok || !Array.isArray(result.data) || !result.data.length) return false;
+      row = result.data[0];
+    }
+    if (!row.conflict) {
+      remoteVersion = Number(row.version || remoteVersion + 1);
+      return true;
+    }
+    return false;
+  }
+
   async function connectCloud() {
     readStoredSession();
     if (!accessToken && !(await refreshSession())) return false;
@@ -223,34 +243,14 @@ const PERSISTENCE_BRIDGE = String.raw`
     const cloudState = remote.data[0].state;
     if (cloudState && typeof cloudState === 'object' && Object.keys(cloudState).length) {
       if (!replaceState(cloudState)) return false;
+      const repaired = appState();
+      if (repaired) {
+        const serialized = JSON.stringify(repaired);
+        await saveRemote(serialized);
+        lastSerialized = JSON.stringify(appState() || repaired);
+      }
     }
     return true;
-  }
-
-  async function saveRemote(serialized) {
-    if (!workspaceId || !accessToken || !serialized) return;
-    let parsed;
-    try { parsed = normalizeWithApp(JSON.parse(serialized)); } catch (_) { return; }
-
-    let result = await rpc('save_workspace_state', {
-      p_workspace_id: workspaceId,
-      p_expected_version: remoteVersion,
-      p_state: parsed
-    });
-    if (!result.ok || !Array.isArray(result.data) || !result.data.length) return;
-
-    let row = result.data[0];
-    if (row.conflict) {
-      remoteVersion = Number(row.version || remoteVersion || 0);
-      result = await rpc('save_workspace_state', {
-        p_workspace_id: workspaceId,
-        p_expected_version: remoteVersion,
-        p_state: parsed
-      });
-      if (!result.ok || !Array.isArray(result.data) || !result.data.length) return;
-      row = result.data[0];
-    }
-    if (!row.conflict) remoteVersion = Number(row.version || remoteVersion + 1);
   }
 
   function persistSnapshot(serialized) {
@@ -279,7 +279,6 @@ const PERSISTENCE_BRIDGE = String.raw`
     for (let i = 0; i < 100 && !appState(); i++) await new Promise(r => setTimeout(r, 40));
     if (!appState()) return;
 
-    // Repair any old local state before anything from the cloud is applied.
     normalizeCurrentState();
     installRenderGuard();
     rerender();
@@ -294,7 +293,6 @@ const PERSISTENCE_BRIDGE = String.raw`
       } catch (_) {}
     }
 
-    // One final native normalization after restore protects all current V16 views.
     normalizeCurrentState();
     rerender();
 
@@ -332,7 +330,7 @@ module.exports = function handler(_req, res) {
     const html = injectPersistence(source());
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('X-Accelerator-Build', 'V16.3.1-persistence-fix-3');
+    res.setHeader('X-Accelerator-Build', 'V16.3.1-persistence-fix-4');
     res.setHeader('X-Accelerator-Source-Length', String(EXPECTED_BYTES));
     res.setHeader('X-Accelerator-Source-SHA256', EXPECTED_SHA256);
     res.status(200).send(html);
