@@ -12,7 +12,26 @@
 <body>
 <div class="load"><h1>Accelerator OS</h1><p>Loading your workspace...</p></div>
 <script>
-(async()=>{try{const r=await fetch('/api/source?build=v1631',{cache:'no-store'});if(!r.ok)throw new Error(`Source request failed: ${r.status}`);const html=await r.text();document.open();document.write(html);document.close()}catch(e){console.error(e);document.body.innerHTML='<div class="load"><h1>Accelerator OS could not load</h1><p>Please refresh the page.</p></div>'}})();
+(async()=>{try{
+  const r=await fetch('/api/source?build=v1631',{cache:'no-store'});
+  if(!r.ok)throw new Error(`Source request failed: ${r.status}`);
+  let html=await r.text();
+
+  // Framework is added by the V16.3 extension after the base app is defined.
+  // The base normalizer's view allow-list predates that extension, so the
+  // persistence safety normalizer was resetting "framework" back to "home".
+  // Add the V16.3 view to the canonical allow-list before the app executes.
+  const baseViews="const VIEWS=['home','creators','strategy','plan','videos','planner','calendar','learn','library'];";
+  const currentViews="const VIEWS=['home','creators','strategy','plan','videos','planner','calendar','learn','library','framework'];";
+  if(html.includes(baseViews)) html=html.replace(baseViews,currentViews);
+
+  document.open();
+  document.write(html);
+  document.close();
+}catch(e){
+  console.error(e);
+  document.body.innerHTML='<div class="load"><h1>Accelerator OS could not load</h1><p>Please refresh the page.</p></div>';
+}})();
 </script>
 </body>
 </html>
