@@ -41,6 +41,14 @@ const PERSISTENCE_BRIDGE = String.raw`
   const AUTH_KEY = 'sb-' + REF + '-auth-token';
   const LOCAL_KEY = 'accelerator-os-v1631-state-backup';
   const LOCAL_META_KEY = LOCAL_KEY + '-meta';
+  const NATIVE_KEYS = [
+    'accelerator.mainline.v11.cleancore',
+    'accelerator.mainline.v10.reconciled',
+    'accelerator.mainline.v9.protocol',
+    'accelerator.mainline.v8.flowclarity',
+    'accelerator.mainline.v7.usability',
+    'accelerator.mainline.v6.protocolflow'
+  ];
 
   let workspaceId = null;
   let remoteVersion = 0;
@@ -97,8 +105,43 @@ const PERSISTENCE_BRIDGE = String.raw`
 
   function normalizeCurrentState() {
     const current = appState();
-    if (!current) return false;
-    return setGlobalState(current);
+    return current ? setGlobalState(current) : false;
+  }
+
+  function creatorCount(value) {
+    return Array.isArray(value && value.creators) ? value.creators.length : 0;
+  }
+
+  function stateSize(value) {
+    try { return JSON.stringify(value).length; } catch (_) { return 0; }
+  }
+
+  function readBestNativeCandidate() {
+    let best = null;
+    for (const key of NATIVE_KEYS) {
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) continue;
+        const parsed = normalizeWithApp(JSON.parse(raw));
+        const count = creatorCount(parsed);
+        const size = stateSize(parsed);
+        const videos = Array.isArray(parsed.creators)
+          ? parsed.creators.reduce((n, c) => n + (Array.isArray(c && c.videos) ? c.videos.length : 0), 0)
+          : 0;
+        const score = count * 1000000000 + videos * 1000000 + size;
+        if (!best || score > best.score) best = { key, state: parsed, count, videos, size, score };
+      } catch (_) {}
+    }
+    return best;
+  }
+
+  function rescueIsRicher(candidate, current) {
+    if (!candidate || !candidate.state) return false;
+    const currentCount = creatorCount(current);
+    const currentSize = stateSize(current);
+    if (candidate.count > currentCount) return true;
+    if (candidate.count === currentCount && candidate.count > 0 && candidate.size > currentSize * 1.35) return true;
+    return false;
   }
 
   function rerender() {
@@ -113,7 +156,7 @@ const PERSISTENCE_BRIDGE = String.raw`
     return false;
   }
 
-  function replaceState(next) {
+  function replaceState(next, sourceName = 'restore') {
     if (!next || typeof next !== 'object') return false;
     applying = true;
     try {
@@ -123,7 +166,7 @@ const PERSISTENCE_BRIDGE = String.raw`
       lastSerialized = JSON.stringify(current);
       try {
         localStorage.setItem(LOCAL_KEY, lastSerialized);
-        localStorage.setItem(LOCAL_META_KEY, JSON.stringify({ savedAt: Date.now(), source: 'restore' }));
+        localStorage.setItem(LOCAL_META_KEY, JSON.stringify({ savedAt: Date.now(), source: sourceName }));
       } catch (_) {}
       rerender();
       return true;
@@ -242,13 +285,7 @@ const PERSISTENCE_BRIDGE = String.raw`
     remoteVersion = Number(remote.data[0].version || remoteVersion || 0);
     const cloudState = remote.data[0].state;
     if (cloudState && typeof cloudState === 'object' && Object.keys(cloudState).length) {
-      if (!replaceState(cloudState)) return false;
-      const repaired = appState();
-      if (repaired) {
-        const serialized = JSON.stringify(repaired);
-        await saveRemote(serialized);
-        lastSerialized = JSON.stringify(appState() || repaired);
-      }
+      if (!replaceState(cloudState, 'cloud')) return false;
     }
     return true;
   }
@@ -279,6 +316,8 @@ const PERSISTENCE_BRIDGE = String.raw`
     for (let i = 0; i < 100 && !appState(); i++) await new Promise(r => setTimeout(r, 40));
     if (!appState()) return;
 
+    const nativeRescue = readBestNativeCandidate();
+
     normalizeCurrentState();
     installRenderGuard();
     rerender();
@@ -288,9 +327,21 @@ const PERSISTENCE_BRIDGE = String.raw`
 
     if (!restoredFromCloud) {
       try {
-        const local = localStorage.getItem(LOCAL_KEY);
-        if (local) replaceState(JSON.parse(local));
+        const bridgeLocal = localStorage.getItem(LOCAL_KEY);
+        if (bridgeLocal) replaceState(JSON.parse(bridgeLocal), 'bridge-local');
       } catch (_) {}
+    }
+
+    if (rescueIsRicher(nativeRescue, appState())) {
+      replaceState(nativeRescue.state, 'native-rescue');
+      const rescued = appState();
+      if (rescued) {
+        const serialized = JSON.stringify(rescued);
+        try { localStorage.setItem(NATIVE_KEYS[0], serialized); } catch (_) {}
+        if (workspaceId && accessToken) await saveRemote(serialized);
+        lastSerialized = JSON.stringify(appState() || rescued);
+        try { console.warn('Accelerator OS restored richer local workspace data from', nativeRescue.key); } catch (_) {}
+      }
     }
 
     normalizeCurrentState();
@@ -330,7 +381,7 @@ module.exports = function handler(_req, res) {
     const html = injectPersistence(source());
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('X-Accelerator-Build', 'V16.3.1-persistence-fix-4');
+    res.setHeader('X-Accelerator-Build', 'V16.3.1-persistence-fix-5');
     res.setHeader('X-Accelerator-Source-Length', String(EXPECTED_BYTES));
     res.setHeader('X-Accelerator-Source-SHA256', EXPECTED_SHA256);
     res.status(200).send(html);
