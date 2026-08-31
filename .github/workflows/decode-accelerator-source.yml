@@ -19,29 +19,46 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Decode production wrapper
+      - name: Decode current V16.3.1 production source
         shell: bash
         run: |
           node <<'NODE'
           const fs = require('fs');
           const zlib = require('zlib');
-          const wrapper = fs.readFileSync('index.html', 'utf8');
-          const match = wrapper.match(/atob\('([^']+)'\)/s);
-          if (!match) throw new Error('Compressed Accelerator payload was not found.');
-          const decoded = zlib.gunzipSync(Buffer.from(match[1], 'base64')).toString('utf8');
-          fs.writeFileSync('decoded-source.html', decoded);
-          console.log(`Decoded ${decoded.length} characters.`);
+          const crypto = require('crypto');
+
+          const encoded = Array.from({ length: 10 }, (_, i) => {
+            const text = fs.readFileSync(`bundles/v1631/v16_${i}.js`, 'utf8');
+            const match = text.match(/^module\.exports=['"]([\s\S]*)['"];?\s*$/);
+            if (!match) throw new Error(`Could not read bundle chunk v16_${i}.js`);
+            return match[1];
+          }).join('');
+
+          const bytes = zlib.brotliDecompressSync(Buffer.from(encoded, 'base64'));
+          const html = bytes.toString('utf8');
+          const hash = crypto.createHash('sha256').update(bytes).digest('hex');
+          fs.writeFileSync('decoded-v1631.html', html);
+          fs.writeFileSync('qa/v1631-source-diagnostics.json', JSON.stringify({
+            bytes: bytes.length,
+            sha256: hash,
+            hasRenderErrorBoundary: html.includes('Something did not render'),
+            hasMigrate: html.includes('function migrate'),
+            hasNativeCloudInit: html.includes('initCloud'),
+            hasSaveWorkspaceState: html.includes('save_workspace_state'),
+            audienceMentions: (html.match(/\.audience/g) || []).length
+          }, null, 2) + '\n');
+          console.log(`Decoded ${bytes.length} bytes, sha256 ${hash}.`);
           NODE
 
-      - name: Commit decoded source
+      - name: Commit decoded current source
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add decoded-source.html
+          git add decoded-v1631.html qa/v1631-source-diagnostics.json
           if git diff --cached --quiet; then
-            echo "Decoded source is already current."
+            echo "Decoded V16.3.1 source is already current."
           else
-            git commit -m "Expose decoded Accelerator source for verification"
+            git commit -m "Expose current V16.3.1 source for verification"
             git push
           fi
