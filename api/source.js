@@ -41,6 +41,7 @@ const PERSISTENCE_BRIDGE = String.raw`
   const AUTH_KEY = 'sb-' + REF + '-auth-token';
   const LOCAL_KEY = 'accelerator-os-v1631-state-backup';
   const LOCAL_META_KEY = LOCAL_KEY + '-meta';
+
   let workspaceId = null;
   let remoteVersion = 0;
   let accessToken = null;
@@ -60,97 +61,94 @@ const PERSISTENCE_BRIDGE = String.raw`
     return value && typeof value === 'object' ? value : null;
   }
 
-  function rerender() {
-    const candidates = ['render', 'renderApp', 'renderAll', 'renderCurrentView', 'renderWorkspace', 'renderShell'];
-    for (const name of candidates) {
-      try {
-        const fn = readBinding(name);
-        if (typeof fn === 'function') { fn(); return true; }
-      } catch (_) {}
+  function clone(value) {
+    return JSON.parse(JSON.stringify(value));
+  }
+
+  // V16.3.1 already contains the authoritative schema normalizer. Always use it.
+  // The earlier bridge attempted to infer the schema from the current sample state,
+  // which could leave persisted creators/videos partially shaped and break renderers.
+  function normalizeWithApp(value) {
+    if (!value || typeof value !== 'object') return value;
+    try {
+      window.__acceleratorNormalizeCandidate = clone(value);
+      const normalized = (0, eval)(
+        'typeof normalize === "function" ? normalize(window.__acceleratorNormalizeCandidate) : window.__acceleratorNormalizeCandidate'
+      );
+      delete window.__acceleratorNormalizeCandidate;
+      return normalized;
+    } catch (_) {
+      try { delete window.__acceleratorNormalizeCandidate; } catch (_) {}
+      return clone(value);
     }
-    try { window.dispatchEvent(new CustomEvent('accelerator:state-restored')); } catch (_) {}
+  }
+
+  function setGlobalState(value) {
+    if (!value || typeof value !== 'object') return false;
+    try {
+      window.__acceleratorRestoreCandidate = normalizeWithApp(value);
+      const applied = (0, eval)(
+        'typeof state !== "undefined" ? (state = window.__acceleratorRestoreCandidate, true) : false'
+      );
+      delete window.__acceleratorRestoreCandidate;
+      return !!applied;
+    } catch (_) {
+      try { delete window.__acceleratorRestoreCandidate; } catch (_) {}
+      return false;
+    }
+  }
+
+  function normalizeCurrentState() {
+    const current = appState();
+    if (!current) return false;
+    return setGlobalState(current);
+  }
+
+  function rerender() {
+    try {
+      const fn = readBinding('render');
+      if (typeof fn === 'function') { fn(); return true; }
+    } catch (_) {}
+    try {
+      const fn = readBinding('renderApp');
+      if (typeof fn === 'function') { fn(); return true; }
+    } catch (_) {}
     return false;
   }
 
-  function isPlainObject(value) {
-    return !!value && typeof value === 'object' && !Array.isArray(value);
-  }
-
-  function emptyShape(value) {
-    if (Array.isArray(value)) return [];
-    if (!isPlainObject(value)) {
-      if (typeof value === 'string') return '';
-      if (typeof value === 'number') return 0;
-      if (typeof value === 'boolean') return false;
-      return value == null ? null : value;
-    }
-    const out = {};
-    for (const key of Object.keys(value)) out[key] = emptyShape(value[key]);
-    return out;
-  }
-
-  function deepMerge(base, incoming) {
-    if (Array.isArray(incoming)) return incoming.map(item => {
-      if (isPlainObject(item)) return deepMerge({}, item);
-      return item;
-    });
-    if (!isPlainObject(incoming)) return incoming;
-    const out = isPlainObject(base) ? { ...base } : {};
-    for (const [key, value] of Object.entries(incoming)) {
-      if (isPlainObject(value)) out[key] = deepMerge(out[key], value);
-      else if (Array.isArray(value)) out[key] = value.map(item => isPlainObject(item) ? deepMerge({}, item) : item);
-      else out[key] = value;
-    }
-    return out;
-  }
-
-  function normalizeLoadedState(current, next) {
-    if (!isPlainObject(next)) return next;
-
-    // Preserve the current build's schema/defaults while overlaying persisted values.
-    // This makes older saved workspaces forward-compatible with newer UI fields.
-    const normalized = deepMerge(current, next);
-
-    if (Array.isArray(next.creators)) {
-      const currentCreators = Array.isArray(current && current.creators) ? current.creators : [];
-      const genericCreatorShape = currentCreators.length ? emptyShape(currentCreators[0]) : {};
-      normalized.creators = next.creators.map((savedCreator) => {
-        if (!isPlainObject(savedCreator)) return savedCreator;
-        const sameCreator = currentCreators.find((candidate) => candidate && candidate.id === savedCreator.id);
-        const schemaBase = sameCreator || genericCreatorShape;
-        return deepMerge(schemaBase, savedCreator);
-      });
-    }
-
-    const creators = Array.isArray(normalized.creators) ? normalized.creators.filter(Boolean) : [];
-    if (creators.length) {
-      const requestedId = normalized.currentCreatorId;
-      const hasRequestedCreator = creators.some((creator) => creator && creator.id === requestedId);
-      if (!hasRequestedCreator) normalized.currentCreatorId = creators[0].id;
-    } else {
-      normalized.currentCreatorId = null;
-      normalized.currentVideoId = null;
-    }
-
-    return normalized;
-  }
-
   function replaceState(next) {
-    const current = appState();
-    if (!current || !next || typeof next !== 'object') return false;
+    if (!next || typeof next !== 'object') return false;
     applying = true;
     try {
-      const normalized = normalizeLoadedState(current, JSON.parse(JSON.stringify(next)));
-      for (const key of Object.keys(current)) delete current[key];
-      Object.assign(current, normalized);
+      if (!setGlobalState(next)) return false;
+      const current = appState();
+      if (!current) return false;
       lastSerialized = JSON.stringify(current);
-      localStorage.setItem(LOCAL_KEY, lastSerialized);
-      localStorage.setItem(LOCAL_META_KEY, JSON.stringify({ savedAt: Date.now(), source: 'restore' }));
+      try {
+        localStorage.setItem(LOCAL_KEY, lastSerialized);
+        localStorage.setItem(LOCAL_META_KEY, JSON.stringify({ savedAt: Date.now(), source: 'restore' }));
+      } catch (_) {}
       rerender();
       return true;
     } finally {
       setTimeout(() => { applying = false; }, 0);
     }
+  }
+
+  // Normalize before every V16 render too. This keeps old/incomplete records from
+  // ever reaching a renderer after an edit, navigation change, or cloud restore.
+  function installRenderGuard() {
+    try {
+      const original = readBinding('render');
+      if (typeof original !== 'function' || window.__acceleratorNativeRender) return;
+      window.__acceleratorNativeRender = original;
+      (0, eval)(String.raw\`
+        render = function acceleratorSafeRender(){
+          try { if (typeof normalize === 'function') state = normalize(state); } catch (_) {}
+          return window.__acceleratorNativeRender.apply(this, arguments);
+        };
+      \`);
+    } catch (_) {}
   }
 
   function readStoredSession() {
@@ -169,7 +167,7 @@ const PERSISTENCE_BRIDGE = String.raw`
     try {
       const response = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=refresh_token', {
         method: 'POST',
-        headers: { 'apikey': API_KEY, 'Content-Type': 'application/json' },
+        headers: { apikey: API_KEY, 'Content-Type': 'application/json' },
         body: JSON.stringify({ refresh_token: refreshToken })
       });
       if (!response.ok) return false;
@@ -187,8 +185,8 @@ const PERSISTENCE_BRIDGE = String.raw`
       const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/' + name, {
         method: 'POST',
         headers: {
-          'apikey': API_KEY,
-          'Authorization': 'Bearer ' + accessToken,
+          apikey: API_KEY,
+          Authorization: 'Bearer ' + accessToken,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(body || {})
@@ -198,7 +196,9 @@ const PERSISTENCE_BRIDGE = String.raw`
       let data = null;
       try { data = text ? JSON.parse(text) : null; } catch (_) { data = text; }
       return { ok: response.ok, status: response.status, data };
-    } catch (_) { return { ok: false, status: 0, data: null }; }
+    } catch (_) {
+      return { ok: false, status: 0, data: null };
+    }
   }
 
   async function connectCloud() {
@@ -215,18 +215,22 @@ const PERSISTENCE_BRIDGE = String.raw`
 
     workspaceId = workspaces.data[0].id;
     remoteVersion = Number(workspaces.data[0].version || 0);
+
     const remote = await rpc('get_workspace_state', { p_workspace_id: workspaceId });
     if (!remote.ok || !Array.isArray(remote.data) || !remote.data.length) return false;
+
     remoteVersion = Number(remote.data[0].version || remoteVersion || 0);
     const cloudState = remote.data[0].state;
-    if (cloudState && typeof cloudState === 'object' && Object.keys(cloudState).length) replaceState(cloudState);
+    if (cloudState && typeof cloudState === 'object' && Object.keys(cloudState).length) {
+      if (!replaceState(cloudState)) return false;
+    }
     return true;
   }
 
   async function saveRemote(serialized) {
     if (!workspaceId || !accessToken || !serialized) return;
     let parsed;
-    try { parsed = JSON.parse(serialized); } catch (_) { return; }
+    try { parsed = normalizeWithApp(JSON.parse(serialized)); } catch (_) { return; }
 
     let result = await rpc('save_workspace_state', {
       p_workspace_id: workspaceId,
@@ -255,7 +259,7 @@ const PERSISTENCE_BRIDGE = String.raw`
       localStorage.setItem(LOCAL_META_KEY, JSON.stringify({ savedAt: Date.now(), source: 'app' }));
     } catch (_) {}
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => saveRemote(serialized), 650);
+    saveTimer = setTimeout(() => saveRemote(serialized), 700);
   }
 
   function observeState() {
@@ -268,12 +272,17 @@ const PERSISTENCE_BRIDGE = String.raw`
       if (!serialized || serialized === lastSerialized) return;
       lastSerialized = serialized;
       persistSnapshot(serialized);
-    }, 350);
+    }, 400);
   }
 
   async function boot() {
-    for (let i = 0; i < 80 && !appState(); i++) await new Promise(r => setTimeout(r, 50));
+    for (let i = 0; i < 100 && !appState(); i++) await new Promise(r => setTimeout(r, 40));
     if (!appState()) return;
+
+    // Repair any old local state before anything from the cloud is applied.
+    normalizeCurrentState();
+    installRenderGuard();
+    rerender();
 
     let restoredFromCloud = false;
     try { restoredFromCloud = await connectCloud(); } catch (_) {}
@@ -284,6 +293,10 @@ const PERSISTENCE_BRIDGE = String.raw`
         if (local) replaceState(JSON.parse(local));
       } catch (_) {}
     }
+
+    // One final native normalization after restore protects all current V16 views.
+    normalizeCurrentState();
+    rerender();
 
     const current = appState();
     if (current) {
@@ -319,7 +332,7 @@ module.exports = function handler(_req, res) {
     const html = injectPersistence(source());
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('X-Accelerator-Build', 'V16.3.1-persistence-fix-2');
+    res.setHeader('X-Accelerator-Build', 'V16.3.1-persistence-fix-3');
     res.setHeader('X-Accelerator-Source-Length', String(EXPECTED_BYTES));
     res.setHeader('X-Accelerator-Source-SHA256', EXPECTED_SHA256);
     res.status(200).send(html);
