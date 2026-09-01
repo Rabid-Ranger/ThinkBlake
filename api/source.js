@@ -3,6 +3,7 @@ const zlib = require('zlib');
 
 const EXPECTED_SHA256 = '1c40a1614db82031e3ebc2e23df28e28fbe7889d828edbb489ab4f24eba6d8e1';
 const EXPECTED_BYTES = 844146;
+const V2_WORKSPACE_ID = 'e9953426-0a8d-4890-9cf0-4f4ac4e71c46';
 const encoded = [
   require('../bundles/v1634/v16_0'),
   require('../bundles/v1634/v16_1'),
@@ -25,7 +26,16 @@ function source() {
   if (bytes.length !== EXPECTED_BYTES || hash !== EXPECTED_SHA256) {
     throw new Error(`Accelerator source verification failed: ${bytes.length} bytes, ${hash}`);
   }
-  verifiedSource = bytes.toString('utf8');
+  verifiedSource = bytes.toString('utf8')
+    // V2 must never read, rotate, or delete the production origin's browser
+    // backups. The raw app owns this native key; the persistence bridge below
+    // owns the rest of the cloud-first safety keys.
+    .replaceAll('accelerator.mainline.v11.cleancore', 'accelerator.ai-v2.mainline.v11.cleancore')
+    .replaceAll('accelerator.mainline.v10.reconciled', 'accelerator.ai-v2.mainline.v10.reconciled')
+    .replaceAll('accelerator.mainline.v9.protocol', 'accelerator.ai-v2.mainline.v9.protocol')
+    .replaceAll('accelerator.mainline.v8.flowclarity', 'accelerator.ai-v2.mainline.v8.flowclarity')
+    .replaceAll('accelerator.mainline.v7.usability', 'accelerator.ai-v2.mainline.v7.usability')
+    .replaceAll('accelerator.mainline.v6.protocolflow', 'accelerator.ai-v2.mainline.v6.protocolflow');
   return verifiedSource;
 }
 
@@ -34,30 +44,31 @@ const PERSISTENCE_BRIDGE = String.raw`
 (() => {
   if (window.__acceleratorPersistenceBridge) return;
   window.__acceleratorPersistenceBridge = true;
-  document.title = 'Accelerator OS V16.3.6 - Cloud-First Data Safety';
+  document.title = 'Accelerator AI V2 - Isolated Test Workspace';
 
   const REF = 'pqggobwpazihraeqvspc';
   const SUPABASE_URL = 'https://' + REF + '.supabase.co';
   const API_KEY = 'sb_publishable_VgGebMpW9tBcCiQlRdnzpA__rbATAaT';
   const AUTH_KEY = 'sb-' + REF + '-auth-token';
+  const REQUIRED_WORKSPACE_ID = '${V2_WORKSPACE_ID}';
   // Stable across software builds: deployments must never strand the latest browser backup.
-  const LOCAL_KEY = 'accelerator-os-state-backup';
+  const LOCAL_KEY = 'accelerator-ai-v2-state-backup';
   const LOCAL_META_KEY = LOCAL_KEY + '-meta';
   const LOCAL_PREVIOUS_KEY = LOCAL_KEY + '-previous';
   const LOCAL_PREVIOUS_META_KEY = LOCAL_PREVIOUS_KEY + '-meta';
-  const RECOVERY_KEY = 'accelerator-os-recovery-copy';
+  const RECOVERY_KEY = 'accelerator-ai-v2-recovery-copy';
   const RECOVERY_META_KEY = RECOVERY_KEY + '-meta';
-  const PENDING_KEY = 'accelerator-os-unsynced-draft';
+  const PENDING_KEY = 'accelerator-ai-v2-unsynced-draft';
   const PENDING_META_KEY = PENDING_KEY + '-meta';
-  const DEMO_MARKER_KEY = 'accelerator-os-demo-mode';
+  const DEMO_MARKER_KEY = 'accelerator-ai-v2-demo-mode';
   const NATIVE_KEYS = [
-    'accelerator-os-v1631-state-backup',
-    'accelerator.mainline.v11.cleancore',
-    'accelerator.mainline.v10.reconciled',
-    'accelerator.mainline.v9.protocol',
-    'accelerator.mainline.v8.flowclarity',
-    'accelerator.mainline.v7.usability',
-    'accelerator.mainline.v6.protocolflow'
+    'accelerator-ai-v2-v1631-state-backup',
+    'accelerator.ai-v2.mainline.v11.cleancore',
+    'accelerator.ai-v2.mainline.v10.reconciled',
+    'accelerator.ai-v2.mainline.v9.protocol',
+    'accelerator.ai-v2.mainline.v8.flowclarity',
+    'accelerator.ai-v2.mainline.v7.usability',
+    'accelerator.ai-v2.mainline.v6.protocolflow'
   ];
 
   let workspaceId = null;
@@ -1005,16 +1016,18 @@ const PERSISTENCE_BRIDGE = String.raw`
     }
     if (!accessToken && !(await refreshSession())) return false;
 
-    let workspaces = await rpc('get_my_workspaces', {});
-    if (!workspaces.ok || !Array.isArray(workspaces.data) || !workspaces.data.length) {
-      const ensured = await rpc('ensure_personal_workspace', { p_name: 'Blake' });
-      if (!ensured.ok) return false;
-      workspaces = await rpc('get_my_workspaces', {});
-    }
+    const workspaces = await rpc('get_my_workspaces', {});
     if (!workspaces.ok || !Array.isArray(workspaces.data) || !workspaces.data.length) return false;
 
-    workspaceId = workspaces.data[0].id;
-    remoteVersion = Number(workspaces.data[0].version || 0);
+    // Hard isolation boundary: V2 may never fall back to production or create a
+    // replacement workspace. A missing test workspace must fail closed.
+    const requiredWorkspace = workspaces.data.find(row => row && row.id === REQUIRED_WORKSPACE_ID);
+    if (!requiredWorkspace) {
+      console.error('Accelerator AI V2 workspace is unavailable. Production fallback is disabled.');
+      return false;
+    }
+    workspaceId = requiredWorkspace.id;
+    remoteVersion = Number(requiredWorkspace.version || 0);
 
     const remote = await rpc('get_workspace_state', { p_workspace_id: workspaceId });
     if (!remote.ok || !Array.isArray(remote.data) || !remote.data.length) return false;
@@ -1415,6 +1428,8 @@ const PERSISTENCE_BRIDGE = String.raw`
   });
 
   window.__acceleratorSaveDiagnostics = () => ({
+    appMode: 'accelerator-ai-v2',
+    requiredWorkspaceId: REQUIRED_WORKSPACE_ID,
     workspaceId,
     remoteVersion,
     pendingBaseVersion,
@@ -1443,11 +1458,353 @@ const PERSISTENCE_BRIDGE = String.raw`
 })();
 </script>`;
 
+const AI_V2_BRIDGE = String.raw`
+<script id="accelerator-ai-v2-webmcp-bridge">
+(() => {
+  if (window.__acceleratorAiV2Bridge) return;
+  window.__acceleratorAiV2Bridge = true;
+
+  const REQUIRED_WORKSPACE_ID = '${V2_WORKSPACE_ID}';
+  const DRAFT_KEY = 'accelerator-ai-v2-proposal-drafts';
+  const TOOL_NAMES = [
+    'accelerator_get_current_context',
+    'accelerator_get_current_creator_record',
+    'accelerator_get_current_video_record',
+    'accelerator_list_staged_proposals',
+    'accelerator_stage_proposal'
+  ];
+  let registered = false;
+
+  function readBinding(name) {
+    try { return (0, eval)('typeof ' + name + ' !== "undefined" ? ' + name + ' : undefined'); }
+    catch (_) { return undefined; }
+  }
+
+  function appState() {
+    const value = readBinding('state');
+    return value && typeof value === 'object' ? value : null;
+  }
+
+  function clone(value) {
+    return JSON.parse(JSON.stringify(value));
+  }
+
+  function saveDiagnostics() {
+    try {
+      return typeof window.__acceleratorSaveDiagnostics === 'function'
+        ? window.__acceleratorSaveDiagnostics()
+        : null;
+    } catch (_) { return null; }
+  }
+
+  function verifiedState() {
+    const diagnostics = saveDiagnostics();
+    if (!diagnostics || !diagnostics.cloudStateLoaded || diagnostics.demoMode) {
+      return { ready: false, reason: 'The isolated V2 cloud workspace has not finished loading.' };
+    }
+    if (diagnostics.workspaceId !== REQUIRED_WORKSPACE_ID) {
+      return { ready: false, reason: 'The required V2 workspace is not active. Production fallback is disabled.' };
+    }
+    const value = appState();
+    if (!value) return { ready: false, reason: 'Dashboard state is unavailable.' };
+    return { ready: true, state: value, diagnostics };
+  }
+
+  function currentCreator(value) {
+    return (value.creators || []).find(item => item.id === value.currentCreatorId) || (value.creators || [])[0] || null;
+  }
+
+  function currentVideo(value, creator) {
+    return (creator && creator.videos || []).find(item => item.id === value.currentVideoId) || (creator && creator.videos || [])[0] || null;
+  }
+
+  function unavailable(result) {
+    return {
+      ok: false,
+      environment: 'accelerator-ai-v2',
+      workspaceId: REQUIRED_WORKSPACE_ID,
+      reason: result.reason
+    };
+  }
+
+  function getCurrentContext() {
+    const result = verifiedState();
+    if (!result.ready) return unavailable(result);
+    const value = result.state;
+    const creator = currentCreator(value);
+    const video = currentVideo(value, creator);
+    return {
+      ok: true,
+      environment: 'accelerator-ai-v2',
+      workspaceId: REQUIRED_WORKSPACE_ID,
+      view: value.view || 'home',
+      creator: creator ? {
+        id: creator.id,
+        name: creator.name,
+        niche: creator.niche || '',
+        currentConstraint: creator.currentConstraint || '',
+        creatorStage: creator.stage || '',
+        videoCount: Array.isArray(creator.videos) ? creator.videos.length : 0
+      } : null,
+      currentVideo: video ? {
+        id: video.id,
+        title: video.title || '',
+        job: video.job || '',
+        stage: video.stage || '',
+        role: video.role || ''
+      } : null,
+      creatorCount: Array.isArray(value.creators) ? value.creators.length : 0,
+      cloudVersion: result.diagnostics.remoteVersion,
+      instruction: 'Treat this as private creator data. Analyze it, but stage recommendations for Blake to review instead of changing dashboard state.'
+    };
+  }
+
+  function getCurrentCreatorRecord() {
+    const result = verifiedState();
+    if (!result.ready) return unavailable(result);
+    const creator = currentCreator(result.state);
+    return {
+      ok: true,
+      environment: 'accelerator-ai-v2',
+      workspaceId: REQUIRED_WORKSPACE_ID,
+      view: result.state.view || 'home',
+      creator: creator ? clone(creator) : null,
+      instruction: 'This record is read-only through site tools. Use accelerator_stage_proposal for recommendations.'
+    };
+  }
+
+  function getCurrentVideoRecord() {
+    const result = verifiedState();
+    if (!result.ready) return unavailable(result);
+    const creator = currentCreator(result.state);
+    const video = currentVideo(result.state, creator);
+    return {
+      ok: true,
+      environment: 'accelerator-ai-v2',
+      workspaceId: REQUIRED_WORKSPACE_ID,
+      creator: creator ? { id: creator.id, name: creator.name } : null,
+      video: video ? clone(video) : null,
+      instruction: 'This record is read-only through site tools. Use accelerator_stage_proposal for recommendations.'
+    };
+  }
+
+  function readDrafts() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(DRAFT_KEY) || '[]');
+      return Array.isArray(parsed) ? parsed.slice(0, 25) : [];
+    } catch (_) { return []; }
+  }
+
+  function writeDrafts(items) {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(items.slice(0, 25)));
+    renderDrafts();
+  }
+
+  function cleanText(value, max) {
+    return String(value || '').trim().slice(0, max);
+  }
+
+  function stageProposal(input) {
+    const context = getCurrentContext();
+    const item = {
+      id: 'ai-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7),
+      createdAt: new Date().toISOString(),
+      creatorId: context.ok && context.creator ? context.creator.id : null,
+      creatorName: context.ok && context.creator ? context.creator.name : '',
+      title: cleanText(input && input.title, 120),
+      target: cleanText(input && input.target, 120),
+      summary: cleanText(input && input.summary, 1200),
+      recommendation: cleanText(input && input.recommendation, 3000),
+      evidence: Array.isArray(input && input.evidence)
+        ? input.evidence.map(value => cleanText(value, 500)).filter(Boolean).slice(0, 8)
+        : [],
+      status: 'Draft - not applied'
+    };
+    if (!item.title || !item.target || !item.summary || !item.recommendation) {
+      return { ok: false, reason: 'title, target, summary, and recommendation are required.' };
+    }
+    const drafts = readDrafts();
+    drafts.unshift(item);
+    writeDrafts(drafts);
+    openDrawer();
+    return {
+      ok: true,
+      environment: 'accelerator-ai-v2',
+      proposalId: item.id,
+      status: item.status,
+      storedIn: 'this browser only',
+      cloudStateChanged: false,
+      nextStep: 'Blake can review, copy, or discard the proposal from the AI V2 drawer.'
+    };
+  }
+
+  function listStagedProposals() {
+    return {
+      ok: true,
+      environment: 'accelerator-ai-v2',
+      cloudStateChanged: false,
+      proposals: readDrafts()
+    };
+  }
+
+  function installUi() {
+    if (document.getElementById('accelerator-ai-v2-button')) return;
+    const style = document.createElement('style');
+    style.id = 'accelerator-ai-v2-styles';
+    style.textContent = [
+      '#accelerator-ai-v2-button{position:fixed;right:18px;bottom:18px;z-index:99990;min-height:44px;border:1px solid #17212b;border-radius:999px;background:#17212b;color:#fff;padding:10px 16px;font:800 12px/1 Inter,system-ui,sans-serif;letter-spacing:.04em;cursor:pointer;box-shadow:0 12px 32px rgba(23,33,43,.2)}',
+      '#accelerator-ai-v2-drawer{width:min(560px,calc(100% - 24px));max-height:min(760px,calc(100% - 24px));border:1px solid #d9e0e6;border-radius:24px;padding:0;background:#f8fafb;color:#17212b;box-shadow:0 28px 90px rgba(23,33,43,.26)}',
+      '#accelerator-ai-v2-drawer::backdrop{background:rgba(23,33,43,.58);backdrop-filter:blur(4px)}',
+      '.ai-v2-shell{padding:25px}.ai-v2-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;padding-bottom:18px;border-bottom:1px solid #dce3e8}',
+      '.ai-v2-kicker{margin:0 0 6px;color:#8a7630;font:850 11px/1.2 Inter,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase}.ai-v2-head h2{margin:0;font:850 30px/1.05 Inter,system-ui,sans-serif;letter-spacing:-.035em}.ai-v2-close{width:42px;height:42px;border:1px solid #cfd8df;border-radius:12px;background:#fff;color:#17212b;font:800 20px/1 Inter,system-ui,sans-serif;cursor:pointer}',
+      '.ai-v2-safety{margin:16px 0;padding:14px;border:1px solid #eadfbd;border-radius:14px;background:#fff9df;color:#58616a;font:550 13px/1.5 Inter,system-ui,sans-serif}.ai-v2-safety strong{color:#17212b}',
+      '.ai-v2-empty{padding:20px 0;color:#6f7a85;font:550 14px/1.5 Inter,system-ui,sans-serif}.ai-v2-list{display:grid;gap:12px}.ai-v2-card{padding:16px;border:1px solid #dce3e8;border-radius:16px;background:#fff}.ai-v2-card h3{margin:0 0 6px;font:800 17px/1.25 Inter,system-ui,sans-serif}.ai-v2-meta{margin:0 0 10px;color:#8a7630;font:800 10px/1.25 Inter,system-ui,sans-serif;letter-spacing:.09em;text-transform:uppercase}.ai-v2-card p{margin:0 0 9px;color:#56616c;font:550 13px/1.45 Inter,system-ui,sans-serif;white-space:pre-wrap}.ai-v2-card strong{color:#17212b}.ai-v2-evidence{margin:8px 0 0;padding-left:18px;color:#56616c;font:550 12px/1.4 Inter,system-ui,sans-serif}.ai-v2-actions{display:flex;gap:8px;margin-top:13px}.ai-v2-actions button{min-height:36px;border-radius:10px;padding:8px 11px;font:800 11px/1.2 Inter,system-ui,sans-serif;cursor:pointer}.ai-v2-copy{border:1px solid #17212b;background:#17212b;color:#fff}.ai-v2-discard{border:1px solid #cfd8df;background:#fff;color:#56616c}',
+      '@media(max-width:560px){#accelerator-ai-v2-button{right:10px;bottom:10px}#accelerator-ai-v2-drawer{width:calc(100% - 16px);max-height:calc(100% - 16px);border-radius:19px}.ai-v2-shell{padding:20px 16px}.ai-v2-head h2{font-size:27px}}'
+    ].join('');
+    document.head.appendChild(style);
+
+    const button = document.createElement('button');
+    button.id = 'accelerator-ai-v2-button';
+    button.type = 'button';
+    button.textContent = 'AI V2';
+    button.setAttribute('aria-label', 'Open Accelerator AI V2 proposals');
+    button.addEventListener('click', openDrawer);
+    document.body.appendChild(button);
+
+    const dialog = document.createElement('dialog');
+    dialog.id = 'accelerator-ai-v2-drawer';
+    dialog.setAttribute('aria-labelledby', 'accelerator-ai-v2-title');
+    dialog.innerHTML = [
+      '<section class="ai-v2-shell">',
+      '<header class="ai-v2-head"><div><p class="ai-v2-kicker">Isolated test workspace</p><h2 id="accelerator-ai-v2-title">AI proposal drafts</h2></div><button class="ai-v2-close" type="button" aria-label="Close">×</button></header>',
+      '<p class="ai-v2-safety"><strong>Safe by design.</strong> Codex can read the active V2 record and stage recommendations here. Drafts stay in this browser and never change cloud data automatically.</p>',
+      '<div data-ai-v2-drafts></div>',
+      '</section>'
+    ].join('');
+    dialog.querySelector('.ai-v2-close').addEventListener('click', () => dialog.close());
+    dialog.addEventListener('click', event => {
+      const copyButton = event.target.closest('[data-ai-copy]');
+      const discardButton = event.target.closest('[data-ai-discard]');
+      if (copyButton) {
+        const item = readDrafts().find(draft => draft.id === copyButton.dataset.aiCopy);
+        if (item && navigator.clipboard) navigator.clipboard.writeText(item.recommendation).catch(() => {});
+      }
+      if (discardButton) writeDrafts(readDrafts().filter(draft => draft.id !== discardButton.dataset.aiDiscard));
+    });
+    document.body.appendChild(dialog);
+    renderDrafts();
+  }
+
+  function escapeHtml(value) {
+    return String(value || '').replace(/[&<>"']/g, character => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[character]);
+  }
+
+  function renderDrafts() {
+    const host = document.querySelector('[data-ai-v2-drafts]');
+    if (!host) return;
+    const drafts = readDrafts();
+    if (!drafts.length) {
+      host.innerHTML = '<p class="ai-v2-empty">No staged proposals yet. Open this page in Codex, ask it to inspect the active creator, then ask it to stage a recommendation.</p>';
+      return;
+    }
+    host.innerHTML = '<div class="ai-v2-list">' + drafts.map(item => {
+      const evidence = item.evidence.length
+        ? '<ul class="ai-v2-evidence">' + item.evidence.map(value => '<li>' + escapeHtml(value) + '</li>').join('') + '</ul>'
+        : '';
+      return '<article class="ai-v2-card"><p class="ai-v2-meta">' + escapeHtml(item.creatorName || 'Workspace') + ' · ' + escapeHtml(item.target) + ' · Not applied</p><h3>' + escapeHtml(item.title) + '</h3><p><strong>Why:</strong> ' + escapeHtml(item.summary) + '</p><p><strong>Recommendation:</strong> ' + escapeHtml(item.recommendation) + '</p>' + evidence + '<div class="ai-v2-actions"><button class="ai-v2-copy" type="button" data-ai-copy="' + escapeHtml(item.id) + '">Copy recommendation</button><button class="ai-v2-discard" type="button" data-ai-discard="' + escapeHtml(item.id) + '">Discard</button></div></article>';
+    }).join('') + '</div>';
+  }
+
+  function openDrawer() {
+    installUi();
+    renderDrafts();
+    const dialog = document.getElementById('accelerator-ai-v2-drawer');
+    if (dialog && !dialog.open) {
+      if (typeof dialog.showModal === 'function') dialog.showModal();
+      else dialog.setAttribute('open', '');
+    }
+  }
+
+  async function registerTools() {
+    if (registered || typeof document.modelContext?.registerTool !== 'function') return false;
+    const register = tool => document.modelContext.registerTool(tool);
+    await register({
+      name: 'accelerator_get_current_context',
+      description: 'Read the active Accelerator AI V2 view, creator summary, current video summary, and isolated cloud version. This never changes data.',
+      inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+      annotations: { readOnlyHint: true },
+      execute: async () => getCurrentContext()
+    });
+    await register({
+      name: 'accelerator_get_current_creator_record',
+      description: 'Read the complete active creator record from the isolated Accelerator AI V2 cloud workspace for diagnosis and planning. This never changes data.',
+      inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+      annotations: { readOnlyHint: true },
+      execute: async () => getCurrentCreatorRecord()
+    });
+    await register({
+      name: 'accelerator_get_current_video_record',
+      description: 'Read the complete current video record and its creator from the isolated Accelerator AI V2 cloud workspace. This never changes data.',
+      inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+      annotations: { readOnlyHint: true },
+      execute: async () => getCurrentVideoRecord()
+    });
+    await register({
+      name: 'accelerator_list_staged_proposals',
+      description: 'List AI proposal drafts stored in this browser. These drafts are separate from dashboard and cloud state.',
+      inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+      annotations: { readOnlyHint: true },
+      execute: async () => listStagedProposals()
+    });
+    await register({
+      name: 'accelerator_stage_proposal',
+      description: 'Stage a recommendation for Blake to review in the AI V2 drawer. This writes only a local proposal draft and does not change dashboard or cloud data.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          title: { type: 'string', minLength: 1, maxLength: 120 },
+          target: { type: 'string', minLength: 1, maxLength: 120, description: 'Where the recommendation belongs, such as Strategy, Plan Month 1, or a video title.' },
+          summary: { type: 'string', minLength: 1, maxLength: 1200 },
+          recommendation: { type: 'string', minLength: 1, maxLength: 3000 },
+          evidence: { type: 'array', maxItems: 8, items: { type: 'string', maxLength: 500 } }
+        },
+        required: ['title', 'target', 'summary', 'recommendation'],
+        additionalProperties: false
+      },
+      annotations: { readOnlyHint: false, destructiveHint: false },
+      execute: async input => stageProposal(input)
+    });
+    registered = true;
+    document.documentElement.dataset.acceleratorSiteTools = 'ready';
+    return true;
+  }
+
+  async function boot() {
+    installUi();
+    for (let attempt = 0; attempt < 100 && !registered; attempt += 1) {
+      if (await registerTools()) break;
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+  }
+
+  window.__acceleratorAiV2Diagnostics = () => ({
+    environment: 'accelerator-ai-v2',
+    requiredWorkspaceId: REQUIRED_WORKSPACE_ID,
+    registered,
+    toolNames: TOOL_NAMES.slice(),
+    draftCount: readDrafts().length,
+    cloud: saveDiagnostics()
+  });
+
+  boot();
+})();
+</script>`;
+
 function injectPersistence(html) {
   if (html.includes('id="accelerator-v1636-persistence-bridge"')) return html;
   const closingBody = html.lastIndexOf('</body>');
-  if (closingBody < 0) return html + PERSISTENCE_BRIDGE;
-  return html.slice(0, closingBody) + PERSISTENCE_BRIDGE + '\n' + html.slice(closingBody);
+  if (closingBody < 0) return html + PERSISTENCE_BRIDGE + AI_V2_BRIDGE;
+  return html.slice(0, closingBody) + PERSISTENCE_BRIDGE + '\n' + AI_V2_BRIDGE + '\n' + html.slice(closingBody);
 }
 
 module.exports = function handler(_req, res) {
@@ -1455,7 +1812,8 @@ module.exports = function handler(_req, res) {
     const html = injectPersistence(source());
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('X-Accelerator-Build', 'V16.3.6-cloud-first-offline-safety');
+    res.setHeader('X-Accelerator-Build', 'Accelerator-AI-V2-isolated-webmcp');
+    res.setHeader('X-Accelerator-Workspace', V2_WORKSPACE_ID);
     res.setHeader('X-Accelerator-Source-Length', String(EXPECTED_BYTES));
     res.setHeader('X-Accelerator-Source-SHA256', EXPECTED_SHA256);
     res.status(200).send(html);

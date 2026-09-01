@@ -1,0 +1,28 @@
+{
+  "build": "Accelerator-AI-V2",
+  "checkedAt": "2026-09-01T23:37:10.961Z",
+  "passed": [
+    "V2 connects only to the fixed isolated cloud workspace.",
+    "Save diagnostics expose the required V2 workspace boundary.",
+    "Loading V2 never writes cloud state.",
+    "All five WebMCP site tools register in a supported browser.",
+    "The AI V2 boundary and proposal drawer are visibly available.",
+    "The inherited creator switcher is available in V2.",
+    "Switching creators returns V2 to Home.",
+    "A real dashboard edit saves only to the fixed V2 workspace.",
+    "The context tool returns only verified V2 cloud data.",
+    "The context tool identifies the active creator.",
+    "The proposal tool explicitly reports that cloud state was not changed.",
+    "Staging a proposal cannot trigger a cloud save.",
+    "A staged proposal opens the review drawer.",
+    "The staged proposal is readable in the drawer without truncation.",
+    "V2 writes only its namespaced browser draft and backup keys.",
+    "V2 never creates or rotates production browser keys.",
+    "The AI V2 drawer fits the mobile viewport.",
+    "Mobile startup is read-only and has no runtime errors.",
+    "V2 fails closed when its isolated workspace is missing.",
+    "Missing V2 access never falls back to production and never saves.",
+    "Desktop V2 has no runtime or console errors."
+  ],
+  "errors": []
+}

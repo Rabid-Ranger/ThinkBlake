@@ -4,16 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#171f27">
-<meta name="accelerator-build" content="V16.3.6">
+<meta name="accelerator-build" content="Accelerator-AI-V2">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<title>Accelerator OS V16.3.6</title>
+<title>Accelerator AI V2</title>
 <style>html,body{margin:0;min-height:100%;background:#0d1117;color:#e6edf3;font-family:Inter,system-ui,sans-serif}body{display:grid;place-items:center}.load{text-align:center;padding:24px}.load p{color:#8b949e}</style>
 </head>
 <body>
-<div class="load"><h1>Accelerator OS</h1><p>Loading your workspace...</p></div>
+<div class="load"><h1>Accelerator AI V2</h1><p>Loading the isolated test workspace...</p></div>
 <script>
 (async()=>{try{
-  const r=await fetch('/api/source?build=v1636',{cache:'no-store'});
+  const r=await fetch('/api/source?build=ai-v2',{cache:'no-store'});
   if(!r.ok)throw new Error(`Source request failed: ${r.status}`);
   let html=await r.text();
 
@@ -30,7 +30,7 @@
   document.close();
 }catch(e){
   console.error(e);
-  document.body.innerHTML='<div class="load"><h1>Accelerator OS could not load</h1><p>Please refresh the page.</p></div>';
+  document.body.innerHTML='<div class="load"><h1>Accelerator AI V2 could not load</h1><p>Please refresh the page.</p></div>';
 }})();
 </script>
 </body>
