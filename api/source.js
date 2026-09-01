@@ -30,11 +30,11 @@ function source() {
 }
 
 const PERSISTENCE_BRIDGE = String.raw`
-<script id="accelerator-v1635-persistence-bridge">
+<script id="accelerator-v1636-persistence-bridge">
 (() => {
   if (window.__acceleratorPersistenceBridge) return;
   window.__acceleratorPersistenceBridge = true;
-  document.title = 'Accelerator OS V16.3.5 - Mobile Cloud Reconnect';
+  document.title = 'Accelerator OS V16.3.6 - Cloud-First Data Safety';
 
   const REF = 'pqggobwpazihraeqvspc';
   const SUPABASE_URL = 'https://' + REF + '.supabase.co';
@@ -47,6 +47,9 @@ const PERSISTENCE_BRIDGE = String.raw`
   const LOCAL_PREVIOUS_META_KEY = LOCAL_PREVIOUS_KEY + '-meta';
   const RECOVERY_KEY = 'accelerator-os-recovery-copy';
   const RECOVERY_META_KEY = RECOVERY_KEY + '-meta';
+  const PENDING_KEY = 'accelerator-os-unsynced-draft';
+  const PENDING_META_KEY = PENDING_KEY + '-meta';
+  const DEMO_MARKER_KEY = 'accelerator-os-demo-mode';
   const NATIVE_KEYS = [
     'accelerator-os-v1631-state-backup',
     'accelerator.mainline.v11.cleancore',
@@ -66,6 +69,7 @@ const PERSISTENCE_BRIDGE = String.raw`
   let lastObservedSerialized = '';
   let lastCloudSerialized = '';
   let pendingSerialized = '';
+  let pendingBaseVersion = null;
   let saveTimer = null;
   let retryTimer = null;
   let retryCount = 0;
@@ -81,8 +85,15 @@ const PERSISTENCE_BRIDGE = String.raw`
   let lastCloudSavedAt = 0;
   let lastCaptureSource = '';
   let cloudAuthRequired = false;
+  let cloudStateLoaded = false;
+  let syncConflict = false;
+  let demoMode = false;
+  let localWorkspaceAvailable = false;
+  let latestCloudState = null;
+  let conflictCloudVersion = null;
   let authDialogAutoOpened = false;
   let saveLabelGuardScheduled = false;
+  let reconnectInFlight = false;
 
   function readBinding(name) {
     try { return (0, eval)('typeof ' + name + ' !== "undefined" ? ' + name + ' : undefined'); }
@@ -112,9 +123,10 @@ const PERSISTENCE_BRIDGE = String.raw`
 
   function saveStateName(text) {
     const value = String(text || '').toLowerCase();
+    if (value.includes('demo mode')) return 'demo';
     if (value.includes('sign-in required')) return 'auth';
     if (value.includes('blocked')) return 'blocked';
-    if (value.includes('changed elsewhere')) return 'conflict';
+    if (value.includes('changed elsewhere') || value.includes('needs review') || value.includes('paused')) return 'conflict';
     if (value.includes('failed')) return 'error';
     if (value.includes('offline')) return 'offline';
     if (value.includes('saving')) return 'saving';
@@ -136,14 +148,15 @@ const PERSISTENCE_BRIDGE = String.raw`
           el.append(dot, textNode);
         }
         el.setAttribute('data-save-label', '');
-        el.setAttribute('role', cloudAuthRequired ? 'button' : 'status');
+        const actionable = cloudAuthRequired || syncConflict || demoMode;
+        el.setAttribute('role', actionable ? 'button' : 'status');
         el.setAttribute('aria-live', 'polite');
         textNode.textContent = lastStatusText;
         el.dataset.saveState = saveStateName(lastStatusText);
         el.title = lastStatusText;
-        if (cloudAuthRequired) {
+        if (actionable) {
           el.tabIndex = 0;
-          el.setAttribute('aria-label', lastStatusText + '. Activate to sign in.');
+          el.setAttribute('aria-label', lastStatusText + (syncConflict ? '. Activate to review.' : '. Activate to sign in.'));
         } else {
           el.removeAttribute('tabindex');
           el.removeAttribute('aria-label');
@@ -151,12 +164,14 @@ const PERSISTENCE_BRIDGE = String.raw`
         if (!el.dataset.cloudAuthWired) {
           el.dataset.cloudAuthWired = 'true';
           el.addEventListener('click', () => {
-            if (cloudAuthRequired) openCloudAuthDialog();
+            if (syncConflict) openSyncConflictDialog();
+            else if (cloudAuthRequired || demoMode) openCloudAuthDialog();
           });
           el.addEventListener('keydown', event => {
-            if (!cloudAuthRequired || (event.key !== 'Enter' && event.key !== ' ')) return;
+            if (!(cloudAuthRequired || syncConflict || demoMode) || (event.key !== 'Enter' && event.key !== ' ')) return;
             event.preventDefault();
-            openCloudAuthDialog();
+            if (syncConflict) openSyncConflictDialog();
+            else openCloudAuthDialog();
           });
         }
       }
@@ -188,6 +203,58 @@ const PERSISTENCE_BRIDGE = String.raw`
     });
   }
 
+  function ensureStartupShield() {
+    let shield = document.getElementById('accelerator-startup-shield');
+    if (shield) return shield;
+    ensureCloudAuthUi();
+    shield = document.createElement('section');
+    shield.id = 'accelerator-startup-shield';
+    shield.className = 'accelerator-startup-shield';
+    shield.setAttribute('role', 'status');
+    shield.setAttribute('aria-live', 'polite');
+    shield.innerHTML = [
+      '<div class="accelerator-startup-card">',
+      '<span class="accelerator-startup-mark" aria-hidden="true">A</span>',
+      '<h1 data-startup-title>Loading your cloud workspace…</h1>',
+      '<p data-startup-copy>Checking the latest saved version before the dashboard becomes editable.</p>',
+      '<div class="accelerator-startup-actions" hidden><button class="accelerator-startup-retry" type="button">Retry cloud</button><button class="accelerator-startup-demo" type="button">View demo</button></div>',
+      '</div>'
+    ].join('');
+    shield.querySelector('.accelerator-startup-retry').addEventListener('click', () => { void retryCloudLoad(); });
+    shield.querySelector('.accelerator-startup-demo').addEventListener('click', enterDemoMode);
+    document.body.appendChild(shield);
+    return shield;
+  }
+
+  function showStartupShield(title = 'Loading your cloud workspace…', copy = 'Checking the latest saved version before the dashboard becomes editable.', actions = false) {
+    document.body.dataset.acceleratorCloudGate = 'true';
+    const shield = ensureStartupShield();
+    shield.querySelector('[data-startup-title]').textContent = title;
+    shield.querySelector('[data-startup-copy]').textContent = copy;
+    shield.querySelector('.accelerator-startup-actions').hidden = !actions;
+  }
+
+  function hideStartupShield() {
+    delete document.body.dataset.acceleratorCloudGate;
+    const shield = document.getElementById('accelerator-startup-shield');
+    if (shield) shield.remove();
+  }
+
+  function setCloudAuthLocalOption(hasLocalWorkspace) {
+    const dialog = ensureCloudAuthUi();
+    const alternative = dialog.querySelector('[data-cloud-auth-close]');
+    const copy = dialog.querySelector('.accelerator-cloud-auth-copy');
+    const safe = dialog.querySelector('.accelerator-cloud-auth-safe span:last-child');
+    alternative.textContent = hasLocalWorkspace ? 'Work locally' : 'View demo';
+    alternative.dataset.localWorkspace = hasLocalWorkspace ? 'true' : 'false';
+    copy.textContent = hasLocalWorkspace
+      ? 'Connect this browser to load the current cloud workspace. You can keep working from the protected browser copy, but it will not replace cloud data automatically.'
+      : 'Connect this browser to load the current cloud workspace. The built-in examples are available only in Demo Mode and can never sync into your account.';
+    safe.innerHTML = hasLocalWorkspace
+      ? '<strong>Your browser copy is safe.</strong> Signing in restores cloud data before the app is allowed to write anything.'
+      : '<strong>Cloud stays authoritative.</strong> No example or unverified browser data can be uploaded during sign-in.';
+  }
+
   function ensureCloudAuthUi() {
     let dialog = document.getElementById('accelerator-cloud-auth-dialog');
     if (dialog) return dialog;
@@ -197,6 +264,17 @@ const PERSISTENCE_BRIDGE = String.raw`
     style.textContent = [
       '.save-label[data-save-state="auth"]{cursor:pointer}',
       '.save-label[data-save-state="auth"] .save-dot{background:#d36b55}',
+      '.save-label[data-save-state="conflict"],.save-label[data-save-state="demo"]{cursor:pointer}',
+      '.save-label[data-save-state="conflict"] .save-dot{background:#d36b55}.save-label[data-save-state="demo"] .save-dot{background:#d5b83f}',
+      'body[data-accelerator-cloud-gate="true"]>*:not(#accelerator-startup-shield):not(#accelerator-cloud-auth-dialog):not(#accelerator-sync-conflict-dialog):not(script):not(style){visibility:hidden!important}',
+      '.accelerator-startup-shield{box-sizing:border-box;position:fixed;inset:0;z-index:99996;display:grid;place-items:center;background:#f6f8fa;color:#17212b;padding:24px}',
+      '.accelerator-startup-card{width:min(520px,100%);text-align:center}',
+      '.accelerator-startup-mark{display:inline-grid;place-items:center;width:48px;height:48px;margin-bottom:22px;border-radius:15px;background:#17212b;color:#fff;font:900 20px/1 Inter,system-ui,sans-serif}',
+      '.accelerator-startup-card h1{margin:0;color:#17212b;font:850 36px/1.04 Inter,system-ui,sans-serif;letter-spacing:-.04em}',
+      '.accelerator-startup-card p{margin:13px auto 0;max-width:460px;color:#66717d;font:500 15px/1.5 Inter,system-ui,sans-serif}',
+      '.accelerator-startup-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:22px}.accelerator-startup-actions[hidden]{display:none}',
+      '.accelerator-startup-actions button{min-height:46px;border-radius:12px;padding:10px 16px;font:800 13px/1.2 Inter,system-ui,sans-serif;cursor:pointer}',
+      '.accelerator-startup-retry{border:1px solid #17212b;background:#17212b;color:#fff}.accelerator-startup-demo{border:1px solid #cfd8df;background:#fff;color:#26313b}',
       '.accelerator-cloud-auth{width:min(460px,calc(100% - 28px));border:1px solid #d9e0e6;border-radius:24px;padding:0;background:#f8fafb;color:#17212b;box-shadow:0 28px 90px rgba(23,33,43,.24)}',
       '.accelerator-cloud-auth::backdrop{background:rgba(23,33,43,.58);backdrop-filter:blur(4px)}',
       '.accelerator-cloud-auth-card{padding:26px}',
@@ -215,11 +293,19 @@ const PERSISTENCE_BRIDGE = String.raw`
       '.accelerator-cloud-auth-message[data-type="error"]{color:#b44435}',
       '.accelerator-cloud-auth-safe{display:flex;gap:8px;align-items:flex-start;margin:18px 0 0;padding-top:16px;border-top:1px solid #dce3e8;color:#66717d;font:500 12px/1.45 Inter,system-ui,sans-serif}',
       '.accelerator-cloud-auth-safe strong{color:#26313b}',
+      '.accelerator-sync-conflict{width:min(520px,calc(100% - 28px));border:1px solid #e0d49a;border-radius:24px;padding:0;background:#fffdf4;color:#17212b;box-shadow:0 28px 90px rgba(23,33,43,.24)}',
+      '.accelerator-sync-conflict::backdrop{background:rgba(23,33,43,.58);backdrop-filter:blur(4px)}',
+      '.accelerator-sync-conflict-card{padding:26px}.accelerator-sync-conflict h2{margin:0;color:#17212b;font:800 30px/1.08 Inter,system-ui,sans-serif;letter-spacing:-.035em}',
+      '.accelerator-sync-conflict-copy{margin:12px 0 0;color:#66717d;font:500 15px/1.5 Inter,system-ui,sans-serif}',
+      '.accelerator-sync-conflict-detail{margin:16px 0 0;padding:13px 14px;border:1px solid #eadfbd;border-radius:12px;background:#fff;color:#4e5862;font:650 12px/1.45 Inter,system-ui,sans-serif}',
+      '.accelerator-sync-conflict-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}.accelerator-sync-conflict-actions button{min-height:46px;border-radius:12px;padding:10px 14px;font:800 13px/1.2 Inter,system-ui,sans-serif;cursor:pointer}',
+      '.accelerator-conflict-cloud{grid-column:1/-1;border:1px solid #17212b;background:#17212b;color:#fff}.accelerator-conflict-review,.accelerator-conflict-download{border:1px solid #cfd8df;background:#fff;color:#26313b}',
+      '.accelerator-sync-conflict-message{min-height:18px;margin:12px 0 0;color:#b44435;font:650 12px/1.45 Inter,system-ui,sans-serif}',
       '.accelerator-recovery-notice{box-sizing:border-box;position:fixed;right:18px;bottom:18px;z-index:99998;width:min(360px,calc(100% - 36px));display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start;border:1px solid #dcc65e;border-radius:16px;background:#fff9df;color:#17212b;padding:14px 14px 14px 16px;box-shadow:0 18px 55px rgba(23,33,43,.2)}',
       '.accelerator-recovery-notice strong{display:block;margin-bottom:3px;font:800 13px/1.25 Inter,system-ui,sans-serif}.accelerator-recovery-notice span{display:block;color:#66717d;font:500 12px/1.4 Inter,system-ui,sans-serif}',
       '.accelerator-recovery-actions{grid-column:1/-1;display:flex;gap:8px;align-items:center}.accelerator-recovery-actions button{min-height:36px;border-radius:10px;padding:8px 11px;font:800 11px/1.2 Inter,system-ui,sans-serif;cursor:pointer}',
       '#accelerator-recovery-copy{border:1px solid #17212b;background:#17212b;color:#fff}.accelerator-recovery-dismiss{border:1px solid #d8d1a7;background:#fffdf2;color:#4e5862}',
-      '@media(max-width:520px){.accelerator-cloud-auth{width:calc(100% - 20px);border-radius:20px}.accelerator-cloud-auth-card{padding:22px 18px}.accelerator-cloud-auth h2{font-size:27px}.accelerator-cloud-auth-actions{grid-template-columns:1fr}.accelerator-cloud-auth-local{order:2}.accelerator-recovery-notice{right:10px;bottom:10px;width:calc(100% - 20px)}}'
+      '@media(max-width:520px){.accelerator-startup-card h1{font-size:31px}.accelerator-cloud-auth,.accelerator-sync-conflict{width:calc(100% - 20px);border-radius:20px}.accelerator-cloud-auth-card,.accelerator-sync-conflict-card{padding:22px 18px}.accelerator-cloud-auth h2,.accelerator-sync-conflict h2{font-size:27px}.accelerator-cloud-auth-actions,.accelerator-sync-conflict-actions{grid-template-columns:1fr}.accelerator-cloud-auth-local{order:2}.accelerator-conflict-cloud{grid-column:auto}.accelerator-recovery-notice{right:10px;bottom:10px;width:calc(100% - 20px)}}'
     ].join('');
     document.head.appendChild(style);
 
@@ -231,19 +317,19 @@ const PERSISTENCE_BRIDGE = String.raw`
       '<section class="accelerator-cloud-auth-card">',
       '<p class="accelerator-cloud-auth-kicker">Secure cloud workspace</p>',
       '<h2 id="accelerator-cloud-auth-title">Connect this browser</h2>',
-      '<p class="accelerator-cloud-auth-copy">Your laptop and phone each need their own sign-in. Connect this browser to load the current cloud workspace and keep future changes synced.</p>',
+      '<p class="accelerator-cloud-auth-copy">Connect this browser to load the current cloud workspace and keep future changes synced.</p>',
       '<form class="accelerator-cloud-auth-form" id="accelerator-cloud-auth-form">',
       '<label>Email<input name="email" type="email" inputmode="email" autocomplete="email" required></label>',
       '<label>Password<input name="password" type="password" autocomplete="current-password" required></label>',
       '<div class="accelerator-cloud-auth-actions"><button class="accelerator-cloud-auth-submit" type="submit">Connect cloud</button><button class="accelerator-cloud-auth-local" type="button" data-cloud-auth-close>Work locally</button></div>',
       '</form>',
       '<p class="accelerator-cloud-auth-message" id="accelerator-cloud-auth-message" role="status" aria-live="polite"></p>',
-      '<p class="accelerator-cloud-auth-safe"><span aria-hidden="true">●</span><span><strong>Your phone copy is safe.</strong> Signing in restores cloud data before the app is allowed to write anything.</span></p>',
+      '<p class="accelerator-cloud-auth-safe"><span aria-hidden="true">●</span><span><strong>Your browser copy is safe.</strong> Signing in restores cloud data before the app is allowed to write anything.</span></p>',
       '</section>'
     ].join('');
     document.body.appendChild(dialog);
 
-    dialog.querySelector('[data-cloud-auth-close]').addEventListener('click', closeCloudAuthDialog);
+    dialog.querySelector('[data-cloud-auth-close]').addEventListener('click', handleCloudAuthAlternative);
     dialog.querySelector('#accelerator-cloud-auth-form').addEventListener('submit', event => {
       event.preventDefault();
       const form = new FormData(event.currentTarget);
@@ -283,8 +369,113 @@ const PERSISTENCE_BRIDGE = String.raw`
     else dialog.removeAttribute('open');
   }
 
-  function markCloudAuthRequired({ clearStored = false, open = false } = {}) {
+  function clearDemoArtifacts() {
+    try {
+      localStorage.removeItem(DEMO_MARKER_KEY);
+      localStorage.removeItem(LOCAL_KEY);
+      localStorage.removeItem(LOCAL_META_KEY);
+      localStorage.removeItem(LOCAL_PREVIOUS_KEY);
+      localStorage.removeItem(LOCAL_PREVIOUS_META_KEY);
+      localStorage.removeItem(PENDING_KEY);
+      localStorage.removeItem(PENDING_META_KEY);
+      for (const key of NATIVE_KEYS) localStorage.removeItem(key);
+    } catch (_) {}
+  }
+
+  function enterDemoMode() {
+    if (!localWorkspaceAvailable) clearDemoArtifacts();
+    demoMode = true;
     cloudAuthRequired = true;
+    cloudStateLoaded = false;
+    saveBlocked = true;
+    pendingSerialized = '';
+    pendingBaseVersion = null;
+    clearPendingDraft();
+    try { localStorage.setItem(DEMO_MARKER_KEY, 'true'); } catch (_) {}
+    closeCloudAuthDialog();
+    hideStartupShield();
+    const current = appState();
+    if (current) {
+      try { lastObservedSerialized = JSON.stringify(current); } catch (_) {}
+    }
+    setSaveLabel('Demo mode - not synced');
+  }
+
+  function handleCloudAuthAlternative(event) {
+    const hasLocal = event.currentTarget.dataset.localWorkspace === 'true';
+    if (!hasLocal) {
+      enterDemoMode();
+      return;
+    }
+    closeCloudAuthDialog();
+    hideStartupShield();
+    setSaveLabel('Cloud sign-in required - local backup safe');
+  }
+
+  function ensureSyncConflictUi() {
+    let dialog = document.getElementById('accelerator-sync-conflict-dialog');
+    if (dialog) return dialog;
+    ensureCloudAuthUi();
+    dialog = document.createElement('dialog');
+    dialog.id = 'accelerator-sync-conflict-dialog';
+    dialog.className = 'accelerator-sync-conflict';
+    dialog.setAttribute('aria-labelledby', 'accelerator-sync-conflict-title');
+    dialog.innerHTML = [
+      '<section class="accelerator-sync-conflict-card">',
+      '<p class="accelerator-cloud-auth-kicker">Cloud data protected</p>',
+      '<h2 id="accelerator-sync-conflict-title">This browser and cloud both changed</h2>',
+      '<p class="accelerator-sync-conflict-copy">Your local edits were not uploaded. Cloud saving is paused so a browser copy cannot silently replace newer work from another device.</p>',
+      '<p class="accelerator-sync-conflict-detail" data-conflict-detail></p>',
+      '<div class="accelerator-sync-conflict-actions">',
+      '<button class="accelerator-conflict-cloud" type="button">Use latest cloud</button>',
+      '<button class="accelerator-conflict-review" type="button">Review local changes</button>',
+      '<button class="accelerator-conflict-download" type="button">Download local copy</button>',
+      '</div>',
+      '<p class="accelerator-sync-conflict-message" role="status" aria-live="polite"></p>',
+      '</section>'
+    ].join('');
+    dialog.querySelector('.accelerator-conflict-cloud').addEventListener('click', () => { void resolveConflictWithCloud(); });
+    dialog.querySelector('.accelerator-conflict-review').addEventListener('click', () => {
+      closeSyncConflictDialog();
+      hideStartupShield();
+      setSaveLabel('Cloud paused - local changes need review');
+    });
+    dialog.querySelector('.accelerator-conflict-download').addEventListener('click', downloadPendingCopy);
+    dialog.addEventListener('cancel', event => {
+      event.preventDefault();
+      closeSyncConflictDialog();
+      hideStartupShield();
+      setSaveLabel('Cloud paused - local changes need review');
+    });
+    document.body.appendChild(dialog);
+    return dialog;
+  }
+
+  function openSyncConflictDialog() {
+    if (!syncConflict) return;
+    const dialog = ensureSyncConflictUi();
+    const base = Number.isInteger(pendingBaseVersion) ? String(pendingBaseVersion) : 'unknown';
+    const cloud = Number.isInteger(conflictCloudVersion) ? String(conflictCloudVersion) : 'newer';
+    dialog.querySelector('[data-conflict-detail]').textContent = 'Local draft started from cloud version ' + base + '. Current cloud version is ' + cloud + '.';
+    dialog.querySelector('.accelerator-sync-conflict-message').textContent = '';
+    if (!dialog.open) {
+      if (typeof dialog.showModal === 'function') dialog.showModal();
+      else dialog.setAttribute('open', '');
+    }
+  }
+
+  function closeSyncConflictDialog() {
+    const dialog = document.getElementById('accelerator-sync-conflict-dialog');
+    if (!dialog || !dialog.open) return;
+    if (typeof dialog.close === 'function') dialog.close();
+    else dialog.removeAttribute('open');
+  }
+
+  function markCloudAuthRequired({ clearStored = false, open = false } = {}) {
+    const fallback = readFallbackState();
+    localWorkspaceAvailable = !!fallback;
+    cloudAuthRequired = true;
+    cloudStateLoaded = false;
     workspaceId = null;
     accessToken = null;
     refreshToken = null;
@@ -293,9 +484,10 @@ const PERSISTENCE_BRIDGE = String.raw`
     if (clearStored) {
       try { localStorage.removeItem(AUTH_KEY); } catch (_) {}
     }
-    setSaveLabel('Cloud sign-in required - local backup safe');
+    setSaveLabel(demoMode ? 'Demo mode - not synced' : 'Cloud sign-in required - local backup safe');
     if (open && !authDialogAutoOpened) {
       authDialogAutoOpened = true;
+      setCloudAuthLocalOption(localWorkspaceAvailable);
       setTimeout(() => openCloudAuthDialog({ automatic: true }), 180);
     }
   }
@@ -328,15 +520,16 @@ const PERSISTENCE_BRIDGE = String.raw`
       }
 
       const candidateState = appState();
-      const recoveryCandidate = candidateState
+      const recoveryCandidate = !demoMode && localWorkspaceAvailable && candidateState
         ? { value: clone(candidateState), key: 'cloud-auth-reconnect' }
-        : readFallbackState();
+        : (!demoMode ? readFallbackState() : null);
       try { localStorage.setItem(AUTH_KEY, JSON.stringify(session)); } catch (_) {}
       accessToken = session.access_token;
       refreshToken = session.refresh_token;
       cloudAuthRequired = false;
+      if (demoMode) clearDemoArtifacts();
+      demoMode = false;
       saveBlocked = false;
-      pendingSerialized = '';
       clearTimeout(saveTimer);
       clearTimeout(retryTimer);
 
@@ -352,6 +545,11 @@ const PERSISTENCE_BRIDGE = String.raw`
         }
         return false;
       }
+
+      clearPendingDraft();
+      syncConflict = false;
+      authDialogAutoOpened = false;
+      hideStartupShield();
 
       const current = appState();
       if (current) {
@@ -374,20 +572,31 @@ const PERSISTENCE_BRIDGE = String.raw`
     }
   }
 
-  function downloadRecoveryCopy() {
+  function downloadSerializedCopy(raw, filename) {
     try {
-      const raw = localStorage.getItem(RECOVERY_KEY);
       if (!raw) return;
       const blob = new Blob([raw], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'accelerator-recovery-copy-' + new Date().toISOString().slice(0, 10) + '.json';
+      link.download = filename;
       document.body.appendChild(link);
       link.click();
       link.remove();
       setTimeout(() => URL.revokeObjectURL(url), 1500);
     } catch (_) {}
+  }
+
+  function downloadRecoveryCopy() {
+    let raw = '';
+    try { raw = localStorage.getItem(RECOVERY_KEY) || ''; } catch (_) {}
+    downloadSerializedCopy(raw, 'accelerator-recovery-copy-' + new Date().toISOString().slice(0, 10) + '.json');
+  }
+
+  function downloadPendingCopy() {
+    let raw = pendingSerialized;
+    try { raw = localStorage.getItem(PENDING_KEY) || raw || localStorage.getItem(RECOVERY_KEY) || ''; } catch (_) {}
+    downloadSerializedCopy(raw, 'accelerator-local-draft-' + new Date().toISOString().slice(0, 10) + '.json');
   }
 
   function ensureRecoveryNotice() {
@@ -502,8 +711,62 @@ const PERSISTENCE_BRIDGE = String.raw`
     } catch (_) {}
   }
 
+  function readLocalMeta() {
+    try {
+      const raw = localStorage.getItem(LOCAL_META_KEY);
+      const parsed = raw ? JSON.parse(raw) : null;
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (_) { return {}; }
+  }
+
+  function readPendingDraft() {
+    try {
+      const raw = localStorage.getItem(PENDING_KEY);
+      if (!raw) return null;
+      const metaRaw = localStorage.getItem(PENDING_META_KEY);
+      const meta = metaRaw ? JSON.parse(metaRaw) : {};
+      const value = normalizeWithApp(JSON.parse(raw));
+      const base = Number(meta && meta.baseVersion);
+      return {
+        value,
+        serialized: JSON.stringify(value),
+        key: PENDING_KEY,
+        baseVersion: Number.isInteger(base) && base >= 0 ? base : null,
+        savedAt: Number(meta && meta.savedAt || 0)
+      };
+    } catch (_) { return null; }
+  }
+
+  function clearPendingDraft() {
+    pendingSerialized = '';
+    pendingBaseVersion = null;
+    try {
+      localStorage.removeItem(PENDING_KEY);
+      localStorage.removeItem(PENDING_META_KEY);
+    } catch (_) {}
+  }
+
+  function derivePendingBaseVersion() {
+    if (Number.isInteger(pendingBaseVersion) && pendingBaseVersion >= 0) return pendingBaseVersion;
+    if (cloudStateLoaded && Number.isInteger(remoteVersion) && remoteVersion >= 0) return remoteVersion;
+    const meta = readLocalMeta();
+    const stored = Number(meta.cloudVersion);
+    return Number.isInteger(stored) && stored >= 0 ? stored : null;
+  }
+
+  function persistPendingDraft(serialized) {
+    try {
+      localStorage.setItem(PENDING_KEY, serialized);
+      localStorage.setItem(PENDING_META_KEY, JSON.stringify({
+        savedAt: Date.now(),
+        baseVersion: Number.isInteger(pendingBaseVersion) ? pendingBaseVersion : null,
+        source: 'offline-or-unconfirmed-edit'
+      }));
+    } catch (_) {}
+  }
+
   function readFallbackState() {
-    const candidates = [LOCAL_KEY, LOCAL_PREVIOUS_KEY, RECOVERY_KEY, ...NATIVE_KEYS];
+    const candidates = [LOCAL_KEY, LOCAL_PREVIOUS_KEY, ...NATIVE_KEYS];
     let best = null;
     for (const key of candidates) {
       try {
@@ -553,6 +816,54 @@ const PERSISTENCE_BRIDGE = String.raw`
     } catch (_) {
       return false;
     }
+  }
+
+  function markSyncConflict(candidate, cloudState, cloudVersion) {
+    if (!candidate || !candidate.value) return false;
+    const normalizedLocal = normalizeWithApp(candidate.value);
+    pendingSerialized = candidate.serialized || JSON.stringify(normalizedLocal);
+    pendingBaseVersion = Number.isInteger(candidate.baseVersion) ? candidate.baseVersion : null;
+    persistPendingDraft(pendingSerialized);
+    latestCloudState = clone(cloudState || {});
+    conflictCloudVersion = Number.isInteger(cloudVersion) ? cloudVersion : remoteVersion;
+    preserveRecoveryCandidate({ value: normalizedLocal, key: candidate.key || PENDING_KEY }, cloudState, true);
+    replaceState(normalizedLocal, 'conflict-local-review');
+    syncConflict = true;
+    saveBlocked = true;
+    setSaveLabel('Cloud paused - local changes need review');
+    setTimeout(openSyncConflictDialog, 0);
+    return true;
+  }
+
+  function reconcilePendingWithCloud(candidate, cloudState, cloudVersion, restoreState = true) {
+    if (!candidate || !candidate.value) return 'none';
+    const normalizedLocal = normalizeWithApp(candidate.value);
+    const localSerialized = candidate.serialized || JSON.stringify(normalizedLocal);
+    const cloudSerialized = JSON.stringify(cloudState || {});
+    const baseVersion = Number.isInteger(candidate.baseVersion) ? candidate.baseVersion : null;
+
+    if (localSerialized === cloudSerialized) {
+      clearPendingDraft();
+      return 'already-synced';
+    }
+
+    if (baseVersion !== null && baseVersion === cloudVersion) {
+      pendingSerialized = localSerialized;
+      pendingBaseVersion = baseVersion;
+      persistPendingDraft(pendingSerialized);
+      if (restoreState) replaceState(normalizedLocal, 'offline-draft-resume');
+      syncConflict = false;
+      saveBlocked = false;
+      return 'resume';
+    }
+
+    markSyncConflict({
+      value: normalizedLocal,
+      serialized: localSerialized,
+      key: candidate.key || PENDING_KEY,
+      baseVersion
+    }, cloudState, cloudVersion);
+    return 'conflict';
   }
 
   function readStoredSession() {
@@ -627,7 +938,7 @@ const PERSISTENCE_BRIDGE = String.raw`
     return false;
   }
 
-  async function saveRemote(serialized) {
+  async function saveRemote(serialized, expectedVersion = pendingBaseVersion) {
     if (!serialized) return { ok: false, retryable: false };
     if (cloudAuthRequired || !accessToken) return { ok: false, retryable: false, authRequired: true };
     if (!workspaceId) return { ok: false, retryable: true };
@@ -644,7 +955,7 @@ const PERSISTENCE_BRIDGE = String.raw`
 
     const result = await rpc('save_workspace_state', {
       p_workspace_id: workspaceId,
-      p_expected_version: remoteVersion,
+      p_expected_version: Number.isInteger(expectedVersion) ? expectedVersion : remoteVersion,
       p_state: parsed
     });
 
@@ -666,7 +977,12 @@ const PERSISTENCE_BRIDGE = String.raw`
     if (row.conflict) {
       // Never blindly retry over a newer cloud version. That is a data-loss path.
       remoteVersion = Number(row.version || remoteVersion || 0);
-      setSaveLabel('Cloud changed elsewhere - refresh before saving');
+      markSyncConflict({
+        value: parsed,
+        serialized,
+        key: PENDING_KEY,
+        baseVersion: Number.isInteger(expectedVersion) ? expectedVersion : null
+      }, latestCloudState || {}, remoteVersion);
       return { ok: false, conflict: true };
     }
 
@@ -675,7 +991,13 @@ const PERSISTENCE_BRIDGE = String.raw`
     return { ok: true };
   }
 
-  async function connectCloud({ restoreState = true, recoveryCandidate = null, forceRecoveryCandidate = false } = {}) {
+  async function connectCloud({
+    restoreState = true,
+    recoveryCandidate = null,
+    forceRecoveryCandidate = false,
+    pendingCandidate = null,
+    reconcilePending = false
+  } = {}) {
     readStoredSession();
     if (!accessToken && !refreshToken) {
       markCloudAuthRequired();
@@ -702,14 +1024,26 @@ const PERSISTENCE_BRIDGE = String.raw`
     const normalizedCloud = cloudState && typeof cloudState === 'object'
       ? normalizeWithApp(cloudState)
       : {};
+    cloudStateLoaded = true;
+    latestCloudState = clone(normalizedCloud);
+    lastCloudSerialized = JSON.stringify(normalizedCloud);
     remoteShape = shapeOf(normalizedCloud);
     preserveRecoveryCandidate(recoveryCandidate, normalizedCloud, forceRecoveryCandidate);
-    if (normalizedCloud && Object.keys(normalizedCloud).length) {
-      if (restoreState && !replaceState(normalizedCloud, 'cloud')) return false;
+    let pendingOutcome = 'none';
+    if (reconcilePending && pendingCandidate) {
+      pendingOutcome = reconcilePendingWithCloud(pendingCandidate, normalizedCloud, remoteVersion, restoreState);
+    }
+    if (pendingOutcome === 'none' || pendingOutcome === 'already-synced') {
+      if (normalizedCloud && Object.keys(normalizedCloud).length) {
+        if (restoreState && !replaceState(normalizedCloud, 'cloud')) return false;
+      }
     }
     cloudAuthRequired = false;
-    saveBlocked = false;
-    setSaveLabel('Cloud connected');
+    if (pendingOutcome !== 'conflict') {
+      syncConflict = false;
+      saveBlocked = false;
+      setSaveLabel(pendingOutcome === 'resume' ? 'Offline changes ready to sync' : 'Cloud connected');
+    }
     return true;
   }
 
@@ -717,13 +1051,24 @@ const PERSISTENCE_BRIDGE = String.raw`
     try {
       const now = Date.now();
       const previous = localStorage.getItem(LOCAL_KEY);
+      const previousMeta = readLocalMeta();
       if (previous && previous !== serialized && now - lastLocalRotationAt >= 30000) {
         localStorage.setItem(LOCAL_PREVIOUS_KEY, previous);
         localStorage.setItem(LOCAL_PREVIOUS_META_KEY, localStorage.getItem(LOCAL_META_KEY) || JSON.stringify({ savedAt: now, source: 'rotation' }));
         lastLocalRotationAt = now;
       }
+      const cloudVersion = Number.isInteger(pendingBaseVersion)
+        ? pendingBaseVersion
+        : (cloudStateLoaded && Number.isInteger(remoteVersion)
+          ? remoteVersion
+          : (Number.isInteger(Number(previousMeta.cloudVersion)) ? Number(previousMeta.cloudVersion) : null));
       localStorage.setItem(LOCAL_KEY, serialized);
-      localStorage.setItem(LOCAL_META_KEY, JSON.stringify({ savedAt: now, source: sourceName }));
+      localStorage.setItem(LOCAL_META_KEY, JSON.stringify({
+        savedAt: now,
+        source: sourceName,
+        cloudVersion,
+        syncState: cloudStateLoaded && serialized === lastCloudSerialized ? 'synced' : 'local'
+      }));
       lastLocalSavedAt = now;
     } catch (_) {}
   }
@@ -737,16 +1082,24 @@ const PERSISTENCE_BRIDGE = String.raw`
 
   async function drainSaveQueue() {
     if (saveInFlight || saveBlocked || !pendingSerialized) return;
+    if (demoMode || syncConflict) return;
+    if (!workspaceId || !cloudStateLoaded) {
+      void retryCloudLoad({ background: true });
+      return;
+    }
     if (pendingSerialized === lastCloudSerialized) {
-      pendingSerialized = '';
+      const synced = pendingSerialized;
+      clearPendingDraft();
+      persistLocalSnapshot(synced, 'cloud-confirmed');
       setSaveLabel('Saved just now');
       return;
     }
 
     const target = pendingSerialized;
+    const targetBaseVersion = pendingBaseVersion;
     saveInFlight = true;
     setSaveLabel('Saving…');
-    const result = await saveRemote(target);
+    const result = await saveRemote(target, targetBaseVersion);
     saveInFlight = false;
 
     if (result.ok) {
@@ -754,7 +1107,14 @@ const PERSISTENCE_BRIDGE = String.raw`
       lastCloudSavedAt = Date.now();
       retryCount = 0;
       clearTimeout(retryTimer);
-      if (pendingSerialized === target) pendingSerialized = '';
+      if (pendingSerialized === target) {
+        clearPendingDraft();
+        persistLocalSnapshot(target, 'cloud-confirmed');
+      } else {
+        pendingBaseVersion = remoteVersion;
+        persistPendingDraft(pendingSerialized);
+        persistLocalSnapshot(pendingSerialized, 'queued-after-cloud-confirmation');
+      }
       setSaveLabel('Saved just now');
       if (pendingSerialized) queueMicrotask(() => { void drainSaveQueue(); });
       return;
@@ -777,9 +1137,21 @@ const PERSISTENCE_BRIDGE = String.raw`
   }
 
   function queueSnapshot(serialized, { immediate = false } = {}) {
+    if (demoMode) {
+      lastObservedSerialized = serialized;
+      setSaveLabel('Demo mode - not synced');
+      return;
+    }
     persistLocalSnapshot(serialized, 'app');
     lastObservedSerialized = serialized;
+    if (!pendingSerialized) pendingBaseVersion = derivePendingBaseVersion();
     pendingSerialized = serialized;
+    persistPendingDraft(serialized);
+    if (syncConflict) {
+      saveBlocked = true;
+      setSaveLabel('Cloud paused - local changes need review');
+      return;
+    }
     if (cloudAuthRequired) {
       setSaveLabel('Cloud sign-in required - local backup safe');
       return;
@@ -808,7 +1180,141 @@ const PERSISTENCE_BRIDGE = String.raw`
     }, 120);
   }
 
+  function currentPendingCandidate() {
+    const stored = readPendingDraft();
+    if (stored) return stored;
+    if (!pendingSerialized) return null;
+    try {
+      return {
+        value: normalizeWithApp(JSON.parse(pendingSerialized)),
+        serialized: pendingSerialized,
+        key: PENDING_KEY,
+        baseVersion: Number.isInteger(pendingBaseVersion) ? pendingBaseVersion : null
+      };
+    } catch (_) { return null; }
+  }
+
+  async function retryCloudLoad({ background = false } = {}) {
+    if (reconnectInFlight || demoMode) return false;
+    if (syncConflict) {
+      openSyncConflictDialog();
+      return false;
+    }
+    reconnectInFlight = true;
+    if (!background) showStartupShield();
+    try {
+      const pendingCandidate = currentPendingCandidate();
+      const fallback = readFallbackState();
+      localWorkspaceAvailable = !!fallback;
+      const connected = await connectCloud({
+        restoreState: true,
+        recoveryCandidate: pendingCandidate ? null : fallback,
+        pendingCandidate,
+        reconcilePending: !!pendingCandidate
+      });
+
+      if (connected) {
+        const current = appState();
+        if (current) {
+          lastObservedSerialized = JSON.stringify(current);
+          if (!pendingSerialized) {
+            lastCloudSerialized = lastObservedSerialized;
+            persistLocalSnapshot(lastObservedSerialized, 'cloud');
+          } else {
+            persistLocalSnapshot(lastObservedSerialized, 'offline-draft-resume');
+          }
+        }
+        if (syncConflict) {
+          openSyncConflictDialog();
+          return false;
+        }
+        hideStartupShield();
+        if (pendingSerialized && ready) queueMicrotask(() => { void drainSaveQueue(); });
+        return true;
+      }
+
+      if (cloudAuthRequired) {
+        setCloudAuthLocalOption(localWorkspaceAvailable);
+        showStartupShield(
+          'Connect to your cloud workspace',
+          localWorkspaceAvailable
+            ? 'A protected browser copy is available, but cloud must load before it can become shared data.'
+            : 'Sign in to load your real workspace. Built-in examples stay isolated in Demo Mode.',
+          false
+        );
+        openCloudAuthDialog({ automatic: true });
+        return false;
+      }
+
+      if (fallback) {
+        replaceState(fallback.value, 'offline-fallback');
+        hideStartupShield();
+        setSaveLabel(navigator.onLine === false ? 'Offline - local backup safe' : 'Cloud unavailable - local backup safe');
+        return false;
+      }
+
+      showStartupShield(
+        'Cloud workspace could not load',
+        'Nothing has been uploaded. Retry the cloud connection, or open the isolated demo without affecting your account.',
+        true
+      );
+      setSaveLabel('Cloud unavailable - no workspace loaded');
+      return false;
+    } catch (_) {
+      showStartupShield(
+        'Cloud workspace could not load',
+        'Nothing has been uploaded. Retry the cloud connection, or open the isolated demo without affecting your account.',
+        true
+      );
+      setSaveLabel('Cloud unavailable - no workspace loaded');
+      return false;
+    } finally {
+      reconnectInFlight = false;
+    }
+  }
+
+  async function resolveConflictWithCloud() {
+    const dialog = ensureSyncConflictUi();
+    const button = dialog.querySelector('.accelerator-conflict-cloud');
+    const message = dialog.querySelector('.accelerator-sync-conflict-message');
+    const candidate = currentPendingCandidate() || (appState() ? { value: clone(appState()), key: 'conflict-local-state' } : null);
+    button.disabled = true;
+    message.textContent = 'Loading the latest cloud workspace…';
+    try {
+      const connected = await connectCloud({
+        restoreState: true,
+        recoveryCandidate: candidate,
+        forceRecoveryCandidate: true,
+        reconcilePending: false
+      });
+      if (!connected) {
+        message.textContent = 'Cloud is still unavailable. Your local copy remains protected.';
+        return false;
+      }
+      clearPendingDraft();
+      syncConflict = false;
+      conflictCloudVersion = null;
+      saveBlocked = false;
+      const current = appState();
+      if (current) {
+        lastObservedSerialized = JSON.stringify(current);
+        lastCloudSerialized = lastObservedSerialized;
+        persistLocalSnapshot(lastObservedSerialized, 'cloud-conflict-resolution');
+      }
+      closeSyncConflictDialog();
+      hideStartupShield();
+      setSaveLabel('Cloud connected');
+      return true;
+    } catch (_) {
+      message.textContent = 'Cloud is still unavailable. Your local copy remains protected.';
+      return false;
+    } finally {
+      button.disabled = false;
+    }
+  }
+
   async function boot() {
+    showStartupShield();
     for (let i = 0; i < 100 && !appState(); i++) await new Promise(r => setTimeout(r, 40));
     if (!appState()) return;
 
@@ -820,33 +1326,28 @@ const PERSISTENCE_BRIDGE = String.raw`
     installSaveHook();
     rerender();
 
-    const preCloudFallback = readFallbackState();
-    let restoredFromCloud = false;
-    try { restoredFromCloud = await connectCloud({ recoveryCandidate: preCloudFallback }); } catch (_) {}
-
-    // Local data is fallback only. It NEVER overwrites a successfully loaded cloud state on boot.
-    if (!restoredFromCloud) {
-      const fallback = readFallbackState();
-      if (fallback) replaceState(fallback.value, 'offline-fallback');
-      setSaveLabel(cloudAuthRequired && navigator.onLine !== false
-        ? 'Cloud sign-in required - local backup safe'
-        : (navigator.onLine === false ? 'Offline - local backup safe' : 'Cloud unavailable - local backup safe'));
+    let resumeDemo = false;
+    try { resumeDemo = localStorage.getItem(DEMO_MARKER_KEY) === 'true'; } catch (_) {}
+    readStoredSession();
+    if (resumeDemo && !accessToken && !refreshToken) {
+      localWorkspaceAvailable = false;
+      enterDemoMode();
+    } else {
+      if (resumeDemo) clearDemoArtifacts();
+      await retryCloudLoad({ background: false });
     }
 
     normalizeCurrentState();
     rerender();
-    setSaveLabel(restoredFromCloud
-      ? 'Cloud connected'
-      : (cloudAuthRequired && navigator.onLine !== false
-        ? 'Cloud sign-in required - local backup safe'
-        : (navigator.onLine === false ? 'Offline - local backup safe' : 'Cloud unavailable - local backup safe')));
 
     const current = appState();
     if (current) {
       try {
         lastObservedSerialized = JSON.stringify(current);
-        lastCloudSerialized = restoredFromCloud ? lastObservedSerialized : '';
-        persistLocalSnapshot(lastObservedSerialized, restoredFromCloud ? 'cloud' : 'offline-fallback');
+        if (!demoMode && !pendingSerialized && (cloudStateLoaded || localWorkspaceAvailable)) {
+          if (cloudStateLoaded) lastCloudSerialized = lastObservedSerialized;
+          persistLocalSnapshot(lastObservedSerialized, cloudStateLoaded ? 'cloud' : 'offline-fallback');
+        }
       } catch (_) {}
     }
 
@@ -856,45 +1357,59 @@ const PERSISTENCE_BRIDGE = String.raw`
     observerArmedAt = Date.now() + 1500;
     ready = true;
     observeState();
-    if (cloudAuthRequired && navigator.onLine !== false) markCloudAuthRequired({ open: true });
+    if (pendingSerialized && cloudStateLoaded && !syncConflict && !cloudAuthRequired) {
+      queueMicrotask(() => { void drainSaveQueue(); });
+    }
+    applySaveLabel();
   }
 
   window.addEventListener('online', async () => {
+    if (demoMode) {
+      setSaveLabel('Demo mode - not synced');
+      return;
+    }
     if (cloudAuthRequired) {
       setSaveLabel('Cloud sign-in required - local backup safe');
       return;
     }
-    saveBlocked = false;
-    if (!workspaceId) {
-      try { await connectCloud({ restoreState: !pendingSerialized, recoveryCandidate: readFallbackState() }); } catch (_) {}
+    if (syncConflict) {
+      setSaveLabel('Cloud paused - local changes need review');
+      openSyncConflictDialog();
+      return;
     }
-    if (pendingSerialized) void drainSaveQueue();
+    await retryCloudLoad({ background: true });
   });
 
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'hidden') return;
+    if (demoMode) return;
     const current = appState();
     if (!current) return;
     try {
       const serialized = JSON.stringify(current);
       persistLocalSnapshot(serialized, 'visibility-hidden');
       if (serialized !== lastCloudSerialized) {
+        if (!pendingSerialized) pendingBaseVersion = derivePendingBaseVersion();
         pendingSerialized = serialized;
+        persistPendingDraft(serialized);
         clearTimeout(saveTimer);
-        void drainSaveQueue();
+        if (!cloudAuthRequired && !syncConflict) void drainSaveQueue();
       }
     } catch (_) {}
   });
 
   window.addEventListener('pagehide', () => {
+    if (demoMode) return;
     const current = appState();
     if (!current) return;
     try {
       const serialized = JSON.stringify(current);
       persistLocalSnapshot(serialized, 'pagehide');
       if (serialized !== lastCloudSerialized) {
+        if (!pendingSerialized) pendingBaseVersion = derivePendingBaseVersion();
         pendingSerialized = serialized;
-        void drainSaveQueue();
+        persistPendingDraft(serialized);
+        if (!cloudAuthRequired && !syncConflict) void drainSaveQueue();
       }
     } catch (_) {}
   });
@@ -902,6 +1417,7 @@ const PERSISTENCE_BRIDGE = String.raw`
   window.__acceleratorSaveDiagnostics = () => ({
     workspaceId,
     remoteVersion,
+    pendingBaseVersion,
     saveInFlight,
     saveBlocked,
     pending: !!pendingSerialized,
@@ -913,6 +1429,11 @@ const PERSISTENCE_BRIDGE = String.raw`
     lastCloudSavedAt,
     lastCaptureSource,
     authRequired: cloudAuthRequired,
+    cloudStateLoaded,
+    syncConflict,
+    demoMode,
+    cloudGate: document.body.dataset.acceleratorCloudGate === 'true',
+    pendingDraft: !!localStorage.getItem(PENDING_KEY),
     retryCount
   });
 
@@ -923,7 +1444,7 @@ const PERSISTENCE_BRIDGE = String.raw`
 </script>`;
 
 function injectPersistence(html) {
-  if (html.includes('id="accelerator-v1635-persistence-bridge"')) return html;
+  if (html.includes('id="accelerator-v1636-persistence-bridge"')) return html;
   const closingBody = html.lastIndexOf('</body>');
   if (closingBody < 0) return html + PERSISTENCE_BRIDGE;
   return html.slice(0, closingBody) + PERSISTENCE_BRIDGE + '\n' + html.slice(closingBody);
@@ -934,7 +1455,7 @@ module.exports = function handler(_req, res) {
     const html = injectPersistence(source());
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('X-Accelerator-Build', 'V16.3.5-mobile-cloud-reconnect');
+    res.setHeader('X-Accelerator-Build', 'V16.3.6-cloud-first-offline-safety');
     res.setHeader('X-Accelerator-Source-Length', String(EXPECTED_BYTES));
     res.setHeader('X-Accelerator-Source-SHA256', EXPECTED_SHA256);
     res.status(200).send(html);
