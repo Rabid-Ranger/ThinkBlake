@@ -1,19 +1,19 @@
 const crypto = require('crypto');
 const zlib = require('zlib');
 
-const EXPECTED_SHA256 = '5a4841b72a58c53c4f1eafb72a0c31ba527eb69c6bb25ecab70ec411e6e80e8a';
-const EXPECTED_BYTES = 842730;
+const EXPECTED_SHA256 = '1c40a1614db82031e3ebc2e23df28e28fbe7889d828edbb489ab4f24eba6d8e1';
+const EXPECTED_BYTES = 844146;
 const encoded = [
-  require('../bundles/v1633/v16_0'),
-  require('../bundles/v1633/v16_1'),
-  require('../bundles/v1633/v16_2'),
-  require('../bundles/v1633/v16_3'),
-  require('../bundles/v1633/v16_4'),
-  require('../bundles/v1633/v16_5'),
-  require('../bundles/v1633/v16_6'),
-  require('../bundles/v1633/v16_7'),
-  require('../bundles/v1633/v16_8'),
-  require('../bundles/v1633/v16_9'),
+  require('../bundles/v1634/v16_0'),
+  require('../bundles/v1634/v16_1'),
+  require('../bundles/v1634/v16_2'),
+  require('../bundles/v1634/v16_3'),
+  require('../bundles/v1634/v16_4'),
+  require('../bundles/v1634/v16_5'),
+  require('../bundles/v1634/v16_6'),
+  require('../bundles/v1634/v16_7'),
+  require('../bundles/v1634/v16_8'),
+  require('../bundles/v1634/v16_9'),
 ].join('');
 
 let verifiedSource;
@@ -30,7 +30,7 @@ function source() {
 }
 
 const PERSISTENCE_BRIDGE = String.raw`
-<script id="accelerator-v1633-persistence-bridge">
+<script id="accelerator-v1634-persistence-bridge">
 (() => {
   if (window.__acceleratorPersistenceBridge) return;
   window.__acceleratorPersistenceBridge = true;
@@ -120,9 +120,20 @@ const PERSISTENCE_BRIDGE = String.raw`
     try {
       const el = document.querySelector('[data-save-label], #saveLabel, .save-label');
       if (el) {
-        const textNode = el.querySelector('[data-save-text]');
-        if (textNode) textNode.textContent = lastStatusText;
-        else el.textContent = lastStatusText;
+        let textNode = el.querySelector('[data-save-text]');
+        if (!textNode) {
+          el.textContent = '';
+          const dot = document.createElement('i');
+          dot.className = 'save-dot';
+          dot.setAttribute('aria-hidden', 'true');
+          textNode = document.createElement('span');
+          textNode.setAttribute('data-save-text', '');
+          el.append(dot, textNode);
+        }
+        el.setAttribute('data-save-label', '');
+        el.setAttribute('role', 'status');
+        el.setAttribute('aria-live', 'polite');
+        textNode.textContent = lastStatusText;
         el.dataset.saveState = saveStateName(lastStatusText);
         el.title = lastStatusText;
       }
@@ -629,7 +640,7 @@ const PERSISTENCE_BRIDGE = String.raw`
 </script>`;
 
 function injectPersistence(html) {
-  if (html.includes('id="accelerator-v1633-persistence-bridge"')) return html;
+  if (html.includes('id="accelerator-v1634-persistence-bridge"')) return html;
   const closingBody = html.lastIndexOf('</body>');
   if (closingBody < 0) return html + PERSISTENCE_BRIDGE;
   return html.slice(0, closingBody) + PERSISTENCE_BRIDGE + '\n' + html.slice(closingBody);
@@ -640,7 +651,7 @@ module.exports = function handler(_req, res) {
     const html = injectPersistence(source());
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('X-Accelerator-Build', 'V16.3.3-full-release-qa');
+    res.setHeader('X-Accelerator-Build', 'V16.3.4-stable-header-clean-pdfs');
     res.setHeader('X-Accelerator-Source-Length', String(EXPECTED_BYTES));
     res.setHeader('X-Accelerator-Source-SHA256', EXPECTED_SHA256);
     res.status(200).send(html);

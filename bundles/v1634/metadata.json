@@ -1,0 +1,17 @@
+{
+  "bytes": 844146,
+  "sha256": "1c40a1614db82031e3ebc2e23df28e28fbe7889d828edbb489ab4f24eba6d8e1",
+  "encodedLength": 236864,
+  "modules": [
+    "v16_0.js",
+    "v16_1.js",
+    "v16_2.js",
+    "v16_3.js",
+    "v16_4.js",
+    "v16_5.js",
+    "v16_6.js",
+    "v16_7.js",
+    "v16_8.js",
+    "v16_9.js"
+  ]
+}
