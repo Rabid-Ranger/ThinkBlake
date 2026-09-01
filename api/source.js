@@ -1,19 +1,19 @@
 const crypto = require('crypto');
 const zlib = require('zlib');
 
-const EXPECTED_SHA256 = '99ce557694fcf9a8421c57ccd01f47b898dda4f7bd7a73be0d4a579eecd4f4a7';
-const EXPECTED_BYTES = 838014;
+const EXPECTED_SHA256 = '337f94699f99b0cb696b5d5064dad625dbeaaa604896fb4cf9a049a239103415';
+const EXPECTED_BYTES = 839942;
 const encoded = [
-  require('../bundles/v1631/v16_0'),
-  require('../bundles/v1631/v16_1'),
-  require('../bundles/v1631/v16_2'),
-  require('../bundles/v1631/v16_3'),
-  require('../bundles/v1631/v16_4'),
-  require('../bundles/v1631/v16_5'),
-  require('../bundles/v1631/v16_6'),
-  require('../bundles/v1631/v16_7'),
-  require('../bundles/v1631/v16_8'),
-  require('../bundles/v1631/v16_9'),
+  require('../bundles/v1632/v16_0'),
+  require('../bundles/v1632/v16_1'),
+  require('../bundles/v1632/v16_2'),
+  require('../bundles/v1632/v16_3'),
+  require('../bundles/v1632/v16_4'),
+  require('../bundles/v1632/v16_5'),
+  require('../bundles/v1632/v16_6'),
+  require('../bundles/v1632/v16_7'),
+  require('../bundles/v1632/v16_8'),
+  require('../bundles/v1632/v16_9'),
 ].join('');
 
 let verifiedSource;
@@ -30,7 +30,7 @@ function source() {
 }
 
 const PERSISTENCE_BRIDGE = String.raw`
-<script id="accelerator-v1631-persistence-bridge">
+<script id="accelerator-v1632-persistence-bridge">
 (() => {
   if (window.__acceleratorPersistenceBridge) return;
   window.__acceleratorPersistenceBridge = true;
@@ -39,9 +39,13 @@ const PERSISTENCE_BRIDGE = String.raw`
   const SUPABASE_URL = 'https://' + REF + '.supabase.co';
   const API_KEY = 'sb_publishable_VgGebMpW9tBcCiQlRdnzpA__rbATAaT';
   const AUTH_KEY = 'sb-' + REF + '-auth-token';
-  const LOCAL_KEY = 'accelerator-os-v1631-state-backup';
+  // Stable across software builds: deployments must never strand the latest browser backup.
+  const LOCAL_KEY = 'accelerator-os-state-backup';
   const LOCAL_META_KEY = LOCAL_KEY + '-meta';
+  const LOCAL_PREVIOUS_KEY = LOCAL_KEY + '-previous';
+  const LOCAL_PREVIOUS_META_KEY = LOCAL_PREVIOUS_KEY + '-meta';
   const NATIVE_KEYS = [
+    'accelerator-os-v1631-state-backup',
     'accelerator.mainline.v11.cleancore',
     'accelerator.mainline.v10.reconciled',
     'accelerator.mainline.v9.protocol',
@@ -56,8 +60,15 @@ const PERSISTENCE_BRIDGE = String.raw`
   let refreshToken = null;
   let ready = false;
   let applying = false;
-  let lastSerialized = '';
+  let lastObservedSerialized = '';
+  let lastCloudSerialized = '';
+  let pendingSerialized = '';
   let saveTimer = null;
+  let retryTimer = null;
+  let retryCount = 0;
+  let saveInFlight = false;
+  let saveBlocked = false;
+  let lastLocalRotationAt = 0;
   let armedAt = 0;
   let remoteShape = { creators: 0, bytes: 0 };
 
@@ -148,11 +159,8 @@ const PERSISTENCE_BRIDGE = String.raw`
       if (!setGlobalState(next)) return false;
       const current = appState();
       if (!current) return false;
-      lastSerialized = JSON.stringify(current);
-      try {
-        localStorage.setItem(LOCAL_KEY, lastSerialized);
-        localStorage.setItem(LOCAL_META_KEY, JSON.stringify({ savedAt: Date.now(), source: sourceName }));
-      } catch (_) {}
+      lastObservedSerialized = JSON.stringify(current);
+      persistLocalSnapshot(lastObservedSerialized, sourceName);
       rerender();
       return true;
     } finally {
@@ -170,7 +178,7 @@ const PERSISTENCE_BRIDGE = String.raw`
   }
 
   function readFallbackState() {
-    const candidates = [LOCAL_KEY, ...NATIVE_KEYS];
+    const candidates = [LOCAL_KEY, LOCAL_PREVIOUS_KEY, ...NATIVE_KEYS];
     let best = null;
     for (const key of candidates) {
       try {
@@ -246,18 +254,18 @@ const PERSISTENCE_BRIDGE = String.raw`
   }
 
   async function saveRemote(serialized) {
-    if (!workspaceId || !accessToken || !serialized) return false;
+    if (!workspaceId || !accessToken || !serialized) return { ok: false, retryable: true };
     let parsed;
-    try { parsed = normalizeWithApp(JSON.parse(serialized)); } catch (_) { return false; }
+    try { parsed = normalizeWithApp(JSON.parse(serialized)); }
+    catch (_) { return { ok: false, retryable: false }; }
 
     // Client-side circuit breaker. The database has the same guard independently.
     if (suspiciousDestructiveSave(parsed)) {
       setSaveLabel('Cloud save blocked - data protected');
       console.error('Accelerator OS blocked a destructive cloud save.');
-      return false;
+      return { ok: false, blocked: true };
     }
 
-    setSaveLabel('Saving to cloud…');
     const result = await rpc('save_workspace_state', {
       p_workspace_id: workspaceId,
       p_expected_version: remoteVersion,
@@ -265,14 +273,16 @@ const PERSISTENCE_BRIDGE = String.raw`
     });
 
     if (!result.ok) {
-      setSaveLabel(result.status === 400 || result.status === 409
-        ? 'Cloud save blocked - data protected'
-        : 'Cloud save unavailable - local backup kept');
-      return false;
+      const detail = JSON.stringify(result.data || '').toLowerCase();
+      const protectedSave = result.status === 409 || /destructive|creator_collapse|size_collapse|23514/.test(detail);
+      if (protectedSave) {
+        setSaveLabel('Cloud save blocked - data protected');
+        return { ok: false, blocked: true };
+      }
+      return { ok: false, retryable: true, status: result.status };
     }
     if (!Array.isArray(result.data) || !result.data.length) {
-      setSaveLabel('Cloud save unavailable - local backup kept');
-      return false;
+      return { ok: false, retryable: true };
     }
 
     const row = result.data[0];
@@ -280,16 +290,15 @@ const PERSISTENCE_BRIDGE = String.raw`
       // Never blindly retry over a newer cloud version. That is a data-loss path.
       remoteVersion = Number(row.version || remoteVersion || 0);
       setSaveLabel('Cloud changed elsewhere - refresh before saving');
-      return false;
+      return { ok: false, conflict: true };
     }
 
     remoteVersion = Number(row.version || remoteVersion + 1);
     remoteShape = shapeOf(parsed);
-    setSaveLabel('Saved to cloud');
-    return true;
+    return { ok: true };
   }
 
-  async function connectCloud() {
+  async function connectCloud({ restoreState = true } = {}) {
     readStoredSession();
     if (!accessToken && !(await refreshSession())) return false;
 
@@ -312,19 +321,75 @@ const PERSISTENCE_BRIDGE = String.raw`
     if (cloudState && typeof cloudState === 'object' && Object.keys(cloudState).length) {
       const normalizedCloud = normalizeWithApp(cloudState);
       remoteShape = shapeOf(normalizedCloud);
-      if (!replaceState(normalizedCloud, 'cloud')) return false;
+      if (restoreState && !replaceState(normalizedCloud, 'cloud')) return false;
     }
     setSaveLabel('Cloud connected');
     return true;
   }
 
-  function persistSnapshot(serialized) {
+  function persistLocalSnapshot(serialized, sourceName = 'app') {
     try {
+      const now = Date.now();
+      const previous = localStorage.getItem(LOCAL_KEY);
+      if (previous && previous !== serialized && now - lastLocalRotationAt >= 30000) {
+        localStorage.setItem(LOCAL_PREVIOUS_KEY, previous);
+        localStorage.setItem(LOCAL_PREVIOUS_META_KEY, localStorage.getItem(LOCAL_META_KEY) || JSON.stringify({ savedAt: now, source: 'rotation' }));
+        lastLocalRotationAt = now;
+      }
       localStorage.setItem(LOCAL_KEY, serialized);
-      localStorage.setItem(LOCAL_META_KEY, JSON.stringify({ savedAt: Date.now(), source: 'app' }));
+      localStorage.setItem(LOCAL_META_KEY, JSON.stringify({ savedAt: now, source: sourceName }));
     } catch (_) {}
+  }
+
+  function scheduleRetry() {
+    clearTimeout(retryTimer);
+    const delay = Math.min(10000, 1000 * Math.pow(2, Math.min(retryCount, 3)));
+    retryCount += 1;
+    retryTimer = setTimeout(() => { void drainSaveQueue(); }, delay);
+  }
+
+  async function drainSaveQueue() {
+    if (saveInFlight || saveBlocked || !pendingSerialized) return;
+    if (pendingSerialized === lastCloudSerialized) {
+      pendingSerialized = '';
+      setSaveLabel('Saved just now');
+      return;
+    }
+
+    const target = pendingSerialized;
+    saveInFlight = true;
+    setSaveLabel('Saving…');
+    const result = await saveRemote(target);
+    saveInFlight = false;
+
+    if (result.ok) {
+      lastCloudSerialized = target;
+      retryCount = 0;
+      clearTimeout(retryTimer);
+      if (pendingSerialized === target) pendingSerialized = '';
+      setSaveLabel('Saved just now');
+      if (pendingSerialized) queueMicrotask(() => { void drainSaveQueue(); });
+      return;
+    }
+
+    if (result.blocked || result.conflict || result.retryable === false) {
+      saveBlocked = true;
+      return;
+    }
+
+    setSaveLabel(navigator.onLine === false
+      ? 'Offline - local backup safe'
+      : 'Cloud save failed - retrying; local backup safe');
+    scheduleRetry();
+  }
+
+  function queueSnapshot(serialized, { immediate = false } = {}) {
+    persistLocalSnapshot(serialized, 'app');
+    lastObservedSerialized = serialized;
+    pendingSerialized = serialized;
+    setSaveLabel('Saving…');
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => saveRemote(serialized), 800);
+    saveTimer = setTimeout(() => { void drainSaveQueue(); }, immediate ? 0 : 250);
   }
 
   function observeState() {
@@ -334,10 +399,9 @@ const PERSISTENCE_BRIDGE = String.raw`
       if (!current) return;
       let serialized;
       try { serialized = JSON.stringify(current); } catch (_) { return; }
-      if (!serialized || serialized === lastSerialized) return;
-      lastSerialized = serialized;
-      persistSnapshot(serialized);
-    }, 450);
+      if (!serialized || serialized === lastObservedSerialized) return;
+      queueSnapshot(serialized);
+    }, 120);
   }
 
   async function boot() {
@@ -363,24 +427,64 @@ const PERSISTENCE_BRIDGE = String.raw`
 
     const current = appState();
     if (current) {
-      try { lastSerialized = JSON.stringify(current); } catch (_) {}
+      try {
+        lastObservedSerialized = JSON.stringify(current);
+        lastCloudSerialized = restoredFromCloud ? lastObservedSerialized : '';
+        persistLocalSnapshot(lastObservedSerialized, restoredFromCloud ? 'cloud' : 'offline-fallback');
+      } catch (_) {}
     }
 
     // Deployment/startup code is never allowed to immediately write cloud state.
     // Only a state change after boot can arm a save.
-    armedAt = Date.now() + 1800;
+    armedAt = Date.now() + 300;
     ready = true;
     observeState();
   }
+
+  window.addEventListener('online', async () => {
+    saveBlocked = false;
+    if (!workspaceId) {
+      try { await connectCloud({ restoreState: !pendingSerialized }); } catch (_) {}
+    }
+    if (pendingSerialized) void drainSaveQueue();
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'hidden') return;
+    const current = appState();
+    if (!current) return;
+    try {
+      const serialized = JSON.stringify(current);
+      persistLocalSnapshot(serialized, 'visibility-hidden');
+      if (serialized !== lastCloudSerialized) {
+        pendingSerialized = serialized;
+        clearTimeout(saveTimer);
+        void drainSaveQueue();
+      }
+    } catch (_) {}
+  });
 
   window.addEventListener('pagehide', () => {
     const current = appState();
     if (!current) return;
     try {
       const serialized = JSON.stringify(current);
-      localStorage.setItem(LOCAL_KEY, serialized);
-      localStorage.setItem(LOCAL_META_KEY, JSON.stringify({ savedAt: Date.now(), source: 'pagehide' }));
+      persistLocalSnapshot(serialized, 'pagehide');
+      if (serialized !== lastCloudSerialized) {
+        pendingSerialized = serialized;
+        void drainSaveQueue();
+      }
     } catch (_) {}
+  });
+
+  window.__acceleratorSaveDiagnostics = () => ({
+    workspaceId,
+    remoteVersion,
+    saveInFlight,
+    saveBlocked,
+    pending: !!pendingSerialized,
+    localBackup: !!localStorage.getItem(LOCAL_KEY),
+    previousLocalBackup: !!localStorage.getItem(LOCAL_PREVIOUS_KEY)
   });
 
   boot();
@@ -388,7 +492,7 @@ const PERSISTENCE_BRIDGE = String.raw`
 </script>`;
 
 function injectPersistence(html) {
-  if (html.includes('id="accelerator-v1631-persistence-bridge"')) return html;
+  if (html.includes('id="accelerator-v1632-persistence-bridge"')) return html;
   const closingBody = html.lastIndexOf('</body>');
   if (closingBody < 0) return html + PERSISTENCE_BRIDGE;
   return html.slice(0, closingBody) + PERSISTENCE_BRIDGE + '\n' + html.slice(closingBody);
@@ -399,7 +503,7 @@ module.exports = function handler(_req, res) {
     const html = injectPersistence(source());
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('X-Accelerator-Build', 'V16.3.1-persistence-safe-1');
+    res.setHeader('X-Accelerator-Build', 'V16.3.2-safe-save-dashboard-pdf');
     res.setHeader('X-Accelerator-Source-Length', String(EXPECTED_BYTES));
     res.setHeader('X-Accelerator-Source-SHA256', EXPECTED_SHA256);
     res.status(200).send(html);
