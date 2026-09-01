@@ -1,10 +1,12 @@
 {
   "build": "V16.3.2-safe-save-dashboard-pdf",
-  "checkedAt": "2026-09-01T03:24:08.917Z",
+  "checkedAt": "2026-09-01T03:37:51.000Z",
   "passed": [
     "The V16.3.2 application source loads without a startup error.",
     "The save bridge reads the current cloud version before allowing writes.",
     "Loading a software update does not write or replace workspace data.",
+    "A richer pre-update browser copy is preserved separately instead of being overwritten by cloud restore.",
+    "The dashboard surfaces a safe recovery-copy download when one is available.",
     "The browser backup captures an edit immediately.",
     "The first cloud save starts in under one second.",
     "Rapid edits are serialized so older responses cannot overwrite newer data.",
@@ -21,27 +23,27 @@
     {
       "expectedVersion": 7,
       "creatorName": "Save Queue QA One",
-      "startedAt": 1788233050452,
+      "startedAt": 1788233872530,
       "status": 200,
       "returnedVersion": 8
     },
     {
       "expectedVersion": 8,
       "creatorName": "Save Queue QA Two",
-      "startedAt": 1788233051113,
+      "startedAt": 1788233873190,
       "status": 200,
       "returnedVersion": 9
     },
     {
       "expectedVersion": 9,
       "creatorName": "Save Queue QA Retry",
-      "startedAt": 1788233051890,
+      "startedAt": 1788233873848,
       "status": 503
     },
     {
       "expectedVersion": 9,
       "creatorName": "Save Queue QA Retry",
-      "startedAt": 1788233052986,
+      "startedAt": 1788233874941,
       "status": 200,
       "returnedVersion": 10
     }

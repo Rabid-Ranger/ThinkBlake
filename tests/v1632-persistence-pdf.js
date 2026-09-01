@@ -88,6 +88,16 @@ function startServer() {
       access_token: 'qa-access-token',
       refresh_token: 'qa-refresh-token'
     }));
+    localStorage.setItem('accelerator-os-v1631-state-backup', JSON.stringify({
+      currentCreatorId: 'legacy-recovery',
+      creators: [
+        { id: 'legacy-recovery', name: 'Legacy Recovery One' },
+        { id: 'legacy-recovery-2', name: 'Legacy Recovery Two' },
+        { id: 'legacy-recovery-3', name: 'Legacy Recovery Three' },
+        { id: 'legacy-recovery-4', name: 'Legacy Recovery Four' },
+        { id: 'legacy-recovery-5', name: 'Legacy Recovery Five' }
+      ]
+    }));
   });
 
   await page.route('https://pqggobwpazihraeqvspc.supabase.co/**', async route => {
@@ -165,6 +175,8 @@ function startServer() {
     check(await page.title() === 'Accelerator OS V16.3.2 - Safe Saving + Dashboard PDFs', 'The V16.3.2 application source loads without a startup error.');
     check((await page.evaluate(() => window.__acceleratorSaveDiagnostics())).remoteVersion === 7, 'The save bridge reads the current cloud version before allowing writes.');
     check(report.saveCalls.length === 0, 'Loading a software update does not write or replace workspace data.');
+    check((await page.evaluate(() => window.__acceleratorSaveDiagnostics())).recoveryAvailable === true, 'A richer pre-update browser copy is preserved separately instead of being overwritten by cloud restore.');
+    check(await page.locator('#accelerator-recovery-copy').count() === 1, 'The dashboard surfaces a safe recovery-copy download when one is available.');
 
     const firstEditAt = Date.now();
     await page.evaluate(() => {

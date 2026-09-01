@@ -44,6 +44,8 @@ const PERSISTENCE_BRIDGE = String.raw`
   const LOCAL_META_KEY = LOCAL_KEY + '-meta';
   const LOCAL_PREVIOUS_KEY = LOCAL_KEY + '-previous';
   const LOCAL_PREVIOUS_META_KEY = LOCAL_PREVIOUS_KEY + '-meta';
+  const RECOVERY_KEY = 'accelerator-os-recovery-copy';
+  const RECOVERY_META_KEY = RECOVERY_KEY + '-meta';
   const NATIVE_KEYS = [
     'accelerator-os-v1631-state-backup',
     'accelerator.mainline.v11.cleancore',
@@ -69,6 +71,7 @@ const PERSISTENCE_BRIDGE = String.raw`
   let saveInFlight = false;
   let saveBlocked = false;
   let lastLocalRotationAt = 0;
+  let recoveryAvailable = false;
   let armedAt = 0;
   let remoteShape = { creators: 0, bytes: 0 };
 
@@ -102,7 +105,37 @@ const PERSISTENCE_BRIDGE = String.raw`
     try {
       const el = document.querySelector('[data-save-label], #saveLabel, .save-label');
       if (el) el.textContent = text;
+      ensureRecoveryNotice(el);
     } catch (_) {}
+  }
+
+  function downloadRecoveryCopy() {
+    try {
+      const raw = localStorage.getItem(RECOVERY_KEY);
+      if (!raw) return;
+      const blob = new Blob([raw], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'accelerator-recovery-copy-' + new Date().toISOString().slice(0, 10) + '.json';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+    } catch (_) {}
+  }
+
+  function ensureRecoveryNotice(label) {
+    if (!recoveryAvailable || !label || !label.parentElement) return;
+    if (document.getElementById('accelerator-recovery-copy')) return;
+    const button = document.createElement('button');
+    button.id = 'accelerator-recovery-copy';
+    button.type = 'button';
+    button.textContent = 'Recovery copy available';
+    button.title = 'Download the protected browser copy before deciding whether to import it.';
+    button.style.cssText = 'margin-left:8px;padding:5px 8px;border:1px solid #d7b33d;border-radius:999px;background:#fff8dc;color:#17212b;font:700 10px/1.2 Inter,system-ui,sans-serif;cursor:pointer';
+    button.addEventListener('click', downloadRecoveryCopy);
+    label.insertAdjacentElement('afterend', button);
   }
 
   function normalizeWithApp(value) {
@@ -178,7 +211,7 @@ const PERSISTENCE_BRIDGE = String.raw`
   }
 
   function readFallbackState() {
-    const candidates = [LOCAL_KEY, LOCAL_PREVIOUS_KEY, ...NATIVE_KEYS];
+    const candidates = [LOCAL_KEY, LOCAL_PREVIOUS_KEY, RECOVERY_KEY, ...NATIVE_KEYS];
     let best = null;
     for (const key of candidates) {
       try {
@@ -190,6 +223,42 @@ const PERSISTENCE_BRIDGE = String.raw`
       } catch (_) {}
     }
     return best;
+  }
+
+  function preserveRecoveryCandidate(candidate, cloudState) {
+    if (!candidate || !candidate.value) return false;
+    const localShape = shapeOf(candidate.value);
+    const cloudShape = shapeOf(cloudState || {});
+    const materiallyRicher = localShape.creators > cloudShape.creators ||
+      (localShape.creators > 0 &&
+       localShape.creators === cloudShape.creators &&
+       cloudShape.bytes > 0 &&
+       localShape.bytes > Math.floor(cloudShape.bytes * 1.35));
+    if (!materiallyRicher) return false;
+
+    try {
+      const existing = localStorage.getItem(RECOVERY_KEY);
+      let keepExisting = false;
+      if (existing) {
+        const existingValue = normalizeWithApp(JSON.parse(existing));
+        const existingShape = shapeOf(existingValue);
+        keepExisting = existingShape.creators > localShape.creators ||
+          (existingShape.creators === localShape.creators && existingShape.bytes >= localShape.bytes);
+      }
+      if (!keepExisting) {
+        localStorage.setItem(RECOVERY_KEY, JSON.stringify(candidate.value));
+        localStorage.setItem(RECOVERY_META_KEY, JSON.stringify({
+          savedAt: Date.now(),
+          sourceKey: candidate.key,
+          localShape,
+          cloudShape
+        }));
+      }
+      recoveryAvailable = true;
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   function readStoredSession() {
@@ -298,7 +367,7 @@ const PERSISTENCE_BRIDGE = String.raw`
     return { ok: true };
   }
 
-  async function connectCloud({ restoreState = true } = {}) {
+  async function connectCloud({ restoreState = true, recoveryCandidate = null } = {}) {
     readStoredSession();
     if (!accessToken && !(await refreshSession())) return false;
 
@@ -318,9 +387,12 @@ const PERSISTENCE_BRIDGE = String.raw`
 
     remoteVersion = Number(remote.data[0].version || remoteVersion || 0);
     const cloudState = remote.data[0].state;
-    if (cloudState && typeof cloudState === 'object' && Object.keys(cloudState).length) {
-      const normalizedCloud = normalizeWithApp(cloudState);
-      remoteShape = shapeOf(normalizedCloud);
+    const normalizedCloud = cloudState && typeof cloudState === 'object'
+      ? normalizeWithApp(cloudState)
+      : {};
+    remoteShape = shapeOf(normalizedCloud);
+    preserveRecoveryCandidate(recoveryCandidate, normalizedCloud);
+    if (normalizedCloud && Object.keys(normalizedCloud).length) {
       if (restoreState && !replaceState(normalizedCloud, 'cloud')) return false;
     }
     setSaveLabel('Cloud connected');
@@ -412,8 +484,9 @@ const PERSISTENCE_BRIDGE = String.raw`
     installRenderGuard();
     rerender();
 
+    const preCloudFallback = readFallbackState();
     let restoredFromCloud = false;
-    try { restoredFromCloud = await connectCloud(); } catch (_) {}
+    try { restoredFromCloud = await connectCloud({ recoveryCandidate: preCloudFallback }); } catch (_) {}
 
     // Local data is fallback only. It NEVER overwrites a successfully loaded cloud state on boot.
     if (!restoredFromCloud) {
@@ -424,6 +497,7 @@ const PERSISTENCE_BRIDGE = String.raw`
 
     normalizeCurrentState();
     rerender();
+    setSaveLabel(restoredFromCloud ? 'Cloud connected' : 'Offline - local backup');
 
     const current = appState();
     if (current) {
@@ -444,7 +518,7 @@ const PERSISTENCE_BRIDGE = String.raw`
   window.addEventListener('online', async () => {
     saveBlocked = false;
     if (!workspaceId) {
-      try { await connectCloud({ restoreState: !pendingSerialized }); } catch (_) {}
+      try { await connectCloud({ restoreState: !pendingSerialized, recoveryCandidate: readFallbackState() }); } catch (_) {}
     }
     if (pendingSerialized) void drainSaveQueue();
   });
@@ -484,7 +558,8 @@ const PERSISTENCE_BRIDGE = String.raw`
     saveBlocked,
     pending: !!pendingSerialized,
     localBackup: !!localStorage.getItem(LOCAL_KEY),
-    previousLocalBackup: !!localStorage.getItem(LOCAL_PREVIOUS_KEY)
+    previousLocalBackup: !!localStorage.getItem(LOCAL_PREVIOUS_KEY),
+    recoveryAvailable: recoveryAvailable || !!localStorage.getItem(RECOVERY_KEY)
   });
 
   boot();
