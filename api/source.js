@@ -1,19 +1,19 @@
 const crypto = require('crypto');
 const zlib = require('zlib');
 
-const EXPECTED_SHA256 = '337f94699f99b0cb696b5d5064dad625dbeaaa604896fb4cf9a049a239103415';
-const EXPECTED_BYTES = 839942;
+const EXPECTED_SHA256 = '5a4841b72a58c53c4f1eafb72a0c31ba527eb69c6bb25ecab70ec411e6e80e8a';
+const EXPECTED_BYTES = 842730;
 const encoded = [
-  require('../bundles/v1632/v16_0'),
-  require('../bundles/v1632/v16_1'),
-  require('../bundles/v1632/v16_2'),
-  require('../bundles/v1632/v16_3'),
-  require('../bundles/v1632/v16_4'),
-  require('../bundles/v1632/v16_5'),
-  require('../bundles/v1632/v16_6'),
-  require('../bundles/v1632/v16_7'),
-  require('../bundles/v1632/v16_8'),
-  require('../bundles/v1632/v16_9'),
+  require('../bundles/v1633/v16_0'),
+  require('../bundles/v1633/v16_1'),
+  require('../bundles/v1633/v16_2'),
+  require('../bundles/v1633/v16_3'),
+  require('../bundles/v1633/v16_4'),
+  require('../bundles/v1633/v16_5'),
+  require('../bundles/v1633/v16_6'),
+  require('../bundles/v1633/v16_7'),
+  require('../bundles/v1633/v16_8'),
+  require('../bundles/v1633/v16_9'),
 ].join('');
 
 let verifiedSource;
@@ -30,7 +30,7 @@ function source() {
 }
 
 const PERSISTENCE_BRIDGE = String.raw`
-<script id="accelerator-v1632-persistence-bridge">
+<script id="accelerator-v1633-persistence-bridge">
 (() => {
   if (window.__acceleratorPersistenceBridge) return;
   window.__acceleratorPersistenceBridge = true;
@@ -73,7 +73,12 @@ const PERSISTENCE_BRIDGE = String.raw`
   let lastLocalRotationAt = 0;
   let recoveryAvailable = false;
   let armedAt = 0;
+  let observerArmedAt = 0;
   let remoteShape = { creators: 0, bytes: 0 };
+  let lastStatusText = 'Saved';
+  let lastLocalSavedAt = 0;
+  let lastCloudSavedAt = 0;
+  let lastCaptureSource = '';
 
   function readBinding(name) {
     try { return (0, eval)('typeof ' + name + ' !== "undefined" ? ' + name + ' : undefined'); }
@@ -101,12 +106,33 @@ const PERSISTENCE_BRIDGE = String.raw`
     return { creators: creatorCount(value), bytes: stateBytes(value) };
   }
 
-  function setSaveLabel(text) {
+  function saveStateName(text) {
+    const value = String(text || '').toLowerCase();
+    if (value.includes('blocked')) return 'blocked';
+    if (value.includes('changed elsewhere')) return 'conflict';
+    if (value.includes('failed')) return 'error';
+    if (value.includes('offline')) return 'offline';
+    if (value.includes('saving')) return 'saving';
+    return 'saved';
+  }
+
+  function applySaveLabel() {
     try {
       const el = document.querySelector('[data-save-label], #saveLabel, .save-label');
-      if (el) el.textContent = text;
+      if (el) {
+        const textNode = el.querySelector('[data-save-text]');
+        if (textNode) textNode.textContent = lastStatusText;
+        else el.textContent = lastStatusText;
+        el.dataset.saveState = saveStateName(lastStatusText);
+        el.title = lastStatusText;
+      }
       ensureRecoveryNotice(el);
     } catch (_) {}
+  }
+
+  function setSaveLabel(text) {
+    lastStatusText = String(text || 'Saved');
+    applySaveLabel();
   }
 
   function downloadRecoveryCopy() {
@@ -206,7 +232,28 @@ const PERSISTENCE_BRIDGE = String.raw`
       const original = readBinding('render');
       if (typeof original !== 'function' || window.__acceleratorNativeRender) return;
       window.__acceleratorNativeRender = original;
-      (0, eval)("render = function acceleratorSafeRender(){ try { if (typeof normalize === 'function') state = normalize(state); } catch (_) {} return window.__acceleratorNativeRender.apply(this, arguments); };");
+      (0, eval)("render = function acceleratorSafeRender(){ try { if (typeof normalize === 'function') state = normalize(state); } catch (_) {} const out = window.__acceleratorNativeRender.apply(this, arguments); queueMicrotask(() => window.__acceleratorApplySaveLabel()); return out; };");
+    } catch (_) {}
+  }
+
+  function captureStateChange(source = 'observer') {
+    if (!ready || applying || Date.now() < armedAt) return false;
+    const current = appState();
+    if (!current) return false;
+    let serialized;
+    try { serialized = JSON.stringify(current); } catch (_) { return false; }
+    if (!serialized || serialized === lastObservedSerialized) return false;
+    lastCaptureSource = source;
+    queueSnapshot(serialized);
+    return true;
+  }
+
+  function installSaveHook() {
+    try {
+      const original = readBinding('save');
+      if (typeof original !== 'function' || window.__acceleratorNativeSave) return;
+      window.__acceleratorNativeSave = original;
+      (0, eval)("save = function acceleratorImmediateSave(){ const out = window.__acceleratorNativeSave.apply(this, arguments); const source = (new Error('dashboard save')).stack || 'dashboard save'; queueMicrotask(() => window.__acceleratorCaptureStateChange(source)); return out; };");
     } catch (_) {}
   }
 
@@ -410,6 +457,7 @@ const PERSISTENCE_BRIDGE = String.raw`
       }
       localStorage.setItem(LOCAL_KEY, serialized);
       localStorage.setItem(LOCAL_META_KEY, JSON.stringify({ savedAt: now, source: sourceName }));
+      lastLocalSavedAt = now;
     } catch (_) {}
   }
 
@@ -436,6 +484,7 @@ const PERSISTENCE_BRIDGE = String.raw`
 
     if (result.ok) {
       lastCloudSerialized = target;
+      lastCloudSavedAt = Date.now();
       retryCount = 0;
       clearTimeout(retryTimer);
       if (pendingSerialized === target) pendingSerialized = '';
@@ -461,17 +510,22 @@ const PERSISTENCE_BRIDGE = String.raw`
     pendingSerialized = serialized;
     setSaveLabel('Saving…');
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => { void drainSaveQueue(); }, immediate ? 0 : 250);
+    saveTimer = setTimeout(() => { void drainSaveQueue(); }, immediate ? 0 : 180);
   }
 
   function observeState() {
     setInterval(() => {
-      if (!ready || applying || Date.now() < armedAt) return;
+      if (!ready || applying) return;
       const current = appState();
       if (!current) return;
       let serialized;
       try { serialized = JSON.stringify(current); } catch (_) { return; }
+      if (Date.now() < observerArmedAt) {
+        lastObservedSerialized = serialized;
+        return;
+      }
       if (!serialized || serialized === lastObservedSerialized) return;
+      lastCaptureSource = 'observer';
       queueSnapshot(serialized);
     }, 120);
   }
@@ -482,6 +536,9 @@ const PERSISTENCE_BRIDGE = String.raw`
 
     normalizeCurrentState();
     installRenderGuard();
+    window.__acceleratorApplySaveLabel = applySaveLabel;
+    window.__acceleratorCaptureStateChange = captureStateChange;
+    installSaveHook();
     rerender();
 
     const preCloudFallback = readFallbackState();
@@ -510,7 +567,8 @@ const PERSISTENCE_BRIDGE = String.raw`
 
     // Deployment/startup code is never allowed to immediately write cloud state.
     // Only a state change after boot can arm a save.
-    armedAt = Date.now() + 300;
+    armedAt = Date.now();
+    observerArmedAt = Date.now() + 1500;
     ready = true;
     observeState();
   }
@@ -559,7 +617,11 @@ const PERSISTENCE_BRIDGE = String.raw`
     pending: !!pendingSerialized,
     localBackup: !!localStorage.getItem(LOCAL_KEY),
     previousLocalBackup: !!localStorage.getItem(LOCAL_PREVIOUS_KEY),
-    recoveryAvailable: recoveryAvailable || !!localStorage.getItem(RECOVERY_KEY)
+    recoveryAvailable: recoveryAvailable || !!localStorage.getItem(RECOVERY_KEY),
+    statusText: lastStatusText,
+    lastLocalSavedAt,
+    lastCloudSavedAt,
+    lastCaptureSource
   });
 
   boot();
@@ -567,7 +629,7 @@ const PERSISTENCE_BRIDGE = String.raw`
 </script>`;
 
 function injectPersistence(html) {
-  if (html.includes('id="accelerator-v1632-persistence-bridge"')) return html;
+  if (html.includes('id="accelerator-v1633-persistence-bridge"')) return html;
   const closingBody = html.lastIndexOf('</body>');
   if (closingBody < 0) return html + PERSISTENCE_BRIDGE;
   return html.slice(0, closingBody) + PERSISTENCE_BRIDGE + '\n' + html.slice(closingBody);
@@ -578,7 +640,7 @@ module.exports = function handler(_req, res) {
     const html = injectPersistence(source());
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('X-Accelerator-Build', 'V16.3.2-safe-save-dashboard-pdf');
+    res.setHeader('X-Accelerator-Build', 'V16.3.3-full-release-qa');
     res.setHeader('X-Accelerator-Source-Length', String(EXPECTED_BYTES));
     res.setHeader('X-Accelerator-Source-SHA256', EXPECTED_SHA256);
     res.status(200).send(html);
