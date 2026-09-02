@@ -24,6 +24,7 @@ const REQUEST_TIMEOUT_MS = 180000;
 const ALLOWED_SURFACES = new Set(['desk', 'home', 'strategy', 'plan', 'videos', 'planner', 'learn', 'framework', 'creators', 'calendar', 'library']);
 const ACTION_DEFINITIONS = {
   'open-question': { mode: 'standard', response: 'decision', instruction: 'Answer the specific question using only the relevant dashboard evidence. Lead with the useful answer, not a tour of the creator record.' },
+  'native-draft': { mode: 'standard', response: 'fields', instruction: 'Draft directly into the allowed dashboard fields for the exact decision in front of Blake. Return only allowed field bindings. Preserve useful recorded language, do not overwrite a sound decision merely to make it different, and keep every field concise enough to use as-is.' },
   'next-decision': { mode: 'standard', response: 'decision', instruction: 'Choose the single decision that most needs to become clear now. Connect it to the destination, newest evidence, active constraint, plan and open commitment. Say what to ignore for now.' },
   'diagnosis-check': { mode: 'deep', response: 'decision', instruction: 'Pressure-test the working diagnosis. Identify what supports it, what contradicts it, what remains assumed, and whether to keep, refine or replace it.' },
   'call-prep': { mode: 'standard', response: 'decision', instruction: 'Prepare the next coaching call around one decision. Give the evidence to review, the sharpest question to ask and the commitment that should leave the call.' },
@@ -176,7 +177,7 @@ const BASE_OUTPUT_PROPERTIES = {
   missing: { type: 'array', items: { type: 'string' }, maxItems: 3 }
 };
 
-function outputSchema(responseType) {
+function outputSchema(responseType, allowedTargets) {
   const properties = { ...BASE_OUTPUT_PROPERTIES };
   const required = Object.keys(BASE_OUTPUT_PROPERTIES);
   if (responseType === 'options') {
@@ -208,6 +209,26 @@ function outputSchema(responseType) {
     properties.decision = { type: 'string' };
     required.push('observation', 'interpretation', 'decision');
   }
+  if (responseType === 'fields') {
+    const bindings = Array.isArray(allowedTargets) ? allowedTargets.filter(Boolean).slice(0, 16) : [];
+    properties.fields = {
+      type: 'array',
+      minItems: 0,
+      maxItems: Math.max(1, Math.min(8, bindings.length || 8)),
+      items: {
+        type: 'object',
+        properties: {
+          binding: bindings.length ? { type: 'string', enum: bindings } : { type: 'string' },
+          label: { type: 'string' },
+          value: { type: 'string' },
+          why: { type: 'string' }
+        },
+        required: ['binding', 'label', 'value', 'why'],
+        additionalProperties: false
+      }
+    };
+    required.push('fields');
+  }
   return { type: 'object', properties, required, additionalProperties: false };
 }
 
@@ -221,7 +242,7 @@ function responseTypeFor(action, question) {
 
 function buildPrompt(question, context, requestMeta, requireJson) {
   const definition = ACTION_DEFINITIONS[requestMeta.action] || ACTION_DEFINITIONS['open-question'];
-  const schema = outputSchema(requestMeta.responseType);
+  const schema = outputSchema(requestMeta.responseType, requestMeta.allowedTargets);
   return [
     'You are the quiet decision assistant inside Accelerator OS.',
     'Use only the relevant dashboard context supplied below. Do not access files, run commands, browse, call tools or add generic YouTube advice.',
@@ -233,6 +254,7 @@ function buildPrompt(question, context, requestMeta, requireJson) {
     'If evidence is sufficient, set status to ready and recommend one clear move. Default to fewer than 90 words across headline, recommendation, why and nextAction.',
     'Use no more than three short evidence items. Confidence reflects the supplied evidence, not writing confidence.',
     'Do not produce a formula, template, options or report unless the response schema explicitly asks for it.',
+    requestMeta.responseType === 'fields' ? 'For field drafts, use only bindings listed in context.allowedTargets. Use context.targetFields to understand each label, guide and current value. Return an empty fields array when the evidence cannot responsibly support a draft.' : '',
     'Do not claim you changed dashboard or cloud data. This is a review suggestion only.',
     'ACTION CONTRACT:',
     definition.instruction,
@@ -251,7 +273,7 @@ function buildPrompt(question, context, requestMeta, requireJson) {
   ].filter(Boolean).join('\n');
 }
 
-function parseProposal(raw, responseType) {
+function parseProposal(raw, responseType, allowedTargets) {
   let parsed;
   try { parsed = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch (_) {
     const match = String(raw || '').match(/\{[\s\S]*\}/);
@@ -269,6 +291,13 @@ function parseProposal(raw, responseType) {
     direction: String(item && item.direction || '').trim(),
     why: String(item && item.why || '').trim()
   })).filter(item => item.label || item.direction) : [];
+  const allowed = new Set(Array.isArray(allowedTargets) ? allowedTargets : []);
+  const fields = Array.isArray(parsed.fields) ? parsed.fields.slice(0, 8).map(item => ({
+    binding: String(item && item.binding || '').trim(),
+    label: String(item && item.label || '').trim(),
+    value: String(item && item.value || '').trim(),
+    why: String(item && item.why || '').trim()
+  })).filter(item => item.binding && item.value && (!allowed.size || allowed.has(item.binding))) : [];
   const proposal = {
     type: responseType,
     status: stringValue('status') === 'needs_input' ? 'needs_input' : 'ready',
@@ -280,6 +309,7 @@ function parseProposal(raw, responseType) {
     evidence: arrayValue('evidence').slice(0, 3),
     missing,
     options,
+    fields,
     formula: stringValue('formula'),
     example: stringValue('example'),
     observation: stringValue('observation'),
@@ -521,7 +551,7 @@ class CodexAppServer {
         effort: routed.effort,
         summary: 'concise',
         personality: 'friendly',
-        outputSchema: outputSchema(requestMeta.responseType)
+        outputSchema: outputSchema(requestMeta.responseType, requestMeta.allowedTargets)
       });
       const raw = await turnPromise;
       return {
@@ -532,7 +562,7 @@ class CodexAppServer {
         responseType: requestMeta.responseType,
         surface: requestMeta.surface,
         action: requestMeta.action,
-        proposal: parseProposal(raw, requestMeta.responseType)
+        proposal: parseProposal(raw, requestMeta.responseType, requestMeta.allowedTargets)
       };
     } finally {
       this.turns.delete(threadId);
@@ -615,7 +645,7 @@ class OpenAiCompatibleRoute {
         responseType: requestMeta.responseType,
         surface: requestMeta.surface,
         action: requestMeta.action,
-        proposal: parseProposal(content, requestMeta.responseType)
+        proposal: parseProposal(content, requestMeta.responseType, requestMeta.allowedTargets)
       };
     } catch (error) {
       if (error && error.name === 'AbortError') throw new Error('The selected model took too long to answer.');
@@ -972,7 +1002,13 @@ const server = http.createServer(async (req, res) => {
       const requestedDepth = String(body.depth || 'auto').trim().toLowerCase();
       const taskMode = requestedDepth === 'deep' ? 'deep' : (requestedDepth === 'fast' ? 'fast' : definition.mode);
       const responseType = responseTypeFor(action, question);
-      const requestMeta = { surface, action, taskMode, responseType };
+      const allowedTargets = Array.isArray(context.allowedTargets)
+        ? context.allowedTargets.map(item => String(item || '').trim()).filter(Boolean).slice(0, 16)
+        : [];
+      if (responseType === 'fields' && !allowedTargets.length) {
+        return json(res, 400, { ok: false, error: 'This draft does not identify any dashboard fields.' });
+      }
+      const requestMeta = { surface, action, taskMode, responseType, allowedTargets };
       const missing = Array.isArray(context.readiness && context.readiness.missing)
         ? context.readiness.missing.map(item => String(item || '').trim()).filter(Boolean).slice(0, 3)
         : [];
@@ -988,8 +1024,9 @@ const server = http.createServer(async (req, res) => {
           missing,
           ...(responseType === 'options' ? { options: [] } : {}),
           ...(responseType === 'formula' ? { formula: '', example: '' } : {}),
-          ...(responseType === 'learning' ? { observation: '', interpretation: '', decision: '' } : {})
-        }, responseType);
+          ...(responseType === 'learning' ? { observation: '', interpretation: '', decision: '' } : {}),
+          ...(responseType === 'fields' ? { fields: [] } : {})
+        }, responseType, allowedTargets);
         return json(res, 200, {
           ok: true,
           route: 'dashboard',

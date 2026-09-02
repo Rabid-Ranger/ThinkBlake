@@ -1,58 +1,66 @@
 # Native AI flow
 
-Accelerator AI should shorten a decision, not create another workspace Blake must manage.
+Accelerator AI should make the existing work faster, more connected and easier to revise. It should not create a second workspace or answer beside the work.
 
-## The decision chain
+## The operating chain
 
 Creator reality → audience and message → diagnosis → active month → video decision → result → learning → next decision
 
-Each downstream AI check inherits the saved decisions upstream. It should challenge the weakest link, but it should not casually rewrite the whole chain.
+AI always starts from the artifact currently being edited and inherits only the useful upstream decisions. When something upstream changes, Accelerator creates a downstream review item instead of silently rewriting later work.
 
-## Interaction rules
+## Interaction model
 
-1. **Appear at the decision.** The default entry point is the small AI assist row beside the current work, not AI Desk.
-2. **One primary move.** The row recommends one context-sensitive check. Secondary checks stay behind `•••`.
-3. **Use only relevant context.** Each action owns an explicit context profile. Unrelated creators, old AI drafts and irrelevant library items are excluded.
-4. **Gate missing evidence before generation.** A deterministic dashboard check names the missing input and makes no model call.
-5. **Match the output to the job.** A decision gets one recommendation; packaging gets at most three directions; a hook gets a formula and example; learning gets observation, interpretation and decision.
-6. **Keep the first answer brief.** Rationale, evidence and uncertainty are progressive disclosure under `Why this answer`.
-7. **Show provenance.** Every generated answer names the provider, actual model, task depth and confidence. A no-model readiness gate says `Dashboard check`.
-8. **Keep Blake in control.** AI can copy or keep a browser-only review draft. It cannot silently edit creator data or cloud-save a recommendation.
+1. **Draft in the real field.** Empty fields offer `Draft with AI`; completed fields offer `Refine with AI`. The suggestion appears directly below that field.
+2. **Draft a complete step when useful.** Audience, Message, Business, Viewer, Research, Promise, Package, Hook and Learning offer one whole-section draft action. Only blank fields are targeted when blanks exist.
+3. **Apply explicitly.** Blake can use one field, use every field in the section, try again or dismiss. No suggestion edits dashboard state until `Use` is selected.
+4. **Propagate changes as review work.** Audience, message, business, viewer, promise, package, hook and result changes create concise review items for the downstream decisions they affect.
+5. **Prepare coaching calls in place.** Review, Decide, Coach and Commit can be prefilled from the current creator, plan, evidence and commitments.
+6. **Turn results into fields, not a report blob.** The selected checkpoint drafts directly into Observe, Interpret, Decide and Next move, while preserving the difference between facts and explanations.
+7. **Keep model controls out of the main flow.** `AI settings & review` shows the active route/model, fallback setup, working automations and queued changes. Custom chat remains optional.
 
-## Action-to-context map
+## What is automated
 
-| Work on screen | AI uses | AI returns |
+- Upstream edits automatically create downstream review items.
+- New checkpoint evidence automatically surfaces a ready-to-draft learning step.
+- Opening a coaching call automatically exposes the right prefill action for the current phase.
+- The active model is routed automatically by task depth when Automatic routing is selected.
+
+Automation prepares, flags and routes work. It does not silently apply or cloud-save generated strategy.
+
+## Field contracts
+
+Every native draft request contains:
+
+- the exact allowed field bindings;
+- the visible label and field guidance;
+- the current value;
+- the current creator and relevant upstream decision context; and
+- one task-specific intent.
+
+The companion returns structured field drafts only for those allowed bindings. The browser validates the binding again before a suggestion can be applied.
+
+## Decision-specific behavior
+
+| Work | Context used | Native result |
 |---|---|---|
-| Audience | recorded person, moment, tension, language, diagnosis | one clarification |
-| Message | audience, message, offer, current viewer/promise | bracketed formula + filled example |
-| Business | audience, message, goal, offer/path, CTA | one handoff correction |
-| Plan | diagnosis, 90-day plan, active month, video mix, recent learning | one plan correction |
-| Viewer | audience, active month, saved viewer state | one viewer clarification |
-| Research | saved sources/signals, promise and package direction | one evidence gap |
-| Promise | viewer problem, result, mechanism and proof | one promise correction |
-| Package | viewer, promise, mechanism, research, active constraint, same-job videos | up to three title/thumbnail directions |
-| Hook | viewer, promise, title, thumbnail, proof assets, comparable hooks | bracketed hook formula + filled example |
-| Structure | package, hook, proof and progression | one weak section/transition |
-| CTA | viewer moment, video job, business path and real destination | one fit/timing correction |
-| Results | selected checkpoint, package, opening, traffic source and same-job comparisons | observation → interpretation → decision |
-| Report | recorded results and learnings only | concise client-ready conclusion |
+| Audience | person, situation, struggle, language, evidence and assumptions | missing or improved audience fields |
+| Message | audience, practical result, emotional meaning, approach and proof | message fields that stay connected |
+| Business | content goal, next step, pathway, offers and measurement | a usable viewer-to-business path |
+| Viewer | creator audience, active month and this video's moment | one recognizable viewer state |
+| Research | saved sources and current video decision | synthesis only; no invented sources |
+| Promise | viewer, problem, result, mechanism and proof | one coherent promise |
+| Package | promise, research, constraint and comparable videos | title and thumbnail fields that work together |
+| Hook | package, viewer tension, mechanism and proof | a click-confirming opening in the Hook field |
+| Learning | selected metrics, traffic context and same-job comparison | Observe, Interpret, Decide and Next move |
+| Coaching | current plan, evidence, open commitments and call phase | phase-specific call fields |
 
-## Routing
+## Research basis
 
-- **Fast:** narrow evidence, timing and capacity checks.
-- **Standard:** audience, message, viewer, promise, hook, structure and next-decision checks.
-- **Deep:** diagnosis, plan coherence, package directions, experiments, results and reports.
-- **Fixed:** use the manually selected provider/model for every action.
+The redesign combines several proven patterns:
 
-Automatic routing is a performance choice, not a hidden identity. The provider and actual model remain visible on every answer.
-
-## Design basis
-
-This design follows three established patterns: offer context-aware help and graceful correction, introduce AI progressively around its benefit rather than its machinery, and render known results in purpose-built interface elements instead of defaulting to long chat text.
-
-- Microsoft Research: Guidelines for Human-AI Interaction — https://www.microsoft.com/en-us/research/publication/guidelines-for-human-ai-interaction/
-- Google PAIR: Mental Models — https://pair.withgoogle.com/guidebook-v2/chapter/mental-models/
-- Google PAIR: Explainability + Trust — https://pair.withgoogle.com/guidebook-v2/chapter/explainability-trust/
-- OpenAI: Latency optimization — https://developers.openai.com/api/docs/guides/latency-optimization
-- Vercel AI Gateway: Model fallbacks — https://vercel.com/docs/ai-gateway/models-and-providers/model-fallbacks
-- Vercel AI SDK: Structured data — https://ai-sdk.dev/docs/ai-sdk-core/generating-structured-data
+- YouTube Studio generates creator-specific ideas, titles, thumbnails, hooks and outlines from channel context, then lets the creator save and refine the useful artifact: https://support.google.com/youtube/answer/15575509 and https://support.google.com/youtube/answer/16291691
+- GitHub Copilot places suggestions directly where work is being written and supports accept, partial accept, ignore and dismiss: https://docs.github.com/en/copilot/responsible-use/inline-suggestions
+- Linear surfaces proactive suggestions against existing workspace data, explains why they appeared and supports accept, decline or auto-apply by category: https://linear.app/docs/triage-intelligence
+- Notion Autofill targets specific properties, can run from page edits or schedules and recommends human accuracy review: https://www.notion.com/help/autofill
+- Microsoft Human-AI Interaction guidelines call for efficient invocation, dismissal and correction: https://www.microsoft.com/en-us/research/publication/guidelines-for-human-ai-interaction/
+- Google PAIR recommends preserving user control and designing graceful failure when automation lacks enough evidence: https://pair.withgoogle.com/guidebook-v2/

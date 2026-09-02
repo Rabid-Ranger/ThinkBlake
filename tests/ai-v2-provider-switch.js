@@ -52,6 +52,7 @@ function startMockModelServer() {
     confidence: 'High',
     evidence: ['The request included the current dashboard context.'],
     missing: [],
+    fields: [{ binding: 'message.banner', label: 'Banner', value: 'Make Golf Feel Possible Again', why: 'It keeps the recorded emotional promise compact.' }],
     formula: '[AUDIENCE] needs [DECISION] because [EVIDENCE].',
     example: 'Dale needs a clearer click promise because packaging is the active constraint.',
   };
@@ -120,10 +121,10 @@ function startMockModelServer() {
     await page.evaluate(() => document.getElementById('accelerator-ai-v2-drawer')?.close());
     await page.locator('[data-view="strategy"]').first().click();
     await page.getByRole('button', { name: 'Message', exact: true }).click();
-    await page.locator('[data-ai-context-action="message-strengthen"]').waitFor({ state: 'visible' });
-    await page.locator('[data-ai-context-action="message-strengthen"]').click();
-    await page.locator('[data-ai-context-guide] [data-ai-companion-stage]').waitFor({ state: 'visible', timeout: 30000 });
-    check((await page.locator('[data-ai-context-guide] .ai-assist-card h4').textContent()).includes('Local model route verified'), 'The selected local model answers through the same contextual Strategy workflow.');
+    const bannerField = page.locator('[data-bind="message.banner"]').locator('..');
+    await bannerField.locator('[data-native-ai-field]').click();
+    await bannerField.locator('[data-native-ai-apply]').waitFor({ state: 'visible', timeout: 30000 });
+    check((await bannerField.locator('.native-ai-draft-value').textContent()).includes('Make Golf Feel Possible Again'), 'The selected local model answers inside the exact Strategy field.');
     check(mock.evidence.chatRequests === 1 && mock.evidence.lastModel === 'accelerator-local-test', 'The request was sent to the selected local model.');
     check(mock.evidence.lastPrompt.includes('Evan Cole Golf') && mock.evidence.lastPrompt.includes('CURRENT DASHBOARD SURFACE:\nstrategy'), 'The local route receives the same creator and decision context as Codex.');
     check(errors.length === 0, 'Provider setup, switching and local generation create no browser errors.');

@@ -10,6 +10,7 @@ module.exports = function buildAiCompanionBridge(workspaceId) {
   const COMPANION_URL = 'http://127.0.0.1:4873';
   const REQUIRED_WORKSPACE_ID = '${workspaceId}';
   const DRAFT_KEY = 'accelerator-ai-v2-proposal-drafts';
+  const REVIEW_KEY = 'accelerator-ai-v2-review-queue';
   const ACTION_CATALOG = {
     home: {
       cue: 'Check the decision chain before adding work.',
@@ -124,6 +125,11 @@ module.exports = function buildAiCompanionBridge(workspaceId) {
   let providerBusy = '';
   let providerMessage = null;
   let healthTimer = null;
+  let nativeResults = {};
+  let nativeRunningKey = '';
+  let nativeRenderQueued = false;
+  let reviewQueue = readReviewQueue();
+  let changeCapturePaused = false;
 
   function readBinding(name) {
     try { return (0, eval)('typeof ' + name + ' !== "undefined" ? ' + name + ' : undefined'); }
@@ -168,6 +174,72 @@ module.exports = function buildAiCompanionBridge(workspaceId) {
     } catch (_) {
       return [];
     }
+  }
+
+  function readReviewQueue() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(REVIEW_KEY) || '[]');
+      return Array.isArray(parsed) ? parsed.slice(0, 30) : [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  function writeReviewQueue(items) {
+    reviewQueue = (Array.isArray(items) ? items : []).slice(0, 30);
+    localStorage.setItem(REVIEW_KEY, JSON.stringify(reviewQueue));
+    renderReviewQueue();
+    scheduleNativeRender();
+    render();
+  }
+
+  function currentReviewItems() {
+    const creator = creatorFor(appState());
+    return reviewQueue.filter(item => !item.creatorId || !creator || item.creatorId === creator.id);
+  }
+
+  function reviewImpact(binding) {
+    const value = String(binding || '');
+    if (/^audience\./.test(value)) return { target: 'strategy', label: 'Audience changed', copy: 'Review the message, monthly focus and any active video viewer decisions.' };
+    if (/^message\./.test(value)) return { target: 'planner', label: 'Message changed', copy: 'Review active promises, packages and hooks that inherit this message.' };
+    if (/^(strategy|business)\./.test(value)) return { target: 'planner', label: 'Business path changed', copy: 'Review conversion roles and CTAs that point to this next step.' };
+    if (/^viewer\./.test(value)) return { target: 'planner', label: 'Video viewer changed', copy: 'Review the promise, package and opening before production continues.' };
+    if (/^promise\./.test(value)) return { target: 'planner', label: 'Promise changed', copy: 'Review the title, thumbnail, hook and structure against the new promise.' };
+    if (/^package\./.test(value)) return { target: 'planner', label: 'Package changed', copy: 'Review the hook so the opening confirms the click immediately.' };
+    if (/^hook\./.test(value)) return { target: 'planner', label: 'Opening changed', copy: 'Review the structure and production handoff for continuity.' };
+    if (/^analytics\.(?:_24h|_7d|_28d|sourceContext)/.test(value)) return { target: 'learn', label: 'New result evidence', copy: 'A learning draft can now be prepared from this checkpoint.' };
+    if (/^analytics\.(?:observe|interpret|decision|nextMove)/.test(value)) return { target: 'home', label: 'Learning changed', copy: 'Review the next video or monthly focus that should inherit this learning.' };
+    return null;
+  }
+
+  function queueReview(binding, origin) {
+    if (changeCapturePaused) return;
+    const impact = reviewImpact(binding);
+    if (!impact) return;
+    const value = appState();
+    const creator = creatorFor(value);
+    const video = videoFor(value, creator);
+    const signature = [creator && creator.id, video && video.id, impact.target, impact.label].join('|');
+    const existing = reviewQueue.find(item => item.signature === signature);
+    const item = {
+      id: existing && existing.id || 'review-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6),
+      signature,
+      creatorId: creator && creator.id || null,
+      videoId: video && video.id || null,
+      target: impact.target,
+      label: impact.label,
+      copy: impact.copy,
+      sourceBinding: String(binding || ''),
+      origin: origin || 'edit',
+      updatedAt: new Date().toISOString()
+    };
+    const next = reviewQueue.filter(entry => entry.signature !== signature);
+    next.unshift(item);
+    writeReviewQueue(next);
+  }
+
+  function dismissReview(id) {
+    writeReviewQueue(reviewQueue.filter(item => item.id !== id));
   }
 
   function portfolioContext(value) {
@@ -384,7 +456,7 @@ module.exports = function buildAiCompanionBridge(workspaceId) {
     return { ...shared, strategy, plan, currentVideo: clone(video), videos: compactVideos(creator), recentSessions: clone((creator && creator.sessions || []).slice(-4)), openCommitments: clone((creator && creator.commitments || []).filter(item => !item.done)), recentLearnings: clone((creator && creator.learningLog || []).slice(-8)) };
   }
 
-  function currentContext(actionId) {
+  function currentContext(actionId, extras) {
     const diagnostics = saveDiagnostics();
     const value = appState();
     if (!value || !diagnostics) return null;
@@ -407,6 +479,23 @@ module.exports = function buildAiCompanionBridge(workspaceId) {
         ? 'This is demo data. Analyze it only and do not treat it as a real client record.'
         : 'This is private V2 creator data. Analyze it, but do not change dashboard or cloud state.'
     };
+    if (extras && typeof extras === 'object') {
+      context.intent = clean(extras.intent, 1200);
+      context.allowedTargets = Array.isArray(extras.allowedTargets)
+        ? extras.allowedTargets.map(item => clean(item, 160)).filter(Boolean).slice(0, 16)
+        : [];
+      context.targetFields = Array.isArray(extras.targetFields)
+        ? extras.targetFields.map(item => ({
+          binding: clean(item && item.binding, 160),
+          label: clean(item && item.label, 180),
+          guide: clean(item && item.guide, 600),
+          currentValue: clean(item && item.currentValue, 4000)
+        })).filter(item => item.binding).slice(0, 16)
+        : [];
+      context.changeSources = Array.isArray(extras.changeSources)
+        ? extras.changeSources.map(item => clean(item, 300)).filter(Boolean).slice(0, 8)
+        : [];
+    }
     return context;
   }
 
@@ -468,23 +557,54 @@ module.exports = function buildAiCompanionBridge(workspaceId) {
       '.ai-routing-control{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 12px;padding:11px 12px;border:1px solid #d8e0e6;border-radius:11px;background:#f8fafb}.ai-routing-control strong{display:block;color:#17212b;font:850 11px/1.3 Inter,system-ui,sans-serif}.ai-routing-control p{margin:3px 0 0;color:#77838d;font:600 10px/1.4 Inter,system-ui,sans-serif}.ai-routing-actions{display:flex;gap:6px}.ai-routing-actions button{min-height:32px;border:1px solid #ccd5dc;border-radius:8px;background:#fff;color:#27333e;padding:7px 9px;font:800 9px/1.2 Inter,system-ui,sans-serif;cursor:pointer}.ai-routing-actions button[data-active="true"]{border-color:#17212b;background:#17212b;color:#fff}body.dark .ai-routing-control,body.dark .ai-routing-actions button{border-color:#46515a;background:#273039;color:#f5f6f7}body.dark .ai-routing-control strong{color:#f5f6f7}',
       'body.dark .ai-context-guide{border-color:#3d4650;background:linear-gradient(135deg,#20272f 0%,#29291f 100%);box-shadow:none}body.dark .ai-context-title{color:#f5f6f7}body.dark .ai-context-description{color:#aab2ba}body.dark .ai-context-status,body.dark .ai-context-basis span,body.dark .ai-context-action,body.dark .ai-context-custom textarea,body.dark .ai-context-result .ai-companion-answer{border-color:#46515a;background:#273039;color:#f5f6f7}body.dark .ai-context-action{color:#f5f6f7}body.dark .ai-proposal-block strong,body.dark .ai-proposal-block p,body.dark .ai-proposal-block ol{color:#dbe0e4}body.dark .ai-proposal-template{background:#353421;color:#f0e6ac!important}',
       'body.dark .ai-assist-row,body.dark .ai-assist-card,body.dark .ai-assist-menu,body.dark .ai-assist-option,body.dark .ai-assist-unit,body.dark .ai-assist-actions button{border-color:#46515a;background:#273039;color:#f5f6f7}body.dark .ai-assist-copy strong,body.dark .ai-assist-card h4,body.dark .ai-assist-option strong{color:#f5f6f7}body.dark .ai-assist-copy span,body.dark .ai-assist-recommendation,body.dark .ai-assist-option p,body.dark .ai-assist-unit p,body.dark .ai-assist-detail-body p,body.dark .ai-assist-detail-body ul{color:#c8d0d6}body.dark .ai-assist-next{background:#20272f;color:#dbe0e4}body.dark .ai-assist-unit[data-formula="true"]{background:#353421}body.dark .ai-assist-menu button{color:#edf0f2}body.dark .ai-assist-menu button:hover{background:#333d46}',
+      '.native-ai-field-ready>label{display:inline}.native-ai-field-action{float:right;margin:-2px 0 5px 10px;border:0;background:transparent;color:#7b6b2c;padding:2px 0;font:850 10px/1.3 Inter,system-ui,sans-serif;cursor:pointer}.native-ai-field-action:hover{text-decoration:underline}.native-ai-field-action:disabled{opacity:.5;cursor:wait}.native-ai-field-ready>.field-guide{clear:both}.native-ai-field-draft{clear:both;margin-top:8px;border:1px solid #d9e0e5;border-radius:11px;background:#fbfaf4;padding:11px 12px}.native-ai-field-draft[data-state="working"]{color:#6f7982;font:650 11px/1.4 Inter,system-ui,sans-serif}.native-ai-draft-label{margin:0 0 5px;color:#857633;font:850 9px/1.2 Inter,system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase}.native-ai-draft-value{margin:0;color:#25313b;font:650 12px/1.5 Inter,system-ui,sans-serif;white-space:pre-wrap;overflow-wrap:anywhere}.native-ai-draft-why{margin:6px 0 0;color:#7a858e;font:600 10px/1.4 Inter,system-ui,sans-serif}.native-ai-draft-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}.native-ai-draft-actions button{min-height:30px;border:1px solid #cfd7dd;border-radius:8px;background:#fff;color:#27333e;padding:6px 9px;font:800 9px/1.2 Inter,system-ui,sans-serif;cursor:pointer}.native-ai-draft-actions button[data-primary="true"]{border-color:#17212b;background:#17212b;color:#fff}',
+      '.native-ai-section{margin:12px 0 18px;border:1px solid #d8dfe4;border-radius:13px;background:#fff;padding:12px}.native-ai-section-top{display:flex;align-items:center;justify-content:space-between;gap:14px}.native-ai-section-copy{min-width:0}.native-ai-section-copy strong{display:block;color:#17212b;font:850 12px/1.3 Inter,system-ui,sans-serif}.native-ai-section-copy span{display:block;margin-top:3px;color:#77838d;font:600 10px/1.4 Inter,system-ui,sans-serif}.native-ai-section-run{flex:0 0 auto;min-height:34px;border:1px solid #17212b;border-radius:9px;background:#17212b;color:#fff;padding:7px 10px;font:800 10px/1.2 Inter,system-ui,sans-serif;cursor:pointer}.native-ai-section-run:disabled{opacity:.5;cursor:wait}.native-ai-section-result{display:grid;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid #e0e5e9}.native-ai-section-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:start}.native-ai-section-item strong{display:block;color:#56626c;font:850 9px/1.2 Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase}.native-ai-section-item p{margin:4px 0 0;color:#27333e;font:650 11px/1.45 Inter,system-ui,sans-serif;white-space:pre-wrap}.native-ai-section-item button{min-height:29px;border:1px solid #cfd7dd;border-radius:8px;background:#fff;color:#27333e;padding:6px 8px;font:800 9px/1.2 Inter,system-ui,sans-serif;cursor:pointer}.native-ai-section-actions{display:flex;gap:7px;margin-top:2px}.native-ai-section-actions button{min-height:32px;border:1px solid #cfd7dd;border-radius:8px;background:#fff;color:#27333e;padding:7px 9px;font:800 9px/1.2 Inter,system-ui,sans-serif;cursor:pointer}.native-ai-section-actions button[data-primary="true"]{border-color:#17212b;background:#17212b;color:#fff}',
+      '.native-ai-review-banner{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:12px 0 18px;border-left:3px solid #b5a14d;border-radius:0 11px 11px 0;background:#fbfaf4;padding:10px 12px}.native-ai-review-banner strong{display:block;color:#27333e;font:850 11px/1.3 Inter,system-ui,sans-serif}.native-ai-review-banner span{display:block;margin-top:2px;color:#6d7882;font:600 10px/1.4 Inter,system-ui,sans-serif}.native-ai-review-banner button{flex:0 0 auto;border:1px solid #cfd7dd;border-radius:8px;background:#fff;color:#27333e;padding:7px 9px;font:800 9px/1.2 Inter,system-ui,sans-serif;cursor:pointer}.native-ai-review-list{display:grid;gap:8px}.native-ai-review-item{padding:12px;border:1px solid #dce3e8;border-radius:12px;background:#fff}.native-ai-review-item strong{display:block;color:#17212b;font:850 12px/1.3 Inter,system-ui,sans-serif}.native-ai-review-item p{margin:4px 0 0;color:#69747e;font:600 10px/1.45 Inter,system-ui,sans-serif}.native-ai-review-item div{display:flex;gap:7px;margin-top:8px}.native-ai-review-item button{border:1px solid #cfd7dd;border-radius:8px;background:#fff;color:#27333e;padding:6px 8px;font:800 9px/1.2 Inter,system-ui,sans-serif;cursor:pointer}.native-ai-automation-list{display:grid;gap:7px}.native-ai-automation{display:flex;gap:9px;align-items:flex-start;padding:10px 11px;border:1px solid #e0e5e9;border-radius:11px;background:#fff}.native-ai-automation:before{content:"✓";color:#5d8b5d;font-weight:900}.native-ai-automation strong{display:block;color:#27333e;font:800 11px/1.3 Inter,system-ui,sans-serif}.native-ai-automation span{display:block;margin-top:2px;color:#77838d;font:600 9px/1.4 Inter,system-ui,sans-serif}',
+      'body.dark .native-ai-field-draft,body.dark .native-ai-section,body.dark .native-ai-review-item,body.dark .native-ai-automation{border-color:#46515a;background:#273039}body.dark .native-ai-draft-value,body.dark .native-ai-section-copy strong,body.dark .native-ai-section-item p,body.dark .native-ai-review-banner strong,body.dark .native-ai-review-item strong,body.dark .native-ai-automation strong{color:#f2f4f5}body.dark .native-ai-review-banner{background:#2f3026}body.dark .native-ai-draft-actions button,body.dark .native-ai-section-item button,body.dark .native-ai-section-actions button,body.dark .native-ai-review-banner button,body.dark .native-ai-review-item button{border-color:#4a5560;background:#20272f;color:#f2f4f5}',
       '@media(max-width:980px){.ai-context-actions{grid-template-columns:repeat(2,minmax(0,1fr))}}',
       '@media(max-width:760px){.ai-assist-row{align-items:flex-start;flex-wrap:wrap}.ai-assist-identity{flex-basis:100%}.ai-assist-run{flex:1}.ai-assist-menu{right:-2px}.ai-assist-options,.ai-assist-formula,.ai-assist-learning,.ai-assist-detail-body{grid-template-columns:1fr}.ai-assist-copy span{white-space:normal}.ai-assist-card{padding:13px}}',
-      '@media(max-width:620px){.ai-companion-controls{align-items:stretch;flex-direction:column}.ai-companion-run{width:100%}.ai-context-guide{margin:18px 0 24px;padding:17px;border-radius:15px}.ai-context-head{display:block}.ai-context-status{margin-top:12px}.ai-context-title{font-size:19px}.ai-context-actions{grid-template-columns:1fr}.ai-context-custom-row{grid-template-columns:1fr}.ai-context-custom button{min-height:42px}.ai-companion-answer-actions{flex-wrap:wrap}}'
+      '@media(max-width:620px){.ai-companion-controls{align-items:stretch;flex-direction:column}.ai-companion-run{width:100%}.ai-context-guide{margin:18px 0 24px;padding:17px;border-radius:15px}.ai-context-head{display:block}.ai-context-status{margin-top:12px}.ai-context-title{font-size:19px}.ai-context-actions{grid-template-columns:1fr}.ai-context-custom-row{grid-template-columns:1fr}.ai-context-custom button{min-height:42px}.ai-companion-answer-actions{flex-wrap:wrap}.native-ai-section-top,.native-ai-review-banner{align-items:stretch;flex-direction:column}.native-ai-section-run,.native-ai-review-banner button{width:100%}.native-ai-section-item{grid-template-columns:1fr}.native-ai-section-item button{width:max-content}}'
     ].join('');
     document.head.appendChild(style);
   }
 
   function ensureCompose() {
     const dialog = document.getElementById('accelerator-ai-v2-drawer');
-    if (!dialog || dialog.querySelector('[data-ai-companion-compose]')) return;
+    if (!dialog) return;
+    const title = dialog.querySelector('#accelerator-ai-v2-title');
+    if (title) title.textContent = 'AI settings & review';
     const routeSection = dialog.querySelector('[data-ai-v2-providers]')?.closest('.ai-v2-section');
     if (!routeSection) return;
+    if (!dialog.querySelector('[data-native-ai-review-section]')) {
+      const reviewSection = document.createElement('section');
+      reviewSection.className = 'ai-v2-section';
+      reviewSection.setAttribute('data-native-ai-review-section', '');
+      reviewSection.innerHTML = '<div class="ai-v2-section-head"><h3>Changes to review</h3><p class="ai-v2-section-note">Created automatically from your edits</p></div><div data-native-ai-review-list></div>';
+      routeSection.parentNode.insertBefore(reviewSection, routeSection);
+    }
+    if (!dialog.querySelector('[data-native-ai-automation-section]')) {
+      const automationSection = document.createElement('section');
+      automationSection.className = 'ai-v2-section';
+      automationSection.setAttribute('data-native-ai-automation-section', '');
+      automationSection.innerHTML = [
+        '<div class="ai-v2-section-head"><h3>Working automations</h3><p class="ai-v2-section-note">Draft and flag · never silently apply</p></div>',
+        '<div class="native-ai-automation-list">',
+        '<div class="native-ai-automation"><div><strong>Downstream review</strong><span>Audience, message, promise, package and learning changes flag the decisions they affect.</span></div></div>',
+        '<div class="native-ai-automation"><div><strong>Result-to-learning</strong><span>New checkpoint evidence surfaces a ready-to-draft learning step.</span></div></div>',
+        '<div class="native-ai-automation"><div><strong>Coaching preparation</strong><span>Each call step can prefill from the current creator, plan, evidence and commitments.</span></div></div>',
+        '</div>'
+      ].join('');
+      routeSection.parentNode.insertBefore(automationSection, routeSection);
+    }
+    if (dialog.querySelector('[data-ai-companion-compose]')) {
+      renderReviewQueue();
+      return;
+    }
     const section = document.createElement('section');
     section.className = 'ai-v2-section';
     section.setAttribute('data-ai-companion-compose', '');
     section.innerHTML = [
-      '<div class="ai-v2-section-head"><h3>Ask Accelerator AI</h3><p class="ai-v2-section-note">Uses the creator currently open</p></div>',
+      '<div class="ai-v2-section-head"><h3>Ask a custom question</h3><p class="ai-v2-section-note">Optional · native help lives in the work</p></div>',
       '<div class="ai-companion-compose">',
       '<label for="accelerator-ai-question">What do you want help deciding?</label>',
       '<textarea id="accelerator-ai-question">Using the current creator and video, what is the single most important next decision—and why?</textarea>',
@@ -493,6 +613,39 @@ module.exports = function buildAiCompanionBridge(workspaceId) {
       '</div>'
     ].join('');
     routeSection.parentNode.insertBefore(section, routeSection);
+    renderReviewQueue();
+  }
+
+  function renderReviewQueue() {
+    const host = document.querySelector('[data-native-ai-review-list]');
+    if (!host) return;
+    const items = currentReviewItems();
+    let markup = '';
+    if (!items.length) {
+      markup = '<p class="ai-v2-empty">Nothing needs review. When an upstream decision changes, the affected downstream work will appear here.</p>';
+    } else {
+      markup = '<div class="native-ai-review-list">' + items.map(item => [
+        '<article class="native-ai-review-item">',
+        '<strong>' + escapeHtml(item.label) + '</strong>',
+        '<p>' + escapeHtml(item.copy) + '</p>',
+        '<div><button type="button" data-native-review-open="' + escapeHtml(item.id) + '">Open affected work</button><button type="button" data-native-review-dismiss="' + escapeHtml(item.id) + '">Dismiss</button></div>',
+        '</article>'
+      ].join('')).join('') + '</div>';
+    }
+    if (host.dataset.nativeSignature === markup) return;
+    host.dataset.nativeSignature = markup;
+    host.innerHTML = markup;
+  }
+
+  function openReviewItem(id) {
+    const item = reviewQueue.find(entry => entry.id === id);
+    if (!item) return;
+    const value = appState();
+    if (!value) return;
+    value.view = item.target || 'home';
+    const appRender = readBinding('render');
+    if (typeof appRender === 'function') appRender();
+    scheduleNativeRender();
   }
 
   function proposalText(proposal) {
@@ -635,6 +788,306 @@ module.exports = function buildAiCompanionBridge(workspaceId) {
     requestAnimationFrame(renderContextualGuide);
   }
 
+  function targetElement(binding) {
+    if (!binding) return null;
+    if (binding.startsWith('#')) return document.getElementById(binding.slice(1));
+    return document.querySelector('[data-bind="' + CSS.escape(binding) + '"]');
+  }
+
+  function targetDescriptor(element, binding) {
+    if (!element) return null;
+    const field = element.closest('.field');
+    const label = field && field.querySelector('label');
+    const guide = field && field.querySelector('.field-guide,small');
+    let fallback = '';
+    if (!label && element.id) {
+      const dialog = element.closest('dialog,[role="dialog"]');
+      const labels = dialog ? [...dialog.querySelectorAll('label,.field-label')] : [];
+      fallback = labels.find(item => item.htmlFor === element.id || item.nextElementSibling === element)?.textContent || '';
+    }
+    return {
+      binding: binding || element.getAttribute('data-bind') || (element.id ? '#' + element.id : ''),
+      label: clean(label && label.textContent || fallback || element.getAttribute('aria-label') || element.id || 'Field', 180),
+      guide: clean(guide && guide.textContent || '', 600),
+      currentValue: clean(element.value, 4000)
+    };
+  }
+
+  function nativeFieldTargets() {
+    const view = surfaceKey();
+    const page = document.querySelector('#app main .page');
+    if (!page) return [];
+    let elements = [...page.querySelectorAll('[data-bind]')].filter(element => ['INPUT', 'TEXTAREA'].includes(element.tagName) && element.type !== 'date' && element.type !== 'file');
+    if (view === 'learn') {
+      const allowed = new Set(['analytics.observe', 'analytics.interpret', 'analytics.decision', 'analytics.nextMove']);
+      elements = elements.filter(element => allowed.has(element.getAttribute('data-bind')));
+    }
+    if (!['strategy', 'planner', 'learn'].includes(view)) return [];
+    return elements.map(element => targetDescriptor(element, element.getAttribute('data-bind'))).filter(Boolean);
+  }
+
+  function coachingTargets() {
+    const dialog = [...document.querySelectorAll('dialog[open],.modal[role="dialog"]')].find(item => /Coaching call/i.test(item.textContent || '')) || null;
+    if (!dialog || !/Coaching call/i.test(dialog.textContent || '')) return [];
+    const allowed = ['sessionReview', 'sessionEvidence', 'sessionDecision', 'sessionDiagnosis', 'sessionCoach', 'sessionParking', 'sessionWhat', 'sessionDone'];
+    return allowed.map(id => targetDescriptor(document.getElementById(id), '#' + id)).filter(Boolean);
+  }
+
+  function nativeIntent(targets, singleBinding) {
+    const value = appState();
+    const creator = creatorFor(value);
+    const video = videoFor(value, creator);
+    const view = surfaceKey();
+    const target = singleBinding ? targets.find(item => item.binding === singleBinding) : null;
+    if (target) return 'Draft only “' + target.label + '” for the exact current decision. Keep the current value if it is already stronger; otherwise return one usable replacement.';
+    if (coachingTargets().length) {
+      if (targets.some(item => item.binding === '#sessionReview')) return 'Prepare the review step from recorded changes, results, commitments and evidence. Draft facts into the review and evidence fields; do not invent what happened.';
+      if (targets.some(item => item.binding === '#sessionDecision')) return 'Prepare the decide step around the single decision this call should resolve and whether the current diagnosis still fits.';
+      if (targets.some(item => item.binding === '#sessionCoach')) return 'Prepare concise coaching questions and put unrelated but useful issues in the parking lot.';
+      return 'Draft one clear commitment, owner-ready language and a definition of done from the decision made in this coaching flow.';
+    }
+    if (view === 'strategy') {
+      const tab = value && value.strategyTab || creator && creator.strategyTab || '';
+      if (tab === 'audience') return 'Complete or strengthen the visible audience fields using recorded creator evidence. Preserve exact audience language and clearly avoid presenting assumptions as facts.';
+      if (tab === 'business') return 'Complete or strengthen the visible business path so the content job, next useful step and measurement form one realistic path.';
+      return 'Complete or strengthen the visible message fields so the practical result, emotional meaning, distinctive approach and proof stay connected to the recorded audience.';
+    }
+    if (view === 'planner') {
+      const step = videoStep(video);
+      if (step === 'viewer') return 'Draft the visible viewer fields for one recognizable person in one specific moment, using their likely language only where the dashboard supports it.';
+      if (step === 'promise') return 'Draft one coherent viewer-problem-result-mechanism promise that the package and video can actually deliver.';
+      if (step === 'package') return 'Draft a working title, optional final title, one coherent mobile-readable thumbnail concept and only essential thumbnail words. The image must add proof or tension instead of repeating the title.';
+      if (step === 'hook') return 'Draft the hook directly from the saved title, thumbnail, viewer tension, promise, mechanism and available proof. Confirm the click and reach useful content quickly.';
+      if (step === 'research') return 'Draft only a research synthesis from the sources already recorded. Do not invent titles, URLs, results or outside evidence.';
+      return 'Draft the visible fields for this video step using the exact upstream decisions it inherits.';
+    }
+    if (view === 'learn') return 'Draft Observe, Interpret, Decide and Next move from the selected checkpoint. Keep facts separate from causes, lower confidence when comparison evidence is weak and route only a supportable learning.';
+    return 'Draft the visible fields using only the current creator record.';
+  }
+
+  function nativeResultKey(scope, binding) {
+    const value = appState();
+    const creator = creatorFor(value);
+    const video = videoFor(value, creator);
+    return [scope, surfaceKey(), creator && creator.id, video && video.id, binding || videoStep(video) || value && value.strategyTab || 'section'].join(':');
+  }
+
+  function nativeResultFor(key) {
+    return nativeResults[key] || null;
+  }
+
+  function nativeDraftMarkup(result, key, onlyBinding) {
+    if (!result) return '';
+    if (result.error) return '<div class="native-ai-field-draft"><p class="native-ai-draft-value">' + escapeHtml(result.error) + '</p><div class="native-ai-draft-actions"><button type="button" data-native-ai-dismiss="' + escapeHtml(key) + '">Dismiss</button></div></div>';
+    const proposal = result.proposal || {};
+    const applied = new Set(result.appliedBindings || []);
+    const fields = Array.isArray(proposal.fields) ? proposal.fields.filter(item => !onlyBinding || item.binding === onlyBinding) : [];
+    if (!fields.length) {
+      return '<div class="native-ai-field-draft"><p class="native-ai-draft-label">' + escapeHtml(proposal.headline || 'More context needed') + '</p><p class="native-ai-draft-value">' + escapeHtml(proposal.recommendation || proposal.nextAction || 'This draft needs more recorded evidence.') + '</p><div class="native-ai-draft-actions"><button type="button" data-native-ai-dismiss="' + escapeHtml(key) + '">Dismiss</button></div></div>';
+    }
+    if (onlyBinding) {
+      const field = fields[0];
+      return [
+        '<div class="native-ai-field-draft">',
+        '<p class="native-ai-draft-label">Suggested draft</p><p class="native-ai-draft-value">' + escapeHtml(field.value) + '</p>',
+        field.why ? '<p class="native-ai-draft-why">' + escapeHtml(field.why) + '</p>' : '',
+        '<div class="native-ai-draft-actions"><button type="button" data-primary="true" data-native-ai-apply="' + escapeHtml(key) + '" data-native-ai-binding="' + escapeHtml(field.binding) + '">' + (applied.has(field.binding) ? 'Applied' : 'Use suggestion') + '</button><button type="button" data-native-ai-redraft="' + escapeHtml(field.binding) + '">Try another</button><button type="button" data-native-ai-dismiss="' + escapeHtml(key) + '">Dismiss</button></div>',
+        '</div>'
+      ].join('');
+    }
+    return [
+      '<div class="native-ai-section-result">',
+      fields.map(field => '<div class="native-ai-section-item"><div><strong>' + escapeHtml(field.label || field.binding) + '</strong><p>' + escapeHtml(field.value) + '</p></div><button type="button" data-native-ai-apply="' + escapeHtml(key) + '" data-native-ai-binding="' + escapeHtml(field.binding) + '">' + (applied.has(field.binding) ? 'Applied' : 'Use') + '</button></div>').join(''),
+      '<div class="native-ai-section-actions"><button type="button" data-primary="true" data-native-ai-apply-all="' + escapeHtml(key) + '">Use all drafts</button><button type="button" data-native-ai-dismiss="' + escapeHtml(key) + '">Dismiss</button></div>',
+      '</div>'
+    ].join('');
+  }
+
+  function sectionLabel(view, targets) {
+    const blankCount = targets.filter(item => !item.currentValue).length;
+    const value = appState();
+    const creator = creatorFor(value);
+    const video = videoFor(value, creator);
+    if (coachingTargets().length) return { title: 'Prepare this call step', button: 'Prefill from creator record', copy: 'Uses the current plan, evidence and commitments. You review every word.' };
+    if (view === 'learn') return { title: 'Turn this checkpoint into a learning', button: 'Draft the learning', copy: 'Writes directly into Observe, Interpret, Decide and Next move for review.' };
+    if (view === 'planner') {
+      const step = videoStep(video);
+      const names = { viewer: 'Define the exact viewer', research: 'Synthesize the research', promise: 'Build the promise', package: 'Build the package', hook: 'Build the opening' };
+      return { title: names[step] || 'Draft this video step', button: blankCount ? 'Draft the missing fields' : 'Strengthen this step', copy: 'Uses the audience, active month and every saved upstream video decision.' };
+    }
+    const strategyTab = clean(value && value.strategyTab || creator && creator.strategyTab || document.querySelector('.detail-section .decision-head h2')?.textContent || 'strategy', 40).toLowerCase();
+    return { title: 'Develop this ' + strategyTab + ' section', button: blankCount ? 'Draft ' + blankCount + ' missing field' + (blankCount === 1 ? '' : 's') : 'Strengthen this section', copy: 'Drafts appear in the real fields and are never applied until you choose.' };
+  }
+
+  function nativeSectionAnchor(view) {
+    const callDialog = [...document.querySelectorAll('dialog[open],.modal[role="dialog"]')].find(item => /Coaching call/i.test(item.textContent || '')) || null;
+    if (callDialog && /Coaching call/i.test(callDialog.textContent || '')) return callDialog.querySelector('#modalBody .phase-track') || callDialog.querySelector('#modalBody .decision-head') || callDialog.querySelector('.modal-body') || callDialog;
+    const page = document.querySelector('#app main .page');
+    if (!page) return null;
+    if (view === 'learn') return [...page.querySelectorAll('.section-head')].find(item => /Learning loop/i.test(item.textContent || '')) || null;
+    return page.querySelector('.detail-section .decision-head,.decision-head');
+  }
+
+  function renderReviewBanner(page, view) {
+    if (!page) return;
+    let host = page.querySelector('[data-native-ai-review-banner]');
+    const items = currentReviewItems().filter(item => item.target === view);
+    if (!items.length) {
+      if (host) host.remove();
+      return;
+    }
+    if (!host) {
+      host = document.createElement('aside');
+      host.className = 'native-ai-review-banner';
+      host.setAttribute('data-native-ai-review-banner', '');
+      const first = page.firstElementChild;
+      if (first && first.parentNode) first.parentNode.insertBefore(host, first.nextSibling);
+    }
+    const markup = '<div><strong>' + items.length + ' connected decision' + (items.length === 1 ? '' : 's') + ' to review</strong><span>' + escapeHtml(items[0].copy) + '</span></div><button type="button" data-native-review-open="' + escapeHtml(items[0].id) + '">Review here</button>';
+    if (host.dataset.nativeSignature !== markup) {
+      host.dataset.nativeSignature = markup;
+      host.innerHTML = markup;
+    }
+  }
+
+  function renderNativeLayer() {
+    nativeRenderQueued = false;
+    const page = document.querySelector('#app main .page');
+    if (!page) return;
+    const oldAssist = page.querySelector('[data-ai-context-guide]');
+    if (oldAssist) oldAssist.remove();
+    const view = surfaceKey();
+    renderReviewBanner(page, view);
+    const callTargets = coachingTargets();
+    const targets = callTargets.length ? callTargets : nativeFieldTargets();
+    const activeBindings = new Set(targets.map(item => item.binding));
+    [...document.querySelectorAll('[data-native-ai-field-host]')].forEach(host => {
+      if (!activeBindings.has(host.dataset.nativeAiFieldHost || '')) host.remove();
+    });
+    for (const target of targets) {
+      if (target.binding.startsWith('#')) continue;
+      const element = targetElement(target.binding);
+      const field = element && element.closest('.field');
+      if (!field) continue;
+      field.classList.add('native-ai-field-ready');
+      let button = field.querySelector(':scope > [data-native-ai-field]');
+      if (!button) {
+        button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'native-ai-field-action';
+        button.setAttribute('data-native-ai-field', target.binding);
+        const label = field.querySelector(':scope > label');
+        if (label) label.insertAdjacentElement('afterend', button);
+        else field.insertBefore(button, field.firstChild);
+      }
+      const key = nativeResultKey('field', target.binding);
+      const disabled = nativeRunningKey === key || !companion.connected;
+      if (button.disabled !== disabled) button.disabled = disabled;
+      const buttonText = nativeRunningKey === key ? 'Drafting…' : (target.currentValue ? 'Refine with AI' : 'Draft with AI');
+      if (button.textContent !== buttonText) button.textContent = buttonText;
+      let host = field.querySelector(':scope > [data-native-ai-field-host]');
+      const result = nativeResultFor(key);
+      if (nativeRunningKey === key || result) {
+        if (!host) {
+          host = document.createElement('div');
+          host.setAttribute('data-native-ai-field-host', target.binding);
+          field.appendChild(host);
+        }
+        const markup = nativeRunningKey === key ? '<div class="native-ai-field-draft" data-state="working">Drafting from the decisions this field inherits…</div>' : nativeDraftMarkup(result, key, target.binding);
+        if (host.dataset.nativeSignature !== markup) {
+          host.dataset.nativeSignature = markup;
+          host.innerHTML = markup;
+        }
+      } else if (host) host.remove();
+    }
+    const anchor = nativeSectionAnchor(view);
+    let section = document.querySelector('[data-native-ai-section]');
+    if (!targets.length || !anchor) {
+      if (section) section.remove();
+      renderReviewQueue();
+      return;
+    }
+    const visibleTargets = targets.filter(item => !item.binding.startsWith('#') || document.querySelector(item.binding));
+    const preferredTargets = visibleTargets.filter(item => !item.currentValue);
+    const chosenTargets = (preferredTargets.length ? preferredTargets : visibleTargets).slice(0, 8);
+    const sectionKey = nativeResultKey(callTargets.length ? 'call' : 'section', chosenTargets.map(item => item.binding).join(','));
+    if (!section) {
+      section = document.createElement('aside');
+      section.className = 'native-ai-section';
+      section.setAttribute('data-native-ai-section', '');
+    }
+    if (anchor.parentNode && anchor.nextSibling !== section) anchor.parentNode.insertBefore(section, anchor.nextSibling);
+    const labels = sectionLabel(view, chosenTargets);
+    const targetSignature = chosenTargets.map(item => item.binding).join('|');
+    if (section.dataset.nativeTargets !== targetSignature) section.dataset.nativeTargets = targetSignature;
+    const sectionMarkup = '<div class="native-ai-section-top"><div class="native-ai-section-copy"><strong>' + escapeHtml(labels.title) + '</strong><span>' + escapeHtml(labels.copy) + '</span></div><button class="native-ai-section-run" type="button" data-native-ai-section-run' + (nativeRunningKey === sectionKey || !companion.connected ? ' disabled' : '') + '>' + escapeHtml(nativeRunningKey === sectionKey ? 'Drafting…' : labels.button) + '</button></div>' + (nativeRunningKey === sectionKey ? '<div class="native-ai-section-result"><p class="native-ai-draft-value">Preparing a reviewable draft in the fields below…</p></div>' : nativeDraftMarkup(nativeResultFor(sectionKey), sectionKey, ''));
+    if (section.dataset.nativeSignature !== sectionMarkup) {
+      section.dataset.nativeSignature = sectionMarkup;
+      section.innerHTML = sectionMarkup;
+    }
+    renderReviewQueue();
+  }
+
+  function scheduleNativeRender() {
+    if (nativeRenderQueued) return;
+    nativeRenderQueued = true;
+    requestAnimationFrame(renderNativeLayer);
+  }
+
+  function nativeContextFor(bindings) {
+    const descriptors = bindings.map(binding => targetDescriptor(targetElement(binding), binding)).filter(Boolean);
+    return {
+      allowedTargets: descriptors.map(item => item.binding),
+      targetFields: descriptors,
+      intent: nativeIntent(descriptors)
+    };
+  }
+
+  function requestNativeDraft(bindings, key, singleBinding) {
+    const context = nativeContextFor(bindings);
+    if (!context.allowedTargets.length) return;
+    context.intent = nativeIntent(context.targetFields, singleBinding || '');
+    nativeRunningKey = key;
+    delete nativeResults[key];
+    scheduleNativeRender();
+    const depth = surfaceKey() === 'learn' ? 'deep' : 'auto';
+    return requestAi(context.intent, surfaceKey(), 'native-draft', depth, { resultKey: key, context, native: true });
+  }
+
+  function setNativeFieldValue(binding, value, origin) {
+    const element = targetElement(binding);
+    if (!element) return false;
+    changeCapturePaused = true;
+    try {
+      const prototype = element.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : (element.tagName === 'SELECT' ? HTMLSelectElement.prototype : HTMLInputElement.prototype);
+      const setter = Object.getOwnPropertyDescriptor(prototype, 'value')?.set;
+      if (setter) setter.call(element, value);
+      else element.value = value;
+      element.dispatchEvent(new Event('input', { bubbles: true }));
+      element.dispatchEvent(new Event('change', { bubbles: true }));
+    } finally {
+      changeCapturePaused = false;
+    }
+    queueReview(binding, origin || 'ai-draft');
+    return true;
+  }
+
+  function applyNativeField(key, binding) {
+    const result = nativeResults[key];
+    const field = result && result.proposal && Array.isArray(result.proposal.fields) ? result.proposal.fields.find(item => item.binding === binding) : null;
+    if (!field || !setNativeFieldValue(binding, field.value, 'ai-draft')) return;
+    result.appliedBindings = [...new Set([...(result.appliedBindings || []), binding])];
+    scheduleNativeRender();
+  }
+
+  function applyAllNativeFields(key) {
+    const result = nativeResults[key];
+    const fields = result && result.proposal && Array.isArray(result.proposal.fields) ? result.proposal.fields : [];
+    for (const field of fields) setNativeFieldValue(field.binding, field.value, 'ai-draft');
+    result.appliedBindings = fields.map(field => field.binding);
+    scheduleNativeRender();
+  }
+
   function renderOutput() {
     const host = document.querySelector('[data-ai-companion-output]');
     if (!host) return;
@@ -720,12 +1173,14 @@ module.exports = function buildAiCompanionBridge(workspaceId) {
     const button = document.getElementById('accelerator-ai-v2-button');
     if (button) {
       button.dataset.connected = String(connected);
-      button.textContent = usingCompanion ? 'AI · ' + (companion.provider || 'Connected') : (connected ? 'AI · Codex tools' : 'AI · Offline');
+      const reviewCount = currentReviewItems().length;
+      button.textContent = usingCompanion ? 'AI · ' + (companion.provider || 'Connected') + (reviewCount ? ' · ' + reviewCount : '') : (connected ? 'AI · Codex tools' : 'AI · Offline');
+      button.setAttribute('aria-label', 'Open AI settings and ' + reviewCount + ' change' + (reviewCount === 1 ? '' : 's') + ' to review');
     }
     const safety = document.querySelector('#accelerator-ai-v2-drawer .ai-v2-safety');
     if (safety) {
       safety.innerHTML = usingCompanion
-        ? '<strong>' + escapeHtml(companion.provider || 'AI') + ' is ready on this Mac.</strong> The active route is always shown below. AI can read the V2 creator you have open and return review drafts, but it cannot silently edit or cloud-save dashboard data.'
+        ? '<strong>' + escapeHtml(companion.provider || 'AI') + ' is ready on this Mac.</strong> Use AI inside the audience, plan, video, coaching and learning work. This drawer is only for review and model settings; nothing is applied without your approval.'
         : '<strong>AI is offline.</strong> Start the Accelerator AI Companion on this Mac, then this page reconnects automatically. The dashboard itself still works normally.';
     }
     const host = document.querySelector('[data-ai-v2-connection]');
@@ -749,20 +1204,26 @@ module.exports = function buildAiCompanionBridge(workspaceId) {
       run.textContent = running ? 'Thinking…' : (usingCompanion ? 'Ask AI' : 'Companion offline');
     }
     renderOutput();
-    scheduleContextualRender();
+    renderReviewQueue();
+    scheduleNativeRender();
   }
 
-  async function requestAi(question, surface, action, depth) {
+  async function requestAi(question, surface, action, depth, options) {
     question = clean(question, 4000);
+    const nativeRequest = options && options.native === true;
+    const resultKey = options && options.resultKey || surface;
+    const storeResult = value => {
+      if (nativeRequest) nativeResults[resultKey] = value;
+      else if (surface === 'desk') lastResult = value;
+      else resultBySurface[surface] = value;
+    };
     if (action === 'open-question' && !question) {
-      if (surface === 'desk') lastResult = { error: 'Enter a question first.' };
-      else resultBySurface[surface] = { error: 'Enter a question first.' };
+      storeResult({ error: 'Enter a question first.' });
       return render();
     }
-    const context = currentContext(action);
+    const context = currentContext(action, options && options.context);
     if (!context) {
-      if (surface === 'desk') lastResult = { error: 'The V2 creator context is not ready yet.' };
-      else resultBySurface[surface] = { error: 'The V2 creator context is not ready yet.' };
+      storeResult({ error: 'The V2 creator context is not ready yet.' });
       return render();
     }
     if (!companion.connected) {
@@ -771,12 +1232,15 @@ module.exports = function buildAiCompanionBridge(workspaceId) {
       const ready = await checkCompanion();
       if (!ready) {
         const error = { error: companion.error || 'Accelerator AI is not connected on this Mac.' };
-        if (surface === 'desk') lastResult = error;
-        else resultBySurface[surface] = error;
+        storeResult(error);
+        if (nativeRequest) nativeRunningKey = '';
         return render();
       }
     }
-    if (surface === 'desk') {
+    if (nativeRequest) {
+      nativeRunningKey = resultKey;
+      delete nativeResults[resultKey];
+    } else if (surface === 'desk') {
       running = true;
       lastResult = null;
     } else {
@@ -790,14 +1254,13 @@ module.exports = function buildAiCompanionBridge(workspaceId) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question, context, surface, action, depth: depth || 'auto' })
       });
-      if (surface === 'desk') lastResult = result;
-      else resultBySurface[surface] = result;
+      storeResult(result);
     } catch (error) {
-      if (surface === 'desk') lastResult = { error: error.message };
-      else resultBySurface[surface] = { error: error.message };
+      storeResult({ error: error.message });
       await checkCompanion();
     } finally {
-      if (surface === 'desk') running = false;
+      if (nativeRequest) nativeRunningKey = '';
+      else if (surface === 'desk') running = false;
       else runningSurface = '';
       render();
     }
@@ -967,6 +1430,35 @@ module.exports = function buildAiCompanionBridge(workspaceId) {
   }
 
   document.addEventListener('click', event => {
+    const nativeField = event.target.closest('[data-native-ai-field]');
+    if (nativeField) {
+      const binding = nativeField.dataset.nativeAiField;
+      requestNativeDraft([binding], nativeResultKey('field', binding), binding);
+    }
+    const nativeSection = event.target.closest('[data-native-ai-section-run]');
+    if (nativeSection) {
+      const host = nativeSection.closest('[data-native-ai-section]');
+      const bindings = String(host && host.dataset.nativeTargets || '').split('|').filter(Boolean);
+      requestNativeDraft(bindings, nativeResultKey(coachingTargets().length ? 'call' : 'section', bindings.join(',')), '');
+    }
+    const nativeApply = event.target.closest('[data-native-ai-apply]');
+    if (nativeApply) applyNativeField(nativeApply.dataset.nativeAiApply, nativeApply.dataset.nativeAiBinding);
+    const nativeApplyAll = event.target.closest('[data-native-ai-apply-all]');
+    if (nativeApplyAll) applyAllNativeFields(nativeApplyAll.dataset.nativeAiApplyAll);
+    const nativeDismiss = event.target.closest('[data-native-ai-dismiss]');
+    if (nativeDismiss) {
+      delete nativeResults[nativeDismiss.dataset.nativeAiDismiss];
+      scheduleNativeRender();
+    }
+    const nativeRedraft = event.target.closest('[data-native-ai-redraft]');
+    if (nativeRedraft) {
+      const binding = nativeRedraft.dataset.nativeAiRedraft;
+      requestNativeDraft([binding], nativeResultKey('field', binding), binding);
+    }
+    const reviewOpen = event.target.closest('[data-native-review-open]');
+    if (reviewOpen) openReviewItem(reviewOpen.dataset.nativeReviewOpen);
+    const reviewDismiss = event.target.closest('[data-native-review-dismiss]');
+    if (reviewDismiss) dismissReview(reviewDismiss.dataset.nativeReviewDismiss);
     if (event.target.closest('[data-ai-companion-run]')) askAi();
     const contextualAction = event.target.closest('[data-ai-context-action]');
     if (contextualAction) {
@@ -998,10 +1490,17 @@ module.exports = function buildAiCompanionBridge(workspaceId) {
         setTimeout(render, 0);
       }
     }
+    setTimeout(scheduleNativeRender, 0);
   });
 
   document.addEventListener('submit', event => {
     if (event.target.closest('[data-ai-v2-providers]')) event.preventDefault();
+  });
+
+  document.addEventListener('change', event => {
+    const input = event.target.closest && event.target.closest('[data-bind]');
+    if (!input) return;
+    queueReview(input.getAttribute('data-bind'), 'edit');
   });
 
   const originalDiagnostics = window.__acceleratorAiV2Diagnostics;
@@ -1021,6 +1520,8 @@ module.exports = function buildAiCompanionBridge(workspaceId) {
     running,
     runningSurface: runningSurface || null,
     hasResult: Boolean(lastResult && lastResult.ok),
+    nativeDrafts: Object.keys(nativeResults).filter(key => Boolean(nativeResults[key] && nativeResults[key].ok)),
+    reviewCount: currentReviewItems().length,
     contextualSurfaces: Object.keys(ACTION_CATALOG),
     contextualResults: Object.keys(resultBySurface).filter(key => Boolean(resultBySurface[key] && resultBySurface[key].ok))
   });
@@ -1034,9 +1535,8 @@ module.exports = function buildAiCompanionBridge(workspaceId) {
   function boot() {
     installStyles();
     render();
-    const app = document.getElementById('app');
-    if (app) {
-      new MutationObserver(scheduleContextualRender).observe(app, { childList: true, subtree: true });
+    if (document.body) {
+      new MutationObserver(scheduleNativeRender).observe(document.body, { childList: true, subtree: true });
     }
     if (['127.0.0.1', 'localhost'].includes(location.hostname)) {
       companion.checking = true;
