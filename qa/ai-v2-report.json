@@ -1,6 +1,6 @@
 {
   "build": "Accelerator-AI-V2",
-  "checkedAt": "2026-09-02T00:14:28.577Z",
+  "checkedAt": "2026-09-02T01:38:47.136Z",
   "passed": [
     "V2 connects only to the fixed isolated cloud workspace.",
     "Save diagnostics expose the required V2 workspace boundary.",
@@ -9,7 +9,7 @@
     "AI diagnostics identify the real active route as Codex browser tools.",
     "The dashboard truthfully reports that Codex model and account details are not exposed to the page.",
     "The AI Desk connection boundary is visibly available.",
-    "The AI Desk button visibly reports the connected provider.",
+    "The AI Desk button visibly reports the connected browser-tool provider.",
     "The inherited creator switcher is available in V2.",
     "Switching creators returns V2 to Home.",
     "A real dashboard edit saves only to the fixed V2 workspace.",

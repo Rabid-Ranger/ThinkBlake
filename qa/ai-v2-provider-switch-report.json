@@ -1,0 +1,155 @@
+{
+  "build": "Accelerator-AI-V2-provider-switch",
+  "checkedAt": "2026-09-02T01:40:16.869Z",
+  "passed": [
+    "AI Desk lists the real Codex models available to this ChatGPT account.",
+    "AI Desk provides an LM Studio setup control.",
+    "AI Desk provides an MLX setup control.",
+    "AI Desk provides a custom OpenAI-compatible server setup control.",
+    "Test & save verifies the custom server and discovers its loaded model.",
+    "The dashboard clearly switches to the selected custom model route.",
+    "The selected local model answers through the same contextual Strategy workflow.",
+    "The request was sent to the selected local model.",
+    "The local route receives the same creator and decision context as Codex.",
+    "Provider setup, switching and local generation create no browser errors."
+  ],
+  "evidence": {
+    "selected": {
+      "url": "http://127.0.0.1:4873",
+      "connected": true,
+      "checking": false,
+      "provider": "Custom model server",
+      "model": "accelerator-local-test",
+      "route": "custom",
+      "activeRoute": "custom",
+      "fallbackRoute": "codex",
+      "routes": {
+        "codex": {
+          "id": "codex",
+          "name": "Codex / ChatGPT",
+          "connected": true,
+          "selected": false,
+          "model": "gpt-5.6-sol",
+          "models": [
+            {
+              "id": "gpt-5.6-sol",
+              "name": "GPT-5.6-Sol",
+              "description": "Reliable agentic workhorse for everyday tasks.",
+              "isDefault": true,
+              "defaultReasoningEffort": "low"
+            },
+            {
+              "id": "gpt-5.6-terra",
+              "name": "GPT-5.6-Terra",
+              "description": "Balanced agentic coding model for everyday work.",
+              "isDefault": false,
+              "defaultReasoningEffort": "medium"
+            },
+            {
+              "id": "gpt-5.6-luna",
+              "name": "GPT-5.6-Luna",
+              "description": "Fast and affordable agentic coding model.",
+              "isDefault": false,
+              "defaultReasoningEffort": "medium"
+            },
+            {
+              "id": "gpt-5.5",
+              "name": "GPT-5.5",
+              "description": "Proven previous-generation model for coding and general work.",
+              "isDefault": false,
+              "defaultReasoningEffort": "medium"
+            },
+            {
+              "id": "gpt-5.4",
+              "name": "GPT-5.4",
+              "description": "Strong model for everyday coding.",
+              "isDefault": false,
+              "defaultReasoningEffort": "medium"
+            },
+            {
+              "id": "gpt-5.4-mini",
+              "name": "GPT-5.4-Mini",
+              "description": "Small, fast, and cost-efficient model for simpler coding tasks.",
+              "isDefault": false,
+              "defaultReasoningEffort": "medium"
+            }
+          ],
+          "account": {
+            "type": "chatgpt",
+            "planType": "plus"
+          },
+          "error": ""
+        },
+        "lmstudio": {
+          "id": "lmstudio",
+          "name": "LM Studio",
+          "connected": false,
+          "selected": false,
+          "configured": false,
+          "baseUrl": "http://127.0.0.1:1234/v1",
+          "model": "",
+          "models": [],
+          "hasApiKey": false,
+          "error": ""
+        },
+        "mlx": {
+          "id": "mlx",
+          "name": "MLX",
+          "connected": false,
+          "selected": false,
+          "configured": false,
+          "baseUrl": "http://127.0.0.1:8080/v1",
+          "model": "",
+          "models": [],
+          "hasApiKey": false,
+          "error": ""
+        },
+        "custom": {
+          "id": "custom",
+          "name": "Custom model server",
+          "connected": true,
+          "selected": true,
+          "configured": true,
+          "baseUrl": "http://127.0.0.1:65257/v1",
+          "model": "accelerator-local-test",
+          "models": [
+            {
+              "id": "accelerator-local-test",
+              "name": "Accelerator local test"
+            }
+          ],
+          "hasApiKey": false,
+          "error": ""
+        }
+      },
+      "account": {
+        "type": "chatgpt",
+        "planType": "plus"
+      },
+      "lastError": null,
+      "running": false,
+      "runningSurface": null,
+      "hasResult": false,
+      "contextualSurfaces": [
+        "home",
+        "strategy",
+        "plan",
+        "videos",
+        "learn",
+        "framework",
+        "creators",
+        "calendar",
+        "library"
+      ],
+      "contextualResults": []
+    },
+    "mock": {
+      "modelRequests": 5,
+      "chatRequests": 1,
+      "lastModel": "accelerator-local-test",
+      "promptIncludedCreator": true,
+      "promptIncludedSurface": true
+    }
+  },
+  "errors": []
+}
