@@ -1,9 +1,11 @@
 const crypto = require('crypto');
 const zlib = require('zlib');
+const buildAiCompanionBridge = require('./ai-companion-bridge');
 
 const EXPECTED_SHA256 = '1c40a1614db82031e3ebc2e23df28e28fbe7889d828edbb489ab4f24eba6d8e1';
 const EXPECTED_BYTES = 844146;
 const V2_WORKSPACE_ID = 'e9953426-0a8d-4890-9cf0-4f4ac4e71c46';
+const AI_COMPANION_BRIDGE = buildAiCompanionBridge(V2_WORKSPACE_ID);
 const encoded = [
   require('../bundles/v1634/v16_0'),
   require('../bundles/v1634/v16_1'),
@@ -1978,8 +1980,8 @@ const AI_V2_BRIDGE = String.raw`
 function injectPersistence(html) {
   if (html.includes('id="accelerator-v1636-persistence-bridge"')) return html;
   const closingBody = html.lastIndexOf('</body>');
-  if (closingBody < 0) return html + PERSISTENCE_BRIDGE + AI_V2_BRIDGE;
-  return html.slice(0, closingBody) + PERSISTENCE_BRIDGE + '\n' + AI_V2_BRIDGE + '\n' + html.slice(closingBody);
+  if (closingBody < 0) return html + PERSISTENCE_BRIDGE + AI_V2_BRIDGE + AI_COMPANION_BRIDGE;
+  return html.slice(0, closingBody) + PERSISTENCE_BRIDGE + '\n' + AI_V2_BRIDGE + '\n' + AI_COMPANION_BRIDGE + '\n' + html.slice(closingBody);
 }
 
 module.exports = function handler(_req, res) {

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.blakerice.accelerator-ai-companion</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node</string>
+    <string>/Users/blakerice/Documents/Codex/Accelerator OS/source/Accelerator-AI-V2/companion/accelerator-companion.js</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>/Users/blakerice/Documents/Codex/Accelerator OS/source/Accelerator-AI-V2/companion</string>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>ProcessType</key>
+  <string>Background</string>
+  <key>ThrottleInterval</key>
+  <integer>10</integer>
+  <key>StandardOutPath</key>
+  <string>/tmp/accelerator-ai-companion.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/accelerator-ai-companion.error.log</string>
+</dict>
+</plist>
