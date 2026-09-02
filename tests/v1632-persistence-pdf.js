@@ -5,9 +5,9 @@ const { chromium } = require('playwright');
 const sourceHandler = require('../api/source');
 
 const ROOT = path.resolve(__dirname, '..');
-const OUTPUT_PDF = '/Users/blakerice/Documents/Codex/2026-08-28/th/outputs/Accelerator-OS-V16.3.2-PDF-Design-QA.pdf';
+const OUTPUT_PDF = '/Users/blakerice/Documents/Codex/2026-08-28/th/outputs/Accelerator-AI-V2-PDF-Design-QA.pdf';
 const report = {
-  build: 'V16.3.2-safe-save-dashboard-pdf',
+  build: 'Accelerator-AI-V2-safe-save-dashboard-pdf',
   checkedAt: new Date().toISOString(),
   passed: [],
   errors: [],
@@ -88,7 +88,7 @@ function startServer() {
       access_token: 'qa-access-token',
       refresh_token: 'qa-refresh-token'
     }));
-    localStorage.setItem('accelerator-os-v1631-state-backup', JSON.stringify({
+    localStorage.setItem('accelerator-ai-v2-state-backup', JSON.stringify({
       currentCreatorId: 'legacy-recovery',
       creators: [
         { id: 'legacy-recovery', name: 'Legacy Recovery One' },
@@ -118,7 +118,7 @@ function startServer() {
       await route.fulfill({
         status: 200,
         headers: cors,
-        body: JSON.stringify([{ id: '11111111-1111-4111-8111-111111111111', version }])
+        body: JSON.stringify([{ id: 'e9953426-0a8d-4890-9cf0-4f4ac4e71c46', version }])
       });
       return;
     }
@@ -172,7 +172,7 @@ function startServer() {
     await page.waitForFunction(() => typeof window.__acceleratorSaveDiagnostics === 'function' && typeof window.__v163BuildPdf === 'function', null, { timeout: 60000 });
     await page.waitForTimeout(500);
 
-    check(await page.title() === 'Accelerator OS V16.3.2 - Safe Saving + Dashboard PDFs', 'The V16.3.2 application source loads without a startup error.');
+    check(await page.title() === 'Accelerator AI V2 - Isolated Test Workspace', 'The Accelerator AI V2 application source loads without a startup error.');
     check((await page.evaluate(() => window.__acceleratorSaveDiagnostics())).remoteVersion === 7, 'The save bridge reads the current cloud version before allowing writes.');
     check(report.saveCalls.length === 0, 'Loading a software update does not write or replace workspace data.');
     check((await page.evaluate(() => window.__acceleratorSaveDiagnostics())).recoveryAvailable === true, 'A richer pre-update browser copy is preserved separately instead of being overwritten by cloud restore.');
@@ -185,7 +185,7 @@ function startServer() {
       render();
     });
     await page.waitForTimeout(180);
-    const localOne = await page.evaluate(() => JSON.parse(localStorage.getItem('accelerator-os-state-backup')).creators[0].name);
+    const localOne = await page.evaluate(() => JSON.parse(localStorage.getItem('accelerator-ai-v2-state-backup')).creators[0].name);
     check(localOne === 'Save Queue QA One', 'The browser backup captures an edit immediately.');
 
     await waitUntil(() => report.saveCalls.length >= 1);
