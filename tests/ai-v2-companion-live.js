@@ -87,33 +87,86 @@ function startServer() {
     await page.evaluate(() => document.getElementById('accelerator-ai-v2-drawer')?.close());
 
     const surfaces = ['home', 'strategy', 'plan', 'videos', 'learn', 'framework', 'creators', 'calendar', 'library'];
+    const minimumActions = { videos: 2 };
     for (const surface of surfaces) {
       await page.locator('[data-view="' + surface + '"]').first().click();
       await page.locator('[data-ai-context-guide]').waitFor({ state: 'visible' });
-      check(await page.locator('[data-ai-context-action]').count() >= 3, 'The ' + surface + ' page exposes its own creator-aware AI decisions.');
+      check(await page.locator('[data-ai-context-action]').count() >= (minimumActions[surface] || 3), 'The ' + surface + ' page exposes its own creator-aware AI decisions.');
     }
 
     await page.locator('[data-view="strategy"]').first().click();
+    await page.getByRole('button', { name: 'Message', exact: true }).click();
+    await page.locator('[data-ai-context-action="message-strengthen"]').waitFor({ state: 'visible' });
+    check(await page.locator('[data-ai-context-action="message-strengthen"]').count() === 1, 'The Strategy assist follows the active Message decision instead of showing a generic prompt.');
     await page.locator('[data-ai-context-action="message-strengthen"]').click();
     await page.locator('[data-ai-context-guide] [data-ai-companion-stage]').waitFor({ state: 'visible', timeout: 180000 });
-    const answer = await page.locator('[data-ai-context-guide] .ai-companion-answer > p').first().textContent();
+    const answer = await page.locator('[data-ai-context-guide] .ai-assist-recommendation').first().textContent();
     check(Boolean(answer && answer.trim().length > 40), 'A real AI answer renders directly inside the Strategy page.');
     check(await page.locator('[data-ai-context-guide] .ai-proposal-template').count() === 1, 'Formula requests include a reusable template.');
-    check(await page.locator('[data-ai-context-guide] .ai-proposal-block').filter({ hasText: 'Filled example' }).count() === 1, 'Formula requests also include a filled creator-specific example.');
+    check(await page.locator('[data-ai-context-guide] .ai-assist-unit').filter({ hasText: 'Filled example' }).count() === 1, 'Formula requests also include a filled creator-specific example.');
+    check(await page.locator('[data-ai-context-guide] .ai-assist-options').count() === 0, 'A message formula does not include unrelated option or report sections.');
     check(chatCalls.length === 1 && chatCalls[0].surface === 'strategy' && chatCalls[0].action === 'message-strengthen', 'The request identifies the exact dashboard surface and decision type.');
-    check(Boolean(chatCalls[0].context?.decisionTrail?.creatorStrategy?.audience), 'The AI request carries the creator strategy and audience context.');
-    check(Boolean(chatCalls[0].context?.decisionTrail?.currentPlan), 'The AI request carries the diagnosis and active plan context.');
-    check(Array.isArray(chatCalls[0].context?.portfolio), 'The AI request carries portfolio context for cross-creator decisions.');
+    check(chatCalls[0].context?.contextProfile === 'message', 'The request uses the narrow Message context profile.');
+    check(Boolean(chatCalls[0].context?.relevant?.audience), 'The AI request carries the audience evidence inherited by the message.');
+    check(Boolean(chatCalls[0].context?.relevant?.message), 'The AI request carries the saved message decisions.');
+    check(!('portfolio' in (chatCalls[0].context?.relevant || {})), 'The Message request excludes unrelated portfolio data.');
     report.evidence.answer = answer;
-    report.evidence.request = { surface: chatCalls[0].surface, action: chatCalls[0].action, creator: chatCalls[0].context?.creator?.name };
+    report.evidence.request = { surface: chatCalls[0].surface, action: chatCalls[0].action, creator: chatCalls[0].context?.relevant?.creator?.name, profile: chatCalls[0].context?.contextProfile };
 
     await page.locator('[data-ai-context-guide] [data-ai-companion-stage]').click();
-    await page.locator('[data-ai-context-guide] .ai-context-staged').waitFor({ state: 'visible' });
+    await page.locator('[data-ai-context-guide] .ai-assist-meta').filter({ hasText: 'Kept for review' }).waitFor({ state: 'visible' });
     await page.locator('#accelerator-ai-v2-button').click();
     await page.locator('.ai-v2-card').first().waitFor({ state: 'visible', timeout: 10000 });
     check(await page.locator('.ai-v2-card').count() >= 1, 'The inline AI answer stages as a review draft in AI Desk.');
     check(saveCalls.length === 0, 'Generating and staging the AI answer makes no cloud save request.');
     check(await page.evaluate(() => Boolean(localStorage.getItem('accelerator-ai-v2-proposal-drafts'))), 'The staged result stays in the V2 browser-only draft key.');
+
+    await page.evaluate(() => document.getElementById('accelerator-ai-v2-drawer')?.close());
+    await page.locator('[data-view="videos"]').first().click();
+    await page.locator('[data-action="open-video"]').first().click();
+    await page.locator('[data-ai-context-guide]').waitFor({ state: 'visible' });
+    check(await page.locator('[data-ai-context-action="package-directions"]').count() === 1, 'The video builder exposes package-specific help on its planner surface.');
+    const plannerRequest = await page.evaluate(() => {
+      const diagnostic = window.__acceleratorAiCompanionDiagnostics?.();
+      return diagnostic?.contextualSurfaces?.includes('planner');
+    });
+    check(plannerRequest === true, 'The planner is a first-class AI surface and cannot fall back to Home prompts.');
+
+    await page.locator('[data-view="learn"]').first().click();
+    const learnSelect = page.locator('main select').first();
+    if (await learnSelect.count()) await learnSelect.selectOption({ index: 0 });
+    const beforeMissingCheck = chatCalls.length;
+    const missingResponsePromise = page.waitForResponse(response => response.url().endsWith('/chat') && response.request().method() === 'POST');
+    await page.locator('[data-ai-context-action="results-interpret"]').click();
+    const missingPayload = await (await missingResponsePromise).json();
+    await page.locator('[data-ai-context-guide] .ai-assist-card[data-status="needs_input"]').waitFor({ state: 'visible', timeout: 10000 });
+    check(chatCalls.length === beforeMissingCheck + 1, 'The missing-evidence check reaches only the local companion gate.');
+    check(missingPayload.route === 'dashboard' && missingPayload.model === 'No AI call', 'Missing results are blocked before any model is invoked.');
+    const missingResponse = await page.locator('[data-ai-context-guide]').innerText();
+    check(missingResponse.includes('DASHBOARD CHECK') && missingResponse.includes('Add the missing evidence first'), 'Missing results produce an instant dashboard check instead of a fabricated interpretation.');
+    check(await page.locator('[data-ai-context-guide] .ai-proposal-template').count() === 0, 'Missing results never produce an irrelevant template.');
+
+    if (await learnSelect.locator('option').count() >= 3) {
+      await learnSelect.selectOption({ index: 2 });
+      await page.waitForFunction(() => document.querySelector('main select')?.selectedIndex === 2);
+      const resultResponsePromise = page.waitForResponse(response => response.url().endsWith('/chat') && response.request().method() === 'POST', { timeout: 210000 });
+      await page.locator('[data-ai-context-action="results-interpret"]').click();
+      const resultPayload = await (await resultResponsePromise).json();
+      check(resultPayload.ok === true && resultPayload.responseType === 'learning', 'Recorded results use the dedicated learning response contract.');
+      check(resultPayload.proposal?.status === 'ready', 'Recorded results are interpreted with explicit limitations instead of being refused after passing the evidence gate.');
+      await page.locator('[data-ai-context-guide] .ai-assist-learning').waitFor({ state: 'visible', timeout: 10000 });
+      check(await page.locator('[data-ai-context-guide] .ai-assist-unit').filter({ hasText: 'Observation' }).count() === 1, 'Recorded results render as an explicit observation.');
+      check(await page.locator('[data-ai-context-guide] .ai-assist-unit').filter({ hasText: 'Interpretation' }).count() === 1, 'Recorded results keep interpretation separate from observation.');
+      check(await page.locator('[data-ai-context-guide] .ai-assist-unit').filter({ hasText: 'Decision' }).count() === 1, 'Recorded results end in a responsible decision.');
+      check(await page.locator('[data-ai-context-guide] .ai-proposal-template').count() === 0, 'A results interpretation never renders a formula template.');
+    }
+
+    await page.locator('[data-view="calendar"]').first().click();
+    await page.locator('[data-ai-context-action="review-timing"]').click();
+    await page.locator('[data-ai-context-guide] .ai-assist-card[data-status="ready"] .ai-assist-meta').filter({ hasText: 'FAST' }).waitFor({ state: 'visible', timeout: 180000 });
+    const fastMeta = await page.locator('[data-ai-context-guide] .ai-assist-meta').innerText();
+    check(fastMeta.includes('GPT-5.6-LUNA'), 'Automatic routing sends a narrow timing check to the available fast Codex model.');
+    report.evidence.fastRoute = fastMeta;
     check(errors.length === 0, 'The complete browser flow has no runtime or console errors.');
     await page.screenshot({ path: path.join(ROOT, 'qa/ai-v2-companion-live.png'), fullPage: true });
   } catch (error) {
