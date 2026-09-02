@@ -1,6 +1,6 @@
 {
   "build": "Accelerator-AI-V2",
-  "checkedAt": "2026-09-01T23:57:09.280Z",
+  "checkedAt": "2026-09-02T00:14:28.577Z",
   "passed": [
     "V2 connects only to the fixed isolated cloud workspace.",
     "Save diagnostics expose the required V2 workspace boundary.",
@@ -25,6 +25,9 @@
     "V2 never creates or rotates production browser keys.",
     "The AI Desk fits the mobile viewport.",
     "Mobile startup is read-only and has no runtime errors.",
+    "A fresh browser opens directly in safe demo mode without a cloud login screen.",
+    "Codex can read clearly labelled demo data without cloud credentials.",
+    "Demo-mode AI testing cannot write to the cloud workspace.",
     "V2 fails closed when its isolated workspace is missing.",
     "Missing V2 access never falls back to production and never saves.",
     "An ordinary browser is truthfully reported as having no AI connected.",

@@ -1342,7 +1342,10 @@ const PERSISTENCE_BRIDGE = String.raw`
     let resumeDemo = false;
     try { resumeDemo = localStorage.getItem(DEMO_MARKER_KEY) === 'true'; } catch (_) {}
     readStoredSession();
-    if (resumeDemo && !accessToken && !refreshToken) {
+    // V2 is a test surface. A fresh browser opens directly in read-only demo
+    // mode instead of blocking behind the cloud sign-in dialog. Existing
+    // authenticated browsers still load the isolated V2 cloud workspace.
+    if (!accessToken && !refreshToken) {
       localWorkspaceAvailable = false;
       enterDemoMode();
     } else {
@@ -1535,6 +1538,10 @@ const AI_V2_BRIDGE = String.raw`
   function getAiConnectionStatus() {
     const settings = readSettings();
     const webMcpAvailable = typeof document.modelContext?.registerTool === 'function';
+    const diagnostics = saveDiagnostics();
+    const dataMode = diagnostics && diagnostics.demoMode
+      ? 'built-in demo'
+      : (diagnostics && diagnostics.cloudStateLoaded ? 'isolated V2 cloud' : 'not loaded');
     return {
       ok: true,
       environment: 'accelerator-ai-v2',
@@ -1542,6 +1549,7 @@ const AI_V2_BRIDGE = String.raw`
       preferredProvider: settings.preferredProvider || 'codex-browser-tools',
       connected: registered,
       webMcpAvailable,
+      dataMode,
       displayName: registered ? 'Codex browser tools' : 'No AI connected to this page',
       model: {
         display: registered ? 'Selected in Codex' : 'None',
@@ -1554,7 +1562,7 @@ const AI_V2_BRIDGE = String.raw`
         explanation: 'Your ChatGPT account and plan remain inside Codex and are not shared with this website.'
       },
       access: {
-        canReadVerifiedV2Context: registered,
+        canReadCurrentV2Context: registered && dataMode !== 'not loaded',
         canReadCurrentCreator: registered,
         canReadCurrentVideo: registered,
         canStageBrowserOnlyDrafts: registered,
@@ -1572,15 +1580,30 @@ const AI_V2_BRIDGE = String.raw`
 
   function verifiedState() {
     const diagnostics = saveDiagnostics();
-    if (!diagnostics || !diagnostics.cloudStateLoaded || diagnostics.demoMode) {
+    const value = appState();
+    if (diagnostics && diagnostics.demoMode && value) {
+      return {
+        ready: true,
+        state: value,
+        diagnostics,
+        dataSource: 'built-in-demo',
+        workspaceId: null
+      };
+    }
+    if (!diagnostics || !diagnostics.cloudStateLoaded) {
       return { ready: false, reason: 'The isolated V2 cloud workspace has not finished loading.' };
     }
     if (diagnostics.workspaceId !== REQUIRED_WORKSPACE_ID) {
       return { ready: false, reason: 'The required V2 workspace is not active. Production fallback is disabled.' };
     }
-    const value = appState();
     if (!value) return { ready: false, reason: 'Dashboard state is unavailable.' };
-    return { ready: true, state: value, diagnostics };
+    return {
+      ready: true,
+      state: value,
+      diagnostics,
+      dataSource: 'isolated-cloud',
+      workspaceId: REQUIRED_WORKSPACE_ID
+    };
   }
 
   function currentCreator(value) {
@@ -1609,7 +1632,8 @@ const AI_V2_BRIDGE = String.raw`
     return {
       ok: true,
       environment: 'accelerator-ai-v2',
-      workspaceId: REQUIRED_WORKSPACE_ID,
+      workspaceId: result.workspaceId,
+      dataSource: result.dataSource,
       view: value.view || 'home',
       creator: creator ? {
         id: creator.id,
@@ -1627,8 +1651,10 @@ const AI_V2_BRIDGE = String.raw`
         role: video.role || ''
       } : null,
       creatorCount: Array.isArray(value.creators) ? value.creators.length : 0,
-      cloudVersion: result.diagnostics.remoteVersion,
-      instruction: 'Treat this as private creator data. Analyze it, but stage recommendations for Blake to review instead of changing dashboard state.'
+      cloudVersion: result.dataSource === 'isolated-cloud' ? result.diagnostics.remoteVersion : null,
+      instruction: result.dataSource === 'built-in-demo'
+        ? 'This is built-in demo data for testing. Stage recommendations for Blake to review and never treat demo content as a real client record.'
+        : 'Treat this as private creator data. Analyze it, but stage recommendations for Blake to review instead of changing dashboard state.'
     };
   }
 
@@ -1639,7 +1665,8 @@ const AI_V2_BRIDGE = String.raw`
     return {
       ok: true,
       environment: 'accelerator-ai-v2',
-      workspaceId: REQUIRED_WORKSPACE_ID,
+      workspaceId: result.workspaceId,
+      dataSource: result.dataSource,
       view: result.state.view || 'home',
       creator: creator ? clone(creator) : null,
       instruction: 'This record is read-only through site tools. Use accelerator_stage_proposal for recommendations.'
@@ -1654,7 +1681,8 @@ const AI_V2_BRIDGE = String.raw`
     return {
       ok: true,
       environment: 'accelerator-ai-v2',
-      workspaceId: REQUIRED_WORKSPACE_ID,
+      workspaceId: result.workspaceId,
+      dataSource: result.dataSource,
       creator: creator ? { id: creator.id, name: creator.name } : null,
       video: video ? clone(video) : null,
       instruction: 'This record is read-only through site tools. Use accelerator_stage_proposal for recommendations.'
@@ -1734,7 +1762,7 @@ const AI_V2_BRIDGE = String.raw`
       '.ai-v2-safety{margin:16px 0;padding:14px;border:1px solid #eadfbd;border-radius:14px;background:#fff9df;color:#58616a;font:550 13px/1.5 Inter,system-ui,sans-serif}.ai-v2-safety strong{color:#17212b}',
       '.ai-v2-section{margin-top:18px}.ai-v2-section-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:10px}.ai-v2-section h3{margin:0;font:850 18px/1.25 Inter,system-ui,sans-serif}.ai-v2-section-note{margin:0;color:#7a858f;font:650 11px/1.35 Inter,system-ui,sans-serif}',
       '.ai-v2-connection{padding:17px;border:1px solid #d8e0e6;border-radius:17px;background:#fff}.ai-v2-connection-top{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}.ai-v2-connection-name{margin:0 0 5px;font:850 19px/1.2 Inter,system-ui,sans-serif}.ai-v2-connection-copy{margin:0;color:#66717c;font:550 13px/1.45 Inter,system-ui,sans-serif}.ai-v2-status{display:inline-flex;align-items:center;gap:7px;flex:none;border-radius:999px;padding:7px 10px;background:#fff1ee;color:#9c3f31;font:850 10px/1 Inter,system-ui,sans-serif;letter-spacing:.07em;text-transform:uppercase}.ai-v2-status::before{content:"";width:7px;height:7px;border-radius:999px;background:#e4775d}.ai-v2-status[data-connected="true"]{background:#edf6ec;color:#426a42}.ai-v2-status[data-connected="true"]::before{background:#78a776}',
-      '.ai-v2-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;margin-top:15px;overflow:hidden;border:1px solid #e0e6eb;border-radius:13px;background:#e0e6eb}.ai-v2-fact{min-width:0;padding:12px;background:#f9fbfc}.ai-v2-fact span{display:block;margin-bottom:5px;color:#89939d;font:850 9px/1.2 Inter,system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase}.ai-v2-fact strong{display:block;font:750 12px/1.35 Inter,system-ui,sans-serif;overflow-wrap:anywhere}',
+      '.ai-v2-facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;margin-top:15px;overflow:hidden;border:1px solid #e0e6eb;border-radius:13px;background:#e0e6eb}.ai-v2-fact{min-width:0;padding:12px;background:#f9fbfc}.ai-v2-fact span{display:block;margin-bottom:5px;color:#89939d;font:850 9px/1.2 Inter,system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase}.ai-v2-fact strong{display:block;font:750 12px/1.35 Inter,system-ui,sans-serif;overflow-wrap:anywhere}',
       '.ai-v2-permissions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:13px 0 0;padding:0;list-style:none}.ai-v2-permissions li{position:relative;padding-left:18px;color:#5f6a75;font:600 12px/1.4 Inter,system-ui,sans-serif}.ai-v2-permissions li::before{position:absolute;left:0;top:1px;color:#5d8b5d;font-weight:900;content:"✓"}.ai-v2-permissions li[data-no="true"]::before{color:#b25343;content:"×"}',
       '.ai-v2-try{display:flex;gap:10px;align-items:center;margin-top:14px;padding:12px;border:1px dashed #c8d2da;border-radius:13px;background:#f8fafb}.ai-v2-try code{min-width:0;flex:1;color:#46515c;font:600 12px/1.4 Inter,system-ui,sans-serif;white-space:normal}.ai-v2-mini-button{flex:none;min-height:34px;border:1px solid #17212b;border-radius:9px;background:#17212b;color:#fff;padding:7px 10px;font:800 10px/1.2 Inter,system-ui,sans-serif;cursor:pointer}',
       '.ai-v2-provider-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.ai-v2-provider{padding:13px;border:1px solid #dce3e8;border-radius:14px;background:#fff}.ai-v2-provider[data-active="true"]{border-color:#b5a14d;box-shadow:inset 0 0 0 1px #b5a14d}.ai-v2-provider-top{display:flex;justify-content:space-between;gap:10px;align-items:center}.ai-v2-provider strong{font:800 13px/1.3 Inter,system-ui,sans-serif}.ai-v2-provider small{display:block;margin-top:5px;color:#6f7a85;font:550 11px/1.4 Inter,system-ui,sans-serif}.ai-v2-provider-tag{color:#89939d;font:850 9px/1.2 Inter,system-ui,sans-serif;letter-spacing:.07em;text-transform:uppercase}.ai-v2-provider[data-active="true"] .ai-v2-provider-tag{color:#75651e}',
@@ -1813,8 +1841,8 @@ const AI_V2_BRIDGE = String.raw`
       host.innerHTML = [
         '<div class="ai-v2-connection">',
         '<div class="ai-v2-connection-top"><div><p class="ai-v2-connection-name">' + escapeHtml(status.displayName) + '</p><p class="ai-v2-connection-copy">' + (status.connected ? 'Codex can discover this page’s six safe tools while this dashboard is open in the Codex browser.' : 'This browser has not exposed the dashboard tools to an AI agent. The dashboard still works normally without AI.') + '</p></div><span class="ai-v2-status" data-connected="' + String(status.connected) + '">' + (status.connected ? 'Connected' : 'Not connected') + '</span></div>',
-        '<div class="ai-v2-facts"><div class="ai-v2-fact"><span>AI route</span><strong>' + escapeHtml(status.connected ? 'Codex / ChatGPT' : 'None') + '</strong></div><div class="ai-v2-fact"><span>Model</span><strong>' + escapeHtml(status.model.display) + '</strong></div><div class="ai-v2-fact"><span>Account</span><strong>' + escapeHtml(status.account.display) + '</strong></div></div>',
-        '<ul class="ai-v2-permissions"><li>Read the verified V2 creator and video</li><li>Stage recommendations for review</li><li data-no="true">Cannot silently edit dashboard data</li><li data-no="true">Cannot write to cloud through AI tools</li></ul>',
+        '<div class="ai-v2-facts"><div class="ai-v2-fact"><span>AI route</span><strong>' + escapeHtml(status.connected ? 'Codex / ChatGPT' : 'None') + '</strong></div><div class="ai-v2-fact"><span>Model</span><strong>' + escapeHtml(status.model.display) + '</strong></div><div class="ai-v2-fact"><span>Account</span><strong>' + escapeHtml(status.account.display) + '</strong></div><div class="ai-v2-fact"><span>Data</span><strong>' + escapeHtml(status.dataMode) + '</strong></div></div>',
+        '<ul class="ai-v2-permissions"><li>Read the current V2 creator and video</li><li>Stage recommendations for review</li><li data-no="true">Cannot silently edit dashboard data</li><li data-no="true">Cannot write to cloud through AI tools</li></ul>',
         '<p class="ai-v2-activity">' + formatActivity(status.lastActivity) + '</p>',
         status.connected ? '<div class="ai-v2-try"><code>' + escapeHtml(prompt) + '</code><button class="ai-v2-mini-button" type="button" data-ai-copy-prompt="' + escapeHtml(prompt) + '">Copy prompt</button></div>' : '<div class="ai-v2-try"><code>Open this exact page in the Codex built-in browser. When site tools are enabled, this card will change to Connected automatically.</code></div>',
         '</div>'

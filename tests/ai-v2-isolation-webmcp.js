@@ -34,11 +34,13 @@ function startServer() {
 
 async function configurePage(page, workspaceRows, options = {}) {
   const saveCalls = [];
-  await page.addInitScript(({ enableSiteTools }) => {
-    localStorage.setItem('sb-pqggobwpazihraeqvspc-auth-token', JSON.stringify({
-      access_token: 'qa-access-token',
-      refresh_token: 'qa-refresh-token'
-    }));
+  await page.addInitScript(({ enableSiteTools, seedCloudAuth }) => {
+    if (seedCloudAuth) {
+      localStorage.setItem('sb-pqggobwpazihraeqvspc-auth-token', JSON.stringify({
+        access_token: 'qa-access-token',
+        refresh_token: 'qa-refresh-token'
+      }));
+    }
     if (enableSiteTools) {
       Object.defineProperty(document, 'modelContext', {
         configurable: true,
@@ -50,7 +52,10 @@ async function configurePage(page, workspaceRows, options = {}) {
         }
       });
     }
-  }, { enableSiteTools: options.enableSiteTools !== false });
+  }, {
+    enableSiteTools: options.enableSiteTools !== false,
+    seedCloudAuth: options.seedCloudAuth !== false
+  });
   await page.route('https://pqggobwpazihraeqvspc.supabase.co/**', async route => {
     const request = route.request();
     const pathname = new URL(request.url()).pathname;
@@ -152,6 +157,19 @@ async function configurePage(page, workspaceRows, options = {}) {
     check(mobileBox && mobileBox.width <= 390 && mobileBox.height <= 844, 'The AI Desk fits the mobile viewport.');
     check(mobileSaves.length === 0 && mobileErrors.length === 0, 'Mobile startup is read-only and has no runtime errors.');
     await mobile.screenshot({ path: path.join(ROOT, 'qa/ai-v2-mobile.png'), fullPage: true });
+
+    const demo = await browser.newPage({ viewport: { width: 1200, height: 800 } });
+    const demoSaves = await configurePage(demo, [], { seedCloudAuth: false });
+    await demo.goto('http://127.0.0.1:' + address.port + '/', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await demo.waitForFunction(() => window.__acceleratorAiV2Diagnostics?.().registered === true && window.__acceleratorSaveDiagnostics?.().demoMode === true, null, { timeout: 60000 });
+    const demoResult = await demo.evaluate(async () => ({
+      diagnostics: window.__acceleratorSaveDiagnostics(),
+      context: await window.__qaRegisteredTools.accelerator_get_current_context.execute({}),
+      authDialogOpen: document.getElementById('accelerator-cloud-auth-dialog')?.open === true
+    }));
+    check(demoResult.diagnostics.demoMode === true && demoResult.authDialogOpen === false, 'A fresh browser opens directly in safe demo mode without a cloud login screen.');
+    check(demoResult.context.ok && demoResult.context.dataSource === 'built-in-demo' && demoResult.context.workspaceId === null, 'Codex can read clearly labelled demo data without cloud credentials.');
+    check(demoSaves.length === 0, 'Demo-mode AI testing cannot write to the cloud workspace.');
 
     const blocked = await browser.newPage({ viewport: { width: 1200, height: 800 } });
     const blockedSaves = await configurePage(blocked, [{ id: PROD_WORKSPACE_ID, version: 1337, name: 'Blake' }]);
