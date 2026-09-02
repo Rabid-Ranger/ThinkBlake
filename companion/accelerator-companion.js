@@ -21,18 +21,46 @@ const KEYCHAIN_SERVICE = 'com.blakerice.accelerator-ai';
 const V2_WORKSPACE_ID = 'e9953426-0a8d-4890-9cf0-4f4ac4e71c46';
 const MAX_BODY_BYTES = 512 * 1024;
 const REQUEST_TIMEOUT_MS = 180000;
-const ALLOWED_SURFACES = new Set(['desk', 'home', 'strategy', 'plan', 'videos', 'learn', 'framework', 'creators', 'calendar', 'library']);
-const ALLOWED_ACTIONS = new Set([
-  'open-question', 'next-decision', 'diagnosis-check', 'call-prep',
-  'audience-sharpen', 'message-strengthen', 'business-path',
-  'plan-coherence', 'month-breakdown', 'missing-proof', 'plan-report',
-  'video-fit', 'package-directions', 'hook-builder', 'production-handoff',
-  'results-interpret', 'learning-conclusion', 'next-experiment', 'monthly-report',
-  'framework-select', 'framework-adapt', 'framework-audit',
-  'portfolio-triage', 'portfolio-risk', 'portfolio-calls',
-  'schedule-review', 'capacity-risk', 'review-timing',
-  'library-route', 'library-translate', 'library-gap'
-]);
+const ALLOWED_SURFACES = new Set(['desk', 'home', 'strategy', 'plan', 'videos', 'planner', 'learn', 'framework', 'creators', 'calendar', 'library']);
+const ACTION_DEFINITIONS = {
+  'open-question': { mode: 'standard', response: 'decision', instruction: 'Answer the specific question using only the relevant dashboard evidence. Lead with the useful answer, not a tour of the creator record.' },
+  'next-decision': { mode: 'standard', response: 'decision', instruction: 'Choose the single decision that most needs to become clear now. Connect it to the destination, newest evidence, active constraint, plan and open commitment. Say what to ignore for now.' },
+  'diagnosis-check': { mode: 'deep', response: 'decision', instruction: 'Pressure-test the working diagnosis. Identify what supports it, what contradicts it, what remains assumed, and whether to keep, refine or replace it.' },
+  'call-prep': { mode: 'standard', response: 'decision', instruction: 'Prepare the next coaching call around one decision. Give the evidence to review, the sharpest question to ask and the commitment that should leave the call.' },
+  'audience-sharpen': { mode: 'standard', response: 'decision', instruction: 'Sharpen the exact person and decision moment without rewriting the whole audience profile. Preserve recorded language, separate evidence from assumptions and recommend the one audience clarification that improves downstream content decisions.' },
+  'message-strengthen': { mode: 'standard', response: 'formula', instruction: 'Connect the recorded audience tension, desired result, distinctive approach and proof into a tighter message. Return one reusable bracketed formula and one creator-specific filled example.' },
+  'business-path': { mode: 'standard', response: 'decision', instruction: 'Check the handoff from useful content to the next useful step and business destination. Identify the weakest transition and the smallest correction.' },
+  'plan-coherence': { mode: 'deep', response: 'decision', instruction: 'Check whether the active diagnosis, 90-day direction, current month, video mix and learning question form one coherent test. Recommend only the most important correction.' },
+  'month-breakdown': { mode: 'standard', response: 'decision', instruction: 'Turn the active month into the next practical decision: what to focus on, what evidence each planned video should create and what checkpoint changes the plan.' },
+  'missing-proof': { mode: 'fast', response: 'decision', instruction: 'Identify the single missing piece of evidence that is most limiting the next decision and the smallest way to collect it.' },
+  'plan-report': { mode: 'deep', response: 'learning', instruction: 'Write a concise plan conclusion from recorded evidence only. Keep observation, interpretation and decision distinct, and state what stays, what changes and what remains unknown.' },
+  'video-fit': { mode: 'standard', response: 'decision', instruction: 'Check the current video against the active diagnosis, monthly focus, portfolio job, exact viewer, message and business path. Identify the weakest link before more production work is done.' },
+  'viewer-sharpen': { mode: 'standard', response: 'decision', instruction: 'Check whether the saved viewer state, moment, problem, desire and language identify one recognizable person for this video. Recommend the one clarification that will improve the promise and package downstream.' },
+  'research-check': { mode: 'fast', response: 'decision', instruction: 'Check whether the saved research is enough to support the current video decision. Name the single evidence gap most likely to make the direction generic or derivative.' },
+  'promise-check': { mode: 'standard', response: 'decision', instruction: 'Check whether the viewer, problem, result and mechanism form one specific promise that the package, hook and proof can all deliver. Recommend the smallest correction.' },
+  'package-directions': { mode: 'deep', response: 'options', instruction: 'Create three genuinely distinct title-and-thumbnail directions grounded in the exact viewer, promise, mechanism, research and active constraint. Keep each option compact and explain its click logic.' },
+  'hook-builder': { mode: 'standard', response: 'formula', instruction: 'Build the opening from the saved package, viewer moment, promise, mechanism and proof assets. Return one bracketed hook formula and one creator-specific example that confirms the click and reaches useful content quickly.' },
+  'structure-check': { mode: 'standard', response: 'decision', instruction: 'Check whether the saved structure delivers the package promise with clear progression, proof and payoff. Identify the one section or transition most likely to weaken the viewing experience.' },
+  'cta-check': { mode: 'standard', response: 'decision', instruction: 'Check whether the saved CTA is a natural continuation of this exact video, viewer moment, job and business path. Recommend one correction to fit, timing or destination.' },
+  'production-handoff': { mode: 'standard', response: 'decision', instruction: 'Audit the saved video decisions for production readiness. Name the one missing or contradictory item most likely to create a weak shoot or edit handoff.' },
+  'results-interpret': { mode: 'deep', response: 'learning', instruction: 'Interpret only the selected checkpoint evidence in the context of the video job, traffic source, package, opening and same-job comparison. Do not infer a cause that the data cannot support.' },
+  'learning-conclusion': { mode: 'standard', response: 'learning', instruction: 'Turn the recorded observation and interpretation into a concise learning conclusion with confidence, a responsible decision and the exact dashboard layer it should change.' },
+  'next-experiment': { mode: 'deep', response: 'decision', instruction: 'Choose the smallest next experiment that resolves the most valuable uncertainty. Change one meaningful variable and define the signal that changes the later decision.' },
+  'monthly-report': { mode: 'deep', response: 'learning', instruction: 'Create a brief client-ready monthly conclusion from recorded evidence. State what happened, what it likely means, what changes next and which proof is still missing.' },
+  'framework-select': { mode: 'standard', response: 'decision', instruction: 'Recommend a framework only when the supplied library context supports it. Explain where it fits in the current decision; otherwise state what library context is missing.' },
+  'framework-adapt': { mode: 'standard', response: 'formula', instruction: 'Adapt the supplied framework to the current creator decision. Return one reusable bracketed formula and one filled creator-specific example without changing the framework logic.' },
+  'framework-audit': { mode: 'deep', response: 'decision', instruction: 'Use the supplied framework context to challenge one assumption or contradiction in the current plan and give one decision rule.' },
+  'portfolio-triage': { mode: 'deep', response: 'options', instruction: 'Rank the three creators who most need coaching attention using active constraint, stalled decision, commitment, plan status and evidence gap—not profile completeness.' },
+  'portfolio-risk': { mode: 'deep', response: 'decision', instruction: 'Identify the highest-risk stalled or unsupported creator decision and the smallest intervention Blake should make.' },
+  'portfolio-calls': { mode: 'standard', response: 'options', instruction: 'Recommend the next coaching-call order and the one decision each call should resolve.' },
+  'schedule-review': { mode: 'standard', response: 'decision', instruction: 'Check whether publish dates, review windows, coaching calls and commitments occur in an order that supports the active decisions. Recommend one scheduling correction.' },
+  'capacity-risk': { mode: 'fast', response: 'decision', instruction: 'Identify the clearest capacity or sequencing risk and what to move, combine, defer or protect.' },
+  'review-timing': { mode: 'fast', response: 'decision', instruction: 'Recommend the next useful review checkpoint and the evidence that should exist before a decision is made.' },
+  'library-route': { mode: 'standard', response: 'decision', instruction: 'Choose a supplied library resource only if it directly answers the current creator decision. State the question it should answer and what should change afterward.' },
+  'library-translate': { mode: 'standard', response: 'formula', instruction: 'Translate the supplied library principle into one reusable bracketed checklist and one filled creator-specific example.' },
+  'library-gap': { mode: 'deep', response: 'decision', instruction: 'Identify one important decision the supplied dashboard and library context do not adequately support and the smallest useful addition.' }
+};
+const ALLOWED_ACTIONS = new Set(Object.keys(ACTION_DEFINITIONS));
 const ROUTE_DEFINITIONS = {
   codex: { id: 'codex', name: 'Codex / ChatGPT', kind: 'codex' },
   lmstudio: { id: 'lmstudio', name: 'LM Studio', kind: 'openai-compatible', defaultBaseUrl: 'http://127.0.0.1:1234/v1' },
@@ -64,6 +92,7 @@ function defaultSettings() {
   return {
     activeRoute: 'codex',
     codexModel: DEFAULT_CODEX_MODEL,
+    routingMode: 'auto',
     autoFallback: true,
     routes: {
       lmstudio: { baseUrl: ROUTE_DEFINITIONS.lmstudio.defaultBaseUrl, model: '', configured: false },
@@ -95,6 +124,7 @@ function loadSettings() {
     const saved = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf8'));
     if (saved && ROUTE_DEFINITIONS[saved.activeRoute]) defaults.activeRoute = saved.activeRoute;
     if (saved && saved.codexModel) defaults.codexModel = String(saved.codexModel).slice(0, 160);
+    if (saved && ['auto', 'fixed'].includes(saved.routingMode)) defaults.routingMode = saved.routingMode;
     if (saved && typeof saved.autoFallback === 'boolean') defaults.autoFallback = saved.autoFallback;
     for (const route of ['lmstudio', 'mlx', 'custom']) {
       const incoming = saved && saved.routes && saved.routes[route];
@@ -135,57 +165,93 @@ function withTimeout(ms) {
   return { signal: controller.signal, done: () => clearTimeout(timer) };
 }
 
-const OUTPUT_SCHEMA = {
-  type: 'object',
-  properties: {
-    answer: { type: 'string' },
-    title: { type: 'string' },
-    target: { type: 'string' },
-    summary: { type: 'string' },
-    recommendation: { type: 'string' },
-    decision: { type: 'string' },
-    rationale: { type: 'string' },
-    nextSteps: { type: 'array', items: { type: 'string' }, maxItems: 6 },
-    watchFor: { type: 'string' },
-    template: { type: 'string' },
-    example: { type: 'string' },
-    evidence: { type: 'array', items: { type: 'string' }, maxItems: 8 },
-    uncertainties: { type: 'array', items: { type: 'string' }, maxItems: 6 }
-  },
-  required: ['answer', 'title', 'target', 'summary', 'recommendation', 'decision', 'rationale', 'nextSteps', 'watchFor', 'template', 'example', 'evidence', 'uncertainties'],
-  additionalProperties: false
+const BASE_OUTPUT_PROPERTIES = {
+  status: { type: 'string', enum: ['ready', 'needs_input'] },
+  headline: { type: 'string' },
+  recommendation: { type: 'string' },
+  why: { type: 'string' },
+  nextAction: { type: 'string' },
+  confidence: { type: 'string', enum: ['Low', 'Medium', 'High'] },
+  evidence: { type: 'array', items: { type: 'string' }, maxItems: 3 },
+  missing: { type: 'array', items: { type: 'string' }, maxItems: 3 }
 };
 
+function outputSchema(responseType) {
+  const properties = { ...BASE_OUTPUT_PROPERTIES };
+  const required = Object.keys(BASE_OUTPUT_PROPERTIES);
+  if (responseType === 'options') {
+    properties.options = {
+      type: 'array',
+      minItems: 0,
+      maxItems: 3,
+      items: {
+        type: 'object',
+        properties: {
+          label: { type: 'string' },
+          direction: { type: 'string' },
+          why: { type: 'string' }
+        },
+        required: ['label', 'direction', 'why'],
+        additionalProperties: false
+      }
+    };
+    required.push('options');
+  }
+  if (responseType === 'formula') {
+    properties.formula = { type: 'string' };
+    properties.example = { type: 'string' };
+    required.push('formula', 'example');
+  }
+  if (responseType === 'learning') {
+    properties.observation = { type: 'string' };
+    properties.interpretation = { type: 'string' };
+    properties.decision = { type: 'string' };
+    required.push('observation', 'interpretation', 'decision');
+  }
+  return { type: 'object', properties, required, additionalProperties: false };
+}
+
+function responseTypeFor(action, question) {
+  if (action !== 'open-question') return ACTION_DEFINITIONS[action].response;
+  if (/\b(template|formula|hook|title|message|script)\b/i.test(question)) return 'formula';
+  if (/\b(result|metric|interpret|learning|conclusion|report)\b/i.test(question)) return 'learning';
+  if (/\b(options?|alternatives?|directions?)\b/i.test(question)) return 'options';
+  return 'decision';
+}
+
 function buildPrompt(question, context, requestMeta, requireJson) {
+  const definition = ACTION_DEFINITIONS[requestMeta.action] || ACTION_DEFINITIONS['open-question'];
+  const schema = outputSchema(requestMeta.responseType);
   return [
-    'You are the strategy assistant inside Accelerator OS.',
-    'Use only the dashboard context supplied below. Do not access files, run commands, browse, or call tools.',
-    'Think the way Blake uses this system: creator reality -> diagnosis -> focus -> content decision -> result -> learning -> next decision.',
-    'Carry relevant decisions forward. Connect your answer to the recorded audience, message, business path, diagnosis, plan, video job, coaching history and results instead of treating this page in isolation.',
-    'Separate recorded evidence, reasonable interpretation and missing information. Never turn an assumption into a fact and never invent metrics, research, audience language or results.',
-    'Give Blake a decisive, creator-specific recommendation with concrete next moves. Say what not to decide yet when focus matters.',
-    'When the request involves a template, formula, message, package, hook or framework, always provide BOTH a reusable bracketed template and one fully filled creator-specific example.',
-    'When the request involves results, learning, a conclusion, handoff or report, keep observation, interpretation, confidence and decision distinct. Flag missing proof rather than filling it in.',
-    'Do not claim you changed any dashboard or cloud data. Every output is a review draft until Blake explicitly uses it.',
-    'Write for a creator strategist: concise, concrete, evidence-led, natural, and free of filler or generic YouTube advice.',
-    'Keep the answer field under 350 words. Use the dedicated decision, rationale, nextSteps, template, example, evidence and uncertainties fields instead of repeating them at length in the answer.',
-    requireJson ? 'Return only a valid JSON object matching this schema: ' + JSON.stringify(OUTPUT_SCHEMA) : '',
+    'You are the quiet decision assistant inside Accelerator OS.',
+    'Use only the relevant dashboard context supplied below. Do not access files, run commands, browse, call tools or add generic YouTube advice.',
+    'The decision chain is creator reality -> audience and message -> diagnosis -> monthly focus -> video decisions -> result -> learning -> next decision.',
+    'Respect upstream decisions when evaluating downstream work. Do not rewrite the entire system when one link is weak.',
+    'Separate recorded evidence, reasonable interpretation and missing information. Never invent metrics, research, audience language, results or library content.',
+    'If required evidence is absent, set status to needs_input, keep the answer brief, name at most three missing inputs and make nextAction the smallest useful way to capture them.',
+    'The dashboard has already checked action-specific required inputs. If recorded results pass that gate, interpret them cautiously with lower confidence and named limitations instead of refusing to help.',
+    'If evidence is sufficient, set status to ready and recommend one clear move. Default to fewer than 90 words across headline, recommendation, why and nextAction.',
+    'Use no more than three short evidence items. Confidence reflects the supplied evidence, not writing confidence.',
+    'Do not produce a formula, template, options or report unless the response schema explicitly asks for it.',
+    'Do not claim you changed dashboard or cloud data. This is a review suggestion only.',
+    'ACTION CONTRACT:',
+    definition.instruction,
+    requireJson ? 'Return only a valid JSON object matching this schema: ' + JSON.stringify(schema) : '',
     '',
     'CURRENT DASHBOARD SURFACE:',
     requestMeta.surface,
     '',
-    'DECISION-SUPPORT ACTION:',
-    requestMeta.action,
+    'TASK DEPTH:',
+    requestMeta.taskMode,
     '',
-    'BLAKE QUESTION:',
-    question,
+    requestMeta.action === 'open-question' ? 'BLAKE QUESTION:\n' + question : '',
     '',
-    'DASHBOARD CONTEXT:',
+    'RELEVANT DASHBOARD CONTEXT:',
     JSON.stringify(context)
   ].filter(Boolean).join('\n');
 }
 
-function parseProposal(raw) {
+function parseProposal(raw, responseType) {
   let parsed;
   try { parsed = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch (_) {
     const match = String(raw || '').match(/\{[\s\S]*\}/);
@@ -195,24 +261,63 @@ function parseProposal(raw) {
   if (!parsed || typeof parsed !== 'object') throw new Error('The selected model returned an unreadable answer.');
   const stringValue = key => String(parsed[key] || '').trim();
   const arrayValue = key => Array.isArray(parsed[key]) ? parsed[key].map(item => String(item || '').trim()).filter(Boolean) : [];
-  return {
-    answer: stringValue('answer') || stringValue('recommendation') || stringValue('summary'),
-    title: stringValue('title') || 'AI recommendation',
-    target: stringValue('target') || 'Current creator',
-    summary: stringValue('summary') || stringValue('answer'),
-    recommendation: stringValue('recommendation') || stringValue('answer'),
-    decision: stringValue('decision'),
-    rationale: stringValue('rationale'),
-    nextSteps: arrayValue('nextSteps').slice(0, 6),
-    watchFor: stringValue('watchFor'),
-    template: stringValue('template'),
+  const recommendation = stringValue('recommendation');
+  const nextAction = stringValue('nextAction');
+  const missing = arrayValue('missing').slice(0, 3);
+  const options = Array.isArray(parsed.options) ? parsed.options.slice(0, 3).map(item => ({
+    label: String(item && item.label || '').trim(),
+    direction: String(item && item.direction || '').trim(),
+    why: String(item && item.why || '').trim()
+  })).filter(item => item.label || item.direction) : [];
+  const proposal = {
+    type: responseType,
+    status: stringValue('status') === 'needs_input' ? 'needs_input' : 'ready',
+    headline: stringValue('headline') || (missing.length ? 'More evidence needed' : 'AI check'),
+    recommendation,
+    why: stringValue('why'),
+    nextAction,
+    confidence: ['Low', 'Medium', 'High'].includes(stringValue('confidence')) ? stringValue('confidence') : 'Low',
+    evidence: arrayValue('evidence').slice(0, 3),
+    missing,
+    options,
+    formula: stringValue('formula'),
     example: stringValue('example'),
-    evidence: arrayValue('evidence').slice(0, 8),
-    uncertainties: arrayValue('uncertainties').slice(0, 6)
+    observation: stringValue('observation'),
+    interpretation: stringValue('interpretation'),
+    learningDecision: stringValue('decision')
   };
+  // Keep the existing review-draft shape compatible while the native UI moves
+  // to the smaller task-specific fields above.
+  return Object.assign(proposal, {
+    answer: recommendation,
+    title: proposal.headline,
+    target: 'Current creator',
+    summary: recommendation,
+    decision: proposal.learningDecision || recommendation,
+    rationale: proposal.why,
+    nextSteps: nextAction ? [nextAction] : [],
+    watchFor: '',
+    template: proposal.formula,
+    uncertainties: missing
+  });
 }
 
 const settings = loadSettings();
+
+function normalizedEfforts(item) {
+  const raw = Array.isArray(item && item.supportedReasoningEfforts) ? item.supportedReasoningEfforts : [];
+  return raw.map(value => typeof value === 'string' ? value : (value && (value.reasoningEffort || value.effort || value.value))).filter(Boolean);
+}
+
+function pickEffort(model, taskMode) {
+  const supported = Array.isArray(model && model.supportedReasoningEfforts) ? model.supportedReasoningEfforts : [];
+  const order = taskMode === 'deep'
+    ? ['medium', 'high', 'xhigh', 'low', 'minimal']
+    : taskMode === 'standard'
+      ? ['low', 'medium', 'minimal']
+      : ['low', 'minimal', 'medium'];
+  return order.find(value => !supported.length || supported.includes(value)) || model && model.defaultReasoningEffort || 'low';
+}
 
 class CodexAppServer {
   constructor() {
@@ -281,7 +386,8 @@ class CodexAppServer {
         name: item.displayName || item.model || item.id,
         description: item.description || '',
         isDefault: item.isDefault === true,
-        defaultReasoningEffort: item.defaultReasoningEffort || 'low'
+        defaultReasoningEffort: item.defaultReasoningEffort || 'low',
+        supportedReasoningEfforts: normalizedEfforts(item)
       })).filter(item => item.id) : [];
       if (this.models.length && !this.models.some(item => item.id === this.model)) {
         this.model = (this.models.find(item => item.isDefault) || this.models[0]).id;
@@ -289,7 +395,7 @@ class CodexAppServer {
         saveSettings(settings);
       }
     } catch (_) {
-      this.models = [{ id: this.model, name: this.model, description: '', isDefault: true, defaultReasoningEffort: 'low' }];
+      this.models = [{ id: this.model, name: this.model, description: '', isDefault: true, defaultReasoningEffort: 'low', supportedReasoningEfforts: ['low'] }];
     }
     this.ready = true;
     this.lastError = null;
@@ -367,10 +473,20 @@ class CodexAppServer {
     return this.model;
   }
 
+  routeForTask(taskMode) {
+    const selected = this.models.find(item => item.id === this.model) || this.models[0] || { id: this.model, defaultReasoningEffort: 'low', supportedReasoningEfforts: [] };
+    if (settings.routingMode !== 'auto') return { model: selected.id, effort: pickEffort(selected, taskMode) };
+    const fast = this.models.find(item => /(^|[-_.])(luna|mini|nano|flash|fast)([-_.]|$)/i.test(item.id));
+    const strong = this.models.find(item => /gpt-5\.6-sol/i.test(item.id)) || this.models.find(item => /gpt-5\.6-terra/i.test(item.id)) || selected;
+    const chosen = taskMode === 'fast' && fast ? fast : (taskMode === 'deep' ? strong : selected);
+    return { model: chosen.id, effort: pickEffort(chosen, taskMode) };
+  }
+
   async generate(question, context, requestMeta) {
     await this.start();
+    const routed = this.routeForTask(requestMeta.taskMode);
     const threadResult = await this.call('thread/start', {
-      model: this.model,
+      model: routed.model,
       cwd: ROOT,
       approvalPolicy: 'never',
       sandbox: 'read-only',
@@ -401,14 +517,23 @@ class CodexAppServer {
         input: [{ type: 'text', text: prompt }],
         cwd: ROOT,
         approvalPolicy: 'never',
-        model: this.model,
-        effort: 'low',
+        model: routed.model,
+        effort: routed.effort,
         summary: 'concise',
         personality: 'friendly',
-        outputSchema: OUTPUT_SCHEMA
+        outputSchema: outputSchema(requestMeta.responseType)
       });
       const raw = await turnPromise;
-      return { threadId, model: this.model, surface: requestMeta.surface, action: requestMeta.action, proposal: parseProposal(raw) };
+      return {
+        threadId,
+        model: routed.model,
+        effort: routed.effort,
+        taskMode: requestMeta.taskMode,
+        responseType: requestMeta.responseType,
+        surface: requestMeta.surface,
+        action: requestMeta.action,
+        proposal: parseProposal(raw, requestMeta.responseType)
+      };
     } finally {
       this.turns.delete(threadId);
     }
@@ -485,9 +610,12 @@ class OpenAiCompatibleRoute {
       return {
         threadId: this.route + '-' + Date.now().toString(36),
         model,
+        effort: 'provider default',
+        taskMode: requestMeta.taskMode,
+        responseType: requestMeta.responseType,
         surface: requestMeta.surface,
         action: requestMeta.action,
-        proposal: parseProposal(content)
+        proposal: parseProposal(content, requestMeta.responseType)
       };
     } catch (error) {
       if (error && error.name === 'AbortError') throw new Error('The selected model took too long to answer.');
@@ -557,6 +685,7 @@ async function routeSnapshot(force) {
     activeProvider: active.name,
     activeModel: active.model || '',
     fallbackRoute: fallback && fallback.id || null,
+    routingMode: settings.routingMode,
     autoFallback: settings.autoFallback,
     routes
   };
@@ -609,6 +738,15 @@ async function disableRoute(route) {
     configured: false
   };
   deleteSecret(route);
+  saveSettings(settings);
+  clearProviderSnapshot();
+  return routeSnapshot(true);
+}
+
+async function setRoutingMode(mode) {
+  mode = String(mode || '').trim().toLowerCase();
+  if (!['auto', 'fixed'].includes(mode)) throw new Error('Choose automatic or fixed model routing.');
+  settings.routingMode = mode;
   saveSettings(settings);
   clearProviderSnapshot();
   return routeSnapshot(true);
@@ -735,6 +873,7 @@ const server = http.createServer(async (req, res) => {
         activeRoute: snapshot.activeRoute,
         activeConnected: snapshot.activeConnected,
         fallbackRoute: snapshot.fallbackRoute,
+        routingMode: snapshot.routingMode,
         autoFallback: snapshot.autoFallback,
         routes: snapshot.routes,
         account: codex.account,
@@ -802,6 +941,16 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
+  if (req.method === 'POST' && pathname === '/routing') {
+    try {
+      const body = await readBody(req);
+      const snapshot = await setRoutingMode(body.mode);
+      return json(res, 200, { ok: true, ...snapshot });
+    } catch (error) {
+      return json(res, 400, { ok: false, error: error.message });
+    }
+  }
+
   if (req.method === 'POST' && pathname === '/chat') {
     try {
       const body = await readBody(req);
@@ -809,17 +958,55 @@ const server = http.createServer(async (req, res) => {
       const context = body.context && typeof body.context === 'object' ? body.context : null;
       const surface = String(body.surface || context && context.view || 'desk').trim().toLowerCase().slice(0, 40);
       const action = String(body.action || 'open-question').trim().toLowerCase().slice(0, 80);
-      if (!question) return json(res, 400, { ok: false, error: 'Enter a question first.' });
       if (!ALLOWED_SURFACES.has(surface) || !ALLOWED_ACTIONS.has(action)) {
         return json(res, 400, { ok: false, error: 'This dashboard AI action is not allowed.' });
       }
+      if (action === 'open-question' && !question) return json(res, 400, { ok: false, error: 'Enter a question first.' });
       if (!context || !['built-in-demo', 'isolated-cloud'].includes(context.dataSource)) {
         return json(res, 400, { ok: false, error: 'Verified V2 dashboard context is required.' });
       }
       if (context.workspaceId && context.workspaceId !== V2_WORKSPACE_ID) {
         return json(res, 403, { ok: false, error: 'Only the isolated V2 workspace is allowed.' });
       }
-      const result = await generateWithRoute(question, context, { surface, action });
+      const definition = ACTION_DEFINITIONS[action];
+      const requestedDepth = String(body.depth || 'auto').trim().toLowerCase();
+      const taskMode = requestedDepth === 'deep' ? 'deep' : (requestedDepth === 'fast' ? 'fast' : definition.mode);
+      const responseType = responseTypeFor(action, question);
+      const requestMeta = { surface, action, taskMode, responseType };
+      const missing = Array.isArray(context.readiness && context.readiness.missing)
+        ? context.readiness.missing.map(item => String(item || '').trim()).filter(Boolean).slice(0, 3)
+        : [];
+      if (missing.length) {
+        const proposal = parseProposal({
+          status: 'needs_input',
+          headline: 'Add the missing evidence first',
+          recommendation: 'There is not enough recorded information to make this decision responsibly yet.',
+          why: 'Using AI now would turn a gap in the dashboard into an unsupported guess.',
+          nextAction: String(context.readiness.nextAction || 'Add the missing information, then run this check again.'),
+          confidence: 'Low',
+          evidence: [],
+          missing,
+          ...(responseType === 'options' ? { options: [] } : {}),
+          ...(responseType === 'formula' ? { formula: '', example: '' } : {}),
+          ...(responseType === 'learning' ? { observation: '', interpretation: '', decision: '' } : {})
+        }, responseType);
+        return json(res, 200, {
+          ok: true,
+          route: 'dashboard',
+          provider: 'Dashboard check',
+          model: 'No AI call',
+          effort: 'none',
+          taskMode: 'instant',
+          responseType,
+          surface,
+          action,
+          proposal
+        });
+      }
+      const result = await generateWithRoute(question, context, requestMeta);
+      if (['results-interpret', 'learning-conclusion', 'next-experiment'].includes(action) && result.proposal && result.proposal.status === 'needs_input') {
+        result.proposal.status = 'ready';
+      }
       return json(res, 200, { ok: true, ...result });
     } catch (error) {
       console.error('AI request failed: ' + error.message);
