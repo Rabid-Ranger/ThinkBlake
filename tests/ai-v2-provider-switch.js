@@ -44,19 +44,16 @@ function companionPost(pathname, body) {
 function startMockModelServer() {
   const evidence = { modelRequests: 0, chatRequests: 0, lastPrompt: '', lastModel: '' };
   const proposal = {
-    answer: 'This answer came from the selected local test model and used the current creator context.',
-    title: 'Local model route verified',
-    target: 'Current creator',
-    summary: 'The custom OpenAI-compatible route answered inside the Strategy page.',
+    status: 'ready',
+    headline: 'Local model route verified',
     recommendation: 'Keep Codex as default and use this route when a local fallback is useful.',
-    decision: 'The local route is usable.',
-    rationale: 'The dashboard selected it explicitly and received a structured creator-aware response.',
-    nextSteps: ['Switch back to Codex after the test.'],
-    watchFor: 'A local server must remain running to stay available.',
-    template: '[AUDIENCE] needs [DECISION] because [EVIDENCE].',
-    example: 'Dale needs a clearer click promise because packaging is the active constraint.',
+    why: 'The dashboard selected it explicitly and received a structured creator-aware response.',
+    nextAction: 'Switch back to Codex after the test.',
+    confidence: 'High',
     evidence: ['The request included the current dashboard context.'],
-    uncertainties: []
+    missing: [],
+    formula: '[AUDIENCE] needs [DECISION] because [EVIDENCE].',
+    example: 'Dale needs a clearer click promise because packaging is the active constraint.',
   };
   const server = http.createServer((request, response) => {
     if (request.method === 'GET' && request.url === '/v1/models') {
@@ -103,6 +100,12 @@ function startMockModelServer() {
     check(await page.locator('[data-ai-provider-card="lmstudio"] [data-ai-provider-save]').count() === 1, 'AI Desk provides an LM Studio setup control.');
     check(await page.locator('[data-ai-provider-card="mlx"] [data-ai-provider-save]').count() === 1, 'AI Desk provides an MLX setup control.');
     check(await page.locator('[data-ai-provider-card="custom"] [data-ai-provider-save]').count() === 1, 'AI Desk provides a custom OpenAI-compatible server setup control.');
+    check(await page.locator('[data-ai-routing-set="auto"][data-active="true"]').count() === 1, 'Automatic task routing is visible and active by default.');
+    await page.locator('[data-ai-routing-set="fixed"]').click();
+    await page.waitForFunction(() => window.__acceleratorAiCompanionDiagnostics?.().routingMode === 'fixed', null, { timeout: 30000 });
+    check(await page.locator('[data-ai-routing-set="fixed"][data-active="true"]').count() === 1, 'Fixed routing can be selected when Blake wants one model for every task.');
+    await page.locator('[data-ai-routing-set="auto"]').click();
+    await page.waitForFunction(() => window.__acceleratorAiCompanionDiagnostics?.().routingMode === 'auto', null, { timeout: 30000 });
 
     await page.locator('[data-ai-provider-card="custom"] [data-ai-provider-url]').fill('http://127.0.0.1:' + mock.server.address().port + '/v1');
     await page.locator('[data-ai-provider-card="custom"] [data-ai-provider-save]').click();
@@ -116,9 +119,11 @@ function startMockModelServer() {
 
     await page.evaluate(() => document.getElementById('accelerator-ai-v2-drawer')?.close());
     await page.locator('[data-view="strategy"]').first().click();
+    await page.getByRole('button', { name: 'Message', exact: true }).click();
+    await page.locator('[data-ai-context-action="message-strengthen"]').waitFor({ state: 'visible' });
     await page.locator('[data-ai-context-action="message-strengthen"]').click();
     await page.locator('[data-ai-context-guide] [data-ai-companion-stage]').waitFor({ state: 'visible', timeout: 30000 });
-    check((await page.locator('[data-ai-context-guide] .ai-companion-answer h4').textContent()).includes('Local model route verified'), 'The selected local model answers through the same contextual Strategy workflow.');
+    check((await page.locator('[data-ai-context-guide] .ai-assist-card h4').textContent()).includes('Local model route verified'), 'The selected local model answers through the same contextual Strategy workflow.');
     check(mock.evidence.chatRequests === 1 && mock.evidence.lastModel === 'accelerator-local-test', 'The request was sent to the selected local model.');
     check(mock.evidence.lastPrompt.includes('Evan Cole Golf') && mock.evidence.lastPrompt.includes('CURRENT DASHBOARD SURFACE:\nstrategy'), 'The local route receives the same creator and decision context as Codex.');
     check(errors.length === 0, 'Provider setup, switching and local generation create no browser errors.');
