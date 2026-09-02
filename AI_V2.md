@@ -21,6 +21,8 @@ This branch is an isolated test copy of Accelerator OS V16.3.6.
 4. Review the answer and optionally choose `Stage for review`.
 5. A staged answer is browser-only. No dashboard field or cloud record is changed automatically.
 
+For the simplest Mac test, open `http://127.0.0.1:4873/dashboard`. It serves the same V2 dashboard and connects to the same isolated Supabase cloud workspace, while avoiding Chrome's public-site-to-local-service permission boundary. The Vercel V2 link also requests Chrome's one-time Local Network Access permission when AI Desk is opened; if Chrome blocks it, use the local link shown inside AI Desk.
+
 ## What “connected” means
 
 The V2 dashboard calls a loopback-only companion at `127.0.0.1:4873`. The companion accepts requests only from the V2 branch deployment, its Vercel preview hosts, or local development. It validates the V2 data source, fixes Codex to read-only mode, refuses interactive approvals, and returns a structured review proposal. It never receives a dashboard cloud-write capability.

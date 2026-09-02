@@ -2,15 +2,18 @@
 'use strict';
 
 const http = require('http');
+const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 const { spawn } = require('child_process');
+const sourceHandler = require('../api/source');
 
 const HOST = '127.0.0.1';
 const PORT = Number(process.env.ACCELERATOR_COMPANION_PORT || 4873);
 const CODEX_BIN = process.env.ACCELERATOR_CODEX_BIN || '/Applications/ChatGPT.app/Contents/Resources/codex';
 const MODEL = process.env.ACCELERATOR_CODEX_MODEL || 'gpt-5.6-sol';
 const ROOT = path.resolve(__dirname);
+const APP_ROOT = path.resolve(__dirname, '..');
 const V2_WORKSPACE_ID = 'e9953426-0a8d-4890-9cf0-4f4ac4e71c46';
 const MAX_BODY_BYTES = 512 * 1024;
 const REQUEST_TIMEOUT_MS = 180000;
@@ -240,6 +243,9 @@ const codex = new CodexAppServer();
 
 function writeCors(req, res) {
   const origin = req.headers.origin;
+  const host = String(req.headers.host || '').split(':')[0];
+  const localSameOrigin = !origin && (host === HOST || host === 'localhost') && req.headers['sec-fetch-site'] === 'same-origin';
+  if (localSameOrigin) return true;
   if (!originAllowed(origin)) return false;
   res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -281,12 +287,32 @@ function readBody(req) {
 
 function requestAllowed(req) {
   const host = String(req.headers.host || '').split(':')[0];
+  const localSameOrigin = !req.headers.origin && req.headers['sec-fetch-site'] === 'same-origin';
   return (host === HOST || host === 'localhost') &&
     req.headers['x-accelerator-companion'] === 'v1' &&
-    originAllowed(req.headers.origin);
+    (originAllowed(req.headers.origin) || localSameOrigin);
 }
 
 const server = http.createServer(async (req, res) => {
+  const pathname = new URL(req.url || '/', 'http://127.0.0.1').pathname;
+  if (req.method === 'GET' && (pathname === '/' || pathname === '/dashboard' || pathname === '/index.html')) {
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-store');
+    return res.end(fs.readFileSync(path.join(APP_ROOT, 'index.html')));
+  }
+  if (req.method === 'GET' && pathname === '/favicon.svg') {
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    return res.end(fs.readFileSync(path.join(APP_ROOT, 'favicon.svg')));
+  }
+  if (req.method === 'GET' && pathname === '/api/source') {
+    return sourceHandler(req, {
+      setHeader: (name, value) => res.setHeader(name, value),
+      status: code => ({ send: body => { res.statusCode = code; res.end(body); } })
+    });
+  }
   if (!writeCors(req, res)) return json(res, 403, { ok: false, error: 'Origin not allowed.' });
   if (req.method === 'OPTIONS') {
     res.statusCode = 204;
@@ -294,7 +320,7 @@ const server = http.createServer(async (req, res) => {
   }
   if (!requestAllowed(req)) return json(res, 403, { ok: false, error: 'Companion request rejected.' });
 
-  if (req.method === 'GET' && req.url === '/health') {
+  if (req.method === 'GET' && pathname === '/health') {
     try {
       await codex.start();
       return json(res, 200, {
@@ -310,7 +336,7 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
-  if (req.method === 'POST' && req.url === '/chat') {
+  if (req.method === 'POST' && pathname === '/chat') {
     try {
       const body = await readBody(req);
       const question = String(body.question || '').trim().slice(0, 4000);

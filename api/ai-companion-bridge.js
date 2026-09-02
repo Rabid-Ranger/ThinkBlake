@@ -79,6 +79,7 @@ module.exports = function buildAiCompanionBridge(workspaceId) {
   async function companionFetch(path, options) {
     const response = await fetch(COMPANION_URL + path, Object.assign({
       cache: 'no-store',
+      targetAddressSpace: 'local',
       headers: { 'X-Accelerator-Companion': 'v1' }
     }, options || {}, {
       headers: Object.assign(
@@ -201,6 +202,7 @@ module.exports = function buildAiCompanionBridge(workspaceId) {
         '<div class="ai-v2-connection-top"><div><p class="ai-v2-connection-name">' + escapeHtml(usingCompanion ? 'Codex / ChatGPT companion' : (connected ? 'Codex browser tools' : 'No AI connected')) + '</p><p class="ai-v2-connection-copy">' + escapeHtml(usingCompanion ? 'Ready to answer inside this dashboard.' : (companion.checking ? 'Checking the local AI companion…' : 'The local companion is not running on this Mac.')) + '</p></div><span class="ai-v2-status" data-connected="' + String(connected) + '">' + (connected ? 'Connected' : 'Offline') + '</span></div>',
         '<div class="ai-v2-facts"><div class="ai-v2-fact"><span>AI route</span><strong>' + escapeHtml(usingCompanion ? companion.provider : (connected ? 'Codex tools' : 'None')) + '</strong></div><div class="ai-v2-fact"><span>Model</span><strong>' + escapeHtml(usingCompanion ? companion.model : (connected ? 'Selected in Codex' : 'None')) + '</strong></div><div class="ai-v2-fact"><span>Account</span><strong>' + escapeHtml(usingCompanion ? ('ChatGPT' + (plan ? ' · ' + plan : '')) : (connected ? 'Managed by Codex' : 'None')) + '</strong></div><div class="ai-v2-fact"><span>Data</span><strong>' + escapeHtml(dataMode) + '</strong></div></div>',
         '<ul class="ai-v2-permissions"><li>Read the current V2 creator and video</li><li>Generate and stage recommendations</li><li data-no="true">Cannot silently edit dashboard data</li><li data-no="true">Cannot write to cloud through AI</li></ul>',
+        usingCompanion ? '' : '<div class="ai-v2-try"><code>Chrome may ask once for permission to connect this V2 page to the AI companion on your Mac.</code><a class="ai-v2-mini-button" href="http://127.0.0.1:4873/dashboard" target="_blank" rel="noopener">Open local AI version</a></div>',
         '</div>'
       ].join('');
     }
