@@ -79,7 +79,7 @@ module.exports = function buildAiCompanionBridge(workspaceId) {
   async function companionFetch(path, options) {
     const response = await fetch(COMPANION_URL + path, Object.assign({
       cache: 'no-store',
-      targetAddressSpace: 'local',
+      targetAddressSpace: 'loopback',
       headers: { 'X-Accelerator-Companion': 'v1' }
     }, options || {}, {
       headers: Object.assign(
