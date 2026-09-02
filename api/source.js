@@ -1466,7 +1466,10 @@ const AI_V2_BRIDGE = String.raw`
 
   const REQUIRED_WORKSPACE_ID = '${V2_WORKSPACE_ID}';
   const DRAFT_KEY = 'accelerator-ai-v2-proposal-drafts';
+  const SETTINGS_KEY = 'accelerator-ai-v2-ai-settings';
+  const ACTIVITY_KEY = 'accelerator-ai-v2-ai-activity';
   const TOOL_NAMES = [
+    'accelerator_get_ai_connection_status',
     'accelerator_get_current_context',
     'accelerator_get_current_creator_record',
     'accelerator_get_current_video_record',
@@ -1495,6 +1498,76 @@ const AI_V2_BRIDGE = String.raw`
         ? window.__acceleratorSaveDiagnostics()
         : null;
     } catch (_) { return null; }
+  }
+
+  function readSettings() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (_) { return {}; }
+  }
+
+  function writeSettings(next) {
+    const value = Object.assign({}, readSettings(), next || {});
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(value));
+    renderConnection();
+    return value;
+  }
+
+  function readActivity() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(ACTIVITY_KEY) || 'null');
+      return parsed && typeof parsed === 'object' ? parsed : null;
+    } catch (_) { return null; }
+  }
+
+  function recordActivity(toolName, detail) {
+    const item = {
+      toolName,
+      detail: cleanText(detail, 180),
+      at: new Date().toISOString()
+    };
+    localStorage.setItem(ACTIVITY_KEY, JSON.stringify(item));
+    renderConnection();
+    return item;
+  }
+
+  function getAiConnectionStatus() {
+    const settings = readSettings();
+    const webMcpAvailable = typeof document.modelContext?.registerTool === 'function';
+    return {
+      ok: true,
+      environment: 'accelerator-ai-v2',
+      activeConnection: registered ? 'codex-browser-tools' : null,
+      preferredProvider: settings.preferredProvider || 'codex-browser-tools',
+      connected: registered,
+      webMcpAvailable,
+      displayName: registered ? 'Codex browser tools' : 'No AI connected to this page',
+      model: {
+        display: registered ? 'Selected in Codex' : 'None',
+        visibleToDashboard: false,
+        explanation: 'Codex does not expose the active model name to the website.'
+      },
+      account: {
+        display: registered ? 'Managed by Codex' : 'None',
+        visibleToDashboard: false,
+        explanation: 'Your ChatGPT account and plan remain inside Codex and are not shared with this website.'
+      },
+      access: {
+        canReadVerifiedV2Context: registered,
+        canReadCurrentCreator: registered,
+        canReadCurrentVideo: registered,
+        canStageBrowserOnlyDrafts: registered,
+        canWriteDashboardOrCloud: false,
+        canRunPromptInsideDashboard: false
+      },
+      alternatives: [
+        { id: 'lm-studio', name: 'LM Studio', status: 'companion-required' },
+        { id: 'mlx', name: 'MLX', status: 'companion-required' },
+        { id: 'custom-openai-compatible', name: 'Custom server', status: 'companion-required' }
+      ],
+      lastActivity: readActivity()
+    };
   }
 
   function verifiedState() {
@@ -1634,7 +1707,7 @@ const AI_V2_BRIDGE = String.raw`
       status: item.status,
       storedIn: 'this browser only',
       cloudStateChanged: false,
-      nextStep: 'Blake can review, copy, or discard the proposal from the AI V2 drawer.'
+      nextStep: 'Blake can review, copy, or discard the proposal from the AI Desk.'
     };
   }
 
@@ -1652,22 +1725,31 @@ const AI_V2_BRIDGE = String.raw`
     const style = document.createElement('style');
     style.id = 'accelerator-ai-v2-styles';
     style.textContent = [
-      '#accelerator-ai-v2-button{position:fixed;right:18px;bottom:18px;z-index:99990;min-height:44px;border:1px solid #17212b;border-radius:999px;background:#17212b;color:#fff;padding:10px 16px;font:800 12px/1 Inter,system-ui,sans-serif;letter-spacing:.04em;cursor:pointer;box-shadow:0 12px 32px rgba(23,33,43,.2)}',
-      '#accelerator-ai-v2-drawer{width:min(560px,calc(100% - 24px));max-height:min(760px,calc(100% - 24px));border:1px solid #d9e0e6;border-radius:24px;padding:0;background:#f8fafb;color:#17212b;box-shadow:0 28px 90px rgba(23,33,43,.26)}',
+      '#accelerator-ai-v2-button{position:fixed;right:18px;bottom:18px;z-index:99990;min-height:46px;border:1px solid #17212b;border-radius:999px;background:#17212b;color:#fff;padding:10px 16px;font:800 12px/1 Inter,system-ui,sans-serif;letter-spacing:.02em;cursor:pointer;box-shadow:0 12px 32px rgba(23,33,43,.2);white-space:nowrap}',
+      '#accelerator-ai-v2-button::before{content:"";display:inline-block;width:8px;height:8px;margin-right:8px;border-radius:999px;background:#e4775d;vertical-align:1px}#accelerator-ai-v2-button[data-connected="true"]::before{background:#8eb48d;box-shadow:0 0 0 3px rgba(142,180,141,.18)}',
+      '#accelerator-ai-v2-drawer{width:min(760px,calc(100% - 24px));max-height:min(880px,calc(100% - 24px));overflow:auto;border:1px solid #d9e0e6;border-radius:24px;padding:0;background:#f8fafb;color:#17212b;box-shadow:0 28px 90px rgba(23,33,43,.26)}',
       '#accelerator-ai-v2-drawer::backdrop{background:rgba(23,33,43,.58);backdrop-filter:blur(4px)}',
       '.ai-v2-shell{padding:25px}.ai-v2-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;padding-bottom:18px;border-bottom:1px solid #dce3e8}',
       '.ai-v2-kicker{margin:0 0 6px;color:#8a7630;font:850 11px/1.2 Inter,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase}.ai-v2-head h2{margin:0;font:850 30px/1.05 Inter,system-ui,sans-serif;letter-spacing:-.035em}.ai-v2-close{width:42px;height:42px;border:1px solid #cfd8df;border-radius:12px;background:#fff;color:#17212b;font:800 20px/1 Inter,system-ui,sans-serif;cursor:pointer}',
       '.ai-v2-safety{margin:16px 0;padding:14px;border:1px solid #eadfbd;border-radius:14px;background:#fff9df;color:#58616a;font:550 13px/1.5 Inter,system-ui,sans-serif}.ai-v2-safety strong{color:#17212b}',
+      '.ai-v2-section{margin-top:18px}.ai-v2-section-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:10px}.ai-v2-section h3{margin:0;font:850 18px/1.25 Inter,system-ui,sans-serif}.ai-v2-section-note{margin:0;color:#7a858f;font:650 11px/1.35 Inter,system-ui,sans-serif}',
+      '.ai-v2-connection{padding:17px;border:1px solid #d8e0e6;border-radius:17px;background:#fff}.ai-v2-connection-top{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}.ai-v2-connection-name{margin:0 0 5px;font:850 19px/1.2 Inter,system-ui,sans-serif}.ai-v2-connection-copy{margin:0;color:#66717c;font:550 13px/1.45 Inter,system-ui,sans-serif}.ai-v2-status{display:inline-flex;align-items:center;gap:7px;flex:none;border-radius:999px;padding:7px 10px;background:#fff1ee;color:#9c3f31;font:850 10px/1 Inter,system-ui,sans-serif;letter-spacing:.07em;text-transform:uppercase}.ai-v2-status::before{content:"";width:7px;height:7px;border-radius:999px;background:#e4775d}.ai-v2-status[data-connected="true"]{background:#edf6ec;color:#426a42}.ai-v2-status[data-connected="true"]::before{background:#78a776}',
+      '.ai-v2-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;margin-top:15px;overflow:hidden;border:1px solid #e0e6eb;border-radius:13px;background:#e0e6eb}.ai-v2-fact{min-width:0;padding:12px;background:#f9fbfc}.ai-v2-fact span{display:block;margin-bottom:5px;color:#89939d;font:850 9px/1.2 Inter,system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase}.ai-v2-fact strong{display:block;font:750 12px/1.35 Inter,system-ui,sans-serif;overflow-wrap:anywhere}',
+      '.ai-v2-permissions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:13px 0 0;padding:0;list-style:none}.ai-v2-permissions li{position:relative;padding-left:18px;color:#5f6a75;font:600 12px/1.4 Inter,system-ui,sans-serif}.ai-v2-permissions li::before{position:absolute;left:0;top:1px;color:#5d8b5d;font-weight:900;content:"✓"}.ai-v2-permissions li[data-no="true"]::before{color:#b25343;content:"×"}',
+      '.ai-v2-try{display:flex;gap:10px;align-items:center;margin-top:14px;padding:12px;border:1px dashed #c8d2da;border-radius:13px;background:#f8fafb}.ai-v2-try code{min-width:0;flex:1;color:#46515c;font:600 12px/1.4 Inter,system-ui,sans-serif;white-space:normal}.ai-v2-mini-button{flex:none;min-height:34px;border:1px solid #17212b;border-radius:9px;background:#17212b;color:#fff;padding:7px 10px;font:800 10px/1.2 Inter,system-ui,sans-serif;cursor:pointer}',
+      '.ai-v2-provider-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.ai-v2-provider{padding:13px;border:1px solid #dce3e8;border-radius:14px;background:#fff}.ai-v2-provider[data-active="true"]{border-color:#b5a14d;box-shadow:inset 0 0 0 1px #b5a14d}.ai-v2-provider-top{display:flex;justify-content:space-between;gap:10px;align-items:center}.ai-v2-provider strong{font:800 13px/1.3 Inter,system-ui,sans-serif}.ai-v2-provider small{display:block;margin-top:5px;color:#6f7a85;font:550 11px/1.4 Inter,system-ui,sans-serif}.ai-v2-provider-tag{color:#89939d;font:850 9px/1.2 Inter,system-ui,sans-serif;letter-spacing:.07em;text-transform:uppercase}.ai-v2-provider[data-active="true"] .ai-v2-provider-tag{color:#75651e}',
+      '.ai-v2-activity{margin:10px 0 0;color:#69747e;font:600 11px/1.4 Inter,system-ui,sans-serif}.ai-v2-activity strong{color:#17212b}',
+      '.ai-v2-divider{height:1px;margin:20px 0;background:#dce3e8}',
       '.ai-v2-empty{padding:20px 0;color:#6f7a85;font:550 14px/1.5 Inter,system-ui,sans-serif}.ai-v2-list{display:grid;gap:12px}.ai-v2-card{padding:16px;border:1px solid #dce3e8;border-radius:16px;background:#fff}.ai-v2-card h3{margin:0 0 6px;font:800 17px/1.25 Inter,system-ui,sans-serif}.ai-v2-meta{margin:0 0 10px;color:#8a7630;font:800 10px/1.25 Inter,system-ui,sans-serif;letter-spacing:.09em;text-transform:uppercase}.ai-v2-card p{margin:0 0 9px;color:#56616c;font:550 13px/1.45 Inter,system-ui,sans-serif;white-space:pre-wrap}.ai-v2-card strong{color:#17212b}.ai-v2-evidence{margin:8px 0 0;padding-left:18px;color:#56616c;font:550 12px/1.4 Inter,system-ui,sans-serif}.ai-v2-actions{display:flex;gap:8px;margin-top:13px}.ai-v2-actions button{min-height:36px;border-radius:10px;padding:8px 11px;font:800 11px/1.2 Inter,system-ui,sans-serif;cursor:pointer}.ai-v2-copy{border:1px solid #17212b;background:#17212b;color:#fff}.ai-v2-discard{border:1px solid #cfd8df;background:#fff;color:#56616c}',
-      '@media(max-width:560px){#accelerator-ai-v2-button{right:10px;bottom:10px}#accelerator-ai-v2-drawer{width:calc(100% - 16px);max-height:calc(100% - 16px);border-radius:19px}.ai-v2-shell{padding:20px 16px}.ai-v2-head h2{font-size:27px}}'
+      '@media(max-width:620px){#accelerator-ai-v2-button{right:10px;bottom:10px}#accelerator-ai-v2-drawer{width:calc(100% - 16px);max-height:calc(100% - 16px);border-radius:19px}.ai-v2-shell{padding:20px 16px}.ai-v2-head h2{font-size:27px}.ai-v2-connection-top{display:block}.ai-v2-status{margin-top:10px}.ai-v2-facts{grid-template-columns:1fr}.ai-v2-permissions{grid-template-columns:1fr}.ai-v2-provider-grid{grid-template-columns:1fr}.ai-v2-try{align-items:flex-start;flex-direction:column}.ai-v2-mini-button{width:100%}}'
     ].join('');
     document.head.appendChild(style);
 
     const button = document.createElement('button');
     button.id = 'accelerator-ai-v2-button';
     button.type = 'button';
-    button.textContent = 'AI V2';
-    button.setAttribute('aria-label', 'Open Accelerator AI V2 proposals');
+    button.textContent = 'AI Desk · Checking';
+    button.setAttribute('aria-label', 'Open Accelerator AI Desk');
     button.addEventListener('click', openDrawer);
     document.body.appendChild(button);
 
@@ -1676,27 +1758,77 @@ const AI_V2_BRIDGE = String.raw`
     dialog.setAttribute('aria-labelledby', 'accelerator-ai-v2-title');
     dialog.innerHTML = [
       '<section class="ai-v2-shell">',
-      '<header class="ai-v2-head"><div><p class="ai-v2-kicker">Isolated test workspace</p><h2 id="accelerator-ai-v2-title">AI proposal drafts</h2></div><button class="ai-v2-close" type="button" aria-label="Close">×</button></header>',
-      '<p class="ai-v2-safety"><strong>Safe by design.</strong> Codex can read the active V2 record and stage recommendations here. Drafts stay in this browser and never change cloud data automatically.</p>',
+      '<header class="ai-v2-head"><div><p class="ai-v2-kicker">Isolated test workspace</p><h2 id="accelerator-ai-v2-title">AI Desk</h2></div><button class="ai-v2-close" type="button" aria-label="Close">×</button></header>',
+      '<p class="ai-v2-safety"><strong>The honest version:</strong> AI is not running inside this dashboard. When you open it in the Codex browser, Codex can use the safe tools this page provides. The page cannot see your ChatGPT account, plan, or selected model.</p>',
+      '<section class="ai-v2-section"><div class="ai-v2-section-head"><h3>Current connection</h3><p class="ai-v2-section-note">Live browser status</p></div><div data-ai-v2-connection></div></section>',
+      '<section class="ai-v2-section"><div class="ai-v2-section-head"><h3>AI routes</h3><p class="ai-v2-section-note">Only real connections show active</p></div><div data-ai-v2-providers></div></section>',
+      '<div class="ai-v2-divider"></div>',
+      '<section class="ai-v2-section"><div class="ai-v2-section-head"><h3>Staged recommendations</h3><p class="ai-v2-section-note">Browser-only · never auto-applied</p></div>',
       '<div data-ai-v2-drafts></div>',
+      '</section>',
       '</section>'
     ].join('');
     dialog.querySelector('.ai-v2-close').addEventListener('click', () => dialog.close());
     dialog.addEventListener('click', event => {
       const copyButton = event.target.closest('[data-ai-copy]');
       const discardButton = event.target.closest('[data-ai-discard]');
+      const promptButton = event.target.closest('[data-ai-copy-prompt]');
       if (copyButton) {
         const item = readDrafts().find(draft => draft.id === copyButton.dataset.aiCopy);
         if (item && navigator.clipboard) navigator.clipboard.writeText(item.recommendation).catch(() => {});
       }
       if (discardButton) writeDrafts(readDrafts().filter(draft => draft.id !== discardButton.dataset.aiDiscard));
+      if (promptButton && navigator.clipboard) {
+        navigator.clipboard.writeText(promptButton.dataset.aiCopyPrompt || '').catch(() => {});
+        promptButton.textContent = 'Copied';
+        setTimeout(() => { promptButton.textContent = 'Copy prompt'; }, 1200);
+      }
     });
     document.body.appendChild(dialog);
+    renderConnection();
     renderDrafts();
   }
 
   function escapeHtml(value) {
     return String(value || '').replace(/[&<>"']/g, character => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[character]);
+  }
+
+  function formatActivity(activity) {
+    if (!activity || !activity.at) return 'No AI tool calls recorded in this browser yet.';
+    const date = new Date(activity.at);
+    const when = Number.isNaN(date.getTime()) ? activity.at : date.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+    return '<strong>Last AI activity:</strong> ' + escapeHtml(activity.detail || activity.toolName) + ' · ' + escapeHtml(when);
+  }
+
+  function renderConnection() {
+    const status = getAiConnectionStatus();
+    const button = document.getElementById('accelerator-ai-v2-button');
+    if (button) {
+      button.dataset.connected = String(status.connected);
+      button.textContent = status.connected ? 'AI Desk · Codex connected' : 'AI Desk · Not connected';
+    }
+    const host = document.querySelector('[data-ai-v2-connection]');
+    if (host) {
+      const prompt = 'Read the current Accelerator creator context, identify the most important next decision, and stage one evidence-based recommendation for my review. Do not change dashboard or cloud data.';
+      host.innerHTML = [
+        '<div class="ai-v2-connection">',
+        '<div class="ai-v2-connection-top"><div><p class="ai-v2-connection-name">' + escapeHtml(status.displayName) + '</p><p class="ai-v2-connection-copy">' + (status.connected ? 'Codex can discover this page’s six safe tools while this dashboard is open in the Codex browser.' : 'This browser has not exposed the dashboard tools to an AI agent. The dashboard still works normally without AI.') + '</p></div><span class="ai-v2-status" data-connected="' + String(status.connected) + '">' + (status.connected ? 'Connected' : 'Not connected') + '</span></div>',
+        '<div class="ai-v2-facts"><div class="ai-v2-fact"><span>AI route</span><strong>' + escapeHtml(status.connected ? 'Codex / ChatGPT' : 'None') + '</strong></div><div class="ai-v2-fact"><span>Model</span><strong>' + escapeHtml(status.model.display) + '</strong></div><div class="ai-v2-fact"><span>Account</span><strong>' + escapeHtml(status.account.display) + '</strong></div></div>',
+        '<ul class="ai-v2-permissions"><li>Read the verified V2 creator and video</li><li>Stage recommendations for review</li><li data-no="true">Cannot silently edit dashboard data</li><li data-no="true">Cannot write to cloud through AI tools</li></ul>',
+        '<p class="ai-v2-activity">' + formatActivity(status.lastActivity) + '</p>',
+        status.connected ? '<div class="ai-v2-try"><code>' + escapeHtml(prompt) + '</code><button class="ai-v2-mini-button" type="button" data-ai-copy-prompt="' + escapeHtml(prompt) + '">Copy prompt</button></div>' : '<div class="ai-v2-try"><code>Open this exact page in the Codex built-in browser. When site tools are enabled, this card will change to Connected automatically.</code></div>',
+        '</div>'
+      ].join('');
+    }
+    const providers = document.querySelector('[data-ai-v2-providers]');
+    if (providers) {
+      providers.innerHTML = '<div class="ai-v2-provider-grid">' + [
+        { name: 'Codex / ChatGPT', tag: status.connected ? 'Active now' : 'Open in Codex', copy: 'Uses your Codex session and ChatGPT-managed sign-in. The model is selected in Codex, not on this page.', active: status.connected },
+        { name: 'LM Studio', tag: 'Companion needed', copy: 'A local companion must safely connect this page to the LM Studio server running on your computer.', active: false },
+        { name: 'MLX', tag: 'Companion needed', copy: 'A local companion must safely connect this page to your MLX model server. Vercel cannot reach your Mac by itself.', active: false },
+        { name: 'Custom model server', tag: 'Companion needed', copy: 'An OpenAI-compatible local or remote endpoint can be routed through the same companion after pairing.', active: false }
+      ].map(provider => '<article class="ai-v2-provider" data-active="' + String(provider.active) + '"><div class="ai-v2-provider-top"><strong>' + escapeHtml(provider.name) + '</strong><span class="ai-v2-provider-tag">' + escapeHtml(provider.tag) + '</span></div><small>' + escapeHtml(provider.copy) + '</small></article>').join('') + '</div>';
+    }
   }
 
   function renderDrafts() {
@@ -1725,36 +1857,49 @@ const AI_V2_BRIDGE = String.raw`
     }
   }
 
+  function runTool(toolName, detail, action) {
+    const result = action();
+    recordActivity(toolName, detail);
+    return result;
+  }
+
   async function registerTools() {
     if (registered || typeof document.modelContext?.registerTool !== 'function') return false;
     const register = tool => document.modelContext.registerTool(tool);
+    await register({
+      name: 'accelerator_get_ai_connection_status',
+      description: 'Read how AI is connected to Accelerator AI V2, what model and account details are visible to the dashboard, and what permissions the site tools have. This never changes data.',
+      inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+      annotations: { readOnlyHint: true },
+      execute: async () => runTool('accelerator_get_ai_connection_status', 'Codex checked the AI connection and permissions.', () => getAiConnectionStatus())
+    });
     await register({
       name: 'accelerator_get_current_context',
       description: 'Read the active Accelerator AI V2 view, creator summary, current video summary, and isolated cloud version. This never changes data.',
       inputSchema: { type: 'object', properties: {}, additionalProperties: false },
       annotations: { readOnlyHint: true },
-      execute: async () => getCurrentContext()
+      execute: async () => runTool('accelerator_get_current_context', 'Codex read the active dashboard context.', () => getCurrentContext())
     });
     await register({
       name: 'accelerator_get_current_creator_record',
       description: 'Read the complete active creator record from the isolated Accelerator AI V2 cloud workspace for diagnosis and planning. This never changes data.',
       inputSchema: { type: 'object', properties: {}, additionalProperties: false },
       annotations: { readOnlyHint: true },
-      execute: async () => getCurrentCreatorRecord()
+      execute: async () => runTool('accelerator_get_current_creator_record', 'Codex read the current creator record.', () => getCurrentCreatorRecord())
     });
     await register({
       name: 'accelerator_get_current_video_record',
       description: 'Read the complete current video record and its creator from the isolated Accelerator AI V2 cloud workspace. This never changes data.',
       inputSchema: { type: 'object', properties: {}, additionalProperties: false },
       annotations: { readOnlyHint: true },
-      execute: async () => getCurrentVideoRecord()
+      execute: async () => runTool('accelerator_get_current_video_record', 'Codex read the current video record.', () => getCurrentVideoRecord())
     });
     await register({
       name: 'accelerator_list_staged_proposals',
       description: 'List AI proposal drafts stored in this browser. These drafts are separate from dashboard and cloud state.',
       inputSchema: { type: 'object', properties: {}, additionalProperties: false },
       annotations: { readOnlyHint: true },
-      execute: async () => listStagedProposals()
+      execute: async () => runTool('accelerator_list_staged_proposals', 'Codex checked staged recommendation drafts.', () => listStagedProposals())
     });
     await register({
       name: 'accelerator_stage_proposal',
@@ -1772,10 +1917,11 @@ const AI_V2_BRIDGE = String.raw`
         additionalProperties: false
       },
       annotations: { readOnlyHint: false, destructiveHint: false },
-      execute: async input => stageProposal(input)
+      execute: async input => runTool('accelerator_stage_proposal', 'Codex staged a browser-only recommendation.', () => stageProposal(input))
     });
     registered = true;
     document.documentElement.dataset.acceleratorSiteTools = 'ready';
+    renderConnection();
     return true;
   }
 
@@ -1792,6 +1938,7 @@ const AI_V2_BRIDGE = String.raw`
     requiredWorkspaceId: REQUIRED_WORKSPACE_ID,
     registered,
     toolNames: TOOL_NAMES.slice(),
+    connection: getAiConnectionStatus(),
     draftCount: readDrafts().length,
     cloud: saveDiagnostics()
   });

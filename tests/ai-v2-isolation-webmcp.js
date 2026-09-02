@@ -32,23 +32,25 @@ function startServer() {
   return new Promise(resolve => server.listen(0, '127.0.0.1', () => resolve(server)));
 }
 
-async function configurePage(page, workspaceRows) {
+async function configurePage(page, workspaceRows, options = {}) {
   const saveCalls = [];
-  await page.addInitScript(() => {
+  await page.addInitScript(({ enableSiteTools }) => {
     localStorage.setItem('sb-pqggobwpazihraeqvspc-auth-token', JSON.stringify({
       access_token: 'qa-access-token',
       refresh_token: 'qa-refresh-token'
     }));
-    Object.defineProperty(document, 'modelContext', {
-      configurable: true,
-      value: {
-        registerTool: async tool => {
-          window.__qaRegisteredTools = window.__qaRegisteredTools || {};
-          window.__qaRegisteredTools[tool.name] = tool;
+    if (enableSiteTools) {
+      Object.defineProperty(document, 'modelContext', {
+        configurable: true,
+        value: {
+          registerTool: async tool => {
+            window.__qaRegisteredTools = window.__qaRegisteredTools || {};
+            window.__qaRegisteredTools[tool.name] = tool;
+          }
         }
-      }
-    });
-  });
+      });
+    }
+  }, { enableSiteTools: options.enableSiteTools !== false });
   await page.route('https://pqggobwpazihraeqvspc.supabase.co/**', async route => {
     const request = route.request();
     const pathname = new URL(request.url()).pathname;
@@ -93,8 +95,11 @@ async function configurePage(page, workspaceRows) {
     check(diagnostics.cloud.workspaceId === V2_WORKSPACE_ID, 'V2 connects only to the fixed isolated cloud workspace.');
     check(diagnostics.cloud.requiredWorkspaceId === V2_WORKSPACE_ID, 'Save diagnostics expose the required V2 workspace boundary.');
     check(saveCalls.length === 0, 'Loading V2 never writes cloud state.');
-    check(diagnostics.toolNames.length === 5 && diagnostics.registered, 'All five WebMCP site tools register in a supported browser.');
-    check(await page.locator('#accelerator-ai-v2-button').isVisible(), 'The AI V2 boundary and proposal drawer are visibly available.');
+    check(diagnostics.toolNames.length === 6 && diagnostics.registered, 'All six WebMCP site tools register in a supported browser.');
+    check(diagnostics.connection.connected === true && diagnostics.connection.activeConnection === 'codex-browser-tools', 'AI diagnostics identify the real active route as Codex browser tools.');
+    check(diagnostics.connection.model.visibleToDashboard === false && diagnostics.connection.account.visibleToDashboard === false, 'The dashboard truthfully reports that Codex model and account details are not exposed to the page.');
+    check(await page.locator('#accelerator-ai-v2-button').isVisible(), 'The AI Desk connection boundary is visibly available.');
+    check((await page.locator('#accelerator-ai-v2-button').textContent()).includes('Codex connected'), 'The AI Desk button visibly reports the connected provider.');
 
     const creatorSwitcher = page.locator('[data-action="switch-creator"]');
     check(await creatorSwitcher.count() === 1, 'The inherited creator switcher is available in V2.');
@@ -106,6 +111,9 @@ async function configurePage(page, workspaceRows) {
     const context = await page.evaluate(() => window.__qaRegisteredTools.accelerator_get_current_context.execute({}));
     check(context.ok && context.workspaceId === V2_WORKSPACE_ID, 'The context tool returns only verified V2 cloud data.');
     check(context.creator && context.creator.id, 'The context tool identifies the active creator.');
+    const connection = await page.evaluate(() => window.__qaRegisteredTools.accelerator_get_ai_connection_status.execute({}));
+    check(connection.connected && connection.access.canWriteDashboardOrCloud === false, 'The connection-status tool exposes the AI boundary and confirms cloud writes are disabled.');
+    check((await page.evaluate(() => window.__acceleratorAiV2Diagnostics().connection.lastActivity?.toolName)) === 'accelerator_get_ai_connection_status', 'The AI Desk records the last real AI tool call in this browser.');
 
     const savesBeforeProposal = saveCalls.length;
     const proposal = await page.evaluate(() => window.__qaRegisteredTools.accelerator_stage_proposal.execute({
@@ -123,12 +131,13 @@ async function configurePage(page, workspaceRows) {
 
     const storage = await page.evaluate(() => ({
       v2Draft: !!localStorage.getItem('accelerator-ai-v2-proposal-drafts'),
+      v2Activity: !!localStorage.getItem('accelerator-ai-v2-ai-activity'),
       productionBackup: localStorage.getItem('accelerator-os-state-backup'),
       productionNative: localStorage.getItem('accelerator.mainline.v11.cleancore'),
       v2Backup: !!localStorage.getItem('accelerator-ai-v2-state-backup'),
       v2Native: !!localStorage.getItem('accelerator.ai-v2.mainline.v11.cleancore')
     }));
-    check(storage.v2Draft && storage.v2Backup && storage.v2Native, 'V2 writes only its namespaced browser draft and backup keys.');
+    check(storage.v2Draft && storage.v2Activity && storage.v2Backup && storage.v2Native, 'V2 writes only its namespaced browser draft, AI activity, and backup keys.');
     check(storage.productionBackup === null && storage.productionNative === null, 'V2 never creates or rotates production browser keys.');
     await page.screenshot({ path: path.join(ROOT, 'qa/ai-v2-desktop.png'), fullPage: true });
 
@@ -140,7 +149,7 @@ async function configurePage(page, workspaceRows) {
     await mobile.waitForFunction(() => window.__acceleratorAiV2Diagnostics?.().registered === true && window.__acceleratorSaveDiagnostics?.().cloudStateLoaded === true, null, { timeout: 60000 });
     await mobile.locator('#accelerator-ai-v2-button').click();
     const mobileBox = await mobile.locator('#accelerator-ai-v2-drawer').boundingBox();
-    check(mobileBox && mobileBox.width <= 390 && mobileBox.height <= 844, 'The AI V2 drawer fits the mobile viewport.');
+    check(mobileBox && mobileBox.width <= 390 && mobileBox.height <= 844, 'The AI Desk fits the mobile viewport.');
     check(mobileSaves.length === 0 && mobileErrors.length === 0, 'Mobile startup is read-only and has no runtime errors.');
     await mobile.screenshot({ path: path.join(ROOT, 'qa/ai-v2-mobile.png'), fullPage: true });
 
@@ -155,6 +164,15 @@ async function configurePage(page, workspaceRows) {
     }));
     check(blockedResult.diagnostics.workspaceId === null && blockedResult.diagnostics.cloudStateLoaded === false, 'V2 fails closed when its isolated workspace is missing.');
     check(blockedResult.context.ok === false && blockedSaves.length === 0, 'Missing V2 access never falls back to production and never saves.');
+
+    const disconnected = await browser.newPage({ viewport: { width: 1200, height: 800 } });
+    const disconnectedSaves = await configurePage(disconnected, [{ id: V2_WORKSPACE_ID, version: 19, name: 'Accelerator AI V2 Test' }], { enableSiteTools: false });
+    await disconnected.goto('http://127.0.0.1:' + address.port + '/', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await disconnected.waitForFunction(() => window.__acceleratorSaveDiagnostics?.().cloudStateLoaded === true, null, { timeout: 60000 });
+    const disconnectedState = await disconnected.evaluate(() => window.__acceleratorAiV2Diagnostics());
+    check(disconnectedState.registered === false && disconnectedState.connection.connected === false, 'An ordinary browser is truthfully reported as having no AI connected.');
+    check((await disconnected.locator('#accelerator-ai-v2-button').textContent()).includes('Not connected'), 'The visible AI Desk label never implies a connection in an unsupported browser.');
+    check(disconnectedSaves.length === 0, 'AI connection detection never causes a cloud save.');
 
     check(runtimeErrors.length === 0, 'Desktop V2 has no runtime or console errors.');
   } catch (error) {
