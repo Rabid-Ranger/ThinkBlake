@@ -25,6 +25,17 @@
   const currentViews="const VIEWS=['home','creators','strategy','plan','videos','planner','calendar','learn','library','framework'];";
   if(html.includes(baseViews)) html=html.replace(baseViews,currentViews);
 
+  // Client-resource hotfix: use native links for saved resources instead of
+  // popup-style window.open calls, and keep the toolbar Resources control as
+  // the chain icon instead of showing a numeric badge when links are saved.
+  const drawerResourceButton='<button class="tinybtn" data-action="v152-open-resource" data-id="${r.id}">Open ↗</button>';
+  const drawerResourceLink='<a class="tinybtn" href="${esc(v152SafeUrl(r.url)||"#")}" target="_blank" rel="noopener noreferrer">Open ↗</a>';
+  const homeResourceButton='<button class="v152-open-link" data-action="v152-open-resource" data-id="${r.id}">Open ↗</button>';
+  const homeResourceLink='<a class="v152-open-link" href="${esc(v152SafeUrl(r.url)||"#")}" target="_blank" rel="noopener noreferrer">Open ↗</a>';
+  html=html.split(drawerResourceButton).join(drawerResourceLink);
+  html=html.split(homeResourceButton).join(homeResourceLink);
+  html=html.replace('</head>','<style id="accelerator-resource-hotfix">.v152-badge{display:none!important}.v152-open-link,.v152-resource-row a.tinybtn{text-decoration:none}</style></head>');
+
   document.open();
   document.write(html);
   document.close();
