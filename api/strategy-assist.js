@@ -6,7 +6,10 @@ const EXPECTED_SHA256 = 'aa0f6be6661b827b64c06760b52daaf55f4bdff134f21608b48ba2d
 
 const encoded = [
   require('../strategy/v184/c00'),
-  require('../strategy/v184/c01'),
+  require('../strategy/v184/c01a'),
+  require('../strategy/v184/c01b'),
+  require('../strategy/v184/c01c'),
+  require('../strategy/v184/c01d'),
   require('../strategy/v184/c02'),
   require('../strategy/v184/c03'),
 ].join('');
