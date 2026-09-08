@@ -18,4 +18,6 @@ Adds:
 Core loop:
 Onboard evidence → establish starting line → diagnose from evidence → build measurable 90-day thesis → carry thesis into each video → review 24h/48h/7d/28d → capture learning → update month and 90-day strategy.
 
+Local functional QA: 24/24 checks passed before the preview bundle was published.
+
 This remains a preview and does not modify production `main`.
