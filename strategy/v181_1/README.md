@@ -15,4 +15,7 @@ Adds:
 - inheritance of 90-day measurement signals into per-video experiment cards
 - upgraded month/90-day reporting with starting-line and decision-trail evidence
 
+Core loop:
+Onboard evidence → establish starting line → diagnose from evidence → build measurable 90-day thesis → carry thesis into each video → review 24h/48h/7d/28d → capture learning → update month and 90-day strategy.
+
 This remains a preview and does not modify production `main`.
