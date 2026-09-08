@@ -1,8 +1,8 @@
 const crypto = require('crypto');
 const zlib = require('zlib');
 
-const EXPECTED_BYTES = 70019;
-const EXPECTED_SHA256 = '091d0af6f578f177a4cb4e30b9a36a19d11271ef80e3729e6e4df6d278eac764';
+const EXPECTED_BYTES = 107378;
+const EXPECTED_SHA256 = 'd6ec7b2256558f8d7dfc4af2d1d1bb3cef4aff913c24d95f80b33d6b927f3a8d';
 
 const encoded = [
   require('../strategy/v182/c00'),
@@ -15,6 +15,12 @@ const encoded = [
   require('../strategy/v182/c07'),
   require('../strategy/v182/c08'),
   require('../strategy/v182/c09'),
+  require('../strategy/v182/c10'),
+  require('../strategy/v182/c11'),
+  require('../strategy/v182/c12'),
+  require('../strategy/v182/c13'),
+  require('../strategy/v182/c14'),
+  require('../strategy/v182/c15'),
 ].join('');
 
 let cached;
@@ -25,7 +31,7 @@ module.exports = function handler(req, res) {
       const bytes = zlib.brotliDecompressSync(Buffer.from(encoded, 'base64'));
       const hash = crypto.createHash('sha256').update(bytes).digest('hex');
       if (bytes.length !== EXPECTED_BYTES || hash !== EXPECTED_SHA256) {
-        throw new Error(`V182 Guided Coach verification failed: ${bytes.length} bytes, ${hash}`);
+        throw new Error(`V182.1 Guided Coach verification failed: ${bytes.length} bytes, ${hash}`);
       }
       cached = bytes.toString('utf8');
     }
@@ -33,7 +39,7 @@ module.exports = function handler(req, res) {
     res.setHeader('Cache-Control', 'no-store, max-age=0');
     res.status(200).send(cached);
   } catch (error) {
-    console.error('V182 Guided Coach source failed', error);
-    res.status(500).send('console.error("V182 Guided Coach failed to load");');
+    console.error('V182.1 Guided Coach source failed', error);
+    res.status(500).send('console.error("V182.1 Guided Coach failed to load");');
   }
 };
