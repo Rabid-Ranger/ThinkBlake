@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#171f27">
 <meta name="accelerator-build" content="V16.3.6">
-<meta name="accelerator-guided-coach" content="V183-preview">
+<meta name="accelerator-guided-coach" content="V184-preview">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <title>Accelerator OS V16.3.6</title>
 <style>html,body{margin:0;min-height:100%;background:#0d1117;color:#e6edf3;font-family:Inter,system-ui,sans-serif}body{display:grid;place-items:center}.load{text-align:center;padding:24px}.load p{color:#8b949e}</style>
@@ -37,9 +37,9 @@
   html=html.split(homeResourceButton).join(homeResourceLink);
   html=html.replace('</head>','<style id="accelerator-resource-hotfix">.v152-badge{display:none!important}.v152-open-link,.v152-resource-row a.tinybtn{text-decoration:none}</style></head>');
 
-  // V183 preview only. Load the Analytics Control Room layer after the current
-  // production app without touching production.
-  const guidedCoach='<script src="/api/strategy-assist?v=v183-analytics-control-room"></'+'script>';
+  // V184 preview only. Load the native Analytics Control Room layer after the
+  // current production app without touching production.
+  const guidedCoach='<script src="/api/strategy-assist?v=v184-native-analytics-control-room"></'+'script>';
   html=html.replace('</body>',guidedCoach+'</body>');
 
   document.open();
