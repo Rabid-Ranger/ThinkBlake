@@ -18,17 +18,10 @@
   if(!r.ok)throw new Error(`Source request failed: ${r.status}`);
   let html=await r.text();
 
-  // Framework is added by the V16.3 extension after the base app is defined.
-  // The base normalizer's view allow-list predates that extension, so the
-  // persistence safety normalizer was resetting "framework" back to "home".
-  // Add the V16.3 view to the canonical allow-list before the app executes.
   const baseViews="const VIEWS=['home','creators','strategy','plan','videos','planner','calendar','learn','library'];";
   const currentViews="const VIEWS=['home','creators','strategy','plan','videos','planner','calendar','learn','library','framework'];";
   if(html.includes(baseViews)) html=html.replace(baseViews,currentViews);
 
-  // Client-resource hotfix: use native links for saved resources instead of
-  // popup-style window.open calls, and keep the toolbar Resources control as
-  // the chain icon instead of showing a numeric badge when links are saved.
   const drawerResourceButton='<button class="tinybtn" data-action="v152-open-resource" data-id="${r.id}">Open ↗</button>';
   const drawerResourceLink='<a class="tinybtn" href="${esc(v152SafeUrl(r.url)||"#")}" target="_blank" rel="noopener noreferrer">Open ↗</a>';
   const homeResourceButton='<button class="v152-open-link" data-action="v152-open-resource" data-id="${r.id}">Open ↗</button>';
@@ -37,9 +30,7 @@
   html=html.split(homeResourceButton).join(homeResourceLink);
   html=html.replace('</head>','<style id="accelerator-resource-hotfix">.v152-badge{display:none!important}.v152-open-link,.v152-resource-row a.tinybtn{text-decoration:none}</style></head>');
 
-  // V184 preview only. Load the native Analytics Control Room layer after the
-  // current production app without touching production.
-  const guidedCoach='<script src="/api/strategy-assist?v=v184-native-analytics-control-room"></'+'script>';
+  const guidedCoach='<script src="/api/strategy-assist?v=v184-native-analytics-control-room-final"></'+'script>';
   html=html.replace('</body>',guidedCoach+'</body>');
 
   document.open();
