@@ -169,8 +169,10 @@
     policy.metricDefinitions = policy.metricDefinitions || {};
     policy.cohortLimit = policy.cohortLimit === undefined ? 20 : policy.cohortLimit;
     policy.refreshAfter = policy.refreshAfter === undefined ? (policy.refreshAfterDistinctVideos || 4) : policy.refreshAfter;
+    policy.refreshDays = policy.refreshDays === undefined ? 30 : policy.refreshDays;
     if (!Number.isInteger(policy.cohortLimit) || policy.cohortLimit < 5 || policy.cohortLimit > 20) fail('Choose a cohort limit between 5 and 20.');
     if (!Number.isInteger(policy.refreshAfter) || policy.refreshAfter < 1) fail('Refresh interval must be a positive number of distinct videos.');
+    if (!Number.isInteger(policy.refreshDays) || policy.refreshDays < 1) fail('Refresh day interval must be a positive number.');
     policy.job = policy.job || policy.primaryJob || null;
     if (policy.job && !['Reach', 'Trust', 'Convert'].includes(policy.job)) fail('Unknown policy video job.');
     policy.traffic = policy.traffic || 'all';
@@ -263,8 +265,10 @@
       const pending = next.events.filter(event => event.kind === 'eligible_video' && event.policyId === policy.id && !event.countedAt && eligibleIds.has(event.videoId));
       const prior = next.baselines.filter(item => item.policyId === policy.id && item.kind === 'operating' && item.builtAt <= now).slice(-1)[0];
       if (!prior) continue;
-      if (pending.length >= policy.refreshAfter) {
-        const changed = baseline(next, policy, selected, 'operating', 'four_new_videos', now, pending.length);
+      const daysSincePrior = (Date.parse(now) - Date.parse(prior.builtAt)) / 86400000;
+      const monthlyRefreshDue = pending.length >= 1 && daysSincePrior >= policy.refreshDays;
+      if (pending.length >= policy.refreshAfter || monthlyRefreshDue) {
+        const changed = baseline(next, policy, selected, 'operating', pending.length >= policy.refreshAfter ? 'four_new_videos' : 'monthly_new_evidence', now, pending.length);
         next.baselines.push(changed);
         pending.forEach(event => { event.countedAt = now; event.baselineVersionId = changed.id; });
       } else {
