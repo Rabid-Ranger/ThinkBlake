@@ -1,0 +1,11 @@
+# Live Analytics
+
+Adds only the Analytics navigation/page to the existing production loader. API/source and cloud-first persistence are unchanged. The page is adapted from the selected Decision Desk Analytics implementation; the Decision Desk Home, AI and research overlays are not installed.
+
+Copy Studio prompt → paste complete JSON → review actual channel, source/window and changes → confirm/save. Missing metrics remain null. Ask Studio may not provide every requested report; use Advanced Mode exports to obtain unavailable source data. No arbitrary prose extraction or guessed values.
+
+The pure engine stores immutable observations and baseline versions per creator in analyticsFoundation. The first baseline needs five eligible source-verified values, preferably 10–20. Each compatible age/format/era/definition group updates after four distinct new eligible uploads; the original starting baseline stays fixed. Duplicates do not count twice. Publishing without results cannot recalculate a baseline. Accepted Studio imports mirror computed versions to coachOS for the existing Analytics charts; native linked videos match exact IDs/URLs only. Manual legacy baselines remain review-based.
+
+Validation: importer/domain tests, browser review/persistence flow, and production cloud safety regression using controlled server responses. No database schema migration. No API key or model dependency. The tests' synthetic data stays in isolated Demo Mode.
+
+Rollback: revert the live Analytics release commit. Previously saved analyticsFoundation/coachOS fields remain in creator data and are not deleted by rollback.
