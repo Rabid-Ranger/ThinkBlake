@@ -340,7 +340,7 @@ qualifiedLeads, bookings, sales, revenue, and context.attributionNote must be nu
 Planned uploads/capacity are also not YouTube analytics and should not be inferred here.
 
 MEASUREMENT RULES
-- Keep engagedViews separate from public Views.
+- Keep engagedViews separate from public Views. Since August 24, 2026, Views is the new exposure count that starts when playback begins. Engaged views is the older/original view-count methodology retained in YouTube Analytics Advanced Mode, including long-form. Ask Studio should explicitly check Advanced Mode for Engaged views. If Ask Studio cannot access that metric, use null and state that Ask Studio could not retrieve it. Do NOT claim Engaged views is Shorts-only and do not copy Views into engagedViews.
 - CTR and traffic-source fields are percentages where 6.2 means 6.2%.
 - Do not put video-level 0:30 retention, APV, or AVD into these channel periods. Those belong in the separate video-checkpoint prompt.
 - If Ask Studio cannot retrieve an exact field, return null and explain why in limitations.
@@ -424,11 +424,11 @@ For every video/checkpoint row request these metrics when Studio can report them
 11. External %
 
 VIDEO-METRIC RULES
-- Keep Views and Engaged Views separate.
+- Keep Views and Engaged Views separate. Since August 24, 2026, Views counts playback starts across formats. Engaged views is the older/original view-count methodology retained in YouTube Analytics Advanced Mode, including long-form. Explicitly check Advanced Mode for Engaged views. If Ask Studio itself cannot access it, use null and say that Ask Studio could not retrieve the Advanced Mode Engaged views metric. Do NOT say Engaged views is Shorts-only and never substitute Views.
 - CTR, retention30, APV, browsePct, suggestedPct, searchPct, and externalPct are percentage numbers where 6.2 means 6.2%.
 - avdSeconds is seconds.
 - Do NOT derive APV from AVD or video length.
-- Do NOT estimate 0:30 retention from a graph.
+- For retention30, first look for an exact YouTube Studio Key moments / Intro / first-30-second value. Use it only if Studio reports an exact number. If only a visual retention curve is available, do NOT eyeball or estimate the graph; return null.
 - If an exact checkpoint metric or traffic-source split is unavailable or still processing, use null.
 - Do not renormalize Browse / Suggested / Search / External to 100%. They are context fields and other sources may exist.
 - Use coverage "exact" only when the report really represents the exact first 24h / 48h / 7d / 28d lifespan. Otherwise use "unknown" or "partial".
@@ -442,8 +442,8 @@ start/end are inclusive, so end is exactly 89 days after start.
 
 For each exact 90-day period request:
 CORE
-- views
-- engagedViews
+- views = the new playback-start view count
+- engagedViews = the older/original view-count metric from Advanced Mode when accessible
 - registered impressions
 - impressions CTR
 - watchTime hours
