@@ -25,7 +25,7 @@
     const watch=r30!==null?r30:apv;
     const watchMetric=r30!==null?'0:30':'APV';
     const audience=ADC?.audienceRead?ADC.audienceRead(c):{};
-    const overall=ADC?.overallRead?ADC.overallRead(c,W,root.__acceleratorCoachGuide):null;
+    const overall=ADC?.overallRead?ADC.overallRead(c,W,(typeof globalThis!=='undefined'?globalThis.__acceleratorCoachGuide:null)):null;
     return {p,reads,outcome,show,click,watch,watchMetric,audience,overall};
   }
   function countVerdict(v,kind='result'){
