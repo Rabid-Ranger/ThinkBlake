@@ -197,6 +197,33 @@
     };
     for(const [id,val] of Object.entries(values)){const el=drawer.querySelector('#'+id);if(el&&!String(el.value||'').trim())el.value=val;}
   }
+  function learnPageHtml(c,v,W){
+    if(!v||!W?.clarityReadFor)return '';
+    const reads=[24,48,168,672].map(hours=>{
+      let x=null;try{x=W.clarityReadFor(c,v,hours)}catch(_){}
+      const multiple=x?.d?.outcomeMultiple;
+      return {hours,x,multiple};
+    });
+    const latest=[...reads].reverse().find(x=>x.x?.r?.status==='compared')||reads.find(x=>x.x?.r?.status==='compared');
+    const label=h=>h===24?'24h':h===48?'48h':h===168?'7d':'28d';
+    const pills=reads.map(x=>{
+      const d=x.x?.d;
+      return '<div class="awf-learn-pill '+esc(d?.tone||'muted')+'"><span>'+label(x.hours)+'</span><b>'+(n(x.multiple)!==null?mult(x.multiple):'—')+'</b><small>'+esc(d?.bottleneck||'No comparable read yet')+'</small></div>';
+    }).join('');
+    if(!latest||!latest.x?.d)return '<section class="awf-learn-page muted" id="awf-learn-page"><div class="awf-kicker">BASELINE LEARNING LOOP</div><h3>No comparable checkpoint yet</h3><p>Add the next mature checkpoint. The Learn workflow will compare it with the creator’s exact same-age normal.</p><div class="awf-learn-pills">'+pills+'</div></section>';
+    const d=latest.x.d;
+    return '<section class="awf-learn-page '+esc(d.tone||'normal')+'" id="awf-learn-page"><div class="awf-learn-head"><div><div class="awf-kicker">LATEST BASELINE READ · '+label(latest.hours)+'</div><h3>'+esc(d.headline||d.bottleneck||'Current read')+'</h3><p>'+esc(d.explain||'Compared with this creator’s same-age normal.')+'</p></div><div class="awf-bottleneck"><span>WHAT TO CARRY FORWARD</span><b>'+esc(d.next||'Keep collecting evidence.')+'</b></div></div><div class="awf-learn-pills">'+pills+'</div><p><b>Use Learn like this:</b> 24h = early read, 48h = problem check, 7d = main diagnosis, 28d = programming lesson. Save what changed, what it might mean, and what the next video should do differently.</p></section>';
+  }
+  function injectLearnPage(win,c,W){
+    let view='';try{view=win.AcceleratorDeskBridge?.view?.()||''}catch(_){}
+    const old=win.document.getElementById('awf-learn-page');
+    if(view!=='learn'){if(old&&!old.closest('#drawerBack'))old.remove();return;}
+    const v=win.AcceleratorDeskBridge?.currentVideo?.();if(!v)return;
+    const strip=win.document.getElementById('cg-context-strip'),page=strip?.parentElement||win.document.querySelector('main .page,.page');if(!page)return;
+    const html=learnPageHtml(c,v,W);if(!html)return;
+    if(!old){const t=win.document.createElement('template');t.innerHTML=html;(strip||page.firstElementChild)?.after(t.content.firstElementChild);}
+    else if(old.dataset.sig!==html){const t=win.document.createElement('template');t.innerHTML=html;const fresh=t.content.firstElementChild;fresh.dataset.sig=html;old.replaceWith(fresh);}
+  }
   function injectLearn(win,c,W,guide){
     const drawer=win.document.getElementById('drawerBack');
     if(!drawer||!drawer.classList.contains('show')||!drawer.querySelector('#cg-r-views'))return;
@@ -214,7 +241,7 @@
     if(!W||!guide)return;
     const current=()=>win.AcceleratorDeskBridge?.current?.()||null;
     let queued=false;
-    const paint=()=>{if(queued)return;queued=true;win.requestAnimationFrame(()=>{queued=false;const c=current();if(!c)return;injectDiagnosis(win,c,W,ADC);injectLearn(win,c,W,guide);});};
+    const paint=()=>{if(queued)return;queued=true;win.requestAnimationFrame(()=>{queued=false;const c=current();if(!c)return;injectDiagnosis(win,c,W,ADC);injectLearnPage(win,c,W);injectLearn(win,c,W,guide);});};
     new MutationObserver(paint).observe(win.document.documentElement,{childList:true,subtree:true});
     win.document.addEventListener('input',e=>{if(e.target.closest?.('#drawerBack')&&/^cg-r-/.test(e.target.id||''))paint();});
     win.document.addEventListener('change',e=>{if(e.target.closest?.('#drawerBack'))paint();});
@@ -222,8 +249,9 @@
       .awf-kicker{font-size:10px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;opacity:.65}
       .awf-answer{grid-column:1/-1;border:1px solid color-mix(in srgb,currentColor 14%,transparent);border-left:4px solid #55757a;border-radius:10px;padding:11px;background:color-mix(in srgb,currentColor 3%,transparent);display:grid;gap:4px}.awf-answer span{font-size:9px;font-weight:900;letter-spacing:.08em}.awf-answer b{font-size:13px}.awf-answer p,.awf-answer small{margin:0;font-size:12px;line-height:1.4}.awf-answer.bad{border-left-color:#b54b4b}.awf-answer.good,.awf-answer.great{border-left-color:#2f8464}.awf-answer.muted{opacity:.7}
       .awf-diagnosis-decision,.awf-live{margin:0 0 14px;border:1px solid color-mix(in srgb,currentColor 14%,transparent);border-left:5px solid #55757a;border-radius:12px;padding:14px;background:color-mix(in srgb,currentColor 3%,transparent)}.awf-diagnosis-decision h3,.awf-live h3{margin:4px 0 6px}.awf-diagnosis-decision p,.awf-live p{line-height:1.45}.awf-diagnosis-decision.focus{border-left-color:#366f7a}.awf-diagnosis-decision.muted,.awf-live.muted{opacity:.72}
+      .awf-learn-page{margin:0 0 14px;border:1px solid var(--line,#d9e0e2);border-left:5px solid #55757a;border-radius:12px;padding:14px;background:var(--card,#fff)}.awf-learn-page.bad{border-left-color:#b54b4b}.awf-learn-page.warn{border-left-color:#b5822e}.awf-learn-page.good,.awf-learn-page.great{border-left-color:#2f8464}.awf-learn-page.muted{opacity:.72}.awf-learn-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,420px);gap:14px}.awf-learn-head h3{margin:4px 0 6px}.awf-learn-head p{margin:0;line-height:1.45}.awf-learn-pills{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0}.awf-learn-pill{border:1px solid var(--line,#d9e0e2);border-radius:9px;padding:10px;display:grid;gap:3px}.awf-learn-pill span{font-size:9px;font-weight:900;letter-spacing:.07em;text-transform:uppercase}.awf-learn-pill b{font-size:16px}.awf-learn-pill small{opacity:.65}.awf-learn-pill.bad{border-top:4px solid #b54b4b}.awf-learn-pill.warn{border-top:4px solid #b5822e}.awf-learn-pill.good,.awf-learn-pill.great{border-top:4px solid #2f8464}.awf-learn-pill.muted{opacity:.6}
       .awf-live.bad{border-left-color:#b54b4b}.awf-live.warn{border-left-color:#b5822e}.awf-live.good,.awf-live.great{border-left-color:#2f8464}.awf-live-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,300px);gap:14px}.awf-bottleneck{padding:11px;border-radius:10px;background:color-mix(in srgb,currentColor 6%,transparent);display:grid;gap:4px}.awf-bottleneck span{font-size:9px;font-weight:900;letter-spacing:.08em}.awf-live-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0}.awf-live-metrics>div{border:1px solid color-mix(in srgb,currentColor 12%,transparent);border-radius:9px;padding:10px;display:grid;gap:3px}.awf-live-metrics span{font-size:9px;font-weight:900;letter-spacing:.07em}.awf-live-metrics b{font-size:17px}.awf-live-metrics small{opacity:.65}
-      @media(max-width:720px){.awf-live-head{grid-template-columns:1fr}.awf-live-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:460px){.awf-live-metrics{grid-template-columns:1fr}}
+      @media(max-width:720px){.awf-live-head,.awf-learn-head{grid-template-columns:1fr}.awf-live-metrics,.awf-learn-pills{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:460px){.awf-live-metrics,.awf-learn-pills{grid-template-columns:1fr}}
     `;win.document.head.appendChild(style);paint();
   }
   return {channelQuestionRead,questionAnswers,proposal,liveReviewRead,install};
