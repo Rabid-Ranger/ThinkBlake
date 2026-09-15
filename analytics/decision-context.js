@@ -138,17 +138,23 @@
   }
   function channelReadHtml(c,W,guide){
     const r=overallRead(c,W,guide),tone=toneFor(r),a=r.audience;
-    return '<section class="adc-overall '+tone+'" id="adc-overall-read"><div class="adc-overall-head"><div><div class="adc-kicker">OVERALL CHANNEL READ</div><h2>'+esc(r.focus)+'</h2><p>'+esc(r.why.slice(0,3).join(' '))+'</p></div><div class="adc-focus"><span>WHAT THIS MEANS NOW</span><b>'+esc(r.action.video)+'</b><small>'+esc(r.confidence)+' confidence · from '+esc(r.source)+'</small></div></div>'+
-      '<div class="adc-baselines">'+baselinePills(r)+'</div>'+
-      '<div class="adc-subhead"><b>Channel health loop</b><span>ATTENTION → RETURN → LIBRARY DEPTH → RESULT. Weak tells you where to investigate, not why.</span></div>'+
-      '<div class="adc-stages">'+r.stages.map(s=>'<div class="adc-stage '+s.band+'"><span>'+esc(s.label)+'</span><b>'+esc(s.value)+'</b><small>'+esc(s.sub)+'</small></div>').join('')+'</div>'+
-      '<div class="adc-subhead"><b>Audience health</b><span>Use this to understand Reach vs Trust pressure. These are trend signals, not grades.</span></div>'+
-      '<div class="adc-audience">'+
-        audienceCard('New viewers',a.newViewers,a.acquisition,'Are we attracting new people?')+
-        audienceCard('Casual viewers',a.casual,a.hasComparison?ratio(a.current.casual,a.previous.casual):null,'Are newer viewers starting to come back?')+
-        audienceCard('Regular viewers',a.regular,a.hasComparison?ratio(a.current.regular,a.previous.regular):null,'Is the loyal core strengthening?')+
-        audienceCard('Returning viewers',a.returning,a.hasComparison?ratio(a.current.returning,a.previous.returning):null,'Are people choosing the channel again?')+
-      '</div><div class="adc-overall-foot"><span><b>Suggested video job if you are addressing this focus:</b> '+esc(r.action.job)+'</span><span><b>Measure:</b> '+esc(r.action.metric)+'</span></div></section>';
+    return '<section class="ac-section adc-overall '+tone+'" id="adc-overall-read">'+
+      '<div class="ac-section-head adc-overall-head"><div class="ac-section-index">01</div><div><div class="adc-kicker">OVERALL CHANNEL READ</div><h2>'+esc(r.focus)+'</h2><p>'+esc(r.why.slice(0,3).join(' '))+'</p></div><div class="adc-focus"><span>WHAT THIS MEANS NOW</span><b>'+esc(r.action.video)+'</b><small>'+esc(r.confidence)+' confidence · from '+esc(r.source)+'</small></div></div>'+
+      '<div class="ac-section-body">'+
+        '<div class="adc-subhead"><b>Baseline movement</b><span>How the creator’s normal is evolving at each checkpoint.</span></div>'+
+        '<div class="adc-baselines">'+baselinePills(r)+'</div>'+
+        '<div class="adc-subhead"><b>Channel health loop</b><span>ATTENTION → RETURN → LIBRARY DEPTH → RESULT. Weak tells you where to investigate, not why.</span></div>'+
+        '<div class="adc-stages">'+r.stages.map(s=>'<div class="adc-stage '+s.band+'"><span>'+esc(s.label)+'</span><b>'+esc(s.value)+'</b><small>'+esc(s.sub)+'</small></div>').join('')+'</div>'+
+        '<div class="adc-subhead"><b>Audience health</b><span>Use this to understand Reach vs Trust pressure. These are trend signals, not grades.</span></div>'+
+        '<div class="adc-audience">'+
+          audienceCard('New viewers',a.newViewers,a.acquisition,'Are we attracting new people?')+
+          audienceCard('Casual viewers',a.casual,a.hasComparison?ratio(a.current.casual,a.previous.casual):null,'Are newer viewers starting to come back?')+
+          audienceCard('Regular viewers',a.regular,a.hasComparison?ratio(a.current.regular,a.previous.regular):null,'Is the loyal core strengthening?')+
+          audienceCard('Returning viewers',a.returning,a.hasComparison?ratio(a.current.returning,a.previous.returning):null,'Are people choosing the channel again?')+
+        '</div>'+
+        '<div class="adc-overall-foot"><span><b>Suggested video job if you are addressing this focus:</b> '+esc(r.action.job)+'</span><span><b>Measure:</b> '+esc(r.action.metric)+'</span></div>'+
+      '</div>'+
+    '</section>';
   }
   function diagnosisHtml(c,W,guide){
     const r=overallRead(c,W,guide),p=r.pattern,a=r.audience,tone=toneFor(r);
@@ -282,15 +288,15 @@ ${JSON.stringify({schemaVersion:1,creatorId:c?.id||'',channelName:'ACTUAL CHANNE
     win.document.addEventListener('click',e=>{if(e.target.closest?.('[data-cg="video-prep"],[data-action="v12-plan-step"],[data-cg="diagnosis"],[data-cg="plan90"]'))setTimeout(paint,0);});
     const style=win.document.createElement('style');style.id='adc-style';style.textContent=`
       .adc-kicker{font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;opacity:.65}
-      .adc-overall{border:1px solid var(--line,#d9e0e2);border-left:5px solid #55757a;border-radius:16px;padding:20px;background:var(--card,#fff);display:grid;gap:16px}.adc-overall.focus{border-left-color:#366f7a}.adc-overall.warn{border-left-color:#b5822e}.adc-overall.great{border-left-color:#2f8464}
-      .adc-overall-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,420px);gap:18px;align-items:start}.adc-overall h2{margin:5px 0 8px}.adc-overall p{margin:0;line-height:1.5}.adc-focus{padding:14px;border-radius:12px;background:rgba(75,104,110,.08);display:grid;gap:5px}.adc-focus span{font-size:10px;font-weight:900;letter-spacing:.08em}.adc-focus b{line-height:1.4}.adc-focus small{opacity:.7}
+      .adc-overall{margin-bottom:24px}.adc-overall.focus{border-left-color:#366f7a}.adc-overall.warn{border-left-color:#b5822e}.adc-overall.great{border-left-color:#2f8464}
+      .adc-overall-head{grid-template-columns:44px minmax(0,1fr) minmax(260px,420px)}.adc-overall h2{margin:4px 0 6px}.adc-overall p{margin:0;line-height:1.5}.adc-focus{padding:14px;border-radius:12px;background:rgba(75,104,110,.08);display:grid;gap:5px}.adc-focus span{font-size:10px;font-weight:900;letter-spacing:.08em}.adc-focus b{line-height:1.4}.adc-focus small{opacity:.7}
       .adc-baselines,.adc-audience,.adc-stages{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.adc-baseline-pill,.adc-audience-card,.adc-stage{border:1px solid var(--line,#d9e0e2);border-radius:11px;padding:12px;display:grid;gap:3px}.adc-stage span{font-size:10px;font-weight:900;letter-spacing:.07em}.adc-stage b{font-size:13px;line-height:1.35}.adc-stage small{opacity:.65;line-height:1.35}.adc-stage.weak{border-top:4px solid #b54b4b}.adc-stage.strong{border-top:4px solid #2f8464}.adc-stage.steady{border-top:4px solid #55757a}.adc-stage.unknown{opacity:.65}.adc-baseline-pill span,.adc-audience-card span{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}.adc-baseline-pill b,.adc-audience-card b{font-size:19px}.adc-baseline-pill small,.adc-audience-card small{opacity:.65;line-height:1.35}.adc-baseline-pill.muted,.adc-audience-card.muted{opacity:.6}.adc-audience-card.bad{border-top:4px solid #b54b4b}.adc-audience-card.good{border-top:4px solid #2f8464}.adc-audience-card.normal{border-top:4px solid #55757a}.adc-audience-card strong{font-size:11px}
       .adc-subhead{display:flex;gap:10px;align-items:baseline;justify-content:space-between}.adc-subhead span{font-size:12px;opacity:.65}.adc-overall-foot{display:flex;gap:18px;justify-content:space-between;flex-wrap:wrap;font-size:12px}
       .adc-diagnosis{border-left:5px solid #55757a!important}.adc-diagnosis.focus{border-left-color:#366f7a!important}.adc-diagnosis.warn{border-left-color:#b5822e!important}.adc-diagnosis.great{border-left-color:#2f8464!important}.adc-decision-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.adc-decision-grid>div{border:1px solid var(--line,#ddd);border-radius:10px;padding:12px;display:grid;gap:4px}.adc-decision-grid span{font-size:10px;font-weight:800;text-transform:uppercase}.adc-decision-grid small{opacity:.65}
       .adc-video-focus{margin:0 0 14px;border:1px solid var(--line,#d9e0e2);border-left:5px solid #55757a;border-radius:12px;padding:14px;background:var(--card,#fff);display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,420px);gap:15px}.adc-video-focus.focus{border-left-color:#366f7a}.adc-video-focus.warn{border-left-color:#b5822e}.adc-video-focus.great{border-left-color:#2f8464}.adc-video-focus h3{margin:4px 0 5px}.adc-video-focus p{margin:0;line-height:1.45}.adc-video-meta{display:grid;gap:5px;font-size:12px}.adc-video-meta small{opacity:.65}
       .adc-prompt-dialog{width:min(820px,94vw);border:1px solid #bbc7c7;border-radius:12px;padding:20px;background:var(--panel,#fff);color:var(--text,#17212a)}.adc-prompt-dialog textarea{width:100%;height:360px;box-sizing:border-box;margin:10px 0}
-      @media(max-width:900px){.adc-overall-head,.adc-video-focus{grid-template-columns:1fr}.adc-baselines,.adc-audience,.adc-stages{grid-template-columns:repeat(2,minmax(0,1fr))}}
-      @media(max-width:560px){.adc-baselines,.adc-audience,.adc-stages,.adc-decision-grid{grid-template-columns:1fr}.adc-subhead{display:grid}.adc-overall{padding:15px}}
+      @media(max-width:900px){.adc-overall-head{grid-template-columns:40px minmax(0,1fr)}.adc-overall-head .adc-focus{grid-column:2}.adc-video-focus{grid-template-columns:1fr}.adc-baselines,.adc-audience,.adc-stages{grid-template-columns:repeat(2,minmax(0,1fr))}}
+      @media(max-width:560px){.adc-baselines,.adc-audience,.adc-stages,.adc-decision-grid{grid-template-columns:1fr}.adc-subhead{display:grid}.adc-overall{margin-bottom:16px}.adc-overall-head{grid-template-columns:32px minmax(0,1fr)}.adc-overall-head .adc-focus{grid-column:1/-1}}
     `;win.document.head.appendChild(style);
     paint();
   }
