@@ -172,6 +172,64 @@
     return '<section class="adc-video-focus '+tone+'" id="adc-video-focus"><div><div class="adc-kicker">DATA FOCUS FOR THIS VIDEO</div><h3>'+esc(r.focus)+'</h3><p>'+esc(r.action.video)+'</p></div><div class="adc-video-meta"><span><b>Why:</b> '+esc(r.why.slice(0,2).join(' '))+'</span><span><b>Suggested job:</b> '+esc(r.action.job)+'</span><span><b>Primary signal:</b> '+esc(r.action.metric)+'</span><small>You can intentionally make a video that does not address this focus. If you do, know why.</small></div></section>';
   }
 
+  function planSuggestion(r){
+    const focus=String(r?.focus||'No clear channel bottleneck yet'),x=focus.toLowerCase();
+    let primaryMetricKey='engagedViews',job=r?.action?.job||'Decide from the plan',mix='Keep the existing Reach / Trust / Convert mix unless the diagnosis gives you a reason to change it.';
+    let hypothesis='If we improve the current channel focus, the matched result should improve without breaking click or watch quality.';
+    let success='Across multiple comparable videos, the primary signal moves toward or above creator normal while the important guardrails stay healthy.';
+    let guard='Do not improve one number by attracting the wrong audience or weakening the next stage of the funnel.';
+    if(x.includes('packag')){
+      primaryMetricKey='ctr';
+      hypothesis='If packaging is the real constraint, stronger title + thumbnail promises should move CTR toward creator normal while retention stays healthy.';
+      success='CTR improves toward creator normal across multiple comparable videos without a meaningful drop in 0:30 / APV.';
+      guard='Do not chase CTR with a promise the video cannot deliver.';
+    }else if(x.includes('opening')||x.includes('viewing')||x.includes('retention')){
+      primaryMetricKey='ret30';
+      hypothesis='If promise delivery / opening is the constraint, stronger first 30–60 seconds should improve 0:30 first, with APV / AVD supporting the read.';
+      success='0:30 improves toward creator normal across multiple comparable videos and APV / AVD do not regress.';
+      guard='Do not make the idea or package smaller just to manufacture retention.';
+    }else if(x.includes('acquisition')||x.includes('gateway')||x.includes('discovery')){
+      primaryMetricKey='newViewers';job='Reach';
+      mix='Bias the next stretch toward qualified Reach / gateway videos, while keeping enough Trust and Convert follow-through.';
+      hypothesis='If acquisition is the constraint, more qualified gateway ideas should increase New viewers and same-age engaged views without weakening click/watch quality.';
+      success='New viewers improve versus the prior comparable channel period and Reach videos produce healthier same-age outcomes.';
+      guard='Do not grow with viewers who do not fit the channel promise.';
+    }else if(x.includes('loyalty')||x.includes('pathway')){
+      primaryMetricKey='returning';job='Trust';
+      mix='Bias the next stretch toward Trust / pathway videos, follow-ups, series and obvious second-watch opportunities.';
+      hypothesis='If loyalty is the constraint, clearer continuation should improve Returning / Regular viewer trend and average views per viewer.';
+      success='Returning or Regular viewers and average views/viewer improve versus the prior comparable period.';
+      guard='Do not sacrifice new-viewer clarity just to serve the core.';
+    }else if(x.includes('business')||x.includes('convert')){
+      primaryMetricKey='qualifiedLeads';job='Convert';
+      mix='Protect Reach and Trust, but give Convert videos enough slots to test the audience-to-offer path.';
+      hypothesis='If conversion is the constraint, clearer audience-to-offer alignment should increase qualified business actions without requiring every video to be a sales video.';
+      success='Qualified leads / bookings improve for comparable Convert videos while audience quality stays healthy.';
+      guard='Do not judge Reach or Trust videos by conversion metrics they were not designed to win.';
+    }else if(x.includes('growth')||x.includes('protect')){
+      primaryMetricKey='engagedViews';
+      mix='Protect the Reach / Trust / Convert mix that produced the wins and make adjacent follow-ups before introducing major changes.';
+      hypothesis='If the current growth mechanism is repeatable, adjacent videos should keep producing above-normal matched outcomes.';
+      success='Multiple adjacent videos stay above creator normal without deterioration in CTR or WATCH.';
+      guard='Do not copy the surface topic if the repeatable mechanism is actually package, audience fit or format.';
+    }
+    return {focus,job,primaryMetricKey,mix,hypothesis,success,guard,next:r?.action?.video||'Use the diagnosis flow before forcing a plan.'};
+  }
+  function planFocusHtml(c,W,guide){
+    const r=overallRead(c,W,guide),s=planSuggestion(r),tone=toneFor(r);
+    return '<section class="adc-plan-focus '+tone+'" id="adc-plan-focus">'+
+      '<div><div class="adc-kicker">DATA → 90-DAY PLAN</div><h3>'+esc(r.focus)+'</h3><p>'+esc(r.why.slice(0,3).join(' '))+'</p></div>'+
+      '<div class="adc-plan-grid">'+
+        '<div><span>CONTENT JOB</span><b>'+esc(s.job)+'</b></div>'+
+        '<div><span>PRIMARY SIGNAL</span><b>'+esc(r.action.metric)+'</b></div>'+
+        '<div><span>WHAT NEXT VIDEOS SHOULD PROVE</span><b>'+esc(s.next)+'</b></div>'+
+      '</div>'+
+      '<p><b>Programming implication:</b> '+esc(s.mix)+'</p>'+
+      '<button class="btn" data-adc-plan-fill>Use these suggestions in empty plan fields</button>'+
+      '<small>This only fills empty fields. It does not overwrite a plan you already wrote.</small>'+
+    '</section>';
+  }
+
   function parseJsonBlock(text){
     if(typeof text!=='string')return null;
     let raw=text.trim();
@@ -278,14 +336,46 @@ ${JSON.stringify({schemaVersion:1,creatorId:c?.id||'',channelName:'ACTUAL CHANNE
         first.prepend(holder.content.firstElementChild);
       }
     }
+    function injectPlan(){
+      const c=current();if(!c)return;
+      const candidates=[...win.document.querySelectorAll('dialog[open],#drawerBack.show,.drawer.show,.drawer.open')];
+      const target=candidates.find(x=>/90-Day Plan/i.test(x.textContent||''));
+      if(!target)return;
+      const html=planFocusHtml(c,W,guide),existing=target.querySelector('#adc-plan-focus');
+      if(existing?.dataset?.adcSignature===html)return;
+      const holder=win.document.createElement('template');holder.innerHTML=html;const fresh=holder.content.firstElementChild;fresh.dataset.adcSignature=html;
+      if(existing)existing.replaceWith(fresh);
+      else{
+        const first=target.querySelector('.studio-body,.drawer-body,.body,.content')||target;
+        first.prepend(fresh);
+      }
+    }
     function injectChannelButton(){
       const c=current(),tools=win.document.querySelector('#studio-tools .actions');if(!c||!tools||tools.querySelector('[data-adc-channel-prompt]'))return;
       const b=win.document.createElement('button');b.className='btn';b.dataset.adcChannelPrompt='1';b.textContent='Copy channel health prompt';b.onclick=()=>openChannelPrompt(win,c);tools.appendChild(b);
     }
     let queued=false;
-    const paint=()=>{if(queued)return;queued=true;win.requestAnimationFrame(()=>{queued=false;injectDiagnosis();injectVideoFocus();injectChannelButton();});};
+    const paint=()=>{if(queued)return;queued=true;win.requestAnimationFrame(()=>{queued=false;injectDiagnosis();injectPlan();injectVideoFocus();injectChannelButton();});};
     new MutationObserver(paint).observe(win.document.documentElement,{childList:true,subtree:true});
-    win.document.addEventListener('click',e=>{if(e.target.closest?.('[data-cg="video-prep"],[data-action="v12-plan-step"],[data-cg="diagnosis"],[data-cg="plan90"]'))setTimeout(paint,0);});
+    win.document.addEventListener('click',e=>{
+      const fill=e.target.closest?.('[data-adc-plan-fill]');
+      if(fill){
+        e.preventDefault();
+        const c=current();if(!c)return;
+        const s=planSuggestion(overallRead(c,W,guide));
+        const setEmpty=(id,value)=>{const el=win.document.getElementById(id);if(el&&!String(el.value||'').trim()&&value!=null){el.value=value;el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));}};
+        setEmpty('cg-p-hyp',s.hypothesis);
+        setEmpty('cg-p-mix',s.mix);
+        setEmpty('cg-p-better',s.success);
+        setEmpty('cg-p-guard',s.guard);
+        const metric=win.document.getElementById('cg-p-metric');
+        if(metric&&(!metric.value||metric.dataset.adcAuto!=='done')){metric.value=s.primaryMetricKey;metric.dataset.adcAuto='done';metric.dispatchEvent(new Event('change',{bubbles:true}));}
+        const outcome=win.document.getElementById('cg-p-outcome');if(outcome&&!String(outcome.value||'').trim()){outcome.value='Improve '+s.focus+' while protecting the rest of the funnel.';outcome.dispatchEvent(new Event('input',{bubbles:true}));}
+        fill.textContent='Added to empty fields';
+        return;
+      }
+      if(e.target.closest?.('[data-cg="video-prep"],[data-action="v12-plan-step"],[data-cg="diagnosis"],[data-cg="plan90"]'))setTimeout(paint,0);
+    });
     const style=win.document.createElement('style');style.id='adc-style';style.textContent=`
       .adc-kicker{font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;opacity:.65}
       .adc-overall{margin-bottom:24px}.adc-overall.focus{border-left-color:#366f7a}.adc-overall.warn{border-left-color:#b5822e}.adc-overall.great{border-left-color:#2f8464}
@@ -293,13 +383,14 @@ ${JSON.stringify({schemaVersion:1,creatorId:c?.id||'',channelName:'ACTUAL CHANNE
       .adc-baselines,.adc-audience,.adc-stages{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.adc-baseline-pill,.adc-audience-card,.adc-stage{border:1px solid var(--line,#d9e0e2);border-radius:11px;padding:12px;display:grid;gap:3px}.adc-stage span{font-size:10px;font-weight:900;letter-spacing:.07em}.adc-stage b{font-size:13px;line-height:1.35}.adc-stage small{opacity:.65;line-height:1.35}.adc-stage.weak{border-top:4px solid #b54b4b}.adc-stage.strong{border-top:4px solid #2f8464}.adc-stage.steady{border-top:4px solid #55757a}.adc-stage.unknown{opacity:.65}.adc-baseline-pill span,.adc-audience-card span{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}.adc-baseline-pill b,.adc-audience-card b{font-size:19px}.adc-baseline-pill small,.adc-audience-card small{opacity:.65;line-height:1.35}.adc-baseline-pill.muted,.adc-audience-card.muted{opacity:.6}.adc-audience-card.bad{border-top:4px solid #b54b4b}.adc-audience-card.good{border-top:4px solid #2f8464}.adc-audience-card.normal{border-top:4px solid #55757a}.adc-audience-card strong{font-size:11px}
       .adc-subhead{display:flex;gap:10px;align-items:baseline;justify-content:space-between}.adc-subhead span{font-size:12px;opacity:.65}.adc-overall-foot{display:flex;gap:18px;justify-content:space-between;flex-wrap:wrap;font-size:12px}
       .adc-diagnosis{border-left:5px solid #55757a!important}.adc-diagnosis.focus{border-left-color:#366f7a!important}.adc-diagnosis.warn{border-left-color:#b5822e!important}.adc-diagnosis.great{border-left-color:#2f8464!important}.adc-decision-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.adc-decision-grid>div{border:1px solid var(--line,#ddd);border-radius:10px;padding:12px;display:grid;gap:4px}.adc-decision-grid span{font-size:10px;font-weight:800;text-transform:uppercase}.adc-decision-grid small{opacity:.65}
+      .adc-plan-focus{margin:0 0 14px;border:1px solid var(--line,#d9e0e2);border-left:5px solid #55757a;border-radius:12px;padding:14px;background:var(--card,#fff);display:grid;gap:12px}.adc-plan-focus.focus{border-left-color:#366f7a}.adc-plan-focus.warn{border-left-color:#b5822e}.adc-plan-focus.great{border-left-color:#2f8464}.adc-plan-focus h3{margin:4px 0 5px}.adc-plan-focus p{margin:0;line-height:1.45}.adc-plan-focus small{opacity:.65}.adc-plan-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.adc-plan-grid>div{border:1px solid var(--line,#d9e0e2);border-radius:9px;padding:10px;display:grid;gap:4px}.adc-plan-grid span{font-size:9px;font-weight:900;letter-spacing:.07em}.adc-plan-grid b{font-size:12px;line-height:1.35}
       .adc-video-focus{margin:0 0 14px;border:1px solid var(--line,#d9e0e2);border-left:5px solid #55757a;border-radius:12px;padding:14px;background:var(--card,#fff);display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,420px);gap:15px}.adc-video-focus.focus{border-left-color:#366f7a}.adc-video-focus.warn{border-left-color:#b5822e}.adc-video-focus.great{border-left-color:#2f8464}.adc-video-focus h3{margin:4px 0 5px}.adc-video-focus p{margin:0;line-height:1.45}.adc-video-meta{display:grid;gap:5px;font-size:12px}.adc-video-meta small{opacity:.65}
       .adc-prompt-dialog{width:min(820px,94vw);border:1px solid #bbc7c7;border-radius:12px;padding:20px;background:var(--panel,#fff);color:var(--text,#17212a)}.adc-prompt-dialog textarea{width:100%;height:360px;box-sizing:border-box;margin:10px 0}
-      @media(max-width:900px){.adc-overall-head{grid-template-columns:40px minmax(0,1fr)}.adc-overall-head .adc-focus{grid-column:2}.adc-video-focus{grid-template-columns:1fr}.adc-baselines,.adc-audience,.adc-stages{grid-template-columns:repeat(2,minmax(0,1fr))}}
+      @media(max-width:900px){.adc-plan-grid{grid-template-columns:1fr}.adc-overall-head{grid-template-columns:40px minmax(0,1fr)}.adc-overall-head .adc-focus{grid-column:2}.adc-video-focus{grid-template-columns:1fr}.adc-baselines,.adc-audience,.adc-stages{grid-template-columns:repeat(2,minmax(0,1fr))}}
       @media(max-width:560px){.adc-baselines,.adc-audience,.adc-stages,.adc-decision-grid{grid-template-columns:1fr}.adc-subhead{display:grid}.adc-overall{margin-bottom:16px}.adc-overall-head{grid-template-columns:32px minmax(0,1fr)}.adc-overall-head .adc-focus{grid-column:1/-1}}
     `;win.document.head.appendChild(style);
     paint();
   }
 
-  return {snapshots,audienceRead,baselineTrajectory,deriveFocus,focusAction,overallRead,channelPrompt,parseJsonBlock,install};
+  return {snapshots,audienceRead,baselineTrajectory,deriveFocus,focusAction,overallRead,planSuggestion,channelPrompt,parseJsonBlock,install};
 });
