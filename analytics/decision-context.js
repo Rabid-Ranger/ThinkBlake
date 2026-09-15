@@ -145,8 +145,9 @@
   function parseJsonBlock(text){
     if(typeof text!=='string')return null;
     let raw=text.trim();
-    if(raw.startsWith('\\`\\`\\`')){
-      const firstBreak=raw.indexOf('\\n'),lastFence=raw.lastIndexOf('\\`\\`\\`');
+    const fence=String.fromCharCode(96,96,96);
+    if(raw.startsWith(fence)){
+      const firstBreak=raw.indexOf('\n'),lastFence=raw.lastIndexOf(fence);
       if(firstBreak>=0&&lastFence>firstBreak)raw=raw.slice(firstBreak+1,lastFence).trim();
     }
     try{return JSON.parse(raw)}catch(_){return null}
