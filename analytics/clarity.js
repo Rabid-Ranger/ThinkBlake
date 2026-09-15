@@ -249,7 +249,7 @@
       const p=pattern(c),tone=p.max?(p.source==='hard'?'bad':'warn'):'normal';
       return '<section class="ac-section ac-pattern-section '+tone+'">'+
         '<div class="ac-section-head"><div class="ac-section-index">04</div><div><div class="ac-kicker">CHANNEL PATTERN · RECENT 7-DAY VIDEOS</div><h2>'+(p.max?'Main issue showing up: '+esc(p.label):'Nothing is repeating yet')+'</h2><p>'+esc(p.explain)+'</p></div><span class="ac-badge '+tone+'">'+esc(p.confidence)+'</span></div>'+
-        '<div class="ac-section-body"><div class="ac-decision-callout"><span>WHAT I’D DO NEXT</span><b>'+esc(p.next)+'</b></div><small>1 result = interesting. 2 similar = watch it. 3+ similar = a pattern may be emerging. This is coaching discipline, not a statistical law.</small></div>'+
+        '<div class="ac-section-body"><div class="ac-decision-callout"><span>WHAT I’D DO NEXT</span><b>'+esc(p.next)+'</b></div><small>One result is worth noticing. Two similar results are worth watching. Three or more may be a real pattern.</small></div>'+
       '</section>';
     }
     function videoSummary(c,full){
@@ -257,7 +257,7 @@
       const b=matchingBaseline(c,v,p.hours); if(b)p.baselineId=b.id;
       let r;try{r=W.compare(c,v,b,p.hours);}catch(e){r={status:'needs_evidence',comparisons:{},message:e.message};}
       const d=diagnose(r,p.hours),age=AGES[p.hours];
-      const baselineName=b?.label||'No matched baseline';
+      const baselineName=b?.label||'No usual result saved yet';
       const controls='<div class="ac-video-controls"><label>Video<select id="ac-video">'+W.videos(c).map(x=>'<option value="'+esc(x.id)+'" '+(x.id===v.id?'selected':'')+'>'+esc(x.title)+'</option>').join('')+'</select></label><div class="ac-age-grid">'+ageOverview(c,v)+'</div><p>Comparing this video with <b>'+esc(baselineName)+'</b> at the same point after publishing.</p></div>';
       const actions='<div class="actions ac-video-actions">'+(v.native&&!v.engineId?action('result','Update this video’s results'):action('import',v.engineId?'Update imported results':'Import results'))+action('baseline','Build / update baseline')+action('diagnosis','Use this in Diagnosis')+'</div>';
       return '<div class="ac-shell">'+
@@ -280,7 +280,7 @@
       const comparable=d.comparable;
       return '<div class="ac-shell">'+
         '<section class="ac-section ac-channel-section '+(comparable?'normal':'warn')+'">'+
-          '<div class="ac-section-head"><div class="ac-section-index">02</div><div><div class="ac-kicker">90-DAY CHANNEL TREND</div><h2>'+(comparable?'Is the whole channel moving?':'Need two verified 90-day reports')+'</h2><p>Use this for channel direction. Do not use 90-day totals as a per-video baseline.</p></div><div class="ac-top-badge"><span>STATUS</span><b>'+(comparable?'READY':'NOT ENOUGH DATA')+'</b><small>Video issues still come from comparing each video with what this creator usually gets at the same point after publishing.</small></div></div>'+
+          '<div class="ac-section-head"><div class="ac-section-index">02</div><div><div class="ac-kicker">90-DAY CHANNEL TREND</div><h2>'+(comparable?'Is the whole channel moving?':'Need two verified 90-day reports')+'</h2><p>Use this to see whether the channel is moving up, down, or staying flat. Do not compare a single video with these 90-day totals.</p></div><div class="ac-top-badge"><span>STATUS</span><b>'+(comparable?'READY':'NOT ENOUGH DATA')+'</b><small>Video issues still come from comparing each video with what this creator usually gets at the same point after publishing.</small></div></div>'+
           '<div class="ac-section-body"><div class="ac-channel">'+keys.map(([k,l])=>{
             const a=n(d.starting?.[k]),z=n(d.current?.[k]);let change='Not comparable yet';
             if(comparable&&a!==null&&z!==null) change=k==='ctr'?((z-a)>=0?'+':'')+(z-a).toFixed(1)+' pp':a?((z/a-1)*100>=0?'+':'')+((z/a-1)*100).toFixed(1)+'%':'—';
