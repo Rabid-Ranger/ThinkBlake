@@ -12,7 +12,8 @@ test('channel health import preserves New Casual Regular Returning and views per
     schemaVersion:1,creatorId:'c',channelName:'Test',observations:[],
     channelPeriods:[{
       start:'2025-10-01',end:'2025-12-29',source:'YouTube Studio Audience + Advanced Mode',metricDefinitionId:'studio-current',
-      metrics:{views:10000,engagedViews:9000,impressions:100000,ctr:5.5,watchTime:800,newViewers:6000,casual:1800,regular:700,returning:2500,avgViewsPerViewer:1.6,qualifiedLeads:null}
+      metrics:{views:10000,engagedViews:9000,impressions:100000,ctr:5.5,watchTime:800,newViewers:6000,casual:1800,regular:700,returning:2500,avgViewsPerViewer:1.6,browsePct:45,suggestedPct:30,searchPct:15,externalPct:5,uploadsPublished:12,newUploadViews:7000,libraryViews:3000,qualifiedLeads:null,bookings:null,sales:null,revenue:null},
+      context:{paidNote:'Organic only',sourceNote:'Top Suggested: Example A',libraryNote:'Published-in-period filter vs older videos',attributionNote:null,notes:null}
     }]
   });
   const out=I.parse(payload,c,A.emptyStore(),'2026-02-01T00:00:00Z');
@@ -22,4 +23,29 @@ test('channel health import preserves New Casual Regular Returning and views per
   assert.equal(out.periods[0].metrics.regular,700);
   assert.equal(out.periods[0].metrics.returning,2500);
   assert.equal(out.periods[0].metrics.avgViewsPerViewer,1.6);
+  assert.equal(out.periods[0].metrics.browsePct,45);
+  assert.equal(out.periods[0].metrics.uploadsPublished,12);
+  assert.equal(out.periods[0].metrics.newUploadViews,7000);
+  assert.equal(out.periods[0].metrics.libraryViews,3000);
+  assert.equal(out.periods[0].context.paidNote,'Organic only');
+  assert.match(out.periods[0].context.sourceNote,/Suggested/);
+});
+
+test('video checkpoint prompt requests every WATCH metric and keeps channel periods separate',()=>{
+  const p=I.prompt(c,168);
+  for(const term of ['views','engagedViews','impressions','ctr','retention30','apv','avdSeconds'])assert.match(p,new RegExp(term));
+  assert.match(p,/first-30-second/i);
+  assert.match(p,/Do not derive APV/i);
+  assert.match(p,/Do not include channelPeriods/i);
+  assert.match(p,/exact first 7 days/i);
+});
+
+test('channel import rejects impossible traffic percentages instead of saving them',()=>{
+  const payload=JSON.stringify({
+    schemaVersion:1,creatorId:'c',channelName:'Test',observations:[],
+    channelPeriods:[{start:'2025-10-01',end:'2025-12-29',source:'Studio',metricDefinitionId:'studio-current',metrics:{browsePct:140}}]
+  });
+  const out=I.parse(payload,c,A.emptyStore(),'2026-02-01T00:00:00Z');
+  assert.equal(out.periods.length,0);
+  assert.match(out.limitations.join(' '),/Invalid channel metric browsePct/);
 });
