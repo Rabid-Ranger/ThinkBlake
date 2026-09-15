@@ -22,19 +22,19 @@
 
   function countSignal(x){
     const m=n(x?.multiple);
-    if(m===null) return {tone:'muted',label:'Need data',detail:'No fair comparison yet',range:'Normal = 0.70–1.30×'};
-    if(m<.7) return {tone:'bad',label:'Needs attention',detail:fmtMultiple(m)+' normal',range:'Normal = 0.70–1.30×'};
-    if(m<1.3) return {tone:'normal',label:'In range',detail:fmtMultiple(m)+' normal',range:'Normal = 0.70–1.30×'};
-    if(m<1.7) return {tone:'good',label:'Promising',detail:fmtMultiple(m)+' normal',range:'1.30×+ is above normal'};
-    if(m<2.5) return {tone:'great',label:'Strong',detail:fmtMultiple(m)+' normal',range:'1.70×+ is a strong result'};
-    return {tone:'great',label:'Big outlier',detail:fmtMultiple(m)+' normal',range:'2.50×+ is a major strength signal'};
+    if(m===null) return {tone:'muted',label:'Not enough data',detail:'No fair comparison yet',range:'Usual range: 0.70–1.30×'};
+    if(m<.7) return {tone:'bad',label:'Looks weak',detail:fmtMultiple(m)+' of usual',range:'Usual range: 0.70–1.30×'};
+    if(m<1.3) return {tone:'normal',label:'Looks normal',detail:fmtMultiple(m)+' of usual',range:'Usual range: 0.70–1.30×'};
+    if(m<1.7) return {tone:'good',label:'Above normal',detail:fmtMultiple(m)+' of usual',range:'1.30×+ is above usual'};
+    if(m<2.5) return {tone:'great',label:'Strong',detail:fmtMultiple(m)+' of usual',range:'1.70×+ is a strong result'};
+    return {tone:'great',label:'Big win',detail:fmtMultiple(m)+' of usual',range:'2.50×+ is a very strong result'};
   }
   function rateSignal(x,threshold){
     const d=n(x?.deltaPp);
-    if(d===null) return {tone:'muted',label:'Need data',detail:'No fair comparison yet',range:'Compare it with what this creator usually gets'};
-    if(d<-threshold) return {tone:'bad',label:'Needs attention',detail:signedPp(d)+' vs normal',range:'In range = within ±'+threshold+' pp'};
-    if(d>threshold) return {tone:'good',label:'Strong',detail:signedPp(d)+' vs normal',range:'In range = within ±'+threshold+' pp'};
-    return {tone:'normal',label:'In range',detail:signedPp(d)+' vs normal',range:'In range = within ±'+threshold+' pp'};
+    if(d===null) return {tone:'muted',label:'Not enough data',detail:'No fair comparison yet',range:'Compare it with what this creator usually gets'};
+    if(d<-threshold) return {tone:'bad',label:'Looks weak',detail:signedPp(d)+' vs usual',range:'Usually okay within ±'+threshold+' pp'};
+    if(d>threshold) return {tone:'good',label:'Strong',detail:signedPp(d)+' vs usual',range:'Usually okay within ±'+threshold+' pp'};
+    return {tone:'normal',label:'Looks normal',detail:signedPp(d)+' vs usual',range:'Usually okay within ±'+threshold+' pp'};
   }
   function metricRead(r){
     const c=r?.comparisons||{};
@@ -49,18 +49,18 @@
   function nextFor(stages,winner){
     const key=stages.slice().sort().join('|');
     if(winner){
-      if(stages.includes('packaging')) return 'Do not panic-change a winner. Check traffic source and audience breadth, then carry the packaging lesson into the follow-up.';
-      if(stages.includes('retention')) return 'Do not rescue the winner. Study the opening/retention soft spot and use the lesson on the next video.';
+      if(stages.includes('packaging')) return 'Do not change a winning video just because CTR looks a little low. First check where the views came from and whether YouTube showed it to a broader audience. Use that lesson on the next video.';
+      if(stages.includes('retention')) return 'Do not try to fix a winner. See where viewers drop more than usual and use that lesson on the next video.';
       if(stages.includes('reach')) return 'The video still won even though YouTube did not show it as evenly as usual. Check where the views came from before copying the surface topic.';
-      return 'Protect what worked. Look for the repeatable topic, package and viewing pattern before scaling it.';
+      return 'Protect what worked. Figure out what you can repeat in the topic, title/thumbnail, and viewing experience before changing the approach.';
     }
     if(key==='packaging|retention') return 'Check the promise first. If fewer people click and the people who click also watch less, a thumbnail swap alone may not fix it.';
     if(key==='packaging|reach') return 'Check the topic and where the views came from first. Then see whether the title and thumbnail are getting enough clicks from the people who do see it.';
     if(key==='reach|retention') return 'Check whether the right people are seeing the video and where the views came from. Then see whether the opening is working for the people who click.';
-    if(stages.includes('reach')) return 'Check topic demand, audience fit and traffic source before touching the package.';
-    if(stages.includes('packaging')) return 'Inspect the title/thumbnail promise and source-aware CTR. Test one meaningfully different package, not random tweaks.';
-    if(stages.includes('retention')) return 'Inspect the first 30 seconds and the first real retention divergence. Check promise delivery, pacing and structure.';
-    return 'Do not force a fix. Keep the video job and source mix in view and recheck at the next useful checkpoint.';
+    if(stages.includes('reach')) return 'Check the topic, whether the right people are seeing it, and where the views came from before changing the title or thumbnail.';
+    if(stages.includes('packaging')) return 'Look at the title and thumbnail. If you can, compare CTR by traffic source. Test one meaningfully different title/thumbnail, not tiny random tweaks.';
+    if(stages.includes('retention')) return 'Look at the first 30 seconds and the retention graph. Find the first point where viewers leave more than usual, then check whether the opening delivered the promise quickly enough.';
+    return 'Nothing clearly needs fixing right now. Keep the video’s job and where the views came from in mind, then check again at the next useful checkpoint.';
   }
   function diagnose(r,hours=168){
     const age=AGES[hours]||AGES[168],m=metricRead(r);
@@ -85,10 +85,10 @@
       headline=(hours<168?'This may be the issue: ':'Main issue: ')+bottleneck;
       explain='This is the clearest weak part of the video compared with what this creator usually gets at the same point after publishing.';
     }else if(winner){
-      bottleneck=soft.length?'NO RESCUE NEEDED · soft spot: '+stageLabel(soft):'NO CLEAR ISSUE';
+      bottleneck=soft.length?'NO FIX NEEDED · '+stageLabel(soft)+' A LITTLE SOFT':'NO CLEAR ISSUE';
       tone='great';
-      headline=soft.length?'Winner. '+stageLabel(soft)+' is the soft spot.':'Winner. Nothing obvious is broken.';
-      explain='The outcome is '+fmtMultiple(outcomeMultiple)+' normal. Treat weak-looking supporting metrics as learning context, not an automatic rescue job.';
+      headline=soft.length?'Winner. '+stageLabel(soft)+' is a little soft, but the video still won.':'Winner. Nothing obvious is broken.';
+      explain='The video is at '+fmtMultiple(outcomeMultiple)+' of its usual result. A weaker-looking number is something to learn from, not a reason to change a winning video.';
     }else if(under){
       bottleneck=soft.length?stageLabel(soft):'CAUSE NOT CLEAR';
       tone='warn';
