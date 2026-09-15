@@ -154,8 +154,8 @@
         const first=rows[0],last=rows.at(-1);if(!last)return null;
         const get=(row,k)=>n(row?.metrics?.[k]?.median);
         return {label:b.label,sample:last.memberVideoIds?.length||last.metrics?.engagedViews?.n||last.metrics?.views?.n||0,first,last,
-          values:{views:get(last,'views'),engagedViews:get(last,'engagedViews'),impressions:get(last,'impressions'),ctr:get(last,'ctr'),retention30:get(last,'retention30'),apv:get(last,'apv')},
-          firstValues:{views:get(first,'views'),engagedViews:get(first,'engagedViews'),impressions:get(first,'impressions'),ctr:get(first,'ctr'),retention30:get(first,'retention30'),apv:get(first,'apv')}};
+          values:{views:get(last,'views'),engagedViews:get(last,'engagedViews'),impressions:get(last,'impressions'),ctr:get(last,'ctr'),retention30:get(last,'retention30'),apv:get(last,'apv'),avdSeconds:get(last,'avdSeconds'),browsePct:get(last,'browsePct'),suggestedPct:get(last,'suggestedPct'),searchPct:get(last,'searchPct'),externalPct:get(last,'externalPct')},
+          firstValues:{views:get(first,'views'),engagedViews:get(first,'engagedViews'),impressions:get(first,'impressions'),ctr:get(first,'ctr'),retention30:get(first,'retention30'),apv:get(first,'apv'),avdSeconds:get(first,'avdSeconds'),browsePct:get(first,'browsePct'),suggestedPct:get(first,'suggestedPct'),searchPct:get(first,'searchPct'),externalPct:get(first,'externalPct')}};
       }
       const values=W.values(b.manual),hist=(c.coachOS?.baseline?.history||[]).filter(x=>x.id===b.id),first=W.values(hist[0]||b.manual);
       return {label:b.label,sample:n(b.manual?.n)||0,values,firstValues:first,first:hist[0]||b.manual,last:b.manual};
@@ -179,6 +179,16 @@
       const current=n(x?.current),base=n(x?.baseline);
       return '<div class="ac-metric '+signal.tone+'"><div class="ac-stage">'+esc(stage)+'</div><h4>'+esc(label)+'</h4><div class="ac-values"><b>'+format(current)+'</b><span>usual '+format(base)+'</span></div><strong>'+esc(signal.label)+'</strong><p>'+esc(signal.detail)+'</p><small>'+esc(signal.range)+'</small></div>';
     }
+    function sourceMixHtml(r){
+      const c=r?.comparisons||{},rows=[
+        ['Browse',c.browsePct],['Suggested',c.suggestedPct],['Search',c.searchPct],['External',c.externalPct]
+      ],has=rows.some(([,x])=>n(x?.current)!==null||n(x?.baseline)!==null);
+      if(!has)return '';
+      return '<div class="ac-source-mix"><div class="ac-subsection-label">WHERE THE VIEWS CAME FROM</div><div class="ac-source-grid">'+rows.map(([label,x])=>{
+        const cur=n(x?.current),base=n(x?.baseline),delta=n(x?.deltaPp);
+        return '<div><span>'+label+'</span><b>'+fmtRate(cur)+'</b><small>'+(base===null?'No usual source mix yet':'usual '+fmtRate(base)+(delta===null?'':' · '+(delta>=0?'+':'')+delta.toFixed(1)+' pp'))+'</small></div>';
+      }).join('')+'</div><small class="ac-source-note">Use this as context for CTR. A different traffic-source mix can change click behavior even when the title and thumbnail did not get worse.</small></div>';
+    }
     function metricsHtml(r,d){
       const c=r?.comparisons||{},m=d.metrics;
       const outcomeX=c[m.outcomeKey]||{};
@@ -188,8 +198,37 @@
         metricCard('SHOW','Impressions',c.impressions||{},m.show,fmtCount)+
         metricCard('CLICK','CTR',c.ctr||{},m.click,fmtRate)+
         metricCard('WATCH',m.watchKey==='retention30'?'First 30 sec':'Average % viewed',watchX,m.watch,fmtRate)+
-      '</div>';
+      '</div>'+sourceMixHtml(r);
     }
+    function normalCell(label,value,format=fmtCount,note=''){
+      return '<div class="ac-normal-cell"><span>'+esc(label)+'</span><b>'+format(value)+'</b>'+(note?'<small>'+esc(note)+'</small>':'')+'</div>';
+    }
+    function allNormalsHtml(c,v){
+      const cards=[24,48,168,672].map(h=>{
+        const b=matchingBaseline(c,v,h),rec=baselineRecord(c,b);
+        if(!rec)return '<div class="ac-normal-card muted"><div class="ac-normal-card-head"><span>'+AGES[h].label+'</span><b>No normal yet</b></div><p>Import or build at least five comparable '+AGES[h].label+' results.</p></div>';
+        const viewNote=n(rec.values.engagedViews)!==null?'Both view-count methods available':'Engaged views not available yet';
+        return '<div class="ac-normal-card"><div class="ac-normal-card-head"><span>'+AGES[h].label+'</span><b>'+esc(rec.sample)+' videos</b></div>'+
+          '<div class="ac-normal-cells">'+
+            normalCell('Views · new count',rec.values.views,fmtCount)+
+            normalCell('Engaged views · old count',rec.values.engagedViews,fmtCount,viewNote)+
+            normalCell('Impressions',rec.values.impressions,fmtCount)+
+            normalCell('CTR',rec.values.ctr,fmtRate)+
+            normalCell('First 30 sec',rec.values.retention30,fmtRate)+
+            normalCell('APV',rec.values.apv,fmtRate)+
+            normalCell('AVD',rec.values.avdSeconds,v=>n(v)===null?'—':Math.round(v)+' sec')+
+          '</div>'+
+          '<details><summary>Traffic-source normal</summary><div class="ac-normal-source">'+
+            normalCell('Browse',rec.values.browsePct,fmtRate)+
+            normalCell('Suggested',rec.values.suggestedPct,fmtRate)+
+            normalCell('Search',rec.values.searchPct,fmtRate)+
+            normalCell('External',rec.values.externalPct,fmtRate)+
+          '</div></details>'+
+        '</div>';
+      }).join('');
+      return '<section class="ac-section ac-all-normals"><div class="ac-section-head"><div class="ac-section-index">03</div><div><div class="ac-kicker">YOUR NORMALS AT A GLANCE</div><h2>What does this creator usually get by each checkpoint?</h2><p>These are the current video baselines for the selected video’s format and era. Views is the new view count. Engaged views is the older/original view count when Studio can provide it.</p></div></div><div class="ac-section-body"><div class="ac-normal-grid">'+cards+'</div><p class="ac-normal-note"><b>90-day is different:</b> it is a whole-channel starting → latest trend, not a per-video baseline. Use the 90-day channel view for audience, traffic-source and channel movement.</p></div></section>';
+    }
+
     function baselineHtml(c,v,h,b){
       const rec=baselineRecord(c,b);
       if(!rec)return '<section class="ac-section ac-baseline-section"><div class="ac-section-head"><div class="ac-section-index">03</div><div><div class="ac-kicker">YOUR NORMAL</div><h2>No usual '+AGES[h].label+' result saved yet</h2><p>Set up what this creator usually gets at this point first, so the comparison is fair.</p></div></div><div class="ac-section-body">'+action('baseline','Build '+AGES[h].label+' baseline')+'</div></section>';
@@ -270,6 +309,7 @@
             actions+
           '</div>'+
         '</section>'+
+        allNormalsHtml(c,v)+
         baselineHtml(c,v,p.hours,b)+
         patternHtml(c)+
         recentHtml(c)+
@@ -344,13 +384,14 @@
       .ac-next-inline{border:1px solid var(--line,#d9e0e2);border-left:5px solid #55757a;border-radius:12px;padding:14px 15px;display:grid;grid-template-columns:minmax(180px,280px) minmax(0,1fr);gap:16px;align-items:center;background:rgba(84,110,116,.03)}.ac-next-inline.bad{border-left-color:#b54b4b}.ac-next-inline.warn{border-left-color:#b5822e}.ac-next-inline.good,.ac-next-inline.great{border-left-color:#2f8464}.ac-next-inline span{font-size:9px;font-weight:900;letter-spacing:.09em}.ac-next-inline b{display:block;margin-top:3px}.ac-next-inline p{margin:0;line-height:1.45}
       .ac-video-actions{padding-top:2px}
       .ac-baseline-grid,.ac-channel{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.ac-baseline-grid>div,.ac-channel-card{padding:13px;border:1px solid var(--line,#d9e0e2);border-radius:11px;display:grid;gap:3px}.ac-baseline-grid span,.ac-channel-card span{font-size:11px;font-weight:800}.ac-baseline-grid b,.ac-channel-card b{font-size:20px}.ac-baseline-grid small,.ac-channel-card small{color:var(--muted,#68757d)}
+      .ac-source-mix{margin-top:12px;border:1px solid var(--line,#d9e0e2);border-radius:12px;padding:12px}.ac-source-grid,.ac-normal-source{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.ac-source-grid>div,.ac-normal-cell{border:1px solid var(--line,#d9e0e2);border-radius:9px;padding:9px;display:grid;gap:2px}.ac-source-grid span,.ac-normal-cell span{font-size:9px;font-weight:900;letter-spacing:.05em;text-transform:uppercase}.ac-source-grid b,.ac-normal-cell b{font-size:15px}.ac-source-grid small,.ac-normal-cell small,.ac-source-note,.ac-normal-note{font-size:10px;line-height:1.4;opacity:.68}.ac-source-note{display:block;margin-top:8px}.ac-normal-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.ac-normal-card{border:1px solid var(--line,#d9e0e2);border-left:4px solid #55757a;border-radius:12px;padding:12px;display:grid;gap:10px}.ac-normal-card.muted{opacity:.65}.ac-normal-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.ac-normal-card-head span{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}.ac-normal-card-head b{font-size:12px}.ac-normal-cells{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.ac-normal-card details{margin:0}.ac-normal-card summary{cursor:pointer;font-size:11px;font-weight:800;margin-bottom:8px}
       .ac-decision-callout{border:1px solid var(--line,#d9e0e2);border-radius:12px;padding:14px;background:rgba(84,110,116,.035);display:grid;gap:4px}.ac-decision-callout span{font-size:9px;font-weight:900;letter-spacing:.09em}.ac-decision-callout b{line-height:1.45}
       .ac-badge{display:inline-flex;align-items:center;width:max-content;max-width:100%;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:800;background:rgba(84,110,116,.1)}.ac-badge.bad,.ac-row strong.bad{color:#a23d3d}.ac-badge.warn,.ac-row strong.warn{color:#956713}.ac-badge.great,.ac-row strong.great,.ac-badge.good,.ac-row strong.good{color:#237055}
       .ac-recent{display:grid}.ac-row{display:grid;grid-template-columns:minmax(0,1fr) 78px minmax(150px,auto);gap:12px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line,#d9e0e2)}.ac-row:last-child{border-bottom:0}.ac-row>div{display:grid;gap:3px}.ac-row small{color:var(--muted,#68757d)}.ac-row strong{text-align:right}
       .ac-full{padding:0}.ac-full>summary{cursor:pointer;display:grid;grid-template-columns:44px 1fr;gap:14px;align-items:center;padding:16px 22px;list-style:none}.ac-full>summary::-webkit-details-marker{display:none}.ac-full>summary span:last-child{display:grid;gap:2px}.ac-full>summary small{font-weight:400;color:var(--muted,#68757d)}.ac-full-inner{padding:0 22px 20px;border-top:1px solid var(--line,#d9e0e2);margin-top:0}.ac-full-inner>.cg-native-section:first-child{margin-top:18px}
       .ac-diagnosis-evidence{border-left:5px solid #55757a!important}.ac-diagnosis-evidence.bad{border-left-color:#b54b4b!important}.ac-diagnosis-evidence.warn{border-left-color:#b5822e!important}.ac-mini-evidence p{padding:7px 0;border-bottom:1px solid var(--line,#ddd);margin:0}
-      @media(max-width:900px){.ac-section-head{grid-template-columns:40px minmax(0,1fr)}.ac-section-head>.ac-top-badge,.ac-section-head>.ac-badge,.ac-section-head>.btn{grid-column:2}.ac-age-grid,.ac-metrics,.ac-baseline-grid,.ac-channel{grid-template-columns:repeat(2,minmax(0,1fr))}.ac-next-inline{grid-template-columns:1fr}}
-      @media(max-width:560px){.ac-shell{gap:16px}.ac-section{border-radius:13px}.ac-section-head{grid-template-columns:32px minmax(0,1fr);padding:15px 14px;gap:10px}.ac-section-index{width:28px;height:28px;border-radius:8px}.ac-section-head h2{font-size:18px}.ac-section-body{padding:14px}.ac-age-grid,.ac-metrics,.ac-baseline-grid,.ac-channel{grid-template-columns:1fr}.ac-row{grid-template-columns:1fr auto}.ac-row .ac-badge{grid-column:1/-1}.ac-full>summary{grid-template-columns:32px 1fr;padding:14px}.ac-full-inner{padding:0 14px 14px}}
+      @media(max-width:900px){.ac-section-head{grid-template-columns:40px minmax(0,1fr)}.ac-section-head>.ac-top-badge,.ac-section-head>.ac-badge,.ac-section-head>.btn{grid-column:2}.ac-age-grid,.ac-metrics,.ac-baseline-grid,.ac-channel,.ac-normal-source,.ac-source-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ac-next-inline{grid-template-columns:1fr}}
+      @media(max-width:560px){.ac-normal-grid,.ac-normal-source,.ac-source-grid{grid-template-columns:1fr}.ac-shell{gap:16px}.ac-section{border-radius:13px}.ac-section-head{grid-template-columns:32px minmax(0,1fr);padding:15px 14px;gap:10px}.ac-section-index{width:28px;height:28px;border-radius:8px}.ac-section-head h2{font-size:18px}.ac-section-body{padding:14px}.ac-age-grid,.ac-metrics,.ac-baseline-grid,.ac-channel{grid-template-columns:1fr}.ac-row{grid-template-columns:1fr auto}.ac-row .ac-badge{grid-column:1/-1}.ac-full>summary{grid-template-columns:32px 1fr;padding:14px}.ac-full-inner{padding:0 14px 14px}}
 `
     win.document.head.appendChild(style);
 
