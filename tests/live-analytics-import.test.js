@@ -5,3 +5,21 @@ test('invalid inputs never change saved data or invent missing metrics',()=>{con
 test('correcting report coverage is accepted, not discarded as a duplicate',()=>{const rows=Array.from({length:5},(_,i)=>row(i));const partial=I.parse(text(rows.map(x=>({...x,coverage:'unknown'}))),c,A.emptyStore(),'2026-02-01T00:00:00Z').next;assert.equal(partial.policies.length,0);const corrected=I.parse(text(rows),c,partial,'2026-02-02T00:00:00Z');assert.equal(corrected.added,5);assert.equal(corrected.next.policies.length,1);assert.equal(corrected.next.baselines.find(x=>x.kind==='starting').metrics.views.n,5);});
 
 test('Studio prose around one JSON block imports; ambiguous blocks and prose do not',()=>{const packet=text([row(1)]);assert.equal(I.parse('Here you go:\n```json\n'+packet+'\n```\nCheck the report.',c,A.emptyStore()).added,1);assert.throws(()=>I.parse('Summary only',c,A.emptyStore()),/Nothing was saved/);assert.throws(()=>I.parse('```json\n'+packet+'\n```\n```json\n'+packet+'\n```',c,A.emptyStore()));assert.throws(()=>I.parse('null',c,A.emptyStore()));});
+
+
+test('channel health import preserves New Casual Regular Returning and views per viewer',()=>{
+  const payload=JSON.stringify({
+    schemaVersion:1,creatorId:'c',channelName:'Test',observations:[],
+    channelPeriods:[{
+      start:'2025-10-01',end:'2025-12-29',source:'YouTube Studio Audience + Advanced Mode',metricDefinitionId:'studio-current',
+      metrics:{views:10000,engagedViews:9000,impressions:100000,ctr:5.5,watchTime:800,newViewers:6000,casual:1800,regular:700,returning:2500,avgViewsPerViewer:1.6,qualifiedLeads:null}
+    }]
+  });
+  const out=I.parse(payload,c,A.emptyStore(),'2026-02-01T00:00:00Z');
+  assert.equal(out.periods.length,1);
+  assert.equal(out.periods[0].metrics.newViewers,6000);
+  assert.equal(out.periods[0].metrics.casual,1800);
+  assert.equal(out.periods[0].metrics.regular,700);
+  assert.equal(out.periods[0].metrics.returning,2500);
+  assert.equal(out.periods[0].metrics.avgViewsPerViewer,1.6);
+});
