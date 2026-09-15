@@ -61,7 +61,7 @@
     const overall=ADC?.overallRead?ADC.overallRead(c,W,guide):null;
     const jobs=guide?.jobScorecard?guide.jobScorecard(c):[];
     return {
-      p,reads,fallback,outcome,show,click,watch,watchMetric,avd,audience,overall,jobs,
+      p,reads,fallback,outcome,show,click,r30,apv,watch,watchMetric,avd,audience,overall,jobs,
       sample:Math.max(reads.length,n(fallback.n)||0),
       sources:{
         outcome:n(strictOutcome)!==null?'verified Analytics workspace':'saved channel diagnosis data',
