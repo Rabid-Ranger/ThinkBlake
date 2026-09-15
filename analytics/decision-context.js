@@ -19,8 +19,14 @@
   function snapshots(c){
     return (c?.coachOS?.analytics?.snapshots||[]).filter(x=>x&&x.period==='90d').slice().sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')));
   }
+  function audienceSnapshots(c){
+    const dedicated=(c?.coachOS?.analytics?.audienceSnapshots||[]).filter(Boolean).slice().sort((a,b)=>String(a.asOf||a.date||'').localeCompare(String(b.asOf||b.date||'')));
+    if(dedicated.length)return dedicated.map(x=>({...(x.metrics||{}),...x,sourceWindow:'28-day monthly audience',legacyWindow:false}));
+    const legacy=snapshots(c).filter(x=>['newViewers','casual','regular','returning','avgViewsPerViewer'].some(k=>n(x[k])!==null));
+    return legacy.map(x=>({...x,sourceWindow:'legacy saved audience data · refresh with 28-day snapshot',legacyWindow:true}));
+  }
   function audienceRead(c){
-    const rows=snapshots(c),cur=rows.at(-1)||{},prev=rows.at(-2)||{};
+    const rows=audienceSnapshots(c),cur=rows.at(-1)||{},prev=rows.at(-2)||{};
     const change=k=>ratio(cur[k],prev[k]);
     const changes={
       newViewers:change('newViewers'),
@@ -34,7 +40,7 @@
     const loyalty=repeatValues.length?(repeatValues.length%2?repeatValues[Math.floor(repeatValues.length/2)]:(repeatValues[repeatValues.length/2-1]+repeatValues[repeatValues.length/2])/2):null;
     const acquisition=changes.newViewers,depth=changes.avgViewsPerViewer;
     const band=r=>r===null?'unknown':r<.85?'weak':r>1.05?'strong':'steady';
-    let read='Not enough audience data yet.',focus='Need another comparable 90-day audience report.';
+    let read='Not enough audience data yet.',focus='Need another comparable 28-day audience snapshot.';
     if(rows.length>=2){
       if(band(acquisition)==='weak'&&['steady','strong'].includes(band(loyalty))){
         read='Repeat viewing looks healthier than new-viewer growth.';
@@ -53,7 +59,7 @@
       if(depth!==null&&band(depth)==='strong')focus+=' Average views per viewer is up, which supports stronger channel depth.';
     }
     return {
-      current:cur,previous:prev,hasCurrent:Boolean(rows.length),hasComparison:rows.length>=2,
+      current:cur,previous:prev,hasCurrent:Boolean(rows.length),hasComparison:rows.length>=2,sourceWindow:cur.sourceWindow||'28-day monthly audience',legacyWindow:Boolean(cur.legacyWindow),
       changes,
       acquisition,acquisitionBand:band(acquisition),
       loyaltyKey:repeatEntries.length>1?'repeat audience':repeatEntries[0]?.[0]||null,
@@ -140,10 +146,10 @@
       else if(current!==null)why.push('Current 7-day normal: '+fmt(current)+' '+(seven.outcomeKey==='engagedViews'?'engaged views':'views')+'.');
     }
     if(audience.hasComparison){
-      if(audience.acquisition!==null)why.push('New viewers are '+signed(audience.acquisition-1)+' vs the prior 90-day report.');
+      if(audience.acquisition!==null)why.push('New viewers are '+signed(audience.acquisition-1)+' vs the prior 28-day audience snapshot.');
       if(audience.loyalty!==null)why.push((audience.loyaltyKey==='repeat audience'?'Casual / Regular / Returning':audience.loyaltyKey==='regular'?'Regular':audience.loyaltyKey==='casual'?'Casual':'Returning')+' viewers are '+signed(audience.loyalty-1)+' vs prior.');
-    } else if(audience.hasCurrent) why.push('Audience data is saved, but we need one more 90-day report before we can see the trend.');
-    else why.push('We do not have a 90-day audience mix yet, so New / Casual / Regular / Returning viewer trends are not affecting this read.');
+    } else if(audience.hasCurrent) why.push('Audience data is saved, but we need one more 28-day audience snapshot before we can see the trend.');
+    else why.push('We do not have comparable 28-day audience snapshots yet, so New / Casual / Regular / Returning viewer trends are not affecting this read.');
     const stages=channelStages(c,audience);
     return {pattern,audience,trajectory,diagnosis,...focus,action,why,stages};
   }
