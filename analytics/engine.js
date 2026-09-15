@@ -14,6 +14,10 @@
     retention30: { label: 'First 30-second retention', unit: 'ratio', max: 1, meaning: 'The reported Studio intro percentage. It identifies an opening question, not the cause of a drop.' },
     apv: { label: 'Average percentage viewed', unit: 'ratio', meaning: 'Average portion watched. Compare similar duration and format; replay-related values may exceed 100%.' },
     avdSeconds: { label: 'Average view duration', unit: 'seconds', meaning: 'Average time watched using the source-defined playback population.' },
+    browsePct: { label: 'Browse %', unit: 'ratio', max: 1, meaning: 'Share of views attributed to Browse features for the exact saved video checkpoint.' },
+    suggestedPct: { label: 'Suggested %', unit: 'ratio', max: 1, meaning: 'Share of views attributed to Suggested videos for the exact saved video checkpoint.' },
+    searchPct: { label: 'Search %', unit: 'ratio', max: 1, meaning: 'Share of views attributed to YouTube Search for the exact saved video checkpoint.' },
+    externalPct: { label: 'External %', unit: 'ratio', max: 1, meaning: 'Share of views attributed to External sources for the exact saved video checkpoint.' },
     watchSeconds: { label: 'Watch time', unit: 'seconds', meaning: 'Total time watched in the stated period.' },
     viewsFromImpressions: { label: 'Views from impressions', unit: 'count', meaning: 'Views within the registered-impression funnel.' },
     watchSecondsFromImpressions: { label: 'Watch time from impressions', unit: 'seconds', meaning: 'Watch time within the registered-impression funnel.' },
@@ -304,7 +308,7 @@
       p25: row ? row.p25 : null, p75: row ? row.p75 : null, sampleLevel: sampleLevel(row ? row.n : 0), status: 'unavailable' };
     if (!sourceCompatible) { result.status = 'definition_mismatch'; return result; }
     if (!valid || !Number.isFinite(normal)) return result;
-    if (normal > 0) { result.relativeChangePct = 100 * (current - normal) / normal; if (rule.unit === 'count') result.multiple = current / normal; }
+    if (normal > 0) { result.relativeChangePct = 100 * (current - normal) / normal; result.multiple = current / normal; }
     if (rule.unit === 'ratio') {
       result.deltaPp = 100 * (current - normal);
       result.status = row.n < 10 ? 'limited_sample' : current < row.p25 ? 'below_typical_range' : current > row.p75 ? 'above_typical_range' : 'inside_typical_range';
@@ -319,21 +323,24 @@
     if (target.coverage !== 'exact') cautions.push('The target window is not exact.');
     if (target.paid === 'unknown') cautions.push('Paid/organic traffic context is unknown.');
     const impressions = target.metrics.impressions;
-    const viewing = target.metrics.engagedViews;
+    const engaged = target.metrics.engagedViews, views = target.metrics.views;
+    const viewing = Number.isFinite(engaged) ? engaged : views;
     // Conservative product cautions, not eligibility thresholds or statistical significance.
     if (!Number.isFinite(impressions) || impressions < 100) cautions.push('Thumbnail exposure is missing or very limited; do not diagnose packaging from the rate alone.');
-    if (!Number.isFinite(viewing) || viewing < 100) cautions.push('There is not enough watch data yet to judge retention.');
+    if (!Number.isFinite(viewing) || viewing < 100) cautions.push('There is not enough playback volume yet to judge retention.');
     const primary = comparisons[policy.primaryMetric];
     if (!primary || primary.n < 5) cautions.push('The comparison has fewer than five primary-metric values.');
     return { cautions, targetImpressions: Number.isFinite(impressions) ? impressions : null,
-      targetEngagedViews: Number.isFinite(viewing) ? viewing : null,
+      targetEngagedViews: Number.isFinite(engaged) ? engaged : null,
+      targetViewingCount: Number.isFinite(viewing) ? viewing : null,
+      viewingCountSource: Number.isFinite(engaged) ? 'engagedViews' : Number.isFinite(views) ? 'views' : null,
       sampleRules: 'Accelerator house guidance, not YouTube thresholds or statistical proof.', causalConfidence: 'not_established' };
   }
   function findingsFor(comparisons, evidence) {
     const findings = [];
     const impressions = comparisons.impressions, ctr = comparisons.ctr, opening = comparisons.retention30;
     const limitedExposure = evidence.targetImpressions === null || evidence.targetImpressions < 100;
-    const limitedViewing = evidence.targetEngagedViews === null || evidence.targetEngagedViews < 100;
+    const limitedViewing = evidence.targetViewingCount === null || evidence.targetViewingCount < 100;
     const lower = item => item && item.status === 'below_typical_range';
     const notLower = item => item && ['inside_typical_range', 'above_typical_range'].includes(item.status);
     if (impressions && impressions.multiple >= 1.7 && ctr && ctr.deltaPp < 0) {
@@ -342,7 +349,7 @@
       findings.push({ stage: 'click', status: 'candidate', message: 'Packaging is a candidate for review. Compare the promise and audience context before choosing a test.' });
     }
     if (!limitedViewing && lower(opening)) findings.push({ stage: 'opening', status: 'candidate', message: 'The opening is holding fewer viewers than usual. Check whether the first 30 seconds deliver what the title and thumbnail promised.' });
-    if (!limitedViewing && notLower(opening) && (lower(comparisons.apv) || lower(comparisons.avdSeconds))) findings.push({ stage: 'experience', status: 'candidate', message: 'Inspect the actual retention curve and structure. These averages do not identify a timestamp or cause.' });
+    if (!limitedViewing && (!opening || opening.status === 'unavailable' || notLower(opening)) && (lower(comparisons.apv) || lower(comparisons.avdSeconds))) findings.push({ stage: 'experience', status: 'candidate', message: 'Inspect the actual retention curve and structure. These averages do not identify a timestamp or cause.' });
     if (impressions && impressions.multiple !== null && impressions.multiple < .7 && impressions.n >= 5) findings.push({ stage: 'opportunity', status: 'candidate', message: 'YouTube is showing this video less than usual. Check the topic, audience fit, and where the views came from before blaming the title or thumbnail.' });
     if (!findings.length) findings.push({ stage: null, status: 'observe', message: 'Keep the video’s job in mind. These numbers do not point to one clear main issue yet.' });
     return findings;
