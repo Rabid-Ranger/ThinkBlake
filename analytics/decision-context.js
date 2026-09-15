@@ -8,7 +8,7 @@
   const AGE_ORDER=[24,48,168,672];
   const WINDOW_KEY={24:'_24h',48:'_48h',168:'_7d',672:'_28d'};
   const AGE_NAME={24:'24h',48:'48h',168:'7d',672:'28d'};
-  const STAGE_TO_FOCUS={reach:'Discovery / idea opportunity',packaging:'Packaging / click',retention:'Promise / opening / viewing experience'};
+  const STAGE_TO_FOCUS={reach:'Topic / Reach',packaging:'Title / thumbnail',retention:'Opening / watch experience'};
   const n=v=>v===''||v==null||!Number.isFinite(Number(v))?null:Number(v);
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const ratio=(a,b)=>n(a)!==null&&n(b)!==null&&n(b)!==0?n(a)/n(b):null;
@@ -79,19 +79,19 @@
     if(['steady','strong'].includes(a.acquisitionBand)&&a.loyaltyBand==='weak')return {focus:'Loyalty / pathway',confidence:'Medium',source:'audience trend'};
     const seven=t.find(x=>x.hours===168);
     if(seven?.growth!==null&&seven.growth>=1.1&&!p.max)return {focus:'Growth pattern worth protecting',confidence:'Medium',source:'rising 7-day normal'};
-    if(p.max)return {focus:patternFocus(p)||'Soft video pattern to investigate',confidence:'Low',source:'soft 7-day pattern'};
-    return {focus:'No clear channel bottleneck yet',confidence:'Low',source:'insufficient repeated evidence'};
+    if(p.max)return {focus:patternFocus(p)||'A small pattern worth checking',confidence:'Low',source:'small 7-day pattern'};
+    return {focus:'No clear channel problem yet',confidence:'Low',source:'not enough repeated data yet'};
   }
   function focusAction(focus){
     const x=String(focus||'').toLowerCase();
-    if(x.includes('packag'))return {job:'Keep intended job',metric:'CTR + engaged views',video:'Pre-build the title + thumbnail promise, then change one meaningful packaging variable while protecting the idea and opening.'};
-    if(x.includes('opening')||x.includes('viewing')||x.includes('retention'))return {job:'Trust or intended job',metric:'0:30 + APV/AVD',video:'Make promise delivery and the first 30–60 seconds the controlled improvement lane. Do not fix retention by making the idea smaller.'};
-    if(x.includes('discovery')||x.includes('acquisition')||x.includes('gateway'))return {job:'Reach',metric:'Engaged views + impressions + new viewers',video:'Build a broader qualified gateway around a proven audience problem. Protect click and watch quality while increasing opportunity.'};
-    if(x.includes('loyalty')||x.includes('pathway'))return {job:'Trust',metric:'Returning / casual / regular + continuation',video:'Make the next video feel like the obvious second watch: follow-up, series, bridge or deeper answer for the same viewer.'};
+    if(x.includes('packag'))return {job:'Keep the video’s intended job',metric:'CTR + engaged views',video:'Plan the title + thumbnail promise before production, then change one meaningful packaging variable without changing the whole idea.'};
+    if(x.includes('opening')||x.includes('viewing')||x.includes('retention'))return {job:'Trust or the video’s intended job',metric:'0:30 + APV/AVD',video:'Focus the next test on the first 30–60 seconds and delivering the promise faster. Do not make the idea smaller just to improve retention.'};
+    if(x.includes('discovery')||x.includes('acquisition')||x.includes('gateway'))return {job:'Reach',metric:'Engaged views + impressions + new viewers',video:'Make a broader Reach video around a proven audience problem. Try to get in front of more of the right people without hurting CTR or watch quality.'};
+    if(x.includes('loyalty')||x.includes('pathway'))return {job:'Trust',metric:'Returning / casual / regular viewers',video:'Make the next video feel like the obvious thing to watch next: a follow-up, series, or deeper answer for the same viewer.'};
     if(x.includes('business')||x.includes('convert'))return {job:'Convert',metric:'Qualified leads / bookings',video:'Make the audience-to-offer path explicit without turning the video into an ad. Judge the video by its job, not only views.'};
-    if(x.includes('growth')||x.includes('protect'))return {job:'Use the job that produced the win',metric:'Matched 7-day outcome + guardrails',video:'Protect the repeatable mechanism in the winners and make one adjacent follow-up instead of changing everything.'};
+    if(x.includes('growth')||x.includes('protect'))return {job:'Use the job that produced the win',metric:'7-day result + the numbers that need to stay healthy',video:'Protect what is clearly working and make one nearby follow-up instead of changing everything.'};
     if(x.includes('capacity')||x.includes('cadence'))return {job:'Any',metric:'Completed strategic reps',video:'Reduce complexity so the team can actually ship the learning rep without lowering topic, package or watch quality.'};
-    return {job:'Decide from the video purpose',metric:'Match the primary metric to the job',video:'Use the existing diagnosis flow. Do not invent a data-driven constraint when the evidence is not there.'};
+    return {job:'Decide from the video purpose',metric:'Use the number that matches the video’s job',video:'Use the diagnosis questions. Do not invent a problem just because the dashboard has numbers.'};
   }
   function overallRead(c,W,guide){
     const pattern=W?.clarityPattern?W.clarityPattern(c):null;
@@ -112,8 +112,8 @@
     if(audience.hasComparison){
       if(audience.acquisition!==null)why.push('New viewers are '+signed(audience.acquisition-1)+' vs the prior 90-day report.');
       if(audience.loyalty!==null)why.push((audience.loyaltyKey==='regular'?'Regular':audience.loyaltyKey==='casual'?'Casual':'Returning')+' viewers are '+signed(audience.loyalty-1)+' vs prior.');
-    } else if(audience.hasCurrent) why.push('Audience mix is saved, but one more comparable 90-day report is needed for trend.');
-    else why.push('90-day audience mix is not saved yet, so acquisition/loyalty is not influencing the read.');
+    } else if(audience.hasCurrent) why.push('Audience data is saved, but we need one more 90-day report before we can see the trend.');
+    else why.push('We do not have a 90-day audience mix yet, so New / Returning viewer trends are not affecting this read.');
     const stages=channelStages(c,audience);
     return {pattern,audience,trajectory,diagnosis,...focus,action,why,stages};
   }
@@ -139,13 +139,13 @@
   function channelReadHtml(c,W,guide){
     const r=overallRead(c,W,guide),tone=toneFor(r),a=r.audience;
     return '<section class="ac-section adc-overall '+tone+'" id="adc-overall-read">'+
-      '<div class="ac-section-head adc-overall-head"><div class="ac-section-index">01</div><div><div class="adc-kicker">OVERALL CHANNEL READ</div><h2>'+esc(r.focus)+'</h2><p>'+esc(r.why.slice(0,3).join(' '))+'</p></div><div class="adc-focus"><span>WHAT THIS MEANS NOW</span><b>'+esc(r.action.video)+'</b><small>'+esc(r.confidence)+' confidence · from '+esc(r.source)+'</small></div></div>'+
+      '<div class="ac-section-head adc-overall-head"><div class="ac-section-index">01</div><div><div class="adc-kicker">OVERALL CHANNEL READ</div><h2>'+esc(r.focus)+'</h2><p>'+esc(r.why.slice(0,3).join(' '))+'</p></div><div class="adc-focus"><span>WHAT I’D FOCUS ON NOW</span><b>'+esc(r.action.video)+'</b><small>'+esc(r.confidence)+' confidence · from '+esc(r.source)+'</small></div></div>'+
       '<div class="ac-section-body">'+
         '<div class="adc-subhead"><b>Baseline movement</b><span>How the creator’s normal is evolving at each checkpoint.</span></div>'+
         '<div class="adc-baselines">'+baselinePills(r)+'</div>'+
-        '<div class="adc-subhead"><b>Channel health loop</b><span>ATTENTION → RETURN → LIBRARY DEPTH → RESULT. Weak tells you where to investigate, not why.</span></div>'+
+        '<div class="adc-subhead"><b>Channel health</b><span>Are we getting attention, bringing people back, getting them to watch more, and creating a result? A weak area tells you where to look next, not why it happened.</span></div>'+
         '<div class="adc-stages">'+r.stages.map(s=>'<div class="adc-stage '+s.band+'"><span>'+esc(s.label)+'</span><b>'+esc(s.value)+'</b><small>'+esc(s.sub)+'</small></div>').join('')+'</div>'+
-        '<div class="adc-subhead"><b>Audience health</b><span>Use this to understand Reach vs Trust pressure. These are trend signals, not grades.</span></div>'+
+        '<div class="adc-subhead"><b>Audience health</b><span>Use this to see whether the bigger issue is getting new people in or getting viewers to come back. These are trends, not grades.</span></div>'+
         '<div class="adc-audience">'+
           audienceCard('New viewers',a.newViewers,a.acquisition,'Are we attracting new people?')+
           audienceCard('Casual viewers',a.casual,a.hasComparison?ratio(a.current.casual,a.previous.casual):null,'Are newer viewers starting to come back?')+
@@ -164,41 +164,41 @@
     if(p?.max)support.push((p.source==='hard'?'Hard':'Soft')+' video pattern: '+(p.label||patternFocus(p))+' · '+p.max+' of '+p.n+' recent 7-day videos.');
     if(a.acquisition!==null)support.push('New viewers '+signed(a.acquisition-1)+' vs prior 90-day report.');
     if(a.loyalty!==null)support.push((a.loyaltyKey||'repeat audience')+' '+signed(a.loyalty-1)+' vs prior.');
-    const decision='If the rest of the diagnosis agrees, choose '+r.focus+' as the working constraint. If creator goal, audience fit, offer, capacity or business context points somewhere stronger, keep this as supporting evidence and investigate the conflict.';
-    return '<section class="studio-evidence adc-diagnosis '+tone+'" id="studio-diagnosis-evidence"><div class="kicker">Analytics decision support</div><h3>'+esc(verdict)+'</h3><p><b>Why:</b> '+esc((support.length?support:r.why).slice(0,3).join(' '))+'</p><div class="adc-decision-grid"><div><span>Analytics suggestion</span><b>'+esc(r.focus)+'</b><small>'+esc(r.confidence)+' confidence</small></div><div><span>If you accept it</span><b>'+esc(r.action.video)+'</b><small>Primary measurement: '+esc(r.action.metric)+'</small></div></div><p><b>How to use this in the diagnosis:</b> '+esc(decision)+'</p><p><b>Do not force it:</b> A repeated metric pattern can tell you where to investigate. It still does not prove the cause.</p><button class="btn" data-studio="analytics">Open Analytics</button></section>';
+    const decision='If the rest of the diagnosis agrees, use '+r.focus+' as the main focus. If the creator goal, audience fit, offer, capacity, or business situation points somewhere else, check that before locking the plan.';
+    return '<section class="studio-evidence adc-diagnosis '+tone+'" id="studio-diagnosis-evidence"><div class="kicker">WHAT THE DATA IS SAYING</div><h3>'+esc(verdict)+'</h3><p><b>Why:</b> '+esc((support.length?support:r.why).slice(0,3).join(' '))+'</p><div class="adc-decision-grid"><div><span>Analytics suggestion</span><b>'+esc(r.focus)+'</b><small>'+esc(r.confidence)+' confidence</small></div><div><span>If you accept it</span><b>'+esc(r.action.video)+'</b><small>Primary measurement: '+esc(r.action.metric)+'</small></div></div><p><b>How to use this in the diagnosis:</b> '+esc(decision)+'</p><p><b>Do not force it:</b> Repeated numbers can show you where to look. They still do not tell you exactly why it happened.</p><button class="btn" data-studio="analytics">Open Analytics</button></section>';
   }
   function videoFocusHtml(c,W,guide){
     const r=overallRead(c,W,guide),tone=toneFor(r);
-    return '<section class="adc-video-focus '+tone+'" id="adc-video-focus"><div><div class="adc-kicker">DATA FOCUS FOR THIS VIDEO</div><h3>'+esc(r.focus)+'</h3><p>'+esc(r.action.video)+'</p></div><div class="adc-video-meta"><span><b>Why:</b> '+esc(r.why.slice(0,2).join(' '))+'</span><span><b>Suggested job:</b> '+esc(r.action.job)+'</span><span><b>Primary signal:</b> '+esc(r.action.metric)+'</span><small>You can intentionally make a video that does not address this focus. If you do, know why.</small></div></section>';
+    return '<section class="adc-video-focus '+tone+'" id="adc-video-focus"><div><div class="adc-kicker">DATA FOCUS FOR THIS VIDEO</div><h3>'+esc(r.focus)+'</h3><p>'+esc(r.action.video)+'</p></div><div class="adc-video-meta"><span><b>Why:</b> '+esc(r.why.slice(0,2).join(' '))+'</span><span><b>Suggested job:</b> '+esc(r.action.job)+'</span><span><b>Main number to watch:</b> '+esc(r.action.metric)+'</span><small>You can intentionally make a video that does not address this focus. If you do, know why.</small></div></section>';
   }
 
   function planSuggestion(r){
     const focus=String(r?.focus||'No clear channel bottleneck yet'),x=focus.toLowerCase();
     let primaryMetricKey='engagedViews',job=r?.action?.job||'Decide from the plan',mix='Keep the existing Reach / Trust / Convert mix unless the diagnosis gives you a reason to change it.';
-    let hypothesis='If we improve the current channel focus, the matched result should improve without breaking click or watch quality.';
-    let success='Across multiple comparable videos, the primary signal moves toward or above creator normal while the important guardrails stay healthy.';
-    let guard='Do not improve one number by attracting the wrong audience or weakening the next stage of the funnel.';
+    let hypothesis='If we improve the current focus, the result should improve without hurting CTR or watch quality.';
+    let success='Across several similar videos, the main number improves toward what this creator normally gets while the other important numbers stay healthy.';
+    let guard='Do not improve one number by attracting the wrong audience or hurting another important part of the video.';
     if(x.includes('packag')){
       primaryMetricKey='ctr';
-      hypothesis='If packaging is the real constraint, stronger title + thumbnail promises should move CTR toward creator normal while retention stays healthy.';
-      success='CTR improves toward creator normal across multiple comparable videos without a meaningful drop in 0:30 / APV.';
+      hypothesis='If the title/thumbnail is the real problem, stronger packaging should move CTR closer to what this creator normally gets while retention stays healthy.';
+      success='CTR improves across several similar videos without a meaningful drop in 0:30 / APV.';
       guard='Do not chase CTR with a promise the video cannot deliver.';
     }else if(x.includes('opening')||x.includes('viewing')||x.includes('retention')){
       primaryMetricKey='ret30';
-      hypothesis='If promise delivery / opening is the constraint, stronger first 30–60 seconds should improve 0:30 first, with APV / AVD supporting the read.';
-      success='0:30 improves toward creator normal across multiple comparable videos and APV / AVD do not regress.';
+      hypothesis='If the opening is the real problem, stronger first 30–60 seconds should improve 0:30 first, with APV / AVD helping confirm it.';
+      success='0:30 improves across several similar videos and APV / AVD do not get worse.';
       guard='Do not make the idea or package smaller just to manufacture retention.';
     }else if(x.includes('acquisition')||x.includes('gateway')||x.includes('discovery')){
       primaryMetricKey='newViewers';job='Reach';
       mix='Bias the next stretch toward qualified Reach / gateway videos, while keeping enough Trust and Convert follow-through.';
-      hypothesis='If acquisition is the constraint, more qualified gateway ideas should increase New viewers and same-age engaged views without weakening click/watch quality.';
-      success='New viewers improve versus the prior comparable channel period and Reach videos produce healthier same-age outcomes.';
+      hypothesis='If Reach is the problem, stronger gateway ideas should bring in more New viewers and better engaged-view results without hurting CTR or watch quality.';
+      success='New viewers improve versus the previous 90-day period and Reach videos perform better at the same point after publishing.';
       guard='Do not grow with viewers who do not fit the channel promise.';
     }else if(x.includes('loyalty')||x.includes('pathway')){
       primaryMetricKey='returning';job='Trust';
       mix='Bias the next stretch toward Trust / pathway videos, follow-ups, series and obvious second-watch opportunities.';
-      hypothesis='If loyalty is the constraint, clearer continuation should improve Returning / Regular viewer trend and average views per viewer.';
-      success='Returning or Regular viewers and average views/viewer improve versus the prior comparable period.';
+      hypothesis='If Trust is the problem, clearer follow-ups and next-video paths should improve Returning / Regular viewers and average views per viewer.';
+      success='Returning or Regular viewers and average views per viewer improve versus the previous 90-day period.';
       guard='Do not sacrifice new-viewer clarity just to serve the core.';
     }else if(x.includes('business')||x.includes('convert')){
       primaryMetricKey='qualifiedLeads';job='Convert';
@@ -221,12 +221,12 @@
       '<div><div class="adc-kicker">DATA → 90-DAY PLAN</div><h3>'+esc(r.focus)+'</h3><p>'+esc(r.why.slice(0,3).join(' '))+'</p></div>'+
       '<div class="adc-plan-grid">'+
         '<div><span>CONTENT JOB</span><b>'+esc(s.job)+'</b></div>'+
-        '<div><span>PRIMARY SIGNAL</span><b>'+esc(r.action.metric)+'</b></div>'+
-        '<div><span>WHAT NEXT VIDEOS SHOULD PROVE</span><b>'+esc(s.next)+'</b></div>'+
+        '<div><span>MAIN NUMBER TO WATCH</span><b>'+esc(r.action.metric)+'</b></div>'+
+        '<div><span>WHAT THE NEXT VIDEOS NEED TO SHOW</span><b>'+esc(s.next)+'</b></div>'+
       '</div>'+
-      '<p><b>Programming implication:</b> '+esc(s.mix)+'</p>'+
+      '<p><b>What this means for what you make next:</b> '+esc(s.mix)+'</p>'+
       '<button class="btn" data-adc-plan-fill>Use these suggestions in empty plan fields</button>'+
-      '<small>This only fills empty fields. It does not overwrite a plan you already wrote.</small>'+
+      '<small>This only fills blank fields. It will not overwrite work you already did.</small>'+
     '</section>';
   }
 
