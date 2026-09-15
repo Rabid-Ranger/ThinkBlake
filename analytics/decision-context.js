@@ -103,7 +103,7 @@
   }
   function deriveFocus(input){
     const d=input.diagnosis||{},p=input.pattern||{},a=input.audience||{},t=input.trajectory||[];
-    if(d.leading&&d.leading!=='Not enough data yet')return {focus:d.leading,confidence:d.confidence||'Low',source:'channel diagnosis'};
+    if(d.leading&&!['Not enough data yet','Not enough evidence yet'].includes(d.leading))return {focus:d.leading,confidence:d.confidence||'Low',source:'channel diagnosis'};
     if(p.max&&p.source==='hard')return {focus:patternFocus(p)||'Video funnel pattern',confidence:p.max>=3?'Medium':'Low',source:'repeated 7-day videos'};
     if(a.acquisitionBand==='weak'&&['steady','strong'].includes(a.loyaltyBand))return {focus:'Acquisition / gateway',confidence:'Medium',source:'audience trend'};
     if(['steady','strong'].includes(a.acquisitionBand)&&a.loyaltyBand==='weak')return {focus:'Loyalty / pathway',confidence:'Medium',source:'audience trend'};
