@@ -273,7 +273,6 @@
         baselineHtml(c,v,p.hours,b)+
         patternHtml(c)+
         recentHtml(c)+
-        '<details class="ac-section ac-full"><summary><span class="ac-section-index">06</span><span><b>Full analytics details</b><small>Sources, every metric, baseline history and advanced controls</small></span></summary><div class="ac-full-inner">'+full+'</div></details>'+
       '</div>';
     }
     function channelSummary(c,full){
@@ -289,7 +288,6 @@
             return '<div class="ac-channel-card"><span>'+l+'</span><b>'+val+'</b><small>'+change+' vs starting report</small></div>';
           }).join('')+'</div><div class="actions"><button class="btn" data-cg="analytics-snapshot-new">Add 90-day report</button><button class="btn" data-ac-mode="video">Back to video diagnosis</button></div></div>'+
         '</section>'+
-        '<details class="ac-section ac-full"><summary><span class="ac-section-index">03</span><span><b>Full channel details</b><small>Report dates, sources and history</small></span></summary><div class="ac-full-inner">'+full+'</div></details>'+
       '</div>';
     }
 
