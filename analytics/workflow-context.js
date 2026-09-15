@@ -254,7 +254,7 @@
     if(!drawer||!drawer.classList.contains('show')||!/Channel Diagnosis/i.test(drawer.textContent||''))return;
     const q=questionAnswers(c,W,ADC),map=[
       ['1 · OUTCOME',q.outcome,'Uses 7-day views / engaged views. Source: '+q.raw.sources.outcome+'.'],
-      ['2 · SHOW',q.show,'Uses same-age registered impressions. Source: '+q.raw.sources.show+'.'],
+      ['2 · SHOW',q.show,'Uses impressions from the same point after publishing. Source: '+q.raw.sources.show+'.'],
       ['3 · CLICK',q.click,'Uses CTR vs what this creator usually gets, with impression expansion context. Source: '+q.raw.sources.click+'.'],
       ['4 · WATCH',q.watch,'Uses 0:30 first, APV fallback, AVD as support when available. Source: '+q.raw.sources.watch+'.'],
       ['5 · RETURN + RESULT',q.returnResult,'Uses New / Casual / Regular / Returning trend plus Reach / Trust / Convert job results when available.']
