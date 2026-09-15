@@ -36,7 +36,7 @@
   html=html.split(homeResourceButton).join(homeResourceLink);
   html=html.replace('</head>','<style id="accelerator-resource-hotfix">.v152-badge{display:none!important}.v152-open-link,.v152-resource-row a.tinybtn{text-decoration:none}</style></head>');
 
-  html=html.replace('</body>','<script src="/analytics/measurement.js"><\/script><script src="/analytics/engine.js"><\/script><script src="/analytics/import.js"><\/script><script src="/analytics/page.js"><\/script><script src="/analytics/workspace.js"><\/script><script src="/analytics/live.js"><\/script><script src="/ai/review-reminders.js"><\/script></body>');
+  html=html.replace('</body>','<script src="/analytics/measurement.js"><\/script><script src="/analytics/engine.js"><\/script><script src="/analytics/import.js"><\/script><script src="/analytics/page.js"><\/script><script src="/analytics/workspace.js"><\/script><script src="/analytics/live.js"><\/script><script src="/ai/review-reminders.js"><\/script><script src="/ai/review-ui.js"><\/script></body>');
   document.open();
   document.write(html);
   document.close();
