@@ -70,7 +70,7 @@
     }
     const first = matches[0];
     const markup =
-      '<div><strong>' + matches.length + ' connected decision' + (matches.length === 1 ? '' : 's') + ' to review</strong>' +
+      '<div><strong>' + matches.length + ' thing' + (matches.length === 1 ? '' : 's') + ' to review after this change</strong>' +
       '<span>' + escapeHtml(first.copy || first.label) + '</span></div>' +
       '<div class="accelerator-review-reminder-actions">' +
       '<button type="button" data-review-dismiss="' + escapeHtml(first.id) + '">Dismiss</button></div>';
