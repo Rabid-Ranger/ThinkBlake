@@ -144,7 +144,11 @@
 
   function parseJsonBlock(text){
     if(typeof text!=='string')return null;
-    let raw=text.trim(),m=raw.match(/\`\`\`(?:json)?\s*([\s\S]*?)\`\`\`/i);if(m)raw=m[1].trim();
+    let raw=text.trim();
+    if(raw.startsWith('\\`\\`\\`')){
+      const firstBreak=raw.indexOf('\\n'),lastFence=raw.lastIndexOf('\\`\\`\\`');
+      if(firstBreak>=0&&lastFence>firstBreak)raw=raw.slice(firstBreak+1,lastFence).trim();
+    }
     try{return JSON.parse(raw)}catch(_){return null}
   }
   function channelPrompt(c){
