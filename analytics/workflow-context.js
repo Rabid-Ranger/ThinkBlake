@@ -106,14 +106,21 @@
       next:'Add or verify the 7-day '+missingMetric+' baseline and recent comparable video values.'
     };
     const weak=(ratioV!==null&&ratioV<thresholdRatio)||(ratioV===null&&delta!==null&&delta<(label==='CTR'?-0.5:-3));
+    const soft=!weak&&((ratioV!==null&&ratioV<.85)||(delta!==null&&delta<(label==='CTR'?-0.5:-3)));
     const strong=(ratioV!==null&&ratioV>=1.15)||(ratioV===null&&delta!==null&&delta>(label==='CTR'?0.5:3));
     const line=(current!==null&&baseline!==null?label+' '+currentTxt+' vs '+baselineTxt+' normal':label+' comparison available')+
       (ratioV!==null?' · '+mult(ratioV)+' normal':'')+(delta!==null?' · '+pp(delta):'');
     if(weak)return {
-      tone:'bad',label:'Yes. This stage is weak vs creator normal.',
+      tone:'bad',label:'Yes. This stage is clearly weak vs creator normal.',
       line,
-      meaning:label==='CTR'?'The people who were shown the videos are choosing them below the creator’s normal.':'The viewing experience is delivering below the creator’s normal after the click.',
+      meaning:label==='CTR'?'The people who were shown the videos are choosing them materially below the creator’s normal.':'The viewing experience is delivering materially below the creator’s normal after the click.',
       next:label==='CTR'?'Check impression expansion and traffic source. If those do not explain it, packaging is a real working bottleneck.':'Open the retention curve and inspect promise delivery, the first 30–60 seconds and the first meaningful divergence.'
+    };
+    if(soft)return {
+      tone:'warn',label:'A little soft, but not enough to stop the diagnosis here.',
+      line,
+      meaning:label==='CTR'?'CLICK is below normal enough to watch, but not strong enough by itself to call packaging the channel bottleneck.':'WATCH is below normal enough to investigate, but not strong enough by itself to call retention the channel bottleneck.',
+      next:label==='CTR'?'Keep it as a secondary clue, check source/expansion, then move to WATCH.':'Keep it as a secondary clue and continue to RETURN + RESULT.'
     };
     if(strong)return {
       tone:'good',label:'No. This stage is stronger than normal.',
