@@ -152,7 +152,7 @@
           audienceCard('Regular viewers',a.regular,a.hasComparison?ratio(a.current.regular,a.previous.regular):null,'Is the loyal core strengthening?')+
           audienceCard('Returning viewers',a.returning,a.hasComparison?ratio(a.current.returning,a.previous.returning):null,'Are people choosing the channel again?')+
         '</div>'+
-        '<div class="adc-overall-foot"><span><b>Suggested video job if you are addressing this focus:</b> '+esc(r.action.job)+'</span><span><b>Measure:</b> '+esc(r.action.metric)+'</span></div>'+
+        '<div class="adc-overall-foot"><span><b>Suggested video job if you are addressing this focus:</b> '+esc(r.action.job)+'</span><span><b>Measure:</b> '+esc(r.action.metric)+'</span><button class="btn" data-ac-mode="channel">View 90-day channel progress</button></div>'+
       '</div>'+
     '</section>';
   }
