@@ -329,8 +329,8 @@
 
   function planJobFocus(leading,overall){
     const x=String(leading||'').toLowerCase();
-    if(x.includes('discovery')||x.includes('acquisition')||x.includes('gateway'))return 'Reach';
-    if(x.includes('loyalty')||x.includes('pathway'))return 'Trust';
+    if(x.includes('reach')||x.includes('discovery')||x.includes('acquisition')||x.includes('gateway'))return 'Reach';
+    if(x.includes('trust')||x.includes('loyalty')||x.includes('pathway'))return 'Trust';
     if(x.includes('business')||x.includes('convert'))return 'Convert';
     if(x.includes('packag')||x.includes('opening')||x.includes('viewing')||x.includes('retention'))return overall?.action?.job||'Keep intended Reach / Trust / Convert job, fix this execution layer across it';
     if(x.includes('growth'))return 'Protect the job mix producing the wins';
