@@ -51,12 +51,12 @@
     if(winner){
       if(stages.includes('packaging')) return 'Do not panic-change a winner. Check traffic source and audience breadth, then carry the packaging lesson into the follow-up.';
       if(stages.includes('retention')) return 'Do not rescue the winner. Study the opening/retention soft spot and use the lesson on the next video.';
-      if(stages.includes('reach')) return 'The result won despite uneven opportunity. Study where the views actually came from before copying the surface topic.';
+      if(stages.includes('reach')) return 'The video still won even though YouTube did not show it as evenly as usual. Check where the views came from before copying the surface topic.';
       return 'Protect what worked. Look for the repeatable topic, package and viewing pattern before scaling it.';
     }
     if(key==='packaging|retention') return 'Check the promise first. If fewer people click and the people who click also watch less, a thumbnail swap alone may not fix it.';
-    if(key==='packaging|reach') return 'Check topic demand and traffic source first, then inspect whether the title/thumbnail are earning the opportunity they do get.';
-    if(key==='reach|retention') return 'Check audience fit and traffic source, then inspect whether the opening is delivering for the people who do arrive.';
+    if(key==='packaging|reach') return 'Check the topic and where the views came from first. Then see whether the title and thumbnail are getting enough clicks from the people who do see it.';
+    if(key==='reach|retention') return 'Check whether the right people are seeing the video and where the views came from. Then see whether the opening is working for the people who click.';
     if(stages.includes('reach')) return 'Check topic demand, audience fit and traffic source before touching the package.';
     if(stages.includes('packaging')) return 'Inspect the title/thumbnail promise and source-aware CTR. Test one meaningfully different package, not random tweaks.';
     if(stages.includes('retention')) return 'Inspect the first 30 seconds and the first real retention divergence. Check promise delivery, pacing and structure.';
@@ -309,7 +309,7 @@
       else if(p.max){title='Nothing looks badly broken. The most common weak spot is '+p.label;lead=p.explain;tone='warn';}
       else{title='The data is not showing one repeated channel problem.';lead=p.explain;tone='normal';}
       const latestLine=latest?'<p><b>Latest 7-day read:</b> '+esc(latest.v.title)+' · '+(latest.d.outcomeMultiple===null?'no outcome multiple':fmtMultiple(latest.d.outcomeMultiple)+' normal')+' · '+esc(latest.d.bottleneck)+'.</p>':'';
-      return '<section class="studio-evidence ac-diagnosis-evidence '+tone+'" id="studio-diagnosis-evidence"><div class="kicker">Analytics check</div><h3>'+esc(title)+'</h3><p>'+esc(lead)+'</p>'+latestLine+'<p><b>How to use this here:</b> Analytics support the diagnosis. They do not replace the rest of the diagnosis flow. If audience, offer, capacity, business goal or creator context disagree, investigate before locking the plan.</p><p><b>Check next:</b> '+esc(p.next)+'</p><details><summary>See the video evidence</summary>'+(reads.length?'<div class="ac-mini-evidence">'+reads.map(x=>'<p><b>'+esc(x.v.title)+'</b> · '+(x.d.outcomeMultiple===null?'—':fmtMultiple(x.d.outcomeMultiple))+' normal · '+esc(x.d.bottleneck)+'</p>').join('')+'</div>':'<p>No comparable 7-day video reads yet.</p>')+'</details><button class="btn" data-studio="analytics">Open Analytics</button></section>';
+      return '<section class="studio-evidence ac-diagnosis-evidence '+tone+'" id="studio-diagnosis-evidence"><div class="kicker">Analytics check</div><h3>'+esc(title)+'</h3><p>'+esc(lead)+'</p>'+latestLine+'<p><b>How to use this here:</b> Analytics support the diagnosis. They do not replace the rest of the diagnosis flow. If audience, offer, capacity, business goal or creator context disagree, check why before locking the plan.</p><p><b>Check next:</b> '+esc(p.next)+'</p><details><summary>See the video evidence</summary>'+(reads.length?'<div class="ac-mini-evidence">'+reads.map(x=>'<p><b>'+esc(x.v.title)+'</b> · '+(x.d.outcomeMultiple===null?'—':fmtMultiple(x.d.outcomeMultiple))+' normal · '+esc(x.d.bottleneck)+'</p>').join('')+'</div>':'<p>No comparable 7-day video reads yet.</p>')+'</details><button class="btn" data-studio="analytics">Open Analytics</button></section>';
     }
     W.diagnosisEvidence=diagnosisEvidence;
 
