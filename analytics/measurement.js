@@ -98,7 +98,7 @@
     const reps=new Set(videos.filter(v=>begin!==null&&time(publishDate(v))>=begin&&Object.values(v.coachOS?.reviews||{}).some(r=>r.savedAt&&time(r.savedAt)>=begin)).map(v=>v.id).filter(Boolean)).size;
     if(begin===null||end===null||end<=begin)return {key,start,current,status:'Awaiting first outcome measurement',detail:'Record a dated observation after this plan starts; no outcome judgment yet.',reps};
     const result=comparison(current,start,{label:'plan starting line',percentagePoints:['ctr','ret30','apv'].includes(key)});
-    return {key,start,current,status:result.status==='ready'?'Outcome recorded · review decision rule':'Insufficient evidence',detail:result.text,reps,comparison:result};
+    return {key,start,current,status:result.status==='ready'?'Result recorded · check whether the plan is working':'Not enough data yet',detail:result.text,reps,comparison:result};
   }
   return {VERSION,DAYS,KEYS,number,median,comparison,period,periodNote,publishDate,cohort,summarize,baselineEligible,freshEvidence,planProgress};
 });
