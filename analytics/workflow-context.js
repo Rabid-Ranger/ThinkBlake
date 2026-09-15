@@ -11,120 +11,268 @@
   const pp=v=>n(v)===null?'—':(n(v)>=0?'+':'')+n(v).toFixed(1)+' pp';
   const signedPct=r=>n(r)===null?'—':((r-1)>=0?'+':'')+((r-1)*100).toFixed(0)+'%';
 
+  function rateSnapshot(reads,key){
+    const xs=reads.map(x=>x.r?.comparisons?.[key]).filter(Boolean);
+    const current=median(xs.map(x=>x.current)),baseline=median(xs.map(x=>x.baseline));
+    const deltaPp=median(xs.map(x=>x.deltaPp));
+    const multiple=median(xs.map(x=>n(x.current)!==null&&n(x.baseline)!==null&&n(x.baseline)!==0?n(x.current)/n(x.baseline):null));
+    return {current,baseline,deltaPp,multiple};
+  }
   function channelQuestionRead(c,W,ADC){
+    const guide=(typeof globalThis!=='undefined'?globalThis.__acceleratorCoachGuide:null);
     const p=W?.clarityPattern?W.clarityPattern(c):{reads:[]},reads=p.reads||[];
+    const fallback=guide?.recentVideoRead?guide.recentVideoRead(c):{};
     const values=key=>reads.map(x=>x.r?.comparisons?.[key]);
-    const outcome=median(reads.map(x=>{
+    const strictOutcome=median(reads.map(x=>{
       const a=x.r?.comparisons?.engagedViews?.multiple;
       return n(a)!==null?a:x.r?.comparisons?.views?.multiple;
     }));
-    const show=median(values('impressions').map(x=>x?.multiple));
-    const click=median(values('ctr').map(x=>x?.deltaPp));
-    const r30=median(values('retention30').map(x=>x?.deltaPp));
-    const apv=median(values('apv').map(x=>x?.deltaPp));
-    const watch=r30!==null?r30:apv;
-    const watchMetric=r30!==null?'0:30':'APV';
-    const avd=median(values('avdSeconds').map(x=>x?.multiple));
+    const strictShow=median(values('impressions').map(x=>x?.multiple));
+    const clickStrict=rateSnapshot(reads,'ctr');
+    const r30Strict=rateSnapshot(reads,'retention30');
+    const apvStrict=rateSnapshot(reads,'apv');
+    const avdStrict=rateSnapshot(reads,'avdSeconds');
+
+    const fallbackRate=(current,ratioValue)=>{
+      const cur=n(current),ratioN=n(ratioValue),base=cur!==null&&ratioN!==null&&ratioN!==0?cur/ratioN:null;
+      return {current:cur,baseline:base,multiple:ratioN,deltaPp:cur!==null&&base!==null?cur-base:null};
+    };
+    const clickFallback=fallbackRate(fallback.ctr,fallback.ctrRatio);
+    const r30Fallback=fallbackRate(fallback.ret30,fallback.retRatio);
+
+    const chooseRate=(strict,fallbackRateObj)=>{
+      const usableStrict=n(strict.multiple)!==null||n(strict.deltaPp)!==null||n(strict.current)!==null;
+      return usableStrict?strict:fallbackRateObj;
+    };
+
+    const outcome=n(strictOutcome)!==null?strictOutcome:n(fallback.viewRatio);
+    const show=n(strictShow)!==null?strictShow:n(fallback.impRatio);
+    const click=chooseRate(clickStrict,clickFallback);
+    const r30=chooseRate(r30Strict,r30Fallback);
+    const apv=apvStrict;
+    const watch=n(r30.multiple)!==null||n(r30.deltaPp)!==null?r30:apv;
+    const watchMetric=watch===r30?'0:30':'APV';
+    const avd=avdStrict;
     const audience=ADC?.audienceRead?ADC.audienceRead(c):{};
-    const overall=ADC?.overallRead?ADC.overallRead(c,W,(typeof globalThis!=='undefined'?globalThis.__acceleratorCoachGuide:null)):null;
-    return {p,reads,outcome,show,click,watch,watchMetric,avd,audience,overall};
+    const overall=ADC?.overallRead?ADC.overallRead(c,W,guide):null;
+    const jobs=guide?.jobScorecard?guide.jobScorecard(c):[];
+    return {
+      p,reads,fallback,outcome,show,click,watch,watchMetric,avd,audience,overall,jobs,
+      sample:Math.max(reads.length,n(fallback.n)||0),
+      sources:{
+        outcome:n(strictOutcome)!==null?'verified Analytics workspace':'saved channel diagnosis data',
+        show:n(strictShow)!==null?'verified Analytics workspace':'saved channel diagnosis data',
+        click:(n(clickStrict.multiple)!==null||n(clickStrict.deltaPp)!==null)?'verified Analytics workspace':'saved channel diagnosis data',
+        watch:(n(r30Strict.multiple)!==null||n(r30Strict.deltaPp)!==null||n(apvStrict.multiple)!==null)?'verified Analytics workspace':'saved channel diagnosis data'
+      }
+    };
   }
-  function countVerdict(v,kind='result'){
-    if(v===null)return {tone:'muted',label:'Need data',line:'No fair matched read yet.'};
-    if(v<.7)return {tone:'bad',label:kind==='show'?'Yes, opportunity is weak':'Yes, this is under normal',line:mult(v)+' of normal.'};
-    if(v<1.3)return {tone:'normal',label:'No clear problem here',line:mult(v)+' of normal, inside the working range.'};
-    if(v<1.7)return {tone:'good',label:kind==='show'?'Opportunity is above normal':'Result is above normal',line:mult(v)+' of normal.'};
-    return {tone:'great',label:kind==='show'?'Strong expansion':'Strong result',line:mult(v)+' of normal.'};
+  function countAnswer(v,kind='outcome',sample=0){
+    const name=kind==='show'?'opportunity':'outcome';
+    if(v===null)return {
+      tone:'muted',label:'I can’t answer this yet',
+      line:'No matched same-age '+(kind==='show'?'impression':'views / engaged-views')+' comparison is available.',
+      meaning:'The '+name+' question is still open.',
+      next:kind==='show'?'Add or verify 7-day impressions for recent comparable videos.':'Add or verify the mature 7-day outcome for recent comparable videos.'
+    };
+    if(v<.7)return {
+      tone:'bad',label:kind==='show'?'Yes. Opportunity is clearly weak.':'Yes. Recent videos are clearly under normal.',
+      line:'Recent median: '+mult(v)+' of creator normal'+(sample?' across '+sample+' mature video'+(sample===1?'':'s'):'')+'.',
+      meaning:kind==='show'?'SHOW is a real clue. The videos are not getting normal opportunity.':'Underperformance is real enough to keep diagnosing downstream.',
+      next:kind==='show'?'Before touching packaging, check topic demand, audience fit and traffic source.':'Move to SHOW. Ask whether the videos were given normal opportunity.'
+    };
+    if(v<1.3)return {
+      tone:'normal',label:kind==='show'?'No. Opportunity is roughly normal.':'No clear underperformance here.',
+      line:'Recent median: '+mult(v)+' of creator normal'+(sample?' across '+sample+' mature video'+(sample===1?'':'s'):'')+'.',
+      meaning:kind==='show'?'SHOW is not the first obvious failure.':'The outcome is inside the working normal range.',
+      next:kind==='show'?'Move to CLICK. Ask whether the right people chose the videos.':'Do not invent a channel crisis from normal results. Use the broader channel trend if there is another reason to investigate.'
+    };
+    return {
+      tone:v>=1.7?'great':'good',
+      label:kind==='show'?'No. Opportunity is above normal.':'No. Results are above normal.',
+      line:'Recent median: '+mult(v)+' of creator normal'+(sample?' across '+sample+' mature video'+(sample===1?'':'s'):'')+'.',
+      meaning:kind==='show'?'YouTube is giving these videos more opportunity than normal.':'This is a strength signal, not an underperformance signal.',
+      next:kind==='show'?'If results are still disappointing, move to CLICK/WATCH. Do not blame lack of opportunity.':'Protect what is working and look for the repeatable mechanism before changing it.'
+    };
   }
-  function rateVerdict(v,threshold,label){
-    if(v===null)return {tone:'muted',label:'Need data',line:'No fair matched '+label+' read yet.'};
-    if(v<-threshold)return {tone:'bad',label:'Yes, this is weak vs normal',line:pp(v)+' vs creator normal.'};
-    if(v>threshold)return {tone:'good',label:'No, this is stronger than normal',line:pp(v)+' vs creator normal.'};
-    return {tone:'normal',label:'No clear problem here',line:pp(v)+' vs creator normal, inside the working noise range.'};
+  function rateAnswer(rate,label,thresholdRatio,missingMetric){
+    const ratioV=n(rate?.multiple),delta=n(rate?.deltaPp),current=n(rate?.current),baseline=n(rate?.baseline);
+    const currentTxt=current===null?'—':current.toFixed(1)+'%';
+    const baselineTxt=baseline===null?'—':baseline.toFixed(1)+'%';
+    if(ratioV===null&&delta===null)return {
+      tone:'muted',label:'I can’t answer this yet',
+      line:'No matched creator-normal comparison for '+missingMetric+'.',
+      meaning:'Raw '+label+' without a fair creator normal is not enough to diagnose this stage.',
+      next:'Add or verify the 7-day '+missingMetric+' baseline and recent comparable video values.'
+    };
+    const weak=(ratioV!==null&&ratioV<thresholdRatio)||(ratioV===null&&delta!==null&&delta<(label==='CTR'?-0.5:-3));
+    const strong=(ratioV!==null&&ratioV>=1.15)||(ratioV===null&&delta!==null&&delta>(label==='CTR'?0.5:3));
+    const line=(current!==null&&baseline!==null?label+' '+currentTxt+' vs '+baselineTxt+' normal':label+' comparison available')+
+      (ratioV!==null?' · '+mult(ratioV)+' normal':'')+(delta!==null?' · '+pp(delta):'');
+    if(weak)return {
+      tone:'bad',label:'Yes. This stage is weak vs creator normal.',
+      line,
+      meaning:label==='CTR'?'The people who were shown the videos are choosing them below the creator’s normal.':'The viewing experience is delivering below the creator’s normal after the click.',
+      next:label==='CTR'?'Check impression expansion and traffic source. If those do not explain it, packaging is a real working bottleneck.':'Open the retention curve and inspect promise delivery, the first 30–60 seconds and the first meaningful divergence.'
+    };
+    if(strong)return {
+      tone:'good',label:'No. This stage is stronger than normal.',
+      line,
+      meaning:label==='CTR'?'CLICK is not the first obvious failure.':'WATCH is not the first obvious failure.',
+      next:label==='CTR'?'Move to WATCH.':'Protect the viewing pattern and continue to RETURN + RESULT.'
+    };
+    return {
+      tone:'normal',label:'No clear problem here.',
+      line,
+      meaning:label==='CTR'?'CLICK is close enough to creator normal that it should not be the first diagnosis.':'WATCH is close enough to creator normal that it should not be the first diagnosis.',
+      next:label==='CTR'?'Move to WATCH unless source context creates a specific concern.':'Move to RETURN + RESULT.'
+    };
   }
   function questionAnswers(c,W,ADC){
-    const r=channelQuestionRead(c,W,ADC),out=countVerdict(r.outcome),show=countVerdict(r.show,'show'),click=rateVerdict(r.click,.5,'CTR'),watch=rateVerdict(r.watch,3,r.watchMetric);
-    const a=r.audience||{},retTone=a.loyaltyBand==='weak'?'bad':a.loyaltyBand==='strong'?'good':a.loyaltyBand==='steady'?'normal':'muted';
-    const trend=(key,label)=>{
+    const r=channelQuestionRead(c,W,ADC);
+    const out=countAnswer(r.outcome,'outcome',r.sample);
+    const show=countAnswer(r.show,'show',r.sample);
+    const click=rateAnswer(r.click,'CTR',.7,'CTR');
+    const watch=rateAnswer(r.watch,r.watchMetric,.7,r.watchMetric==='0:30'?'first-30-second retention':'APV');
+
+    if(n(r.show)!==null&&r.show>=1.7&&(click.tone==='bad')){
+      click.meaning='CTR is weak, but impressions are strongly expanded. Wider/colder distribution can lower CTR without proving the package is broken.';
+      click.next='Check traffic source and audience breadth first. Only call packaging the bottleneck if CTR remains weak in comparable source context.';
+    }
+
+    const a=r.audience||{},trend=(key,label)=>{
       const cur=n(a.current?.[key]),prev=n(a.previous?.[key]),rr=cur!==null&&prev!==null&&prev!==0?cur/prev:null;
-      return rr===null?null:label+' '+signedPct(rr);
+      return rr===null?null:{label,ratio:rr,text:label+' '+signedPct(rr)};
     };
-    const audienceParts=[trend('newViewers','New'),trend('casual','Casual'),trend('regular','Regular'),trend('returning','Returning')].filter(Boolean);
-    const returnLine=audienceParts.length?audienceParts.join(' · '):'No comparable repeat-audience trend yet.';
+    const audienceTrends=[trend('newViewers','New'),trend('casual','Casual'),trend('regular','Regular'),trend('returning','Returning')].filter(Boolean);
+    const loyaltyWeak=a.loyaltyBand==='weak',loyaltyStrong=a.loyaltyBand==='strong';
+    const jobParts=(r.jobs||[]).map(j=>{
+      const bits=[j.job];
+      if(n(j.viewRatio)!==null)bits.push(mult(j.viewRatio)+' view result');
+      if(n(j.yield)!==null)bits.push(j.yield.toFixed(1)+' leads / 1K views');
+      else if(n(j.leads)!==null)bits.push(j.leads.toFixed(1)+' median leads');
+      return bits.join(' · ');
+    });
     const resultStage=r.overall?.stages?.find(x=>x.key==='result');
-    const resultLine=resultStage?.value||'Business result is not connected yet.';
-    const returnVerdict={tone:retTone,label:retTone==='bad'?'Return is weakening':retTone==='good'?'Return is strengthening':retTone==='normal'?'Return is roughly steady':'Need audience trend',line:returnLine+'. '+resultLine};
-    return {raw:r,outcome:out,show,click,watch,returnResult:returnVerdict};
+    let rrTone='muted',rrLabel='I can’t fully answer RETURN + RESULT yet',rrMeaning='Audience and/or business-result trend is incomplete.',rrNext='Add a comparable audience snapshot and connect the job-specific result you care about.';
+    if(audienceTrends.length){
+      rrTone=loyaltyWeak?'bad':loyaltyStrong?'good':'normal';
+      rrLabel=loyaltyWeak?'RETURN is weakening.':loyaltyStrong?'RETURN is strengthening.':'RETURN is roughly steady.';
+      rrMeaning=a.acquisitionBand==='weak'&&['steady','strong'].includes(a.loyaltyBand)
+        ?'Existing viewers are healthier than new-viewer acquisition. That points more toward Reach / gateway pressure.'
+        :['steady','strong'].includes(a.acquisitionBand)&&a.loyaltyBand==='weak'
+        ?'New people are arriving, but repeat behavior is weaker. That points more toward Trust / pathway pressure.'
+        :'Audience movement does not isolate one simple Reach-vs-Trust problem yet.';
+      rrNext=a.acquisitionBand==='weak'&&['steady','strong'].includes(a.loyaltyBand)
+        ?'Bias the plan toward qualified Reach/gateway ideas while protecting click and watch.'
+        :['steady','strong'].includes(a.acquisitionBand)&&a.loyaltyBand==='weak'
+        ?'Bias the plan toward Trust/pathway videos, follow-ups and continuation.'
+        :'Use the video job scorecard and business result to decide what the next content mix should prove.';
+    }
+    const returnResult={
+      tone:rrTone,label:rrLabel,
+      line:(audienceTrends.length?audienceTrends.map(x=>x.text).join(' · '):'No comparable New / Casual / Regular / Returning trend yet.')+
+        (jobParts.length?' | Jobs: '+jobParts.join(' | '):'')+
+        (resultStage?.value?' | '+resultStage.value:''),
+      meaning:rrMeaning,next:rrNext
+    };
+    return {raw:r,outcome:out,show,click,watch,returnResult};
+  }
+  function planJobFocus(leading,overall){
+    const x=String(leading||'').toLowerCase();
+    if(x.includes('discovery')||x.includes('acquisition')||x.includes('gateway'))return 'Reach';
+    if(x.includes('loyalty')||x.includes('pathway'))return 'Trust';
+    if(x.includes('business')||x.includes('convert'))return 'Convert';
+    if(x.includes('packag')||x.includes('opening')||x.includes('viewing')||x.includes('retention'))return overall?.action?.job||'Keep intended Reach / Trust / Convert job, fix this execution layer across it';
+    if(x.includes('growth'))return 'Protect the job mix producing the wins';
+    return overall?.action?.job||'Decide from the plan';
   }
   function proposal(c,W,ADC){
     const q=questionAnswers(c,W,ADC),r=q.raw,a=r.audience||{},p=r.p||{};
     let leading='Not enough evidence yet',because='',next='',alternative='',confidence='Low';
-    if(r.outcome===null){because='There is not enough mature same-age evidence to judge the recent video outcome yet.';next='Get comparable 7-day results before forcing a channel bottleneck.';}
-    else if(r.show!==null&&r.show<.7){
+    if(r.outcome===null){
+      because='The OUTCOME question is still unanswered because there is no fair mature same-age result.';
+      next='Verify the 7-day result before choosing a downstream bottleneck.';
+    }else if(r.show!==null&&r.show<.7){
       leading='Discovery / idea opportunity';
-      because='The first unusual stage is SHOW. Recent mature videos are getting only '+mult(r.show)+' of normal impression opportunity.';
-      next='Check topic demand, audience fit and traffic source before changing the title or thumbnail.';
+      because='OUTCOME is weak and SHOW is the first clear unusual stage: recent impression opportunity is '+mult(r.show)+' of normal.';
+      next='Check topic demand, audience fit and traffic source before changing packaging.';
       alternative='A narrower intentional audience, source shift or mixed comparison set could lower impressions without making the idea bad.';
-    }else if(r.click!==null&&r.click<-.5){
+    }else if((n(r.click?.multiple)!==null&&r.click.multiple<.7)||(n(r.click?.multiple)===null&&n(r.click?.deltaPp)!==null&&r.click.deltaPp<-.5)){
       leading='Packaging / click';
-      because='SHOW is not the first clear failure, but CLICK is. Recent CTR is '+pp(r.click)+' vs creator normal.';
-      next=r.show!==null&&r.show>=1.7?'Check audience expansion and traffic source first. If CTR is still weak in comparable source context, test a meaningfully different package.':'Test the title + thumbnail promise while protecting the underlying idea and opening.';
+      because='SHOW is not the first clear failure, but CLICK is. '+q.click.line;
+      next=q.click.next;
       alternative='A colder or broader audience mix can cool CTR without proving the package is bad.';
-    }else if(r.watch!==null&&r.watch<-3){
+    }else if((n(r.watch?.multiple)!==null&&r.watch.multiple<.7)||(n(r.watch?.multiple)===null&&n(r.watch?.deltaPp)!==null&&r.watch.deltaPp<-3)){
       leading='Promise / opening / viewing experience';
-      because='SHOW and CLICK are holding better, while '+r.watchMetric+' is '+pp(r.watch)+' vs creator normal.';
-      next='Review the first 30–60 seconds, promise delivery and the first meaningful retention divergence.';
-      alternative='Traffic source or audience-temperature changes can depress retention without proving the content structure is the only cause.';
+      because='SHOW and CLICK hold better, while WATCH is the first clear weak stage. '+q.watch.line;
+      next=q.watch.next;
+      alternative='Traffic source or audience-temperature changes can depress retention without proving structure is the only cause.';
     }else if(a.acquisitionBand==='weak'&&['steady','strong'].includes(a.loyaltyBand)){
       leading='Acquisition / gateway';
-      because='Existing viewers are returning better than new viewers are entering. The pressure is getting enough qualified new people into the channel.';
+      because='The video funnel does not isolate an earlier failure, while New viewers are weakening relative to repeat-audience health.';
       next='Use Reach/gateway videos around proven audience problems and protect click/watch quality.';
       alternative='Seasonality or an intentional core-audience period can reduce new viewers without representing a structural problem.';
     }else if(['steady','strong'].includes(a.acquisitionBand)&&a.loyaltyBand==='weak'){
       leading='Loyalty / pathway';
-      because='New viewers are arriving, but repeat-audience signals are weaker. The pressure is turning first views into second and third views.';
+      because='The video funnel does not isolate an earlier failure, while repeat-audience health is weaker than new-viewer acquisition.';
       next='Build follow-ups, bridges, series and clearer continuation paths.';
       alternative='A recent discovery spike can temporarily make repeat-viewer ratios look weaker.';
     }else if(r.outcome!==null&&r.outcome>=1.3){
       leading='Growth pattern worth protecting';
-      because='Recent mature results are above the creator’s own normal and no earlier funnel stage is clearly broken.';
+      because='Recent mature outcomes are above creator normal and no earlier stage is clearly broken.';
       next='Protect the repeatable winning mechanism and make adjacent follow-ups before changing the system.';
-      alternative='One or two outliers may still be carrying the median.';
+      alternative='One or two outliers may still be carrying the recent sample.';
     }else{
       because='The current evidence does not isolate one clear first unusual stage.';
-      next='Keep the broader diagnosis flow primary and wait for a repeated signal before making a channel-wide change.';
+      next='Keep the broader diagnosis flow primary. Do not force a channel-wide bottleneck from mixed/normal evidence.';
       alternative='The issue may be portfolio, market, audience, business or capacity rather than one video funnel stage.';
     }
     if((p.max||0)>=3)confidence='Medium';
     else if((p.max||0)>=2)confidence='Low';
-    return {leading,because,next,alternative,confidence,q};
+    const jobFocus=planJobFocus(leading,r.overall);
+    return {leading,because,next,alternative,confidence,jobFocus,q};
   }
-  function answerHtml(title,x,detail=''){
-    return '<div class="awf-answer '+x.tone+'"><span>WHAT YOUR DATA SAYS</span><b>'+esc(x.label)+'</b><p>'+esc(x.line)+'</p>'+(detail?'<small>'+esc(detail)+'</small>':'')+'</div>';
+  function answerHtml(question,x,detail=''){
+    return '<div class="awf-answer '+x.tone+'">'+
+      '<span>DATA ANSWER TO THIS QUESTION</span>'+
+      '<b>'+esc(x.label)+'</b>'+
+      '<p class="awf-answer-evidence">'+esc(x.line)+'</p>'+
+      '<div class="awf-answer-grid"><div><small>WHAT IT MEANS</small><p>'+esc(x.meaning||'')+'</p></div><div><small>NEXT IN THE DIAGNOSIS</small><p>'+esc(x.next||'')+'</p></div></div>'+
+      (detail?'<em>'+esc(detail)+'</em>':'')+
+    '</div>';
   }
   function injectDiagnosis(win,c,W,ADC){
     const drawer=win.document.getElementById('drawerBack');
     if(!drawer||!drawer.classList.contains('show')||!/Channel Diagnosis/i.test(drawer.textContent||''))return;
     const q=questionAnswers(c,W,ADC),map=[
-      ['1 · OUTCOME',q.outcome,'Across '+q.raw.reads.length+' recent mature 7-day videos.'],
-      ['2 · SHOW',q.show,'Same-age impression opportunity across the recent 7-day set.'],
-      ['3 · CLICK',q.click,q.raw.show>=1.7&&q.raw.click<-.5?'Important: impressions are expanded, so check source/audience breadth before blaming packaging.':'CTR is compared with creator normal in percentage points.'],
-      ['4 · WATCH',q.watch,(q.raw.watchMetric||'WATCH')+' is the current usable matched signal. 0:30 is preferred; APV is the fallback.'+(q.raw.avd!==null?' AVD is '+mult(q.raw.avd)+' normal as supporting context.':'')],
-      ['5 · RETURN + RESULT',q.returnResult,'Use 90-day audience trend and the video/channel job. No universal loyalty target.']
+      ['1 · OUTCOME',q.outcome,'Uses mature same-age views / engaged views. Source: '+q.raw.sources.outcome+'.'],
+      ['2 · SHOW',q.show,'Uses same-age registered impressions. Source: '+q.raw.sources.show+'.'],
+      ['3 · CLICK',q.click,'Uses CTR vs creator normal, with impression expansion context. Source: '+q.raw.sources.click+'.'],
+      ['4 · WATCH',q.watch,'Uses 0:30 first, APV fallback, AVD as support when available. Source: '+q.raw.sources.watch+'.'],
+      ['5 · RETURN + RESULT',q.returnResult,'Uses New / Casual / Regular / Returning trend plus Reach / Trust / Convert job results when available.']
     ];
     for(const [label,val,detail] of map){
       const d=[...drawer.querySelectorAll('details.cg-decision')].find(x=>(x.querySelector('summary span')?.textContent||'').trim()===label);
       if(!d)continue;
       const body=d.querySelector('.cg-decision-body');if(!body)continue;
-      let box=body.querySelector('.awf-answer');const html=answerHtml(label,val,detail);
+      const html=answerHtml(label,val,detail);
+      let box=body.querySelector('.awf-answer');
       if(!box){const t=win.document.createElement('template');t.innerHTML=html;body.prepend(t.content.firstElementChild);}
       else if(box.dataset.sig!==html){const t=win.document.createElement('template');t.innerHTML=html;const fresh=t.content.firstElementChild;fresh.dataset.sig=html;box.replaceWith(fresh);}
     }
-    const s=c.coachOS?.diagnosis||{},prop=proposal(c,W,ADC);
-    let summary=drawer.querySelector('#awf-diagnosis-decision');
-    const summaryHtml='<section class="awf-diagnosis-decision '+(prop.leading==='Not enough evidence yet'?'muted':'focus')+'" id="awf-diagnosis-decision"><div class="awf-kicker">DATA-ASSISTED WORKING ANSWER</div><h3>'+esc(prop.leading)+'</h3><p>'+esc(prop.because)+'</p><p><b>Next:</b> '+esc(prop.next)+'</p><small>'+esc(prop.confidence)+' confidence. This uses the first unusual stage, then audience/business context. You still confirm the diagnosis.</small></section>';
+    const saved=c.coachOS?.diagnosis||{},prop=proposal(c,W,ADC);
+    const summaryHtml='<section class="awf-diagnosis-decision '+(prop.leading==='Not enough evidence yet'?'muted':'focus')+'" id="awf-diagnosis-decision">'+
+      '<div class="awf-kicker">DATA-ASSISTED WORKING ANSWER</div>'+
+      '<h3>'+esc(prop.leading)+'</h3>'+
+      '<p>'+esc(prop.because)+'</p>'+
+      '<div class="awf-plan-link"><span>WHAT THIS MEANS FOR THE PLAN</span><b>'+esc(prop.jobFocus)+'</b><p>'+esc(prop.next)+'</p></div>'+
+      '<small>'+esc(prop.confidence)+' confidence. The metric sequence suggests where to focus. Creator goals, offer, audience fit, capacity and business context still confirm the final diagnosis.</small>'+
+    '</section>';
+    const summary=drawer.querySelector('#awf-diagnosis-decision');
     if(!summary){const first=drawer.querySelector('.cg-section');if(first){const t=win.document.createElement('template');t.innerHTML=summaryHtml;first.after(t.content.firstElementChild);}}
-    if(!s.savedAt){
+    else if(summary.dataset.sig!==summaryHtml){const t=win.document.createElement('template');t.innerHTML=summaryHtml;const fresh=t.content.firstElementChild;fresh.dataset.sig=summaryHtml;summary.replaceWith(fresh);}
+    if(!saved.savedAt){
       const set=(id,v)=>{const el=drawer.querySelector('#'+id);if(el&&v!=null)el.value=v;};
       set('cg-d-leading',prop.leading);set('cg-d-confidence',prop.confidence);set('cg-d-because',prop.because);set('cg-d-alt',prop.alternative);set('cg-d-next',prop.next);
     }
@@ -247,11 +395,11 @@
     win.document.addEventListener('change',e=>{if(e.target.closest?.('#drawerBack'))paint();});
     const style=win.document.createElement('style');style.id='awf-style';style.textContent=`
       .awf-kicker{font-size:10px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;opacity:.65}
-      .awf-answer{grid-column:1/-1;border:1px solid color-mix(in srgb,currentColor 14%,transparent);border-left:4px solid #55757a;border-radius:10px;padding:11px;background:color-mix(in srgb,currentColor 3%,transparent);display:grid;gap:4px}.awf-answer span{font-size:9px;font-weight:900;letter-spacing:.08em}.awf-answer b{font-size:13px}.awf-answer p,.awf-answer small{margin:0;font-size:12px;line-height:1.4}.awf-answer.bad{border-left-color:#b54b4b}.awf-answer.good,.awf-answer.great{border-left-color:#2f8464}.awf-answer.muted{opacity:.7}
+      .awf-answer{grid-column:1/-1;border:1px solid color-mix(in srgb,currentColor 14%,transparent);border-left:4px solid #55757a;border-radius:10px;padding:11px;background:color-mix(in srgb,currentColor 3%,transparent);display:grid;gap:4px}.awf-answer span{font-size:9px;font-weight:900;letter-spacing:.08em}.awf-answer b{font-size:14px}.awf-answer p,.awf-answer small{margin:0;font-size:12px;line-height:1.4}.awf-answer-evidence{font-weight:650}.awf-answer-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:5px}.awf-answer-grid>div{padding:9px;border-radius:8px;background:rgba(84,110,116,.055)}.awf-answer-grid small{display:block;font-size:8px;font-weight:900;letter-spacing:.07em;margin-bottom:3px}.awf-answer em{font-style:normal;font-size:10px;opacity:.65}.awf-plan-link{margin:12px 0;padding:12px;border-radius:10px;background:rgba(54,111,122,.07);display:grid;gap:4px}.awf-plan-link span{font-size:9px;font-weight:900;letter-spacing:.08em}.awf-plan-link p{margin:0}.awf-plan-link b{font-size:15px}.awf-answer.bad{border-left-color:#b54b4b}.awf-answer.good,.awf-answer.great{border-left-color:#2f8464}.awf-answer.muted{opacity:.7}
       .awf-diagnosis-decision,.awf-live{margin:0 0 14px;border:1px solid color-mix(in srgb,currentColor 14%,transparent);border-left:5px solid #55757a;border-radius:12px;padding:14px;background:color-mix(in srgb,currentColor 3%,transparent)}.awf-diagnosis-decision h3,.awf-live h3{margin:4px 0 6px}.awf-diagnosis-decision p,.awf-live p{line-height:1.45}.awf-diagnosis-decision.focus{border-left-color:#366f7a}.awf-diagnosis-decision.muted,.awf-live.muted{opacity:.72}
       .awf-learn-page{margin:0 0 14px;border:1px solid var(--line,#d9e0e2);border-left:5px solid #55757a;border-radius:12px;padding:14px;background:var(--card,#fff)}.awf-learn-page.bad{border-left-color:#b54b4b}.awf-learn-page.warn{border-left-color:#b5822e}.awf-learn-page.good,.awf-learn-page.great{border-left-color:#2f8464}.awf-learn-page.muted{opacity:.72}.awf-learn-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,420px);gap:14px}.awf-learn-head h3{margin:4px 0 6px}.awf-learn-head p{margin:0;line-height:1.45}.awf-learn-pills{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0}.awf-learn-pill{border:1px solid var(--line,#d9e0e2);border-radius:9px;padding:10px;display:grid;gap:3px}.awf-learn-pill span{font-size:9px;font-weight:900;letter-spacing:.07em;text-transform:uppercase}.awf-learn-pill b{font-size:16px}.awf-learn-pill small{opacity:.65}.awf-learn-pill.bad{border-top:4px solid #b54b4b}.awf-learn-pill.warn{border-top:4px solid #b5822e}.awf-learn-pill.good,.awf-learn-pill.great{border-top:4px solid #2f8464}.awf-learn-pill.muted{opacity:.6}
       .awf-live.bad{border-left-color:#b54b4b}.awf-live.warn{border-left-color:#b5822e}.awf-live.good,.awf-live.great{border-left-color:#2f8464}.awf-live-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,300px);gap:14px}.awf-bottleneck{padding:11px;border-radius:10px;background:color-mix(in srgb,currentColor 6%,transparent);display:grid;gap:4px}.awf-bottleneck span{font-size:9px;font-weight:900;letter-spacing:.08em}.awf-live-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0}.awf-live-metrics>div{border:1px solid color-mix(in srgb,currentColor 12%,transparent);border-radius:9px;padding:10px;display:grid;gap:3px}.awf-live-metrics span{font-size:9px;font-weight:900;letter-spacing:.07em}.awf-live-metrics b{font-size:17px}.awf-live-metrics small{opacity:.65}
-      @media(max-width:720px){.awf-live-head,.awf-learn-head{grid-template-columns:1fr}.awf-live-metrics,.awf-learn-pills{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:460px){.awf-live-metrics,.awf-learn-pills{grid-template-columns:1fr}}
+      @media(max-width:720px){.awf-live-head,.awf-learn-head{grid-template-columns:1fr}.awf-live-metrics,.awf-learn-pills{grid-template-columns:repeat(2,minmax(0,1fr))}.awf-answer-grid{grid-template-columns:1fr}}@media(max-width:460px){.awf-live-metrics,.awf-learn-pills{grid-template-columns:1fr}}
     `;win.document.head.appendChild(style);paint();
   }
   return {channelQuestionRead,questionAnswers,proposal,liveReviewRead,install};
