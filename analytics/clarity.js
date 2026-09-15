@@ -68,13 +68,14 @@
     const outcomeMultiple=n(r.comparisons?.[m.outcomeKey]?.multiple);
     const winner=outcomeMultiple!==null&&outcomeMultiple>=1.7;
     const under=outcomeMultiple!==null&&outcomeMultiple<.7;
+    const expandedAudience=n(r.comparisons?.impressions?.multiple)>=1.7;
     const raw=[];
     if(m.show.tone==='bad')raw.push('reach');
     if(m.click.tone==='bad')raw.push('packaging');
     if(m.watch.tone==='bad')raw.push('retention');
     const soft=[],hard=[];
     raw.forEach(stage=>{
-      const expansion=stage==='packaging'&&n(r.comparisons?.impressions?.multiple)>=1.7;
+      const expansion=stage==='packaging'&&expandedAudience;
       if(winner||expansion)soft.push(stage); else hard.push(stage);
     });
     let headline,bottleneck,tone='normal',explain;
@@ -104,7 +105,11 @@
       explain='The available funnel metrics are inside the working range versus this creator’s own same-age normal.';
     }
     const all=[...new Set([...hard,...soft])];
-    return {tone,kind:'diagnosed',headline,bottleneck,explain,next:nextFor(all,winner),hardIssues:hard,softIssues:soft,winner,under,outcomeMultiple,metrics:m,age};
+    const expansionContext=expandedAudience&&soft.includes('packaging')&&!winner;
+    const next=expansionContext
+      ? 'Check traffic source, audience breadth and other expanded videos first. Lower CTR during wider distribution is not automatically a thumbnail problem. Only test the package if it is still materially weak after that context check.'
+      : nextFor(all,winner);
+    return {tone,kind:'diagnosed',headline,bottleneck,explain,next,hardIssues:hard,softIssues:soft,winner,under,outcomeMultiple,metrics:m,age};
   }
 
   function patternFromDiagnoses(diags){
