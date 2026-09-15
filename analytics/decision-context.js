@@ -192,7 +192,7 @@
   function diagnosisHtml(c,W,guide){
     const r=overallRead(c,W,guide),p=r.pattern,a=r.audience,tone=toneFor(r);
     let verdict='The data is not pointing to one clear answer yet.';
-    if(r.focus!=='No clear channel bottleneck yet')verdict='The data is pointing you toward '+r.focus+'.';
+    if(r.focus!=='No clear channel problem yet')verdict='The data is pointing you toward '+r.focus+'.';
     const support=[];
     if(p?.max)support.push((p.source==='hard'?'Hard':'Soft')+' video pattern: '+(p.label||patternFocus(p))+' · '+p.max+' of '+p.n+' recent 7-day videos.');
     if(a.acquisition!==null)support.push('New viewers '+signed(a.acquisition-1)+' vs prior 90-day report.');
@@ -206,7 +206,7 @@
   }
 
   function planSuggestion(r){
-    const focus=String(r?.focus||'No clear channel bottleneck yet'),x=focus.toLowerCase();
+    const focus=String(r?.focus||'No clear channel problem yet'),x=focus.toLowerCase();
     let primaryMetricKey='engagedViews',job=r?.action?.job||'Decide from the plan',mix='Keep the existing Reach / Trust / Convert mix unless the diagnosis gives you a reason to change it.';
     let hypothesis='If we improve the current focus, the result should improve without hurting CTR or watch quality.';
     let success='Across several similar videos, the main number improves toward what this creator usually gets while the other important numbers stay healthy.';
