@@ -225,8 +225,18 @@
     const q=questionAnswers(c,W,ADC),r=q.raw,a=r.audience||{},cur=a.current||{},prev=a.previous||{};
     const base={tone:'muted',verdict:'Analytics cannot answer this yet.',line:'There is not enough matching data for this question.',meaning:'Use the question itself and collect the missing data before letting analytics sway the answer.',next:'Choose NOT SURE if the non-analytics evidence is also missing.',metrics:[],note:''};
     if(index===0){
-      const published=n(cur.uploadsPublished),planned=n(cur.uploadsPlanned),ratioV=published!==null&&planned!==null&&planned>0?published/planned:null;
-      if(ratioV===null)return {...base,verdict:'Analytics do not track enough execution data yet.',line:'Add planned vs published long-form uploads, or review the last 6–8 planned uploads manually.',note:'There is no universal ideal upload frequency. The question is whether the team is shipping consistently enough to learn.'};
+      const published=n(cur.uploadsPublished),previousPublished=n(prev.uploadsPublished),planned=n(cur.uploadsPlanned),ratioV=published!==null&&planned!==null&&planned>0?published/planned:null;
+      if(ratioV===null){
+        const metrics=published===null?[]:[{label:'Published in latest 90d',value:String(Math.round(published)),compare:previousPublished===null?'No prior upload count':Math.round(previousPublished)+' in prior 90d',tone:'normal'}];
+        return {...base,
+          verdict:'Studio can show output, but it cannot fully answer this question.',
+          line:published===null?'We do not have a reliable published-upload count yet.':('Studio shows '+Math.round(published)+' long-form upload'+(Math.round(published)===1?'':'s')+' in the latest 90 days'+(previousPublished===null?'.':' vs '+Math.round(previousPublished)+' in the prior 90 days.')),
+          meaning:'This question is really asking whether the creator is executing the plan consistently enough to learn. YouTube Studio does not know the planned upload count, team capacity, ownership, or whether the right strategic videos actually shipped.',
+          next:'Use the upload count as context, then compare planned vs published videos in the dashboard or on the call. Do not treat a raw upload frequency as good or bad by itself.',
+          metrics,
+          note:'There is no universal ideal upload frequency. This is the one diagnosis question that needs execution / planning context in addition to YouTube analytics.'
+        };
+      }
       const tone=ratioV<.7?'bad':ratioV<.9?'warn':'good';
       return {tone,verdict:ratioV<.7?'Analytics lean NO: execution is getting in the way.':ratioV<.9?'Analytics say this is worth checking.':'Analytics support YES: execution looks consistent enough to keep diagnosing.',line:Math.round(published)+' of '+Math.round(planned)+' planned long-form uploads were published in the latest report.',meaning:ratioV<.7?'The team may not be shipping enough of the plan to judge the strategy fairly.':'Publishing does not look like the first obvious break from the data we have.',next:ratioV<.7?'Fix scope, ownership, or capacity before over-diagnosing creative strategy.':'Keep moving downstream unless the call context says execution is still unstable.',metrics:[{label:'Published',value:String(Math.round(published)),compare:'Planned '+Math.round(planned),tone}],note:'Cadence is context, not a universal grade.'};
     }
