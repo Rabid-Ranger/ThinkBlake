@@ -274,56 +274,97 @@
     try{return JSON.parse(raw)}catch(_){return null}
   }
   function channelPrompt(c){
-    return `In Ask Studio, return RAW channel analytics for ${JSON.stringify(c?.name||'this channel')} so Accelerator can compare channel health. Do not estimate, infer, coach, or calculate trends. If a metric is unavailable, use null and explain it in limitations.
+    const schema={schemaVersion:1,creatorId:c?.id||'',channelName:'ACTUAL CHANNEL',observations:[],channelPeriods:[{
+      start:'YYYY-MM-DD',end:'YYYY-MM-DD',source:'ACTUAL YOUTUBE STUDIO REPORT(S) + FILTERS',metricDefinitionId:'ACTUAL DEFINITION OR unknown',
+      metrics:{
+        views:null,engagedViews:null,impressions:null,ctr:null,watchTime:null,
+        newViewers:null,casual:null,regular:null,returning:null,avgViewsPerViewer:null,
+        browsePct:null,suggestedPct:null,searchPct:null,externalPct:null,
+        uploadsPublished:null,newUploadViews:null,libraryViews:null,
+        qualifiedLeads:null,bookings:null,sales:null,revenue:null
+      },
+      context:{paidNote:null,sourceNote:null,libraryNote:null,attributionNote:null,notes:null}
+    }],limitations:[]};
+    return `In Ask Studio, return RAW YouTube Studio channel analytics for ${JSON.stringify(c?.name||'this channel')} so Accelerator can update the Analytics page and support the channel diagnosis. Do not coach, diagnose, estimate, infer missing values, or calculate trends for me. Return the measurements only.
 
-Return TWO completed, non-overlapping 90-day periods when available: the latest completed 90-day period and the immediately preceding completed 90-day period. Keep metric definitions and filters consistent. Use exact reported values.
+PERIODS
+Return TWO completed, non-overlapping 90-day periods when available:
+1. the latest fully completed 90-day period that does not include today;
+2. the immediately preceding 90-day period.
+The JSON start/end dates are inclusive, so each end date must be exactly 89 days after its start date. Keep filters and metric definitions as consistent as possible across both periods.
 
-For each period request: views, engagedViews, registered impressions, CTR, watchTime hours, new viewers, casual viewers, regular viewers, returning viewers, and average views per viewer. Audience segments are for acquisition/loyalty diagnosis. Do not convert percentages into counts or counts into percentages. Use the value exactly as Studio reports it, or null if Ask Studio cannot provide it. qualifiedLeads must be null unless that value is genuinely available from a connected first-party business source.
+CORE CHANNEL METRICS
+For each exact 90-day period request:
+- views
+- engagedViews
+- registered impressions
+- impressions CTR
+- watchTime in hours
 
-Important:
-- Engaged views must stay separate from public Views.
-- Audience retention and first-30-second Intro are video-level metrics, not channel-period metrics.
-- New/casual/regular/returning viewer data may update with delay. Do not guess.
-- Ask Studio is a convenience extractor. If it cannot return an exact metric, leave it null so I can verify it in YouTube Analytics.
+AUDIENCE GROWTH + LOYALTY
+For the SAME exact 90-day dates, request these as RAW Studio-reported values when available:
+- newViewers
+- casual viewers
+- regular viewers
+- returning viewers
+- average views per viewer
+
+Audience rules:
+- New, Casual, Regular, and Returning are different Studio audience measures. Do not substitute one for another.
+- Do not derive Casual or Regular from Returning, New, subscribers, or percentages.
+- Do not convert a percentage into a viewer count.
+- avgViewsPerViewer must be the raw reported metric. Do not calculate views / unique viewers yourself.
+- If Studio only exposes an audience value on a rolling 28-day window or some other window instead of the exact requested 90 days, put null in the 90-day field and explain the actual available window in limitations. Never label a 28-day value as 90-day data.
+- Audience data can update with delay. If it is unavailable or still processing, use null.
+
+TRAFFIC-SOURCE CONTEXT
+For those same 90-day dates, request the percentage of views from these sources when Studio can report them:
+- browsePct
+- suggestedPct
+- searchPct
+- externalPct
+Use the raw percentages. Do not renormalize them to 100%.
+In context.sourceNote, include concise raw source evidence when available, such as the leading Suggested source videos or leading Search queries. Do not interpret them.
+
+PROGRAMMING / LIBRARY CONTEXT
+- uploadsPublished = exact count of long-form uploads published inside that 90-day period, only if Studio can retrieve that exact count. Do not infer it from cadence.
+- newUploadViews = views during the period from videos published inside that same period, only if Studio can isolate that exact slice.
+- libraryViews = views during the period from videos published before the period began, only if Studio can isolate that exact slice.
+If either library split cannot be produced exactly, use null rather than estimating. In context.libraryNote, record the exact filter/report used when available.
+
+PAID / FILTER CONTEXT
+In context.paidNote, state the actual paid/promoted/organic filter or note if Studio cannot verify it. Keep the source/report/filter description readable in source.
+
+NOT YOUTUBE STUDIO METRICS
+qualifiedLeads, bookings, sales, revenue, and context.attributionNote must be null in this YouTube Studio request. Those are added separately from business/CRM evidence. Do not invent them.
+Planned uploads/capacity are also not YouTube analytics and should not be inferred here.
+
+MEASUREMENT RULES
+- Keep engagedViews separate from public Views.
+- CTR and traffic-source fields are percentages where 6.2 means 6.2%.
+- Do not put video-level 0:30 retention, APV, or AVD into these channel periods. Those belong in the separate video-checkpoint prompt.
+- If Ask Studio cannot retrieve an exact field, return null and explain why in limitations.
 - Keep creatorId exactly ${JSON.stringify(c?.id||'')}.
-- Return observations as an empty array. This request is channel health only.
+- channelName must be the actual channel being inspected.
+- Return observations as an empty array. This request is only for channel + audience health.
+- Return ONLY the JSON object. No prose before or after it.
 
-Return ONLY this JSON shape:
-${JSON.stringify({schemaVersion:1,creatorId:c?.id||'',channelName:'ACTUAL CHANNEL',observations:[],channelPeriods:[{start:'YYYY-MM-DD',end:'YYYY-MM-DD',source:'ACTUAL REPORT AND FILTERS',metricDefinitionId:'ACTUAL DEFINITION OR unknown',metrics:{views:null,engagedViews:null,impressions:null,ctr:null,watchTime:null,newViewers:null,casual:null,regular:null,returning:null,avgViewsPerViewer:null,qualifiedLeads:null}}],limitations:[]},null,2)}`;
+JSON SHAPE:
+${JSON.stringify(schema,null,2)}`;
   }
 
   function extendStudioImport(win){
-    const I=win.AcceleratorStudioImport;if(!I||I.__adcExtended)return;I.__adcExtended=true;
-    const priorPrompt=I.prompt,priorParse=I.parse;
-    I.prompt=function(c,hours){
-      let text=priorPrompt(c,hours);
-      text=text.replace('Always request BOTH views and engagedViews as separate fields. Do not replace engaged views with views.',
-        'Always request BOTH views and engagedViews as separate fields. Do not replace engaged views with views. Also request AVD, APV and first-30-second Intro retention when available. Retention can take time to process; if 0:30 is unavailable use null. APV is the WATCH fallback, and AVD is supporting depth context.');
-      text=text.replace('Attribution outside Studio must be null.',
-        'For separately collected 90-day channel reports, also request casual viewers, regular viewers and average views per viewer when Studio can provide them. Do not guess or derive missing audience fields. Attribution outside Studio must be null.');
-      return text;
-    };
-    I.parse=function(text,c,prior,now){
-      const parsed=priorParse(text,c,prior,now),raw=parseJsonBlock(text);
-      if(!raw?.channelPeriods?.length||!parsed.periods?.length)return parsed;
-      for(const p of parsed.periods){
-        const src=raw.channelPeriods.find(x=>x&&x.start===p.start&&x.end===p.end);if(!src?.metrics)continue;
-        for(const k of ['casual','regular','avgViewsPerViewer']){
-          const v=src.metrics[k];
-          if(v===null||v===undefined){p.metrics[k]=null;continue;}
-          if(typeof v!=='number'||!Number.isFinite(v)||v<0)throw Error('Invalid channel metric '+k);
-          p.metrics[k]=v;
-        }
-      }
-      return parsed;
-    };
+    const I=win.AcceleratorStudioImport;if(!I||I.__adcExtended)return;
+    I.__adcExtended=true;
+    // Video-checkpoint prompting and channel-period parsing now live in analytics/import.js.
+    // Keep this hook only as a version marker so older runtime wrappers do not double-modify prompts or imports.
   }
 
   function openChannelPrompt(win,c){
     let d=win.document.getElementById('adc-channel-prompt-dialog');
     if(!d){d=win.document.createElement('dialog');d.id='adc-channel-prompt-dialog';d.className='adc-prompt-dialog';win.document.body.appendChild(d);}
     const text=channelPrompt(c);
-    d.innerHTML='<h2>Copy channel health prompt</h2><p>This gathers the audience + channel trend data used by the overall read. If Ask Studio cannot return something exactly, it should leave it null.</p><textarea readonly id="adc-channel-prompt-text">'+esc(text)+'</textarea><div class="actions"><button class="btn dark" id="adc-copy-channel">Copy prompt</button><button class="btn" id="adc-close-channel">Close</button></div>';
+    d.innerHTML='<h2>Copy 90-day channel + audience prompt</h2><p>This gathers the whole-channel, audience, traffic-source and library context used by Analytics and the diagnosis. Video retention checkpoints use the separate 24h / 48h / 7d / 28d prompts. If Ask Studio cannot return something exactly, it should leave it null.</p><textarea readonly id="adc-channel-prompt-text">'+esc(text)+'</textarea><div class="actions"><button class="btn dark" id="adc-copy-channel">Copy prompt</button><button class="btn" id="adc-close-channel">Close</button></div>';
     if(!d.open)d.showModal();
     d.querySelector('#adc-close-channel').onclick=()=>d.close();
     d.querySelector('#adc-copy-channel').onclick=async()=>{try{await win.navigator.clipboard.writeText(text);d.querySelector('#adc-copy-channel').textContent='Copied';}catch(_){d.querySelector('textarea').select();}};
@@ -385,7 +426,7 @@ ${JSON.stringify({schemaVersion:1,creatorId:c?.id||'',channelName:'ACTUAL CHANNE
     }
     function injectChannelButton(){
       const c=current(),tools=win.document.querySelector('#studio-tools .actions');if(!c||!tools||tools.querySelector('[data-adc-channel-prompt]'))return;
-      const b=win.document.createElement('button');b.className='btn';b.dataset.adcChannelPrompt='1';b.textContent='Copy channel health prompt';b.onclick=()=>openChannelPrompt(win,c);tools.appendChild(b);
+      const b=win.document.createElement('button');b.className='btn';b.dataset.adcChannelPrompt='1';b.textContent='Copy 90-day channel + audience prompt';b.onclick=()=>openChannelPrompt(win,c);tools.appendChild(b);
     }
     let queued=false;
     const paint=()=>{if(queued)return;queued=true;win.requestAnimationFrame(()=>{queued=false;injectDiagnosis();injectPlan();injectVideoFocus();injectChannelButton();});};
