@@ -144,7 +144,7 @@
 
     if(n(r.show)!==null&&r.show>=1.7&&(click.tone==='bad')){
       click.meaning='CTR is weak, but impressions are strongly expanded. Wider/colder distribution can lower CTR without proving the package is broken.';
-      click.next='Check traffic source and audience breadth first. Only call packaging the bottleneck if CTR remains weak in comparable source context.';
+      click.next='Check traffic source and how broad the audience was first. Only call packaging the bottleneck if CTR remains weak in comparable where the views came from.';
     }
 
     const a=r.audience||{},trend=(key,label)=>{
@@ -171,7 +171,7 @@
         ?'New people are arriving, but repeat behavior is weaker. That points more toward Trust / pathway pressure.'
         :'Audience movement does not isolate one simple Reach-vs-Trust problem yet.';
       rrNext=a.acquisitionBand==='weak'&&['steady','strong'].includes(a.loyaltyBand)
-        ?'Bias the plan toward qualified Reach/gateway ideas while protecting click and watch.'
+        ?'Bias the plan toward Reach ideas aimed at the right people while protecting click and watch.'
         :['steady','strong'].includes(a.acquisitionBand)&&a.loyaltyBand==='weak'
         ?'Bias the plan toward Trust/pathway videos, follow-ups and continuation.'
         :'Use the video job scorecard and business result to decide what the next content mix should prove.';
@@ -227,8 +227,8 @@
       alternative='A recent discovery spike can temporarily make repeat-viewer ratios look weaker.';
     }else if(r.outcome!==null&&r.outcome>=1.3){
       leading='Growth pattern worth protecting';
-      because='Recent mature outcomes are above creator normal and no earlier stage is clearly broken.';
-      next='Protect the repeatable winning mechanism and make adjacent follow-ups before changing the system.';
+      because='Recent 7-day results are above what this creator usually gets, and no earlier part of the video looks clearly broken.';
+      next='Protect what is clearly working and make nearby follow-ups before changing the whole approach.';
       alternative='One or two outliers may still be carrying the recent sample.';
     }else{
       because='The numbers do not point to one clear problem yet.';
@@ -253,9 +253,9 @@
     const drawer=win.document.getElementById('drawerBack');
     if(!drawer||!drawer.classList.contains('show')||!/Channel Diagnosis/i.test(drawer.textContent||''))return;
     const q=questionAnswers(c,W,ADC),map=[
-      ['1 · OUTCOME',q.outcome,'Uses mature same-age views / engaged views. Source: '+q.raw.sources.outcome+'.'],
+      ['1 · OUTCOME',q.outcome,'Uses 7-day views / engaged views. Source: '+q.raw.sources.outcome+'.'],
       ['2 · SHOW',q.show,'Uses same-age registered impressions. Source: '+q.raw.sources.show+'.'],
-      ['3 · CLICK',q.click,'Uses CTR vs creator normal, with impression expansion context. Source: '+q.raw.sources.click+'.'],
+      ['3 · CLICK',q.click,'Uses CTR vs what this creator usually gets, with impression expansion context. Source: '+q.raw.sources.click+'.'],
       ['4 · WATCH',q.watch,'Uses 0:30 first, APV fallback, AVD as support when available. Source: '+q.raw.sources.watch+'.'],
       ['5 · RETURN + RESULT',q.returnResult,'Uses New / Casual / Regular / Returning trend plus Reach / Trust / Convert job results when available.']
     ];
@@ -334,9 +334,9 @@
   }
   function liveReviewHtml(read){
     if(!read||read.status==='needs_baseline')return '<section class="awf-live muted" id="awf-live-review"><div class="awf-kicker">LIVE READ VS THIS CREATOR’S USUAL NUMBERS</div><h3>No fair comparison yet</h3><p>Set up what this creator usually gets at this point before judging this result.</p></section>';
-    if(read.status==='needs_data')return '<section class="awf-live muted" id="awf-live-review"><div class="awf-kicker">LIVE READ VS THIS CREATOR’S USUAL NUMBERS</div><h3>Add the checkpoint numbers</h3><p>As you enter the results below, this panel will update against the creator’s same-age normal.</p></section>';
+    if(read.status==='needs_data')return '<section class="awf-live muted" id="awf-live-review"><div class="awf-kicker">LIVE READ VS THIS CREATOR’S USUAL NUMBERS</div><h3>Add the checkpoint numbers</h3><p>As you enter the results below, this panel will update against what this creator usually gets at the same point after publishing.</p></section>';
     const c=read.comparisons,d=read.d||{},watch=n(c.retention30.deltaPp)!==null?['0:30',pp(c.retention30.deltaPp)]:['APV',pp(c.apv.deltaPp)],avd=n(c.avdSeconds?.multiple)!==null?mult(c.avdSeconds.multiple):'—';
-    return '<section class="awf-live '+esc(d.tone||'normal')+'" id="awf-live-review"><div class="awf-live-head"><div><div class="awf-kicker">LIVE SAME-AGE READ · '+esc(read.rw.hours===24?'24H':read.rw.hours===48?'48H':read.rw.hours===168?'7D':'28D')+'</div><h3>'+esc(d.headline||'Current read')+'</h3><p>'+esc(d.explain||'Compared with this creator’s same-age normal.')+'</p></div><div class="awf-bottleneck"><span>BOTTLENECK</span><b>'+esc(d.bottleneck||'—')+'</b></div></div><div class="awf-live-metrics"><div><span>OUTCOME</span><b>'+mult(c[read.outcomeKey]?.multiple)+'</b><small>vs normal</small></div><div><span>SHOW</span><b>'+mult(c.impressions.multiple)+'</b><small>impressions</small></div><div><span>CLICK</span><b>'+pp(c.ctr.deltaPp)+'</b><small>CTR vs normal</small></div><div><span>WATCH</span><b>'+esc(watch[1])+'</b><small>'+esc(watch[0])+' vs normal · AVD '+esc(avd)+'</small></div></div><p><b>What I would do next:</b> '+esc(d.next||'Keep collecting evidence before changing strategy.')+'</p><button class="btn" data-awf-use-read>Use this read in the review</button></section>';
+    return '<section class="awf-live '+esc(d.tone||'normal')+'" id="awf-live-review"><div class="awf-live-head"><div><div class="awf-kicker">LIVE SAME-AGE READ · '+esc(read.rw.hours===24?'24H':read.rw.hours===48?'48H':read.rw.hours===168?'7D':'28D')+'</div><h3>'+esc(d.headline||'Current read')+'</h3><p>'+esc(d.explain||'Compared with this creator’s usual result at the same point after publishing.')+'</p></div><div class="awf-bottleneck"><span>BOTTLENECK</span><b>'+esc(d.bottleneck||'—')+'</b></div></div><div class="awf-live-metrics"><div><span>OUTCOME</span><b>'+mult(c[read.outcomeKey]?.multiple)+'</b><small>vs normal</small></div><div><span>SHOW</span><b>'+mult(c.impressions.multiple)+'</b><small>impressions</small></div><div><span>CLICK</span><b>'+pp(c.ctr.deltaPp)+'</b><small>CTR vs normal</small></div><div><span>WATCH</span><b>'+esc(watch[1])+'</b><small>'+esc(watch[0])+' vs normal · AVD '+esc(avd)+'</small></div></div><p><b>What I would do next:</b> '+esc(d.next||'Keep collecting evidence before changing strategy.')+'</p><button class="btn" data-awf-use-read>Use this read in the review</button></section>';
   }
   function fillReview(drawer,read){
     if(!read?.d)return;
@@ -367,7 +367,7 @@
     }).join('');
     if(!latest||!latest.x?.d)return '<section class="awf-learn-page muted" id="awf-learn-page"><div class="awf-kicker">HOW THIS VIDEO IS TRACKING</div><h3>No fair checkpoint comparison yet</h3><p>Add the next checkpoint. Learn will compare it with what this creator usually gets at that point after publishing.</p><div class="awf-learn-pills">'+pills+'</div></section>';
     const d=latest.x.d;
-    return '<section class="awf-learn-page '+esc(d.tone||'normal')+'" id="awf-learn-page"><div class="awf-learn-head"><div><div class="awf-kicker">LATEST BASELINE READ · '+label(latest.hours)+'</div><h3>'+esc(d.headline||d.bottleneck||'Current read')+'</h3><p>'+esc(d.explain||'Compared with this creator’s same-age normal.')+'</p></div><div class="awf-bottleneck"><span>WHAT TO CARRY FORWARD</span><b>'+esc(d.next||'Keep collecting evidence.')+'</b></div></div><div class="awf-learn-pills">'+pills+'</div><p><b>Use Learn like this:</b> 24h = early read, 48h = problem check, 7d = main diagnosis, 28d = programming lesson. Save what changed, what it might mean, and what the next video should do differently.</p></section>';
+    return '<section class="awf-learn-page '+esc(d.tone||'normal')+'" id="awf-learn-page"><div class="awf-learn-head"><div><div class="awf-kicker">LATEST BASELINE READ · '+label(latest.hours)+'</div><h3>'+esc(d.headline||d.bottleneck||'Current read')+'</h3><p>'+esc(d.explain||'Compared with this creator’s usual result at the same point after publishing.')+'</p></div><div class="awf-bottleneck"><span>WHAT TO CARRY FORWARD</span><b>'+esc(d.next||'Keep collecting evidence.')+'</b></div></div><div class="awf-learn-pills">'+pills+'</div><p><b>Use Learn like this:</b> 24h = early read, 48h = problem check, 7d = main diagnosis, 28d = programming lesson. Save what changed, what it might mean, and what the next video should do differently.</p></section>';
   }
   function injectLearnPage(win,c,W){
     let view='';try{view=win.AcceleratorDeskBridge?.view?.()||''}catch(_){}
