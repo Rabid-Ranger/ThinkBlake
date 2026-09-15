@@ -369,7 +369,7 @@ ${JSON.stringify({schemaVersion:1,creatorId:c?.id||'',channelName:'ACTUAL CHANNE
         setEmpty('cg-p-better',s.success);
         setEmpty('cg-p-guard',s.guard);
         const metric=win.document.getElementById('cg-p-metric');
-        if(metric&&(!metric.value||metric.dataset.adcAuto!=='done')){metric.value=s.primaryMetricKey;metric.dataset.adcAuto='done';metric.dispatchEvent(new Event('change',{bubbles:true}));}
+        if(metric&&!c.coachOS?.plan90?.primaryMetricKey){metric.value=s.primaryMetricKey;metric.dataset.adcAuto='done';metric.dispatchEvent(new Event('change',{bubbles:true}));}
         const outcome=win.document.getElementById('cg-p-outcome');if(outcome&&!String(outcome.value||'').trim()){outcome.value='Improve '+s.focus+' while protecting the rest of the funnel.';outcome.dispatchEvent(new Event('input',{bubbles:true}));}
         fill.textContent='Added to empty fields';
         return;
