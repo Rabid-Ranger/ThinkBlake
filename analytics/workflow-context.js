@@ -70,29 +70,29 @@
   function countAnswer(v,kind='outcome',sample=0){
     const name=kind==='show'?'opportunity':'outcome';
     if(v===null)return {
-      tone:'muted',label:'I can’t answer this yet',
-      line:'No matched same-age '+(kind==='show'?'impression':'views / engaged-views')+' comparison is available.',
-      meaning:'The '+name+' question is still open.',
-      next:kind==='show'?'Add or verify 7-day impressions for recent comparable videos.':'Add or verify the mature 7-day outcome for recent comparable videos.'
+      tone:'muted',label:'Not enough data yet',
+      line:'We do not have a fair '+(kind==='show'?'impression':'views / engaged-views')+' comparison yet.',
+      meaning:'We cannot answer this question confidently yet.',
+      next:kind==='show'?'Add or verify 7-day impressions for a few similar recent videos.':'Add or verify the 7-day result for a few similar recent videos.'
     };
     if(v<.7)return {
-      tone:'bad',label:kind==='show'?'Yes. Opportunity is clearly weak.':'Yes. Recent videos are clearly under normal.',
-      line:'Recent median: '+mult(v)+' of creator normal'+(sample?' across '+sample+' mature video'+(sample===1?'':'s'):'')+'.',
-      meaning:kind==='show'?'SHOW is a real clue. The videos are not getting normal opportunity.':'Underperformance is real enough to keep diagnosing downstream.',
-      next:kind==='show'?'Before touching packaging, check topic demand, audience fit and traffic source.':'Move to SHOW. Ask whether the videos were given normal opportunity.'
+      tone:'bad',label:kind==='show'?'Yes. YouTube is showing these videos less than usual.':'Yes. Recent videos are clearly below normal.',
+      line:'Recent middle result: '+mult(v)+' of what this creator usually gets'+(sample?' across '+sample+' 7-day video'+(sample===1?'':'s'):'')+'.',
+      meaning:kind==='show'?'This is a real clue. YouTube is not showing these videos as much as it usually does.':'The videos really are under normal, so keep checking where the drop starts.',
+      next:kind==='show'?'Before changing the title or thumbnail, check the topic, who the video reached, and where the views came from.':'Next, check whether YouTube showed the videos as much as usual.'
     };
     if(v<1.3)return {
-      tone:'normal',label:kind==='show'?'No. Opportunity is roughly normal.':'No clear underperformance here.',
-      line:'Recent median: '+mult(v)+' of creator normal'+(sample?' across '+sample+' mature video'+(sample===1?'':'s'):'')+'.',
-      meaning:kind==='show'?'SHOW is not the first obvious failure.':'The outcome is inside the working normal range.',
-      next:kind==='show'?'Move to CLICK. Ask whether the right people chose the videos.':'Do not invent a channel crisis from normal results. Use the broader channel trend if there is another reason to investigate.'
+      tone:'normal',label:kind==='show'?'No. YouTube is showing these videos about as much as usual.':'No clear problem here.',
+      line:'Recent middle result: '+mult(v)+' of what this creator usually gets'+(sample?' across '+sample+' 7-day video'+(sample===1?'':'s'):'')+'.',
+      meaning:kind==='show'?'How often YouTube showed the videos does not look like the problem.':'The result is close to what this creator usually gets.',
+      next:kind==='show'?'Next, check whether people clicked when they saw the videos.':'Do not treat normal results like a channel problem. Only dig deeper if something else in the channel points to an issue.'
     };
     return {
       tone:v>=1.7?'great':'good',
-      label:kind==='show'?'No. Opportunity is above normal.':'No. Results are above normal.',
-      line:'Recent median: '+mult(v)+' of creator normal'+(sample?' across '+sample+' mature video'+(sample===1?'':'s'):'')+'.',
-      meaning:kind==='show'?'YouTube is giving these videos more opportunity than normal.':'This is a strength signal, not an underperformance signal.',
-      next:kind==='show'?'If results are still disappointing, move to CLICK/WATCH. Do not blame lack of opportunity.':'Protect what is working and look for the repeatable mechanism before changing it.'
+      label:kind==='show'?'No. YouTube is showing these videos more than usual.':'No. Results are above normal.',
+      line:'Recent middle result: '+mult(v)+' of what this creator usually gets'+(sample?' across '+sample+' 7-day video'+(sample===1?'':'s'):'')+'.',
+      meaning:kind==='show'?'YouTube is showing these videos more than it usually does.':'This looks like a strength, not a problem.',
+      next:kind==='show'?'If the result is still weak, check CLICK and WATCH next. The problem is not that YouTube failed to show it.':'Protect what is working and figure out what you can repeat before changing it.'
     };
   }
   function rateAnswer(rate,label,thresholdRatio,missingMetric){
@@ -100,10 +100,10 @@
     const currentTxt=current===null?'—':current.toFixed(1)+'%';
     const baselineTxt=baseline===null?'—':baseline.toFixed(1)+'%';
     if(ratioV===null&&delta===null)return {
-      tone:'muted',label:'I can’t answer this yet',
-      line:'No matched creator-normal comparison for '+missingMetric+'.',
-      meaning:'Raw '+label+' without a fair creator normal is not enough to diagnose this stage.',
-      next:'Add or verify the 7-day '+missingMetric+' baseline and recent comparable video values.'
+      tone:'muted',label:'Not enough data yet',
+      line:'We do not have a fair comparison for '+missingMetric+'.',
+      meaning:'The raw '+label+' number by itself is not enough to call this a problem.',
+      next:'Add or verify the 7-day '+missingMetric+' normal and a few similar recent videos.'
     };
     const weak=(ratioV!==null&&ratioV<thresholdRatio)||(ratioV===null&&delta!==null&&delta<(label==='CTR'?-0.5:-3));
     const soft=!weak&&((ratioV!==null&&ratioV<.85)||(delta!==null&&delta<(label==='CTR'?-0.5:-3)));
@@ -111,28 +111,28 @@
     const line=(current!==null&&baseline!==null?label+' '+currentTxt+' vs '+baselineTxt+' normal':label+' comparison available')+
       (ratioV!==null?' · '+mult(ratioV)+' normal':'')+(delta!==null?' · '+pp(delta):'');
     if(weak)return {
-      tone:'bad',label:'Yes. This stage is clearly weak vs creator normal.',
+      tone:'bad',label:'Yes. This looks clearly weak for this creator.',
       line,
-      meaning:label==='CTR'?'The people who were shown the videos are choosing them materially below the creator’s normal.':'The viewing experience is delivering materially below the creator’s normal after the click.',
-      next:label==='CTR'?'Check impression expansion and traffic source. If those do not explain it, packaging is a real working bottleneck.':'Open the retention curve and inspect promise delivery, the first 30–60 seconds and the first meaningful divergence.'
+      meaning:label==='CTR'?'People are clicking these videos less than they usually do for this creator.':'People are watching less than they usually do after clicking.',
+      next:label==='CTR'?'First check whether YouTube showed the video to a broader audience and where the views came from. If that does not explain it, the title/thumbnail is likely the issue.':'Open the retention graph and check the first 30–60 seconds. Find where viewers start leaving more than usual.'
     };
     if(soft)return {
-      tone:'warn',label:'A little soft, but not enough to stop the diagnosis here.',
+      tone:'warn',label:'A little below normal, but not enough to call it the main problem.',
       line,
-      meaning:label==='CTR'?'CLICK is below normal enough to watch, but not strong enough by itself to call packaging the channel bottleneck.':'WATCH is below normal enough to investigate, but not strong enough by itself to call retention the channel bottleneck.',
-      next:label==='CTR'?'Keep it as a secondary clue, check source/expansion, then move to WATCH.':'Keep it as a secondary clue and continue to RETURN + RESULT.'
+      meaning:label==='CTR'?'CTR is a little low, but not low enough by itself to say the title/thumbnail is the main problem.':'Watch performance is a little low, but not low enough by itself to say retention is the main problem.',
+      next:label==='CTR'?'Keep it in mind, check where the views came from, then look at WATCH.':'Keep it in mind and continue to RETURN + RESULT.'
     };
     if(strong)return {
-      tone:'good',label:'No. This stage is stronger than normal.',
+      tone:'good',label:'No. This looks stronger than usual.',
       line,
-      meaning:label==='CTR'?'CLICK is not the first obvious failure.':'WATCH is not the first obvious failure.',
+      meaning:label==='CTR'?'Clicking does not look like the problem.':'Watching does not look like the problem.',
       next:label==='CTR'?'Move to WATCH.':'Protect the viewing pattern and continue to RETURN + RESULT.'
     };
     return {
-      tone:'normal',label:'No clear problem here.',
+      tone:'normal',label:'Nothing looks clearly wrong here.',
       line,
-      meaning:label==='CTR'?'CLICK is close enough to creator normal that it should not be the first diagnosis.':'WATCH is close enough to creator normal that it should not be the first diagnosis.',
-      next:label==='CTR'?'Move to WATCH unless source context creates a specific concern.':'Move to RETURN + RESULT.'
+      meaning:label==='CTR'?'CTR is close to what this creator usually gets, so I would not stop here.':'Watch performance is close to what this creator usually gets, so I would not stop here.',
+      next:label==='CTR'?'Next, look at WATCH unless the traffic source clearly changed.':'Next, look at RETURN + RESULT.'
     };
   }
   function questionAnswers(c,W,ADC){
@@ -198,12 +198,12 @@
     const q=questionAnswers(c,W,ADC),r=q.raw,a=r.audience||{},p=r.p||{};
     let leading='Not enough evidence yet',because='',next='',alternative='',confidence='Low';
     if(r.outcome===null){
-      because='The OUTCOME question is still unanswered because there is no fair mature same-age result.';
-      next='Verify the 7-day result before choosing a downstream bottleneck.';
+      because='We still cannot answer OUTCOME because we do not have a fair 7-day comparison yet.';
+      next='Verify the 7-day result before deciding what the main issue is.';
     }else if(r.show!==null&&r.show<.7){
-      leading='Discovery / idea opportunity';
-      because='OUTCOME is weak and SHOW is the first clear unusual stage: recent impression opportunity is '+mult(r.show)+' of normal.';
-      next='Check topic demand, audience fit and traffic source before changing packaging.';
+      leading='Topic / Reach';
+      because='The videos are under normal, and the first place the drop shows up is SHOW: YouTube is showing them at '+mult(r.show)+' of the usual level.';
+      next='Check the topic, who the video reached, and where the views came from before changing the title or thumbnail.';
       alternative='A narrower intentional audience, source shift or mixed comparison set could lower impressions without making the idea bad.';
     }else if((n(r.click?.multiple)!==null&&r.click.multiple<.7)||(n(r.click?.multiple)===null&&n(r.click?.deltaPp)!==null&&r.click.deltaPp<-.5)){
       leading='Packaging / click';
@@ -216,14 +216,14 @@
       next=q.watch.next;
       alternative='Traffic source or audience-temperature changes can depress retention without proving structure is the only cause.';
     }else if(a.acquisitionBand==='weak'&&['steady','strong'].includes(a.loyaltyBand)){
-      leading='Acquisition / gateway';
-      because='The video funnel does not isolate an earlier failure, while New viewers are weakening relative to repeat-audience health.';
-      next='Use Reach/gateway videos around proven audience problems and protect click/watch quality.';
+      leading='Reach / getting new viewers in';
+      because='The video-level numbers do not show an earlier problem, but New viewers are falling while repeat viewers are healthier.';
+      next='Make more Reach videos around proven audience problems, while keeping CTR and watch quality healthy.';
       alternative='Seasonality or an intentional core-audience period can reduce new viewers without representing a structural problem.';
     }else if(['steady','strong'].includes(a.acquisitionBand)&&a.loyaltyBand==='weak'){
-      leading='Loyalty / pathway';
-      because='The video funnel does not isolate an earlier failure, while repeat-audience health is weaker than new-viewer acquisition.';
-      next='Build follow-ups, bridges, series and clearer continuation paths.';
+      leading='Trust / getting viewers to come back';
+      because='The video-level numbers do not show an earlier problem, but repeat viewing is weaker than new-viewer growth.';
+      next='Make clearer follow-ups, series, and obvious next videos so people know what to watch next.';
       alternative='A recent discovery spike can temporarily make repeat-viewer ratios look weaker.';
     }else if(r.outcome!==null&&r.outcome>=1.3){
       leading='Growth pattern worth protecting';
@@ -231,9 +231,9 @@
       next='Protect the repeatable winning mechanism and make adjacent follow-ups before changing the system.';
       alternative='One or two outliers may still be carrying the recent sample.';
     }else{
-      because='The current evidence does not isolate one clear first unusual stage.';
-      next='Keep the broader diagnosis flow primary. Do not force a channel-wide bottleneck from mixed/normal evidence.';
-      alternative='The issue may be portfolio, market, audience, business or capacity rather than one video funnel stage.';
+      because='The numbers do not point to one clear problem yet.';
+      next='Use the rest of the diagnosis questions. Do not force a channel-wide problem when the numbers are mixed or normal.';
+      alternative='The issue may be what you are making, the market, the audience, the business, or capacity rather than one video metric.';
     }
     if((p.max||0)>=3)confidence='Medium';
     else if((p.max||0)>=2)confidence='Low';
@@ -242,10 +242,10 @@
   }
   function answerHtml(question,x,detail=''){
     return '<div class="awf-answer '+x.tone+'">'+
-      '<span>DATA ANSWER TO THIS QUESTION</span>'+
+      '<span>WHAT THE DATA SAYS</span>'+
       '<b>'+esc(x.label)+'</b>'+
       '<p class="awf-answer-evidence">'+esc(x.line)+'</p>'+
-      '<div class="awf-answer-grid"><div><small>WHAT IT MEANS</small><p>'+esc(x.meaning||'')+'</p></div><div><small>NEXT IN THE DIAGNOSIS</small><p>'+esc(x.next||'')+'</p></div></div>'+
+      '<div class="awf-answer-grid"><div><small>WHAT IT MEANS</small><p>'+esc(x.meaning||'')+'</p></div><div><small>WHAT I’D CHECK NEXT</small><p>'+esc(x.next||'')+'</p></div></div>'+
       (detail?'<em>'+esc(detail)+'</em>':'')+
     '</div>';
   }
@@ -270,7 +270,7 @@
     }
     const saved=c.coachOS?.diagnosis||{},prop=proposal(c,W,ADC);
     const summaryHtml='<section class="awf-diagnosis-decision '+(prop.leading==='Not enough evidence yet'?'muted':'focus')+'" id="awf-diagnosis-decision">'+
-      '<div class="awf-kicker">DATA-ASSISTED WORKING ANSWER</div>'+
+      '<div class="awf-kicker">WHAT THE DATA IS POINTING TO</div>'+
       '<h3>'+esc(prop.leading)+'</h3>'+
       '<p>'+esc(prop.because)+'</p>'+
       '<div class="awf-plan-link"><span>WHAT THIS MEANS FOR THE PLAN</span><b>'+esc(prop.jobFocus)+'</b><p>'+esc(prop.next)+'</p></div>'+
@@ -333,8 +333,8 @@
     return {rw,status:'compared',b,cur,comparisons,d,outcomeKey};
   }
   function liveReviewHtml(read){
-    if(!read||read.status==='needs_baseline')return '<section class="awf-live muted" id="awf-live-review"><div class="awf-kicker">LIVE SAME-AGE READ</div><h3>No matched baseline yet</h3><p>Build the same-age baseline before treating this checkpoint like a diagnosis.</p></section>';
-    if(read.status==='needs_data')return '<section class="awf-live muted" id="awf-live-review"><div class="awf-kicker">LIVE SAME-AGE READ</div><h3>Add the checkpoint numbers</h3><p>As you enter the results below, this panel will update against the creator’s same-age normal.</p></section>';
+    if(!read||read.status==='needs_baseline')return '<section class="awf-live muted" id="awf-live-review"><div class="awf-kicker">LIVE READ VS THIS CREATOR’S USUAL NUMBERS</div><h3>No fair comparison yet</h3><p>Set up what this creator usually gets at this point before judging this result.</p></section>';
+    if(read.status==='needs_data')return '<section class="awf-live muted" id="awf-live-review"><div class="awf-kicker">LIVE READ VS THIS CREATOR’S USUAL NUMBERS</div><h3>Add the checkpoint numbers</h3><p>As you enter the results below, this panel will update against the creator’s same-age normal.</p></section>';
     const c=read.comparisons,d=read.d||{},watch=n(c.retention30.deltaPp)!==null?['0:30',pp(c.retention30.deltaPp)]:['APV',pp(c.apv.deltaPp)],avd=n(c.avdSeconds?.multiple)!==null?mult(c.avdSeconds.multiple):'—';
     return '<section class="awf-live '+esc(d.tone||'normal')+'" id="awf-live-review"><div class="awf-live-head"><div><div class="awf-kicker">LIVE SAME-AGE READ · '+esc(read.rw.hours===24?'24H':read.rw.hours===48?'48H':read.rw.hours===168?'7D':'28D')+'</div><h3>'+esc(d.headline||'Current read')+'</h3><p>'+esc(d.explain||'Compared with this creator’s same-age normal.')+'</p></div><div class="awf-bottleneck"><span>BOTTLENECK</span><b>'+esc(d.bottleneck||'—')+'</b></div></div><div class="awf-live-metrics"><div><span>OUTCOME</span><b>'+mult(c[read.outcomeKey]?.multiple)+'</b><small>vs normal</small></div><div><span>SHOW</span><b>'+mult(c.impressions.multiple)+'</b><small>impressions</small></div><div><span>CLICK</span><b>'+pp(c.ctr.deltaPp)+'</b><small>CTR vs normal</small></div><div><span>WATCH</span><b>'+esc(watch[1])+'</b><small>'+esc(watch[0])+' vs normal · AVD '+esc(avd)+'</small></div></div><p><b>What I would do next:</b> '+esc(d.next||'Keep collecting evidence before changing strategy.')+'</p><button class="btn" data-awf-use-read>Use this read in the review</button></section>';
   }
@@ -344,9 +344,9 @@
     const values={
       'cg-r-see':(c[out]?.multiple!==null?'Outcome is '+mult(c[out].multiple)+' normal. ':'')+'Current read: '+d.bottleneck+'.',
       'cg-r-compare':'Compared with this creator’s matched '+(read.rw.hours===24?'24-hour':read.rw.hours===48?'48-hour':read.rw.hours===168?'7-day':'28-day')+' baseline.',
-      'cg-r-unusual':d.bottleneck==='NO CLEAR ISSUE'?'Nothing is clearly outside the working range.':d.bottleneck,
+      'cg-r-unusual':d.bottleneck==='NO CLEAR ISSUE'?'Nothing looks clearly off.':d.bottleneck,
       'cg-r-mean':d.explain||'',
-      'cg-r-notprove':'This comparison identifies where to investigate. It does not prove the cause by itself.',
+      'cg-r-notprove':'This comparison shows where the problem might be. It does not prove why it happened.',
       'cg-r-next':d.next||'',
       'cg-r-decision':d.next||''
     };
@@ -365,7 +365,7 @@
       const d=x.x?.d;
       return '<div class="awf-learn-pill '+esc(d?.tone||'muted')+'"><span>'+label(x.hours)+'</span><b>'+(n(x.multiple)!==null?mult(x.multiple):'—')+'</b><small>'+esc(d?.bottleneck||'No comparable read yet')+'</small></div>';
     }).join('');
-    if(!latest||!latest.x?.d)return '<section class="awf-learn-page muted" id="awf-learn-page"><div class="awf-kicker">BASELINE LEARNING LOOP</div><h3>No comparable checkpoint yet</h3><p>Add the next mature checkpoint. The Learn workflow will compare it with the creator’s exact same-age normal.</p><div class="awf-learn-pills">'+pills+'</div></section>';
+    if(!latest||!latest.x?.d)return '<section class="awf-learn-page muted" id="awf-learn-page"><div class="awf-kicker">HOW THIS VIDEO IS TRACKING</div><h3>No fair checkpoint comparison yet</h3><p>Add the next checkpoint. Learn will compare it with what this creator usually gets at that point after publishing.</p><div class="awf-learn-pills">'+pills+'</div></section>';
     const d=latest.x.d;
     return '<section class="awf-learn-page '+esc(d.tone||'normal')+'" id="awf-learn-page"><div class="awf-learn-head"><div><div class="awf-kicker">LATEST BASELINE READ · '+label(latest.hours)+'</div><h3>'+esc(d.headline||d.bottleneck||'Current read')+'</h3><p>'+esc(d.explain||'Compared with this creator’s same-age normal.')+'</p></div><div class="awf-bottleneck"><span>WHAT TO CARRY FORWARD</span><b>'+esc(d.next||'Keep collecting evidence.')+'</b></div></div><div class="awf-learn-pills">'+pills+'</div><p><b>Use Learn like this:</b> 24h = early read, 48h = problem check, 7d = main diagnosis, 28d = programming lesson. Save what changed, what it might mean, and what the next video should do differently.</p></section>';
   }
