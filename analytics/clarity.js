@@ -236,9 +236,9 @@
     }
     function recentHtml(c){
       const reads=bestReads(c,8);
-      if(!reads.length)return '<section class="ac-section ac-recent-section"><div class="ac-section-head"><div class="ac-section-index">05</div><div><div class="ac-kicker">RECENT VIDEOS</div><h2>No fair video reads yet</h2><p>Add same-age results and the list will fill itself in.</p></div></div></section>';
+      if(!reads.length)return '<section class="ac-section ac-recent-section"><div class="ac-section-head"><div class="ac-section-index">05</div><div><div class="ac-kicker">RECENT VIDEOS</div><h2>No fair video reads yet</h2><p>Add results at the same checkpoints and the list will fill itself in.</p></div></div></section>';
       return '<section class="ac-section ac-recent-section">'+
-        '<div class="ac-section-head"><div class="ac-section-index">05</div><div><div class="ac-kicker">RECENT VIDEOS</div><h2>See the pattern without opening every video</h2><p>Latest usable checkpoint, score vs normal, and the current bottleneck for each video.</p></div></div>'+
+        '<div class="ac-section-head"><div class="ac-section-index">05</div><div><div class="ac-kicker">RECENT VIDEOS</div><h2>See the pattern without opening every video</h2><p>Latest usable checkpoint, score vs usual, and the main issue for each video.</p></div></div>'+
         '<div class="ac-section-body"><div class="ac-recent">'+reads.map(x=>{
           const out=x.d.outcomeMultiple===null?'—':fmtMultiple(x.d.outcomeMultiple);
           return '<div class="ac-row"><div><b>'+esc(x.v.title)+'</b><small>'+AGES[x.h].label+' · '+AGES[x.h].name+'</small></div><strong class="'+x.d.tone+'">'+out+'</strong><span class="ac-badge '+x.d.tone+'">'+esc(x.d.bottleneck)+'</span></div>';
@@ -280,7 +280,7 @@
       const comparable=d.comparable;
       return '<div class="ac-shell">'+
         '<section class="ac-section ac-channel-section '+(comparable?'normal':'warn')+'">'+
-          '<div class="ac-section-head"><div class="ac-section-index">02</div><div><div class="ac-kicker">90-DAY CHANNEL TREND</div><h2>'+(comparable?'Is the whole channel moving?':'Need two verified 90-day reports')+'</h2><p>Use this for channel direction. Do not use 90-day totals as a per-video baseline.</p></div><div class="ac-top-badge"><span>STATUS</span><b>'+(comparable?'READY':'NOT ENOUGH DATA')+'</b><small>Video bottlenecks still come from same-age video comparisons.</small></div></div>'+
+          '<div class="ac-section-head"><div class="ac-section-index">02</div><div><div class="ac-kicker">90-DAY CHANNEL TREND</div><h2>'+(comparable?'Is the whole channel moving?':'Need two verified 90-day reports')+'</h2><p>Use this for channel direction. Do not use 90-day totals as a per-video baseline.</p></div><div class="ac-top-badge"><span>STATUS</span><b>'+(comparable?'READY':'NOT ENOUGH DATA')+'</b><small>Video issues still come from comparing each video with what this creator usually gets at the same point after publishing.</small></div></div>'+
           '<div class="ac-section-body"><div class="ac-channel">'+keys.map(([k,l])=>{
             const a=n(d.starting?.[k]),z=n(d.current?.[k]);let change='Not comparable yet';
             if(comparable&&a!==null&&z!==null) change=k==='ctr'?((z-a)>=0?'+':'')+(z-a).toFixed(1)+' pp':a?((z/a-1)*100>=0?'+':'')+((z/a-1)*100).toFixed(1)+'%':'—';
