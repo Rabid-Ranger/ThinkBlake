@@ -22,13 +22,43 @@
   function audienceRead(c){
     const rows=snapshots(c),cur=rows.at(-1)||{},prev=rows.at(-2)||{};
     const change=k=>ratio(cur[k],prev[k]);
-    const loyaltyCandidates=['regular','returning','casual'].map(k=>[k,change(k)]).filter(x=>x[1]!==null);
-    const loyalty=loyaltyCandidates.find(x=>x[0]==='regular')||loyaltyCandidates.find(x=>x[0]==='returning')||loyaltyCandidates[0]||[null,null];
-    const acquisition=change('newViewers'),depth=change('avgViewsPerViewer');
+    const changes={
+      newViewers:change('newViewers'),
+      casual:change('casual'),
+      regular:change('regular'),
+      returning:change('returning'),
+      avgViewsPerViewer:change('avgViewsPerViewer')
+    };
+    const repeatEntries=['casual','regular','returning'].map(k=>[k,changes[k]]).filter(x=>x[1]!==null);
+    const repeatValues=repeatEntries.map(x=>x[1]).sort((a,b)=>a-b);
+    const loyalty=repeatValues.length?(repeatValues.length%2?repeatValues[Math.floor(repeatValues.length/2)]:(repeatValues[repeatValues.length/2-1]+repeatValues[repeatValues.length/2])/2):null;
+    const acquisition=changes.newViewers,depth=changes.avgViewsPerViewer;
     const band=r=>r===null?'unknown':r<.85?'weak':r>1.05?'strong':'steady';
+    let read='Not enough audience data yet.',focus='Need another comparable 90-day audience report.';
+    if(rows.length>=2){
+      if(band(acquisition)==='weak'&&['steady','strong'].includes(band(loyalty))){
+        read='Repeat viewing looks healthier than new-viewer growth.';
+        focus='Reach is the audience-side pressure: bring in more of the right new viewers while protecting what is already bringing people back.';
+      }else if(['steady','strong'].includes(band(acquisition))&&band(loyalty)==='weak'){
+        read='New people are arriving, but repeat viewing is weaker.';
+        focus='Trust is the audience-side pressure: make the next useful video obvious and give viewers stronger reasons to return.';
+      }else if(band(acquisition)==='weak'&&band(loyalty)==='weak'){
+        read='Both new-viewer growth and repeat viewing are weak.';
+        focus='This is broader than one audience metric. Check the earlier diagnosis stages, then the content mix and channel promise.';
+      }else if(['steady','strong'].includes(band(acquisition))&&['steady','strong'].includes(band(loyalty))){
+        read='New-viewer growth and repeat viewing both look healthy.';
+        focus='Audience growth is not the obvious break. Protect what is working and keep checking the rest of the diagnosis.';
+      }
+      if(depth!==null&&band(depth)==='weak')focus+=' Average views per viewer is also down, so viewers may not be going as deep into the channel.';
+      if(depth!==null&&band(depth)==='strong')focus+=' Average views per viewer is up, which supports stronger channel depth.';
+    }
     return {
       current:cur,previous:prev,hasCurrent:Boolean(rows.length),hasComparison:rows.length>=2,
-      acquisition,acquisitionBand:band(acquisition),loyaltyKey:loyalty[0],loyalty:loyalty[1],loyaltyBand:band(loyalty[1]),depth,depthBand:band(depth),
+      changes,
+      acquisition,acquisitionBand:band(acquisition),
+      loyaltyKey:repeatEntries.length>1?'repeat audience':repeatEntries[0]?.[0]||null,
+      loyalty,loyaltyBand:band(loyalty),loyaltySignals:repeatEntries,
+      depth,depthBand:band(depth),read,focus,
       newViewers:n(cur.newViewers),casual:n(cur.casual),regular:n(cur.regular),returning:n(cur.returning),avgViewsPerViewer:n(cur.avgViewsPerViewer)
     };
   }
@@ -61,7 +91,7 @@
     const phrase=(r,label)=>r===null?'No comparable trend yet':label+' '+signed(r-1)+' vs prior';
     return [
       {key:'attention',label:'ATTENTION',band:stageBand(attention),value:phrase(attention,outcomeKey==='engagedViews'?'Engaged views':'Views'),sub:impressions===null?'Impressions trend unavailable':'Impressions '+signed(impressions-1)+' vs prior'},
-      {key:'return',label:'RETURN',band:stageBand(returnRatio),value:returnRatio===null?'No comparable repeat-audience trend yet':(audience.loyaltyKey==='regular'?'Regular':audience.loyaltyKey==='casual'?'Casual':'Returning')+' viewers '+signed(returnRatio-1),sub:'Are more people choosing to come back?'},
+      {key:'return',label:'RETURN',band:stageBand(returnRatio),value:returnRatio===null?'No comparable repeat-audience trend yet':'Repeat-audience trend '+signed(returnRatio-1),sub:'Casual + Regular + Returning viewers, read together.'},
       {key:'depth',label:'LIBRARY DEPTH',band:stageBand(depth),value:depth===null?'Average views/viewer not comparable yet':'Avg views/viewer '+signed(depth-1)+' vs prior',sub:'Is attention turning into more viewing?'},
       {key:'result',label:'RESULT',band:stageBand(resultRatio),value:resultRatio===null?'Business result not connected yet':(resultKey==='qualifiedLeads'?'Qualified leads':resultKey==='bookings'?'Bookings':'Sales')+' '+signed(resultRatio-1),sub:'Is attention producing the intended outcome?'}
     ];
@@ -113,7 +143,7 @@
       if(audience.acquisition!==null)why.push('New viewers are '+signed(audience.acquisition-1)+' vs the prior 90-day report.');
       if(audience.loyalty!==null)why.push((audience.loyaltyKey==='regular'?'Regular':audience.loyaltyKey==='casual'?'Casual':'Returning')+' viewers are '+signed(audience.loyalty-1)+' vs prior.');
     } else if(audience.hasCurrent) why.push('Audience data is saved, but we need one more 90-day report before we can see the trend.');
-    else why.push('We do not have a 90-day audience mix yet, so New / Returning viewer trends are not affecting this read.');
+    else why.push('We do not have a 90-day audience mix yet, so New / Casual / Regular / Returning viewer trends are not affecting this read.');
     const stages=channelStages(c,audience);
     return {pattern,audience,trajectory,diagnosis,...focus,action,why,stages};
   }
@@ -145,13 +175,16 @@
         '<div class="adc-baselines">'+baselinePills(r)+'</div>'+
         '<div class="adc-subhead"><b>Channel health</b><span>Are we getting attention, bringing people back, getting them to watch more, and creating a result? A weak area tells you where to look next, not why it happened.</span></div>'+
         '<div class="adc-stages">'+r.stages.map(s=>'<div class="adc-stage '+s.band+'"><span>'+esc(s.label)+'</span><b>'+esc(s.value)+'</b><small>'+esc(s.sub)+'</small></div>').join('')+'</div>'+
-        '<div class="adc-subhead"><b>Audience health</b><span>Use this to see whether the bigger issue is getting new people in or getting viewers to come back. These are trends, not grades.</span></div>'+
+        '<div class="adc-subhead"><b>Audience growth + loyalty</b><span>Use direction over time. These are audience segments, not a person-by-person funnel.</span></div>'+
+        '<div class="adc-audience-read"><b>'+esc(a.read)+'</b><span>'+esc(a.focus)+'</span></div>'+
         '<div class="adc-audience">'+
-          audienceCard('New viewers',a.newViewers,a.acquisition,'Are we attracting new people?')+
-          audienceCard('Casual viewers',a.casual,a.hasComparison?ratio(a.current.casual,a.previous.casual):null,'Are newer viewers starting to come back?')+
-          audienceCard('Regular viewers',a.regular,a.hasComparison?ratio(a.current.regular,a.previous.regular):null,'Is the loyal core strengthening?')+
-          audienceCard('Returning viewers',a.returning,a.hasComparison?ratio(a.current.returning,a.previous.returning):null,'Are people choosing the channel again?')+
+          audienceCard('New viewers',a.newViewers,a.changes?.newViewers??null,'First-time viewers in the selected period. This is the Reach signal.')+
+          audienceCard('Casual viewers',a.casual,a.changes?.casual??null,'People who have watched occasionally. Use the trend as an early repeat-viewing signal.')+
+          audienceCard('Regular viewers',a.regular,a.changes?.regular??null,'Long-term consistent viewers. The definition is strict, so direction matters more than the raw size.')+
+          audienceCard('Returning viewers',a.returning,a.changes?.returning??null,'People coming back to the channel again. Read this with Casual + Regular, not by itself.')+
+          audienceCard('Avg views / viewer',a.avgViewsPerViewer,a.changes?.avgViewsPerViewer??null,'A channel-depth clue. Repeat views of the same video can count.')+
         '</div>'+
+        '<small class="adc-audience-note">Do not read this as New → Casual → Regular conversion. Studio does not prove that specific people moved between those groups.</small>'+
         '<div class="adc-overall-foot"><span><b>Suggested video job if you are addressing this focus:</b> '+esc(r.action.job)+'</span><span><b>Measure:</b> '+esc(r.action.metric)+'</span><button class="btn" data-ac-mode="channel">View 90-day channel progress</button></div>'+
       '</div>'+
     '</section>';
@@ -176,7 +209,7 @@
     const focus=String(r?.focus||'No clear channel bottleneck yet'),x=focus.toLowerCase();
     let primaryMetricKey='engagedViews',job=r?.action?.job||'Decide from the plan',mix='Keep the existing Reach / Trust / Convert mix unless the diagnosis gives you a reason to change it.';
     let hypothesis='If we improve the current focus, the result should improve without hurting CTR or watch quality.';
-    let success='Across several similar videos, the main number improves toward what this what this creator usually getsly gets while the other important numbers stay healthy.';
+    let success='Across several similar videos, the main number improves toward what this creator usually gets while the other important numbers stay healthy.';
     let guard='Do not improve one number by attracting the wrong audience or hurting another important part of the video.';
     if(x.includes('packag')){
       primaryMetricKey='ctr';
@@ -380,8 +413,8 @@ ${JSON.stringify({schemaVersion:1,creatorId:c?.id||'',channelName:'ACTUAL CHANNE
       .adc-kicker{font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;opacity:.65}
       .adc-overall{margin-bottom:24px}.adc-overall.focus{border-left-color:#366f7a}.adc-overall.warn{border-left-color:#b5822e}.adc-overall.great{border-left-color:#2f8464}
       .adc-overall-head{grid-template-columns:44px minmax(0,1fr) minmax(260px,420px)}.adc-overall h2{margin:4px 0 6px}.adc-overall p{margin:0;line-height:1.5}.adc-focus{padding:14px;border-radius:12px;background:rgba(75,104,110,.08);display:grid;gap:5px}.adc-focus span{font-size:10px;font-weight:900;letter-spacing:.08em}.adc-focus b{line-height:1.4}.adc-focus small{opacity:.7}
-      .adc-baselines,.adc-audience,.adc-stages{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.adc-baseline-pill,.adc-audience-card,.adc-stage{border:1px solid var(--line,#d9e0e2);border-radius:11px;padding:12px;display:grid;gap:3px}.adc-stage span{font-size:10px;font-weight:900;letter-spacing:.07em}.adc-stage b{font-size:13px;line-height:1.35}.adc-stage small{opacity:.65;line-height:1.35}.adc-stage.weak{border-top:4px solid #b54b4b}.adc-stage.strong{border-top:4px solid #2f8464}.adc-stage.steady{border-top:4px solid #55757a}.adc-stage.unknown{opacity:.65}.adc-baseline-pill span,.adc-audience-card span{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}.adc-baseline-pill b,.adc-audience-card b{font-size:19px}.adc-baseline-pill small,.adc-audience-card small{opacity:.65;line-height:1.35}.adc-baseline-pill.muted,.adc-audience-card.muted{opacity:.6}.adc-audience-card.bad{border-top:4px solid #b54b4b}.adc-audience-card.good{border-top:4px solid #2f8464}.adc-audience-card.normal{border-top:4px solid #55757a}.adc-audience-card strong{font-size:11px}
-      .adc-subhead{display:flex;gap:10px;align-items:baseline;justify-content:space-between}.adc-subhead span{font-size:12px;opacity:.65}.adc-overall-foot{display:flex;gap:18px;justify-content:space-between;flex-wrap:wrap;font-size:12px}
+      .adc-baselines,.adc-stages{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.adc-audience{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}.adc-baseline-pill,.adc-audience-card,.adc-stage{border:1px solid var(--line,#d9e0e2);border-radius:11px;padding:12px;display:grid;gap:3px}.adc-stage span{font-size:10px;font-weight:900;letter-spacing:.07em}.adc-stage b{font-size:13px;line-height:1.35}.adc-stage small{opacity:.65;line-height:1.35}.adc-stage.weak{border-top:4px solid #b54b4b}.adc-stage.strong{border-top:4px solid #2f8464}.adc-stage.steady{border-top:4px solid #55757a}.adc-stage.unknown{opacity:.65}.adc-baseline-pill span,.adc-audience-card span{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}.adc-baseline-pill b,.adc-audience-card b{font-size:19px}.adc-baseline-pill small,.adc-audience-card small{opacity:.65;line-height:1.35}.adc-baseline-pill.muted,.adc-audience-card.muted{opacity:.6}.adc-audience-card.bad{border-top:4px solid #b54b4b}.adc-audience-card.good{border-top:4px solid #2f8464}.adc-audience-card.normal{border-top:4px solid #55757a}.adc-audience-card strong{font-size:11px}
+      .adc-subhead{display:flex;gap:10px;align-items:baseline;justify-content:space-between}.adc-subhead span{font-size:12px;opacity:.65}.adc-audience-read{margin:0 0 10px;padding:12px;border-radius:10px;background:rgba(75,104,110,.07);display:grid;gap:3px}.adc-audience-read span,.adc-audience-note{font-size:12px;line-height:1.45;opacity:.72}.adc-audience-note{display:block;margin-top:8px}.adc-overall-foot{display:flex;gap:18px;justify-content:space-between;flex-wrap:wrap;font-size:12px}
       .adc-diagnosis{border-left:5px solid #55757a!important}.adc-diagnosis.focus{border-left-color:#366f7a!important}.adc-diagnosis.warn{border-left-color:#b5822e!important}.adc-diagnosis.great{border-left-color:#2f8464!important}.adc-decision-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.adc-decision-grid>div{border:1px solid var(--line,#ddd);border-radius:10px;padding:12px;display:grid;gap:4px}.adc-decision-grid span{font-size:10px;font-weight:800;text-transform:uppercase}.adc-decision-grid small{opacity:.65}
       .adc-plan-focus{margin:0 0 14px;border:1px solid var(--line,#d9e0e2);border-left:5px solid #55757a;border-radius:12px;padding:14px;background:var(--card,#fff);display:grid;gap:12px}.adc-plan-focus.focus{border-left-color:#366f7a}.adc-plan-focus.warn{border-left-color:#b5822e}.adc-plan-focus.great{border-left-color:#2f8464}.adc-plan-focus h3{margin:4px 0 5px}.adc-plan-focus p{margin:0;line-height:1.45}.adc-plan-focus small{opacity:.65}.adc-plan-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.adc-plan-grid>div{border:1px solid var(--line,#d9e0e2);border-radius:9px;padding:10px;display:grid;gap:4px}.adc-plan-grid span{font-size:9px;font-weight:900;letter-spacing:.07em}.adc-plan-grid b{font-size:12px;line-height:1.35}
       .adc-video-focus{margin:0 0 14px;border:1px solid var(--line,#d9e0e2);border-left:5px solid #55757a;border-radius:12px;padding:14px;background:var(--card,#fff);display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,420px);gap:15px}.adc-video-focus.focus{border-left-color:#366f7a}.adc-video-focus.warn{border-left-color:#b5822e}.adc-video-focus.great{border-left-color:#2f8464}.adc-video-focus h3{margin:4px 0 5px}.adc-video-focus p{margin:0;line-height:1.45}.adc-video-meta{display:grid;gap:5px;font-size:12px}.adc-video-meta small{opacity:.65}
