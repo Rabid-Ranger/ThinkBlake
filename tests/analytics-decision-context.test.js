@@ -98,3 +98,13 @@ test('audience read combines Casual Regular and Returning instead of letting one
   assert.equal(r.changes.returning,.75);
   assert.match(r.focus,/Trust/i);
 });
+
+
+test('master Studio prompt requests all four video checkpoints plus channel audience data in one response',()=>{
+  const p=A.masterPrompt({id:'c1',name:'Test Creator'});
+  for(const h of [24,48,168,672])assert.match(p,new RegExp('windowHours[^\\n]*'+h));
+  for(const term of ['retention30','apv','avdSeconds','newViewers','casual','regular','returning','avgViewsPerViewer','browsePct','suggestedPct','newUploadViews','libraryViews'])assert.match(p,new RegExp(term));
+  assert.match(p,/ONE JSON object only/i);
+  assert.match(p,/same video may appear up to four times/i);
+  assert.match(p,/do NOT fail the whole request/i);
+});
