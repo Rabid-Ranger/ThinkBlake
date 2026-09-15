@@ -71,7 +71,7 @@ test('one combined Studio response can import all four checkpoints and 90-day ch
       {start:'2025-10-01',end:'2025-12-29',source:'Studio 90d B',metricDefinitionId:'studio-current',metrics:{views:12000,newViewers:7000,casual:2000,regular:800,returning:2900,avgViewsPerViewer:1.7,browsePct:48}}
     ]
   });
-  const out=I.parse(payload,c,A.emptyStore(),'2026-02-01T00:00:00Z');
+  const out=I.parse(payload,c,A.emptyStore(),'2026-03-15T00:00:00Z');
   assert.equal(out.added,20);
   assert.equal(out.periods.length,2);
   for(const hours of [24,48,168,672])assert.equal(out.next.policies.some(p=>p.windowHours===hours),true);
