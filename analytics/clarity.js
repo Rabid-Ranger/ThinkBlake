@@ -6,10 +6,10 @@
   'use strict';
 
   const AGES={
-    24:{label:'24h',name:'EARLY READ',purpose:'How did it start?',act:'Watch. Do not overreact yet.'},
-    48:{label:'48h',name:'PROBLEM CHECK',purpose:'Is there a clear problem?',act:'Something may be off here. Check it, but don’t make a big change yet.'},
-    168:{label:'7d',name:'MAIN DIAGNOSIS',purpose:'What actually happened vs normal?',act:'This is the main decision point.'},
-    672:{label:'28d',name:'WHAT TO MAKE NEXT',purpose:'What did the video become?',act:'Use this for programming and follow-up decisions.'}
+    24:{label:'24h',name:'FIRST LOOK',purpose:'What is happening so far?',act:'It is too early for a big change. Just note anything that looks clearly off.'},
+    48:{label:'48h',name:'EARLY CHECK',purpose:'Does anything look clearly off?',act:'Check obvious problems, but do not change the whole strategy yet.'},
+    168:{label:'7d',name:'MAIN READ',purpose:'What happened compared with this creator’s usual result?',act:'Use this to decide what, if anything, should change on the next video.'},
+    672:{label:'28d',name:'WHAT TO MAKE NEXT',purpose:'What did this video teach us?',act:'Use this to decide what to make next and what to repeat, change, or stop.'}
   };
   const STAGE={reach:'TOPIC / REACH',packaging:'PACKAGING',retention:'RETENTION'};
   const n=v=>v===''||v==null||!Number.isFinite(Number(v))?null:Number(v);
