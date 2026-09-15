@@ -73,7 +73,7 @@
   }
   function deriveFocus(input){
     const d=input.diagnosis||{},p=input.pattern||{},a=input.audience||{},t=input.trajectory||[];
-    if(d.leading&&d.leading!=='Not enough evidence yet')return {focus:d.leading,confidence:d.confidence||'Low',source:'channel diagnosis'};
+    if(d.leading&&d.leading!=='Not enough data yet')return {focus:d.leading,confidence:d.confidence||'Low',source:'channel diagnosis'};
     if(p.max&&p.source==='hard')return {focus:patternFocus(p)||'Video funnel pattern',confidence:p.max>=3?'Medium':'Low',source:'repeated 7-day videos'};
     if(a.acquisitionBand==='weak'&&['steady','strong'].includes(a.loyaltyBand))return {focus:'Acquisition / gateway',confidence:'Medium',source:'audience trend'};
     if(['steady','strong'].includes(a.acquisitionBand)&&a.loyaltyBand==='weak')return {focus:'Loyalty / pathway',confidence:'Medium',source:'audience trend'};
@@ -165,7 +165,7 @@
     if(a.acquisition!==null)support.push('New viewers '+signed(a.acquisition-1)+' vs prior 90-day report.');
     if(a.loyalty!==null)support.push((a.loyaltyKey||'repeat audience')+' '+signed(a.loyalty-1)+' vs prior.');
     const decision='If the rest of the diagnosis agrees, use '+r.focus+' as the main focus. If the creator goal, audience fit, offer, capacity, or business situation points somewhere else, check that before locking the plan.';
-    return '<section class="studio-evidence adc-diagnosis '+tone+'" id="studio-diagnosis-evidence"><div class="kicker">WHAT THE DATA IS SAYING</div><h3>'+esc(verdict)+'</h3><p><b>Why:</b> '+esc((support.length?support:r.why).slice(0,3).join(' '))+'</p><div class="adc-decision-grid"><div><span>Analytics suggestion</span><b>'+esc(r.focus)+'</b><small>'+esc(r.confidence)+' confidence</small></div><div><span>If you accept it</span><b>'+esc(r.action.video)+'</b><small>Primary measurement: '+esc(r.action.metric)+'</small></div></div><p><b>How to use this in the diagnosis:</b> '+esc(decision)+'</p><p><b>Do not force it:</b> Repeated numbers can show you where to look. They still do not tell you exactly why it happened.</p><button class="btn" data-studio="analytics">Open Analytics</button></section>';
+    return '<section class="studio-data adc-diagnosis '+tone+'" id="studio-diagnosis-data"><div class="kicker">WHAT THE DATA IS SAYING</div><h3>'+esc(verdict)+'</h3><p><b>Why:</b> '+esc((support.length?support:r.why).slice(0,3).join(' '))+'</p><div class="adc-decision-grid"><div><span>Analytics suggestion</span><b>'+esc(r.focus)+'</b><small>'+esc(r.confidence)+' confidence</small></div><div><span>If you accept it</span><b>'+esc(r.action.video)+'</b><small>Primary measurement: '+esc(r.action.metric)+'</small></div></div><p><b>How to use this in the diagnosis:</b> '+esc(decision)+'</p><p><b>Do not force it:</b> Repeated numbers can show you where to look. They still do not tell you exactly why it happened.</p><button class="btn" data-studio="analytics">Open Analytics</button></section>';
   }
   function videoFocusHtml(c,W,guide){
     const r=overallRead(c,W,guide),tone=toneFor(r);
@@ -176,11 +176,11 @@
     const focus=String(r?.focus||'No clear channel bottleneck yet'),x=focus.toLowerCase();
     let primaryMetricKey='engagedViews',job=r?.action?.job||'Decide from the plan',mix='Keep the existing Reach / Trust / Convert mix unless the diagnosis gives you a reason to change it.';
     let hypothesis='If we improve the current focus, the result should improve without hurting CTR or watch quality.';
-    let success='Across several similar videos, the main number improves toward what this creator normally gets while the other important numbers stay healthy.';
+    let success='Across several similar videos, the main number improves toward what this what this creator usually getsly gets while the other important numbers stay healthy.';
     let guard='Do not improve one number by attracting the wrong audience or hurting another important part of the video.';
     if(x.includes('packag')){
       primaryMetricKey='ctr';
-      hypothesis='If the title/thumbnail is the real problem, stronger packaging should move CTR closer to what this creator normally gets while retention stays healthy.';
+      hypothesis='If the title/thumbnail is the real problem, stronger packaging should move CTR closer to what this what this creator usually getsly gets while retention stays healthy.';
       success='CTR improves across several similar videos without a meaningful drop in 0:30 / APV.';
       guard='Do not chase CTR with a promise the video cannot deliver.';
     }else if(x.includes('opening')||x.includes('viewing')||x.includes('retention')){
@@ -203,14 +203,14 @@
     }else if(x.includes('business')||x.includes('convert')){
       primaryMetricKey='qualifiedLeads';job='Convert';
       mix='Protect Reach and Trust, but give Convert videos enough slots to test the audience-to-offer path.';
-      hypothesis='If conversion is the constraint, clearer audience-to-offer alignment should increase qualified business actions without requiring every video to be a sales video.';
+      hypothesis='If conversion is the problem, clearer audience-to-offer alignment should increase qualified business actions without requiring every video to be a sales video.';
       success='Qualified leads / bookings improve for comparable Convert videos while audience quality stays healthy.';
       guard='Do not judge Reach or Trust videos by conversion metrics they were not designed to win.';
     }else if(x.includes('growth')||x.includes('protect')){
       primaryMetricKey='engagedViews';
       mix='Protect the Reach / Trust / Convert mix that produced the wins and make adjacent follow-ups before introducing major changes.';
       hypothesis='If the current growth mechanism is repeatable, adjacent videos should keep producing above-normal matched outcomes.';
-      success='Multiple adjacent videos stay above creator normal without deterioration in CTR or WATCH.';
+      success='Multiple adjacent videos stay above what this creator usually gets without deterioration in CTR or WATCH.';
       guard='Do not copy the surface topic if the repeatable mechanism is actually package, audience fit or format.';
     }
     return {focus,job,primaryMetricKey,mix,hypothesis,success,guard,next:r?.action?.video||'Use the diagnosis flow before forcing a plan.'};
@@ -309,7 +309,7 @@ ${JSON.stringify({schemaVersion:1,creatorId:c?.id||'',channelName:'ACTUAL CHANNE
 
     function current(){try{return win.AcceleratorDeskBridge?.current?.()||null}catch(_){return null}}
     function injectDiagnosis(){
-      const c=current(),old=win.document.getElementById('studio-diagnosis-evidence');if(!c||!old)return;
+      const c=current(),old=win.document.getElementById('studio-diagnosis-data');if(!c||!old)return;
       const html=diagnosisHtml(c,W,guide);if(old.dataset.adcSignature===html)return;
       const tpl=win.document.createElement('template');tpl.innerHTML=html;const node=tpl.content.firstElementChild;node.dataset.adcSignature=html;old.replaceWith(node);
     }
