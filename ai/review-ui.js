@@ -69,11 +69,15 @@
       page.insertBefore(banner, page.firstChild);
     }
     const first = matches[0];
-    banner.innerHTML =
+    const markup =
       '<div><strong>' + matches.length + ' connected decision' + (matches.length === 1 ? '' : 's') + ' to review</strong>' +
       '<span>' + escapeHtml(first.copy || first.label) + '</span></div>' +
       '<div class="accelerator-review-reminder-actions">' +
       '<button type="button" data-review-dismiss="' + escapeHtml(first.id) + '">Dismiss</button></div>';
+    if (banner.dataset.signature !== markup) {
+      banner.dataset.signature = markup;
+      banner.innerHTML = markup;
+    }
   }
 
   function escapeHtml(value) {
