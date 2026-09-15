@@ -7,7 +7,7 @@
 
   const AGES={
     24:{label:'24h',name:'EARLY READ',purpose:'How did it start?',act:'Watch. Do not overreact yet.'},
-    48:{label:'48h',name:'PROBLEM CHECK',purpose:'Is there a clear problem?',act:'Investigate a clear issue, but keep it provisional.'},
+    48:{label:'48h',name:'PROBLEM CHECK',purpose:'Is there a clear problem?',act:'Something may be off here. Check it, but don’t make a big change yet.'},
     168:{label:'7d',name:'MAIN DIAGNOSIS',purpose:'What actually happened vs normal?',act:'This is the main decision point.'},
     672:{label:'28d',name:'WHAT TO MAKE NEXT',purpose:'What did the video become?',act:'Use this for programming and follow-up decisions.'}
   };
@@ -22,7 +22,7 @@
 
   function countSignal(x){
     const m=n(x?.multiple);
-    if(m===null) return {tone:'muted',label:'Need data',detail:'No fair matched comparison yet',range:'Normal = 0.70–1.30×'};
+    if(m===null) return {tone:'muted',label:'Need data',detail:'No fair comparison yet',range:'Normal = 0.70–1.30×'};
     if(m<.7) return {tone:'bad',label:'Needs attention',detail:fmtMultiple(m)+' normal',range:'Normal = 0.70–1.30×'};
     if(m<1.3) return {tone:'normal',label:'In range',detail:fmtMultiple(m)+' normal',range:'Normal = 0.70–1.30×'};
     if(m<1.7) return {tone:'good',label:'Promising',detail:fmtMultiple(m)+' normal',range:'1.30×+ is above normal'};
@@ -31,7 +31,7 @@
   }
   function rateSignal(x,threshold){
     const d=n(x?.deltaPp);
-    if(d===null) return {tone:'muted',label:'Need data',detail:'No fair matched comparison yet',range:'Use the creator’s matched normal'};
+    if(d===null) return {tone:'muted',label:'Need data',detail:'No fair comparison yet',range:'Compare it with what this creator usually gets'};
     if(d<-threshold) return {tone:'bad',label:'Needs attention',detail:signedPp(d)+' vs normal',range:'In range = within ±'+threshold+' pp'};
     if(d>threshold) return {tone:'good',label:'Strong',detail:signedPp(d)+' vs normal',range:'In range = within ±'+threshold+' pp'};
     return {tone:'normal',label:'In range',detail:signedPp(d)+' vs normal',range:'In range = within ±'+threshold+' pp'};
@@ -64,7 +64,7 @@
   }
   function diagnose(r,hours=168){
     const age=AGES[hours]||AGES[168],m=metricRead(r);
-    if(!r||r.status!=='compared') return {tone:'muted',kind:'needs_data',headline:'Need a fair comparison first.',bottleneck:'NEED DATA',explain:r?.message||'Choose a matched baseline and exact same-age result.',next:'Complete the comparison before changing strategy.',hardIssues:[],softIssues:[],metrics:m,age};
+    if(!r||r.status!=='compared') return {tone:'muted',kind:'needs_data',headline:'Not enough data yet.',bottleneck:'NOT ENOUGH DATA YET',explain:r?.message||'We need this video compared with what this creator usually gets at the same point after publishing.',next:'Get the missing comparison first. Don’t change the strategy yet.',hardIssues:[],softIssues:[],metrics:m,age};
     const outcomeMultiple=n(r.comparisons?.[m.outcomeKey]?.multiple);
     const winner=outcomeMultiple!==null&&outcomeMultiple>=1.7;
     const under=outcomeMultiple!==null&&outcomeMultiple<.7;
@@ -92,8 +92,8 @@
     }else if(under){
       bottleneck=soft.length?stageLabel(soft):'CAUSE NOT CLEAR';
       tone='warn';
-      headline='Under normal, but the cause is not clear yet.';
-      explain='The outcome is '+fmtMultiple(outcomeMultiple)+' normal, but SHOW → CLICK → WATCH does not isolate one clean failure.';
+      headline='This video is below normal, but we can’t tell why yet.';
+      explain='The video is at '+fmtMultiple(outcomeMultiple)+' of its normal result, but the numbers do not point to one clear reason yet.';
     }else if(soft.length){
       bottleneck='CHECK CONTEXT · '+stageLabel(soft);
       tone='warn';
@@ -107,7 +107,7 @@
     const all=[...new Set([...hard,...soft])];
     const expansionContext=expandedAudience&&soft.includes('packaging')&&!winner;
     const next=expansionContext
-      ? 'Check traffic source, audience breadth and other expanded videos first. Lower CTR during wider distribution is not automatically a thumbnail problem. Only test the package if it is still materially weak after that context check.'
+      ? 'First check where the views came from and whether YouTube showed the video to a broader audience. Lower CTR during wider distribution does not automatically mean the thumbnail is bad. Only test the title or thumbnail if CTR still looks clearly weak after that check.'
       : nextFor(all,winner);
     return {tone,kind:'diagnosed',headline,bottleneck,explain,next,hardIssues:hard,softIssues:soft,winner,under,outcomeMultiple,metrics:m,age};
   }
@@ -229,9 +229,9 @@
       const reads=sevenDayReads(c,6),p=patternFromDiagnoses(reads.map(x=>x.d));
       const label=p.stages.length?stageLabel(p.stages):'NO REPEATED BOTTLENECK';
       let explain,next;
-      if(!reads.length){explain='No comparable 7-day reads yet. The numbers should not pretend to know the bottleneck.';next='Get the 7-day baseline and first mature video comparisons in place.';}
+      if(!reads.length){explain='We do not have enough 7-day results yet to call a channel-wide problem.';next='Get a 7-day normal in place and add the first few 7-day video results.';}
       else if(p.max){explain=p.max+' of '+p.n+' recent 7-day videos point to '+label.toLowerCase()+'. '+(p.source==='soft'?'These are mostly soft spots, not rescue-level failures.':'This is the most repeated hard issue in the recent sample.');next=nextFor(p.stages,false);}
-      else{explain='Across '+p.n+' recent 7-day videos, no SHOW → CLICK → WATCH failure repeats often enough to call it the channel bottleneck.';next='Keep using the diagnosis flow. Protect strengths and wait for a repeated pattern before making a channel-wide fix.';}
+      else{explain='Across '+p.n+' recent 7-day videos, no SHOW → CLICK → WATCH failure repeats often enough to call it the channel bottleneck.';next='Keep using the diagnosis questions. Protect what is working and wait for a repeated pattern before making a big channel-wide change.';}
       return {...p,reads,label,explain,next};
     }
     function recentHtml(c){
@@ -304,7 +304,7 @@
     function diagnosisEvidence(c){
       const p=pattern(c),reads=p.reads||[],latest=reads[0],has=p.n>0;
       let title,lead,tone='normal';
-      if(!has){title='Analytics do not have enough mature evidence yet.';lead='Keep the diagnosis flow primary. Get comparable 7-day reads before letting the numbers push the plan.';tone='warn';}
+      if(!has){title='We do not have enough 7-day data yet.';lead='Use the diagnosis questions for now. Get a few fair 7-day comparisons before letting the numbers change the plan.';tone='warn';}
       else if(p.max&&p.source==='hard'){title='Analytics are backing: '+p.label;lead=p.explain;tone='bad';}
       else if(p.max){title='No rescue-level pattern. Most common soft spot: '+p.label;lead=p.explain;tone='warn';}
       else{title='Analytics are not showing a repeated bottleneck.';lead=p.explain;tone='normal';}
