@@ -222,14 +222,15 @@ ${JSON.stringify({schemaVersion:1,creatorId:c?.id||'',channelName:'ACTUAL CHANNE
     }
     function injectVideoFocus(){
       const c=current();if(!c)return;
-      let view='';try{view=win.state?.view||''}catch(_){}
+      let view='';try{view=win.AcceleratorDeskBridge?.view?.()||''}catch(_){}
       if(['videos','planner'].includes(view)){
         const strip=win.document.getElementById('cg-context-strip');
         if(strip){
           let node=win.document.getElementById('adc-video-focus');
           const html=videoFocusHtml(c,W,guide),holder=win.document.createElement('template');holder.innerHTML=html;
-          if(!node)strip.after(holder.content.firstElementChild);
-          else if(node.outerHTML!==html)node.replaceWith(holder.content.firstElementChild);
+          const fresh=holder.content.firstElementChild;fresh.dataset.adcSignature=html;
+          if(!node)strip.after(fresh);
+          else if(node.dataset.adcSignature!==html)node.replaceWith(fresh);
         }
       }else{
         const node=win.document.getElementById('adc-video-focus');if(node&&!node.closest('dialog'))node.remove();
