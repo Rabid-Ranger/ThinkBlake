@@ -54,9 +54,11 @@
     const click=chooseRate(clickStrict,clickFallback);
     const r30=chooseRate(r30Strict,r30Fallback);
     const apv=apvStrict;
-    const watch=n(r30.multiple)!==null||n(r30.deltaPp)!==null?r30:apv;
-    const watchMetric=watch===r30?'0:30':'APV';
     const avd=avdStrict;
+    const hasRate=x=>n(x?.multiple)!==null||n(x?.deltaPp)!==null||n(x?.current)!==null;
+    const hasDuration=x=>n(x?.multiple)!==null||n(x?.deltaSeconds)!==null||n(x?.current)!==null;
+    const watch=hasRate(r30)?r30:hasRate(apv)?apv:avd;
+    const watchMetric=watch===r30?'0:30':watch===apv?'APV':'AVD';
     const audience=ADC?.audienceRead?ADC.audienceRead(c):{};
     const overall=ADC?.overallRead?ADC.overallRead(c,W,guide):null;
     const jobs=guide?.jobScorecard?guide.jobScorecard(c):[];
@@ -67,7 +69,7 @@
         outcome:n(strictOutcome)!==null?'verified Analytics workspace':'saved channel diagnosis data',
         show:n(strictShow)!==null?'verified Analytics workspace':'saved channel diagnosis data',
         click:(n(clickStrict.multiple)!==null||n(clickStrict.deltaPp)!==null)?'verified Analytics workspace':'saved channel diagnosis data',
-        watch:(n(r30Strict.multiple)!==null||n(r30Strict.deltaPp)!==null||n(apvStrict.multiple)!==null)?'verified Analytics workspace':'saved channel diagnosis data'
+        watch:(n(r30Strict.multiple)!==null||n(r30Strict.deltaPp)!==null||n(apvStrict.multiple)!==null||n(apvStrict.deltaPp)!==null||n(avdStrict.multiple)!==null||n(avdStrict.deltaSeconds)!==null)?'verified Analytics workspace':'saved channel diagnosis data'
       }
     };
   }
@@ -139,12 +141,22 @@
       next:label==='CTR'?'Next, look at WATCH unless the traffic source clearly changed.':'Next, look at RETURN + RESULT.'
     };
   }
+  function durationAnswer(rate,label='AVD'){
+    const ratioV=n(rate?.multiple),delta=n(rate?.deltaSeconds),current=n(rate?.current),baseline=n(rate?.baseline);
+    if(ratioV===null&&delta===null)return {tone:'muted',label:'Not enough data yet',line:'We do not have a fair Average View Duration comparison yet.',meaning:'AVD can support WATCH when exact 0:30 and APV are unavailable.',next:'Add or verify the same-age AVD normal, then inspect the retention curve if WATCH looks weak.'};
+    const line=(current!==null&&baseline!==null?label+' '+Math.round(current)+' sec vs '+Math.round(baseline)+' sec normal':label+' comparison available')+
+      (ratioV!==null?' · '+mult(ratioV)+' normal':'')+(delta!==null?' · '+(delta>=0?'+':'')+Math.round(delta)+' sec':'');
+    if(ratioV!==null&&ratioV<.7)return {tone:'bad',label:'Yes. WATCH looks clearly weak for this creator.',line,meaning:'Average viewing time is well below this creator’s normal. That flags the viewing experience, even without an exact 0:30 number.',next:'Open the retention curve and inspect the first meaningful divergence, promise delivery, pacing, and structure.'};
+    if(ratioV!==null&&ratioV<.85)return {tone:'warn',label:'WATCH is a little below normal.',line,meaning:'AVD is softer than usual, but not enough by itself to prove the opening is the main problem.',next:'Keep it in context with CTR, traffic source, APV when available, and the retention curve.'};
+    if(ratioV!==null&&ratioV>1.15)return {tone:'good',label:'No. WATCH looks stronger than usual.',line,meaning:'Average viewing time is above this creator’s normal.',next:'Protect the viewing pattern and continue to RETURN + RESULT.'};
+    return {tone:'normal',label:'Nothing looks clearly wrong here.',line,meaning:'Average viewing time is close to this creator’s normal.',next:'Continue to RETURN + RESULT.'};
+  }
   function questionAnswers(c,W,ADC){
     const r=channelQuestionRead(c,W,ADC);
     const out=countAnswer(r.outcome,'outcome',r.sample);
     const show=countAnswer(r.show,'show',r.sample);
     const click=rateAnswer(r.click,'CTR',.7,'CTR');
-    const watch=rateAnswer(r.watch,r.watchMetric,.7,r.watchMetric==='0:30'?'first-30-second retention':'APV');
+    const watch=r.watchMetric==='AVD'?durationAnswer(r.watch,'AVD'):rateAnswer(r.watch,r.watchMetric,.7,r.watchMetric==='0:30'?'first-30-second retention':'APV');
 
     if(n(r.show)!==null&&r.show>=1.7&&(click.tone==='bad')){
       click.meaning='CTR is weak, but impressions are strongly expanded. Wider/colder distribution can lower CTR without proving the package is broken.';
@@ -207,8 +219,8 @@
     let compare='No fair comparison yet';
     if(base!==null){
       compare='usual '+(seconds?Math.round(base)+' sec':base.toFixed(1)+'%');
+      if(m!==null)compare+=' · '+mult(m)+' normal';
       if(delta!==null)compare+=' · '+(delta>=0?'+':'')+(seconds?Math.round(delta)+' sec':delta.toFixed(1)+' pp');
-      else if(m!==null)compare+=' · '+mult(m);
     }
     return {value,compare,tone:metricTone(rate,{seconds})};
   }
@@ -474,10 +486,10 @@
       views:{current:cur.views,baseline:n(b.views),multiple:cmp(cur.views,b.views)},
       engagedViews:{current:cur.engagedViews,baseline:n(b.engagedViews),multiple:cmp(cur.engagedViews,b.engagedViews)},
       impressions:{current:cur.impressions,baseline:n(b.impressions),multiple:cmp(cur.impressions,b.impressions)},
-      ctr:{current:cur.ctr,baseline:n(b.ctr),deltaPp:n(cur.ctr)!==null&&n(b.ctr)!==null?cur.ctr-b.ctr:null},
-      retention30:{current:cur.ret30,baseline:n(b.ret30),deltaPp:n(cur.ret30)!==null&&n(b.ret30)!==null?cur.ret30-b.ret30:null},
-      apv:{current:cur.apv,baseline:n(b.apv),deltaPp:n(cur.apv)!==null&&n(b.apv)!==null?cur.apv-b.apv:null},
-      avdSeconds:{current:cur.avdSeconds,baseline:n(b.avdSeconds),multiple:cmp(cur.avdSeconds,b.avdSeconds)}
+      ctr:{current:cur.ctr,baseline:n(b.ctr),multiple:cmp(cur.ctr,b.ctr),deltaPp:n(cur.ctr)!==null&&n(b.ctr)!==null?cur.ctr-b.ctr:null},
+      retention30:{current:cur.ret30,baseline:n(b.ret30),multiple:cmp(cur.ret30,b.ret30),deltaPp:n(cur.ret30)!==null&&n(b.ret30)!==null?cur.ret30-b.ret30:null},
+      apv:{current:cur.apv,baseline:n(b.apv),multiple:cmp(cur.apv,b.apv),deltaPp:n(cur.apv)!==null&&n(b.apv)!==null?cur.apv-b.apv:null},
+      avdSeconds:{current:cur.avdSeconds,baseline:n(b.avdSeconds),multiple:cmp(cur.avdSeconds,b.avdSeconds),deltaSeconds:n(cur.avdSeconds)!==null&&n(b.avdSeconds)!==null?cur.avdSeconds-b.avdSeconds:null}
     };
     const has=Object.values(comparisons).some(x=>n(x.current)!==null&&n(x.baseline)!==null);
     if(!has)return {rw,status:'needs_data',b,cur,comparisons};
@@ -489,8 +501,11 @@
   function liveReviewHtml(read){
     if(!read||read.status==='needs_baseline')return '<section class="awf-live muted" id="awf-live-review"><div class="awf-kicker">LIVE READ VS THIS CREATOR’S USUAL NUMBERS</div><h3>No fair comparison yet</h3><p>Set up what this creator usually gets at this point before judging this result.</p></section>';
     if(read.status==='needs_data')return '<section class="awf-live muted" id="awf-live-review"><div class="awf-kicker">LIVE READ VS THIS CREATOR’S USUAL NUMBERS</div><h3>Add the checkpoint numbers</h3><p>As you enter the results below, this panel will update against what this creator usually gets at the same point after publishing.</p></section>';
-    const c=read.comparisons,d=read.d||{},watch=n(c.retention30.deltaPp)!==null?['0:30',pp(c.retention30.deltaPp)]:['APV',pp(c.apv.deltaPp)],avd=n(c.avdSeconds?.multiple)!==null?mult(c.avdSeconds.multiple):'—';
-    return '<section class="awf-live '+esc(d.tone||'normal')+'" id="awf-live-review"><div class="awf-live-head"><div><div class="awf-kicker">LIVE READ VS WHAT THIS CREATOR USUALLY GETS · '+esc(read.rw.hours===24?'24H':read.rw.hours===48?'48H':read.rw.hours===168?'7D':'28D')+'</div><h3>'+esc(d.headline||'Current read')+'</h3><p>'+esc(d.explain||'Compared with this creator’s usual result at the same point after publishing.')+'</p></div><div class="awf-bottleneck"><span>MAIN ISSUE</span><b>'+esc(d.bottleneck||'—')+'</b></div></div><div class="awf-live-metrics"><div><span>OUTCOME</span><b>'+mult(c[read.outcomeKey]?.multiple)+'</b><small>vs normal</small></div><div><span>SHOW</span><b>'+mult(c.impressions.multiple)+'</b><small>impressions</small></div><div><span>CLICK</span><b>'+pp(c.ctr.deltaPp)+'</b><small>CTR vs normal</small></div><div><span>WATCH</span><b>'+esc(watch[1])+'</b><small>'+esc(watch[0])+' vs normal · AVD '+esc(avd)+'</small></div></div><p><b>What I would do next:</b> '+esc(d.next||'Keep collecting data before changing the strategy.')+'</p><button class="btn" data-awf-use-read>Use this read in the review</button></section>';
+    const c=read.comparisons,d=read.d||{};
+    const rateText=x=>[n(x?.multiple)!==null?mult(x.multiple)+' normal':null,n(x?.deltaPp)!==null?pp(x.deltaPp):null].filter(Boolean).join(' · ')||'—';
+    const durationText=x=>[n(x?.multiple)!==null?mult(x.multiple)+' normal':null,n(x?.deltaSeconds)!==null?(x.deltaSeconds>=0?'+':'')+Math.round(x.deltaSeconds)+' sec':null].filter(Boolean).join(' · ')||'—';
+    const watch=n(c.retention30?.deltaPp)!==null?['0:30',rateText(c.retention30)]:n(c.apv?.deltaPp)!==null?['APV',rateText(c.apv)]:['AVD',durationText(c.avdSeconds)],avd=durationText(c.avdSeconds);
+    return '<section class="awf-live '+esc(d.tone||'normal')+'" id="awf-live-review"><div class="awf-live-head"><div><div class="awf-kicker">LIVE READ VS WHAT THIS CREATOR USUALLY GETS · '+esc(read.rw.hours===24?'24H':read.rw.hours===48?'48H':read.rw.hours===168?'7D':'28D')+'</div><h3>'+esc(d.headline||'Current read')+'</h3><p>'+esc(d.explain||'Compared with this creator’s usual result at the same point after publishing.')+'</p></div><div class="awf-bottleneck"><span>MAIN ISSUE</span><b>'+esc(d.bottleneck||'—')+'</b></div></div><div class="awf-live-metrics"><div><span>OUTCOME</span><b>'+mult(c[read.outcomeKey]?.multiple)+'</b><small>vs normal</small></div><div><span>SHOW</span><b>'+mult(c.impressions.multiple)+'</b><small>impressions</small></div><div><span>CLICK</span><b>'+esc(rateText(c.ctr))+'</b><small>CTR vs normal</small></div><div><span>WATCH</span><b>'+esc(watch[1])+'</b><small>'+esc(watch[0])+' vs normal'+(watch[0]==='AVD'?'':' · AVD '+esc(avd))+'</small></div></div><p><b>What I would do next:</b> '+esc(d.next||'Keep collecting data before changing the strategy.')+'</p><button class="btn" data-awf-use-read>Use this read in the review</button></section>';
   }
   function fillReview(drawer,read){
     if(!read?.d)return;
