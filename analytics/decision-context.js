@@ -344,6 +344,7 @@ MEASUREMENT RULES
 - CTR and traffic-source fields are percentages where 6.2 means 6.2%.
 - Do not put video-level 0:30 retention, APV, or AVD into these channel periods. Those belong in the separate video-checkpoint prompt.
 - If Ask Studio cannot retrieve an exact field, return null and explain why in limitations.
+- metricDefinitionId describes the measurement definitions/version, not the date-range precision. Do not set it to "exact". Include the post-August-24 Views / Engaged views regime when verified; otherwise use "unknown".
 - Keep creatorId exactly ${JSON.stringify(c?.id||'')}.
 - channelName must be the actual channel being inspected.
 - Return observations as an empty array. This request is only for channel + audience health.
@@ -432,6 +433,7 @@ VIDEO-METRIC RULES
 - If an exact checkpoint metric or traffic-source split is unavailable or still processing, use null.
 - Do not renormalize Browse / Suggested / Search / External to 100%. They are context fields and other sources may exist.
 - Use coverage "exact" only when the report really represents the exact first 24h / 48h / 7d / 28d lifespan. Otherwise use "unknown" or "partial".
+- definitionId describes the measurement definitions/version, not whether the time window is exact. Do not set definitionId to "exact". Include the post-August-24 Views / Engaged views regime when verified; otherwise use "unknown".
 - Use actual video IDs/URLs, publication timestamps, capture timestamps, filters, traffic scope, and measurement definitions.
 
 PART 2 — 90-DAY CHANNEL + AUDIENCE HEALTH
