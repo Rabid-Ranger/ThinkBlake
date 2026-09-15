@@ -158,14 +158,14 @@
   }
   function diagnosisHtml(c,W,guide){
     const r=overallRead(c,W,guide),p=r.pattern,a=r.audience,tone=toneFor(r);
-    let verdict='Analytics are not deciding this for you yet.';
-    if(r.focus!=='No clear channel bottleneck yet')verdict='Analytics are pointing you toward '+r.focus+'.';
+    let verdict='The data is not pointing to one clear answer yet.';
+    if(r.focus!=='No clear channel bottleneck yet')verdict='The data is pointing you toward '+r.focus+'.';
     const support=[];
     if(p?.max)support.push((p.source==='hard'?'Hard':'Soft')+' video pattern: '+(p.label||patternFocus(p))+' · '+p.max+' of '+p.n+' recent 7-day videos.');
     if(a.acquisition!==null)support.push('New viewers '+signed(a.acquisition-1)+' vs prior 90-day report.');
     if(a.loyalty!==null)support.push((a.loyaltyKey||'repeat audience')+' '+signed(a.loyalty-1)+' vs prior.');
     const decision='If the rest of the diagnosis agrees, use '+r.focus+' as the main focus. If the creator goal, audience fit, offer, capacity, or business situation points somewhere else, check that before locking the plan.';
-    return '<section class="studio-data adc-diagnosis '+tone+'" id="studio-diagnosis-data"><div class="kicker">WHAT THE DATA IS SAYING</div><h3>'+esc(verdict)+'</h3><p><b>Why:</b> '+esc((support.length?support:r.why).slice(0,3).join(' '))+'</p><div class="adc-decision-grid"><div><span>Analytics suggestion</span><b>'+esc(r.focus)+'</b><small>'+esc(r.confidence)+' confidence</small></div><div><span>If you accept it</span><b>'+esc(r.action.video)+'</b><small>Primary measurement: '+esc(r.action.metric)+'</small></div></div><p><b>How to use this in the diagnosis:</b> '+esc(decision)+'</p><p><b>Do not force it:</b> Repeated numbers can show you where to look. They still do not tell you exactly why it happened.</p><button class="btn" data-studio="analytics">Open Analytics</button></section>';
+    return '<section class="studio-data adc-diagnosis '+tone+'" id="studio-diagnosis-data"><div class="kicker">WHAT THE DATA IS SAYING</div><h3>'+esc(verdict)+'</h3><p><b>Why:</b> '+esc((support.length?support:r.why).slice(0,3).join(' '))+'</p><div class="adc-decision-grid"><div><span>What the data suggests</span><b>'+esc(r.focus)+'</b><small>'+esc(r.confidence)+' confidence</small></div><div><span>If you accept it</span><b>'+esc(r.action.video)+'</b><small>Main number to watch: '+esc(r.action.metric)+'</small></div></div><p><b>How to use this in the diagnosis:</b> '+esc(decision)+'</p><p><b>Do not force it:</b> Repeated numbers can show you where to look. They still do not tell you exactly why it happened.</p><button class="btn" data-studio="analytics">Open Analytics</button></section>';
   }
   function videoFocusHtml(c,W,guide){
     const r=overallRead(c,W,guide),tone=toneFor(r);
