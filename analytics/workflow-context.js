@@ -196,7 +196,7 @@
   }
   function proposal(c,W,ADC){
     const q=questionAnswers(c,W,ADC),r=q.raw,a=r.audience||{},p=r.p||{};
-    let leading='Not enough evidence yet',because='',next='',alternative='',confidence='Low';
+    let leading='Not enough data yet',because='',next='',alternative='',confidence='Low';
     if(r.outcome===null){
       because='We still cannot answer OUTCOME because we do not have a fair 7-day comparison yet.';
       next='Verify the 7-day result before deciding what the main issue is.';
@@ -269,7 +269,7 @@
       else if(box.dataset.sig!==html){const t=win.document.createElement('template');t.innerHTML=html;const fresh=t.content.firstElementChild;fresh.dataset.sig=html;box.replaceWith(fresh);}
     }
     const saved=c.coachOS?.diagnosis||{},prop=proposal(c,W,ADC);
-    const summaryHtml='<section class="awf-diagnosis-decision '+(prop.leading==='Not enough evidence yet'?'muted':'focus')+'" id="awf-diagnosis-decision">'+
+    const summaryHtml='<section class="awf-diagnosis-decision '+(prop.leading==='Not enough data yet'?'muted':'focus')+'" id="awf-diagnosis-decision">'+
       '<div class="awf-kicker">WHAT THE DATA IS POINTING TO</div>'+
       '<h3>'+esc(prop.leading)+'</h3>'+
       '<p>'+esc(prop.because)+'</p>'+
@@ -336,7 +336,7 @@
     if(!read||read.status==='needs_baseline')return '<section class="awf-live muted" id="awf-live-review"><div class="awf-kicker">LIVE READ VS THIS CREATOR’S USUAL NUMBERS</div><h3>No fair comparison yet</h3><p>Set up what this creator usually gets at this point before judging this result.</p></section>';
     if(read.status==='needs_data')return '<section class="awf-live muted" id="awf-live-review"><div class="awf-kicker">LIVE READ VS THIS CREATOR’S USUAL NUMBERS</div><h3>Add the checkpoint numbers</h3><p>As you enter the results below, this panel will update against what this creator usually gets at the same point after publishing.</p></section>';
     const c=read.comparisons,d=read.d||{},watch=n(c.retention30.deltaPp)!==null?['0:30',pp(c.retention30.deltaPp)]:['APV',pp(c.apv.deltaPp)],avd=n(c.avdSeconds?.multiple)!==null?mult(c.avdSeconds.multiple):'—';
-    return '<section class="awf-live '+esc(d.tone||'normal')+'" id="awf-live-review"><div class="awf-live-head"><div><div class="awf-kicker">LIVE READ VS WHAT THIS CREATOR USUALLY GETS · '+esc(read.rw.hours===24?'24H':read.rw.hours===48?'48H':read.rw.hours===168?'7D':'28D')+'</div><h3>'+esc(d.headline||'Current read')+'</h3><p>'+esc(d.explain||'Compared with this creator’s usual result at the same point after publishing.')+'</p></div><div class="awf-bottleneck"><span>MAIN ISSUE</span><b>'+esc(d.bottleneck||'—')+'</b></div></div><div class="awf-live-metrics"><div><span>OUTCOME</span><b>'+mult(c[read.outcomeKey]?.multiple)+'</b><small>vs normal</small></div><div><span>SHOW</span><b>'+mult(c.impressions.multiple)+'</b><small>impressions</small></div><div><span>CLICK</span><b>'+pp(c.ctr.deltaPp)+'</b><small>CTR vs normal</small></div><div><span>WATCH</span><b>'+esc(watch[1])+'</b><small>'+esc(watch[0])+' vs normal · AVD '+esc(avd)+'</small></div></div><p><b>What I would do next:</b> '+esc(d.next||'Keep collecting evidence before changing strategy.')+'</p><button class="btn" data-awf-use-read>Use this read in the review</button></section>';
+    return '<section class="awf-live '+esc(d.tone||'normal')+'" id="awf-live-review"><div class="awf-live-head"><div><div class="awf-kicker">LIVE READ VS WHAT THIS CREATOR USUALLY GETS · '+esc(read.rw.hours===24?'24H':read.rw.hours===48?'48H':read.rw.hours===168?'7D':'28D')+'</div><h3>'+esc(d.headline||'Current read')+'</h3><p>'+esc(d.explain||'Compared with this creator’s usual result at the same point after publishing.')+'</p></div><div class="awf-bottleneck"><span>MAIN ISSUE</span><b>'+esc(d.bottleneck||'—')+'</b></div></div><div class="awf-live-metrics"><div><span>OUTCOME</span><b>'+mult(c[read.outcomeKey]?.multiple)+'</b><small>vs normal</small></div><div><span>SHOW</span><b>'+mult(c.impressions.multiple)+'</b><small>impressions</small></div><div><span>CLICK</span><b>'+pp(c.ctr.deltaPp)+'</b><small>CTR vs normal</small></div><div><span>WATCH</span><b>'+esc(watch[1])+'</b><small>'+esc(watch[0])+' vs normal · AVD '+esc(avd)+'</small></div></div><p><b>What I would do next:</b> '+esc(d.next||'Keep collecting data before changing the strategy.')+'</p><button class="btn" data-awf-use-read>Use this read in the review</button></section>';
   }
   function fillReview(drawer,read){
     if(!read?.d)return;
@@ -367,7 +367,7 @@
     }).join('');
     if(!latest||!latest.x?.d)return '<section class="awf-learn-page muted" id="awf-learn-page"><div class="awf-kicker">HOW THIS VIDEO IS TRACKING</div><h3>No fair checkpoint comparison yet</h3><p>Add the next checkpoint. Learn will compare it with what this creator usually gets at that point after publishing.</p><div class="awf-learn-pills">'+pills+'</div></section>';
     const d=latest.x.d;
-    return '<section class="awf-learn-page '+esc(d.tone||'normal')+'" id="awf-learn-page"><div class="awf-learn-head"><div><div class="awf-kicker">LATEST BASELINE READ · '+label(latest.hours)+'</div><h3>'+esc(d.headline||d.bottleneck||'Current read')+'</h3><p>'+esc(d.explain||'Compared with this creator’s usual result at the same point after publishing.')+'</p></div><div class="awf-bottleneck"><span>WHAT TO CARRY FORWARD</span><b>'+esc(d.next||'Keep collecting evidence.')+'</b></div></div><div class="awf-learn-pills">'+pills+'</div><p><b>Use Learn like this:</b> 24h = early read, 48h = problem check, 7d = main diagnosis, 28d = programming lesson. Save what changed, what it might mean, and what the next video should do differently.</p></section>';
+    return '<section class="awf-learn-page '+esc(d.tone||'normal')+'" id="awf-learn-page"><div class="awf-learn-head"><div><div class="awf-kicker">LATEST BASELINE READ · '+label(latest.hours)+'</div><h3>'+esc(d.headline||d.bottleneck||'Current read')+'</h3><p>'+esc(d.explain||'Compared with this creator’s usual result at the same point after publishing.')+'</p></div><div class="awf-bottleneck"><span>WHAT TO CARRY FORWARD</span><b>'+esc(d.next||'Keep collecting data.')+'</b></div></div><div class="awf-learn-pills">'+pills+'</div><p><b>Use Learn like this:</b> 24h = first look, 48h = early check, 7d = main read, 28d = what to make next. Save what changed, what it might mean, and what the next video should do differently.</p></section>';
   }
   function injectLearnPage(win,c,W){
     let view='';try{view=win.AcceleratorDeskBridge?.view?.()||''}catch(_){}
