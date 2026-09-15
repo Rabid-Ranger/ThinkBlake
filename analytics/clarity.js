@@ -192,7 +192,7 @@
     }
     function baselineHtml(c,v,h,b){
       const rec=baselineRecord(c,b);
-      if(!rec)return '<section class="ac-section ac-baseline-section"><div class="ac-section-head"><div class="ac-section-index">03</div><div><div class="ac-kicker">YOUR NORMAL</div><h2>No matched '+AGES[h].label+' baseline yet</h2><p>Build the same-age baseline first so the dashboard has a fair definition of normal.</p></div></div><div class="ac-section-body">'+action('baseline','Build '+AGES[h].label+' baseline')+'</div></section>';
+      if(!rec)return '<section class="ac-section ac-baseline-section"><div class="ac-section-head"><div class="ac-section-index">03</div><div><div class="ac-kicker">YOUR NORMAL</div><h2>No usual '+AGES[h].label+' result saved yet</h2><p>Set up what this creator usually gets at this point first, so the comparison is fair.</p></div></div><div class="ac-section-body">'+action('baseline','Build '+AGES[h].label+' baseline')+'</div></section>';
       const o=baselineOutcome(rec),watch=n(rec.values.retention30)!==null?['First 30 sec',rec.values.retention30]:['APV',rec.values.apv];
       const evo=o.growth===null?'No earlier saved version to compare yet.':Math.abs(o.growth-1)<.001?'Normal has not moved from the first saved version.':'Normal is '+((o.growth-1)*100>=0?'+':'')+((o.growth-1)*100).toFixed(1)+'% vs the first saved version.';
       const startLine=o.first===null||o.first===undefined?'Starting normal not recorded yet.':'Started at '+fmtCount(o.first)+' '+(o.key==='engagedViews'?'engaged views':'views')+' → now '+fmtCount(o.current)+'.';
@@ -258,7 +258,7 @@
       let r;try{r=W.compare(c,v,b,p.hours);}catch(e){r={status:'needs_evidence',comparisons:{},message:e.message};}
       const d=diagnose(r,p.hours),age=AGES[p.hours];
       const baselineName=b?.label||'No matched baseline';
-      const controls='<div class="ac-video-controls"><label>Video<select id="ac-video">'+W.videos(c).map(x=>'<option value="'+esc(x.id)+'" '+(x.id===v.id?'selected':'')+'>'+esc(x.title)+'</option>').join('')+'</select></label><div class="ac-age-grid">'+ageOverview(c,v)+'</div><p>Comparing this video with <b>'+esc(baselineName)+'</b>. Same age vs same age.</p></div>';
+      const controls='<div class="ac-video-controls"><label>Video<select id="ac-video">'+W.videos(c).map(x=>'<option value="'+esc(x.id)+'" '+(x.id===v.id?'selected':'')+'>'+esc(x.title)+'</option>').join('')+'</select></label><div class="ac-age-grid">'+ageOverview(c,v)+'</div><p>Comparing this video with <b>'+esc(baselineName)+'</b> at the same point after publishing.</p></div>';
       const actions='<div class="actions ac-video-actions">'+(v.native&&!v.engineId?action('result','Update this video’s results'):action('import',v.engineId?'Update imported results':'Import results'))+action('baseline','Build / update baseline')+action('diagnosis','Use this in Diagnosis')+'</div>';
       return '<div class="ac-shell">'+
         '<section class="ac-section ac-video-section '+d.tone+'">'+
