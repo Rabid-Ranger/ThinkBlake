@@ -62,7 +62,7 @@ test('import accepts per-video source mix and separate 28-day audience snapshots
 });
 
 test('retention evidence can use Views for playback volume when Engaged views is unavailable',()=>{
-  const rows=Array.from({length:5},(_,i)=>observation(i,{views:1000+i*50,apv:50,avd:300}));
+  const rows=Array.from({length:10},(_,i)=>observation(i,{views:1000+i*50,apv:50,avd:300}));
   let parsed=Import.parse(JSON.stringify({schemaVersion:1,creatorId:'c',channelName:'QA',observations:rows}),creator,Engine.emptyStore(),'2026-01-15T00:00:00Z');
   const target=observation(10,{videoId:'target',title:'Target',views:1800,apv:20,avd:100});
   parsed=Import.parse(JSON.stringify({schemaVersion:1,creatorId:'c',channelName:'QA',observations:[target]}),creator,parsed.next,'2026-02-01T00:00:00Z');
