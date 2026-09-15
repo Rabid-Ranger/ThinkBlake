@@ -62,3 +62,20 @@ test('JSON block parser accepts fenced Ask Studio responses',()=>{
   const x=A.parseJsonBlock(fence+'json'+nl+'{"schemaVersion":1,"channelPeriods":[]}'+nl+fence);
   assert.equal(x.schemaVersion,1);
 });
+
+
+test('plan suggestion maps channel focus into Reach Trust Convert and the right primary metric',()=>{
+  let s=A.planSuggestion({focus:'Acquisition / gateway',action:{job:'Reach',video:'Build a qualified gateway',metric:'Engaged views + new viewers'}});
+  assert.equal(s.job,'Reach');
+  assert.equal(s.primaryMetricKey,'newViewers');
+  assert.match(s.mix,/Reach/);
+
+  s=A.planSuggestion({focus:'Loyalty / pathway',action:{job:'Trust',video:'Build the next obvious watch',metric:'Returning viewers'}});
+  assert.equal(s.job,'Trust');
+  assert.equal(s.primaryMetricKey,'returning');
+  assert.match(s.success,/Regular|Returning/);
+
+  s=A.planSuggestion({focus:'Promise / opening / viewing experience',action:{job:'Keep intended job',video:'Improve the opening',metric:'0:30 + APV/AVD'}});
+  assert.equal(s.primaryMetricKey,'ret30');
+  assert.match(s.success,/0:30/);
+});
