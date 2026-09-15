@@ -52,9 +52,12 @@ test('audience imbalance can choose acquisition or loyalty only when enough tren
 
 test('channel prompt explicitly requests audience segments and preserves missing values',()=>{
   const p=A.channelPrompt({id:'c1',name:'Test Creator'});
-  for(const term of ['engagedViews','casual','regular','returning','avgViewsPerViewer','observations'])assert.match(p,new RegExp(term));
+  for(const term of ['engagedViews','casual','regular','returning','avgViewsPerViewer','browsePct','suggestedPct','searchPct','externalPct','uploadsPublished','newUploadViews','libraryViews','observations'])assert.match(p,new RegExp(term));
   assert.match(p,/use null/i);
-  assert.match(p,/Do not guess/i);
+  assert.match(p,/Do not derive Casual or Regular/i);
+  assert.match(p,/rolling 28-day window/i);
+  assert.match(p,/must be null in this YouTube Studio request/i);
+  assert.match(p,/Planned uploads\/capacity are also not YouTube analytics/i);
 });
 
 test('JSON block parser accepts fenced Ask Studio responses',()=>{
