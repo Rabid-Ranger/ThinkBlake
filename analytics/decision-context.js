@@ -353,6 +353,145 @@ JSON SHAPE:
 ${JSON.stringify(schema,null,2)}`;
   }
 
+  function masterPrompt(c){
+    const videoRow=hours=>({
+      videoId:'ACTUAL YOUTUBE URL OR ID',
+      title:'ACTUAL TITLE',
+      publishedAt:'ISO TIMESTAMP',
+      capturedAt:'ISO TIMESTAMP',
+      windowHours:hours,
+      format:'edited-long-form',
+      eraId:'current',
+      job:null,
+      definitionId:'unknown',
+      coverage:'unknown',
+      paid:'unknown',
+      traffic:'all',
+      source:'ACTUAL REPORT AND FILTERS',
+      metrics:{views:null,engagedViews:null,impressions:null,ctr:null,retention30:null,apv:null,avdSeconds:null}
+    });
+    const channelPeriod={
+      start:'YYYY-MM-DD',end:'YYYY-MM-DD',
+      source:'ACTUAL YOUTUBE STUDIO REPORT(S) + FILTERS',
+      metricDefinitionId:'ACTUAL DEFINITION OR unknown',
+      metrics:{
+        views:null,engagedViews:null,impressions:null,ctr:null,watchTime:null,
+        newViewers:null,casual:null,regular:null,returning:null,avgViewsPerViewer:null,
+        browsePct:null,suggestedPct:null,searchPct:null,externalPct:null,
+        uploadsPublished:null,newUploadViews:null,libraryViews:null,
+        qualifiedLeads:null,bookings:null,sales:null,revenue:null
+      },
+      context:{paidNote:null,sourceNote:null,libraryNote:null,attributionNote:null,notes:null}
+    };
+    const schema={
+      schemaVersion:1,
+      creatorId:c?.id||'',
+      channelName:'ACTUAL CHANNEL',
+      observations:[24,48,168,672].map(videoRow),
+      channelPeriods:[channelPeriod,{...channelPeriod}],
+      limitations:[]
+    };
+    return `In Ask Studio, collect ALL analytics needed by Accelerator for ${JSON.stringify(c?.name||'this channel')} in ONE response. Return raw measurements only. Do not coach, diagnose, estimate, infer, average, or calculate missing metrics.
+
+PART 1 — VIDEO CHECKPOINTS
+Build comparable video rows for ALL FOUR checkpoints:
+- 24 hours
+- 48 hours
+- 7 days / 168 hours
+- 28 days / 672 hours
+
+For EACH checkpoint independently:
+- Use previous comparable current-era long-form uploads that have fully completed that checkpoint.
+- 10–20 comparable rows is preferred; 5–9 is usable but less certain.
+- The currently reviewed video must not be included in its own baseline.
+- The eligible video set can differ by checkpoint. A recent upload can qualify for 24h but not 28d.
+- The same video may appear up to four times, once for each exact checkpoint.
+- Keep only ONE row per video + checkpoint.
+- Do not substitute lifetime totals, realtime totals, last calendar days, or a different age window.
+- Do not remove flops or outliers unless the video is structurally incomparable, paid/promoted when judging organic, a different format, or from a genuinely different strategy era.
+
+For every video/checkpoint row request all seven metrics when Studio can report them:
+1. views
+2. engagedViews
+3. registered impressions
+4. impressions CTR
+5. first-30-second / Intro retention
+6. average percentage viewed / APV
+7. average view duration / AVD in seconds
+
+VIDEO-METRIC RULES
+- Keep Views and Engaged Views separate.
+- CTR, retention30, and APV are percentage numbers where 6.2 means 6.2%.
+- avdSeconds is seconds.
+- Do NOT derive APV from AVD or video length.
+- Do NOT estimate 0:30 retention from a graph.
+- If an exact checkpoint metric is unavailable or still processing, use null.
+- Use coverage "exact" only when the report really represents the exact first 24h / 48h / 7d / 28d lifespan. Otherwise use "unknown" or "partial".
+- Use actual video IDs/URLs, publication timestamps, capture timestamps, filters, traffic scope, and measurement definitions.
+
+PART 2 — 90-DAY CHANNEL + AUDIENCE HEALTH
+Return TWO completed, non-overlapping 90-day periods when available:
+1. the latest fully completed 90-day period that does not include today;
+2. the immediately preceding completed 90-day period.
+start/end are inclusive, so end is exactly 89 days after start.
+
+For each exact 90-day period request:
+CORE
+- views
+- engagedViews
+- registered impressions
+- impressions CTR
+- watchTime hours
+
+AUDIENCE
+- newViewers
+- casual viewers
+- regular viewers
+- returning viewers
+- average views per viewer
+
+TRAFFIC SOURCE
+- browsePct
+- suggestedPct
+- searchPct
+- externalPct
+
+LIBRARY / OUTPUT CONTEXT, only when Studio can isolate it exactly
+- uploadsPublished = exact count of long-form uploads published inside that 90-day period
+- newUploadViews = views during the period from videos published inside that same period
+- libraryViews = views during the period from videos published before the period began
+
+In context:
+- paidNote = actual organic/paid/promoted filter or "unable to verify"
+- sourceNote = concise raw source evidence such as leading Suggested videos or Search queries when available
+- libraryNote = exact report/filter used for the new-upload vs older-library split
+- attributionNote = null
+- notes = raw measurement/context notes only, not strategy advice
+
+AUDIENCE RULES
+- New, Casual, Regular, and Returning are separate Studio measures. Never substitute one for another.
+- Do not derive Casual or Regular from Returning, New, subscribers, or percentages.
+- avgViewsPerViewer must be Studio's reported metric. Do not calculate it yourself.
+- If an audience metric is only available for a rolling 28-day or another window instead of the exact requested 90 days, put null in the 90-day field and explain the available window in limitations.
+- Audience data may update with delay. Use null when unavailable or still processing.
+- Do not treat New → Casual → Regular as a tracked person-by-person conversion funnel.
+
+NOT YOUTUBE STUDIO METRICS
+qualifiedLeads, bookings, sales, revenue, and context.attributionNote must be null. Do not infer them.
+Do not infer planned uploads or capacity from Studio.
+
+OUTPUT RULES
+- Keep creatorId exactly ${JSON.stringify(c?.id||'')}.
+- channelName must be the actual channel inspected.
+- Return ONE JSON object only, no prose before or after it.
+- observations may contain many rows. Repeat a video across different windowHours when exact data exists.
+- If Ask Studio cannot retrieve part of this request, DO NOT fail the whole request. Return every verified field/row you can, use null or omit unavailable observations, and explain the limitation in limitations.
+- Do not fabricate a cleaner or more complete answer.
+
+JSON SHAPE:
+${JSON.stringify(schema,null,2)}`;
+  }
+
   function extendStudioImport(win){
     const I=win.AcceleratorStudioImport;if(!I||I.__adcExtended)return;
     I.__adcExtended=true;
@@ -466,5 +605,5 @@ ${JSON.stringify(schema,null,2)}`;
     paint();
   }
 
-  return {snapshots,audienceRead,baselineTrajectory,deriveFocus,focusAction,overallRead,planSuggestion,channelPrompt,parseJsonBlock,install};
+  return {snapshots,audienceRead,baselineTrajectory,deriveFocus,focusAction,overallRead,planSuggestion,channelPrompt,masterPrompt,parseJsonBlock,install};
 });
