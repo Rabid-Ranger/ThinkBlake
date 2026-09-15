@@ -192,16 +192,19 @@
     }
     function baselineHtml(c,v,h,b){
       const rec=baselineRecord(c,b);
-      if(!rec)return '<section class="ac-block"><div class="ac-kicker">YOUR NORMAL</div><h3>No matched '+AGES[h].label+' baseline yet</h3><p>Build the same-age baseline first so the dashboard has a fair definition of normal.</p>'+action('baseline','Build '+AGES[h].label+' baseline')+'</section>';
+      if(!rec)return '<section class="ac-section ac-baseline-section"><div class="ac-section-head"><div class="ac-section-index">03</div><div><div class="ac-kicker">YOUR NORMAL</div><h2>No matched '+AGES[h].label+' baseline yet</h2><p>Build the same-age baseline first so the dashboard has a fair definition of normal.</p></div></div><div class="ac-section-body">'+action('baseline','Build '+AGES[h].label+' baseline')+'</div></section>';
       const o=baselineOutcome(rec),watch=n(rec.values.retention30)!==null?['First 30 sec',rec.values.retention30]:['APV',rec.values.apv];
       const evo=o.growth===null?'No earlier saved version to compare yet.':Math.abs(o.growth-1)<.001?'Normal has not moved from the first saved version.':'Normal is '+((o.growth-1)*100>=0?'+':'')+((o.growth-1)*100).toFixed(1)+'% vs the first saved version.';
       const startLine=o.first===null||o.first===undefined?'Starting normal not recorded yet.':'Started at '+fmtCount(o.first)+' '+(o.key==='engagedViews'?'engaged views':'views')+' → now '+fmtCount(o.current)+'.';
-      return '<section class="ac-block"><div class="ac-kicker">YOUR NORMAL RIGHT NOW · '+AGES[h].label+'</div><div class="ac-block-head"><div><h3>'+esc(rec.label)+'</h3><p><b>'+esc(startLine)+'</b> '+esc(evo)+' Built from '+esc(rec.sample)+' comparable video'+(rec.sample===1?'':'s')+'.</p></div><button class="btn" data-aw="edit-baseline">Review baseline</button></div><div class="ac-baseline-grid">'+
-        '<div><span>Outcome</span><b>'+fmtCount(o.current)+'</b><small>'+(o.key==='engagedViews'?'Engaged views':'Views')+'</small></div>'+
-        '<div><span>Show</span><b>'+fmtCount(rec.values.impressions)+'</b><small>Impressions</small></div>'+
-        '<div><span>Click</span><b>'+fmtRate(rec.values.ctr)+'</b><small>CTR</small></div>'+
-        '<div><span>Watch</span><b>'+fmtRate(watch[1])+'</b><small>'+esc(watch[0])+'</small></div>'+
-      '</div></section>';
+      return '<section class="ac-section ac-baseline-section">'+
+        '<div class="ac-section-head"><div class="ac-section-index">03</div><div><div class="ac-kicker">YOUR NORMAL · '+AGES[h].label+'</div><h2>'+esc(rec.label)+'</h2><p><b>'+esc(startLine)+'</b> '+esc(evo)+' Built from '+esc(rec.sample)+' comparable video'+(rec.sample===1?'':'s')+'.</p></div><button class="btn" data-aw="edit-baseline">Review baseline</button></div>'+
+        '<div class="ac-section-body"><div class="ac-baseline-grid">'+
+          '<div><span>Outcome</span><b>'+fmtCount(o.current)+'</b><small>'+(o.key==='engagedViews'?'Engaged views':'Views')+'</small></div>'+
+          '<div><span>Show</span><b>'+fmtCount(rec.values.impressions)+'</b><small>Impressions</small></div>'+
+          '<div><span>Click</span><b>'+fmtRate(rec.values.ctr)+'</b><small>CTR</small></div>'+
+          '<div><span>Watch</span><b>'+fmtRate(watch[1])+'</b><small>'+esc(watch[0])+'</small></div>'+
+        '</div></div>'+
+      '</section>';
     }
     function bestReads(c,limit=8){
       const rows=[];
@@ -233,15 +236,21 @@
     }
     function recentHtml(c){
       const reads=bestReads(c,8);
-      if(!reads.length)return '<section class="ac-block"><div class="ac-kicker">RECENT VIDEOS</div><h3>No fair video reads yet</h3><p>Add same-age results and the list will fill itself in.</p></section>';
-      return '<section class="ac-block"><div class="ac-kicker">RECENT VIDEOS</div><h3>See the pattern without opening every video</h3><div class="ac-recent">'+reads.map(x=>{
-        const out=x.d.outcomeMultiple===null?'—':fmtMultiple(x.d.outcomeMultiple);
-        return '<div class="ac-row"><div><b>'+esc(x.v.title)+'</b><small>'+AGES[x.h].label+' · '+AGES[x.h].name+'</small></div><strong class="'+x.d.tone+'">'+out+'</strong><span class="ac-badge '+x.d.tone+'">'+esc(x.d.bottleneck)+'</span></div>';
-      }).join('')+'</div></section>';
+      if(!reads.length)return '<section class="ac-section ac-recent-section"><div class="ac-section-head"><div class="ac-section-index">05</div><div><div class="ac-kicker">RECENT VIDEOS</div><h2>No fair video reads yet</h2><p>Add same-age results and the list will fill itself in.</p></div></div></section>';
+      return '<section class="ac-section ac-recent-section">'+
+        '<div class="ac-section-head"><div class="ac-section-index">05</div><div><div class="ac-kicker">RECENT VIDEOS</div><h2>See the pattern without opening every video</h2><p>Latest usable checkpoint, score vs normal, and the current bottleneck for each video.</p></div></div>'+
+        '<div class="ac-section-body"><div class="ac-recent">'+reads.map(x=>{
+          const out=x.d.outcomeMultiple===null?'—':fmtMultiple(x.d.outcomeMultiple);
+          return '<div class="ac-row"><div><b>'+esc(x.v.title)+'</b><small>'+AGES[x.h].label+' · '+AGES[x.h].name+'</small></div><strong class="'+x.d.tone+'">'+out+'</strong><span class="ac-badge '+x.d.tone+'">'+esc(x.d.bottleneck)+'</span></div>';
+        }).join('')+'</div></div>'+
+      '</section>';
     }
     function patternHtml(c){
       const p=pattern(c),tone=p.max?(p.source==='hard'?'bad':'warn'):'normal';
-      return '<section class="ac-block ac-pattern '+tone+'"><div class="ac-kicker">OVERALL PATTERN · RECENT 7-DAY VIDEOS</div><div class="ac-block-head"><div><h3>'+(p.max?'Overall bottleneck: '+esc(p.label):'No repeated bottleneck yet')+'</h3><p>'+esc(p.explain)+'</p></div><span class="ac-badge '+tone+'">'+esc(p.confidence)+'</span></div><p><b>What I would do:</b> '+esc(p.next)+'</p><small>1 result = interesting. 2 similar = watch it. 3+ similar = a pattern may be emerging. This is coaching discipline, not a statistical law.</small></section>';
+      return '<section class="ac-section ac-pattern-section '+tone+'">'+
+        '<div class="ac-section-head"><div class="ac-section-index">04</div><div><div class="ac-kicker">CHANNEL PATTERN · RECENT 7-DAY VIDEOS</div><h2>'+(p.max?'Overall bottleneck: '+esc(p.label):'No repeated bottleneck yet')+'</h2><p>'+esc(p.explain)+'</p></div><span class="ac-badge '+tone+'">'+esc(p.confidence)+'</span></div>'+
+        '<div class="ac-section-body"><div class="ac-decision-callout"><span>WHAT I WOULD DO</span><b>'+esc(p.next)+'</b></div><small>1 result = interesting. 2 similar = watch it. 3+ similar = a pattern may be emerging. This is coaching discipline, not a statistical law.</small></div>'+
+      '</section>';
     }
     function videoSummary(c,full){
       const p=W.prefs(c),v=selectedVideo(c);if(!v)return full;
@@ -249,24 +258,41 @@
       let r;try{r=W.compare(c,v,b,p.hours);}catch(e){r={status:'needs_evidence',comparisons:{},message:e.message};}
       const d=diagnose(r,p.hours),age=AGES[p.hours];
       const baselineName=b?.label||'No matched baseline';
+      const controls='<div class="ac-video-controls"><label>Video<select id="ac-video">'+W.videos(c).map(x=>'<option value="'+esc(x.id)+'" '+(x.id===v.id?'selected':'')+'>'+esc(x.title)+'</option>').join('')+'</select></label><div class="ac-age-grid">'+ageOverview(c,v)+'</div><p>Comparing this video with <b>'+esc(baselineName)+'</b>. Same age vs same age.</p></div>';
+      const actions='<div class="actions ac-video-actions">'+(v.native&&!v.engineId?action('result','Update this video’s results'):action('import',v.engineId?'Update imported results':'Import results'))+action('baseline','Build / update baseline')+action('diagnosis','Use this in Diagnosis')+'</div>';
       return '<div class="ac-shell">'+
-        '<section class="ac-top '+d.tone+'"><div><div class="ac-kicker">'+age.label+' · '+age.name+'</div><h2>'+esc(d.headline)+'</h2><p>'+esc(d.explain)+'</p></div><div class="ac-top-badge"><span>BOTTLENECK</span><b>'+esc(d.bottleneck)+'</b><small>'+esc(age.act)+'</small></div></section>'+
-        '<section class="ac-controls"><label>Video<select id="ac-video">'+W.videos(c).map(x=>'<option value="'+esc(x.id)+'" '+(x.id===v.id?'selected':'')+'>'+esc(x.title)+'</option>').join('')+'</select></label><div class="ac-age-grid">'+ageOverview(c,v)+'</div><p>Comparing this video with <b>'+esc(baselineName)+'</b>. Same age vs same age.</p><div class="actions">'+(v.native&&!v.engineId?action('result','Update this video’s results'):action('import',v.engineId?'Update imported results':'Import results'))+action('baseline','Build / update baseline')+action('diagnosis','Use this in Diagnosis')+'</div></section>'+
-        '<section class="ac-block ac-next '+d.tone+'"><div class="ac-kicker">WHAT TO DO NEXT</div><h3>'+esc(d.bottleneck)+'</h3><p>'+esc(d.next)+'</p></section>'+
-        metricsHtml(r,d)+baselineHtml(c,v,p.hours,b)+patternHtml(c)+recentHtml(c)+
-        '<details class="ac-full"><summary><b>Full analytics details</b> · sources, every metric, baseline history and advanced controls</summary><div class="ac-full-inner">'+full+'</div></details>'+
+        '<section class="ac-section ac-video-section '+d.tone+'">'+
+          '<div class="ac-section-head ac-video-head"><div class="ac-section-index">02</div><div><div class="ac-kicker">THIS VIDEO READ · '+age.label+' · '+age.name+'</div><h2>'+esc(d.headline)+'</h2><p>'+esc(d.explain)+'</p></div><div class="ac-top-badge"><span>BOTTLENECK</span><b>'+esc(d.bottleneck)+'</b><small>'+esc(age.act)+'</small></div></div>'+
+          '<div class="ac-section-body">'+
+            controls+
+            '<div class="ac-subsection"><div class="ac-subsection-label">HOW THE NUMBERS LOOK</div>'+metricsHtml(r,d)+'</div>'+
+            '<div class="ac-next-inline '+d.tone+'"><div><span>WHAT TO DO NEXT</span><b>'+esc(d.bottleneck)+'</b></div><p>'+esc(d.next)+'</p></div>'+
+            actions+
+          '</div>'+
+        '</section>'+
+        baselineHtml(c,v,p.hours,b)+
+        patternHtml(c)+
+        recentHtml(c)+
+        '<details class="ac-section ac-full"><summary><span class="ac-section-index">06</span><span><b>Full analytics details</b><small>Sources, every metric, baseline history and advanced controls</small></span></summary><div class="ac-full-inner">'+full+'</div></details>'+
       '</div>';
     }
     function channelSummary(c,full){
       const d=W.channel(c),keys=[['engagedViews','Engaged views'],['views','Views'],['impressions','Impressions'],['ctr','CTR']];
       const comparable=d.comparable;
-      return '<div class="ac-shell"><section class="ac-top '+(comparable?'normal':'warn')+'"><div><div class="ac-kicker">90-DAY CHANNEL TREND</div><h2>'+(comparable?'Is the whole channel moving?':'Need two verified 90-day reports')+'</h2><p>Use this for channel direction. Do not use 90-day totals as a per-video baseline.</p></div><div class="ac-top-badge"><span>STATUS</span><b>'+(comparable?'COMPARABLE':'NEED DATA')+'</b><small>Video bottlenecks still come from same-age video comparisons.</small></div></section><div class="ac-channel">'+keys.map(([k,l])=>{
-        const a=n(d.starting?.[k]),z=n(d.current?.[k]);let change='Not comparable yet';
-        if(comparable&&a!==null&&z!==null) change=k==='ctr'?((z-a)>=0?'+':'')+(z-a).toFixed(1)+' pp':a?((z/a-1)*100>=0?'+':'')+((z/a-1)*100).toFixed(1)+'%':'—';
-        const val=k==='ctr'?(z===null?'—':Number(z).toFixed(1)+'%'):fmtCount(z);
-        return '<div class="ac-channel-card"><span>'+l+'</span><b>'+val+'</b><small>'+change+' vs starting report</small></div>';
-      }).join('')+'</div><div class="actions"><button class="btn" data-cg="analytics-snapshot-new">Add 90-day report</button><button class="btn" data-ac-mode="video">Back to video diagnosis</button></div><details class="ac-full"><summary><b>Full channel details</b> · report dates, sources and history</summary><div class="ac-full-inner">'+full+'</div></details></div>';
+      return '<div class="ac-shell">'+
+        '<section class="ac-section ac-channel-section '+(comparable?'normal':'warn')+'">'+
+          '<div class="ac-section-head"><div class="ac-section-index">02</div><div><div class="ac-kicker">90-DAY CHANNEL TREND</div><h2>'+(comparable?'Is the whole channel moving?':'Need two verified 90-day reports')+'</h2><p>Use this for channel direction. Do not use 90-day totals as a per-video baseline.</p></div><div class="ac-top-badge"><span>STATUS</span><b>'+(comparable?'COMPARABLE':'NEED DATA')+'</b><small>Video bottlenecks still come from same-age video comparisons.</small></div></div>'+
+          '<div class="ac-section-body"><div class="ac-channel">'+keys.map(([k,l])=>{
+            const a=n(d.starting?.[k]),z=n(d.current?.[k]);let change='Not comparable yet';
+            if(comparable&&a!==null&&z!==null) change=k==='ctr'?((z-a)>=0?'+':'')+(z-a).toFixed(1)+' pp':a?((z/a-1)*100>=0?'+':'')+((z/a-1)*100).toFixed(1)+'%':'—';
+            const val=k==='ctr'?(z===null?'—':Number(z).toFixed(1)+'%'):fmtCount(z);
+            return '<div class="ac-channel-card"><span>'+l+'</span><b>'+val+'</b><small>'+change+' vs starting report</small></div>';
+          }).join('')+'</div><div class="actions"><button class="btn" data-cg="analytics-snapshot-new">Add 90-day report</button><button class="btn" data-ac-mode="video">Back to video diagnosis</button></div></div>'+
+        '</section>'+
+        '<details class="ac-section ac-full"><summary><span class="ac-section-index">03</span><span><b>Full channel details</b><small>Report dates, sources and history</small></span></summary><div class="ac-full-inner">'+full+'</div></details>'+
+      '</div>';
     }
+
 
     W.body=function(c){
       const full=originalBody(c),p=W.prefs(c);
@@ -305,26 +331,29 @@
     const style=win.document.createElement('style');
     style.id='accelerator-analytics-clarity-style';
     style.textContent=`
-      .ac-shell{display:grid;gap:18px}.ac-kicker{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted,#68757d)}
-      .ac-top,.ac-block,.ac-controls,.ac-metrics,.ac-channel{border:1px solid var(--line,#d9e0e2);background:var(--card,#fff);border-radius:16px}
-      .ac-top{padding:22px;display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,340px);gap:20px;align-items:center;border-left:5px solid #55757a}
-      .ac-top h2,.ac-block h3{margin:5px 0 7px}.ac-top p,.ac-block p{margin:6px 0;line-height:1.5}.ac-top.bad{border-left-color:#b54b4b}.ac-top.warn{border-left-color:#b5822e}.ac-top.great{border-left-color:#2f8464}
-      .ac-top-badge{padding:15px;border-radius:12px;background:rgba(84,110,116,.08);display:grid;gap:4px}.ac-top-badge span{font-size:10px;font-weight:800;letter-spacing:.1em}.ac-top-badge b{font-size:18px}.ac-top-badge small{line-height:1.35;color:var(--muted,#68757d)}
-      .ac-controls{padding:18px}.ac-controls>label{display:grid;gap:7px;font-weight:700}.ac-controls select{width:100%;font-size:15px}.ac-controls .actions{margin-top:12px}
-      .ac-age-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:14px 0}.ac-age{border:1px solid var(--line,#d9e0e2);border-radius:12px;background:transparent;padding:11px;text-align:left;display:grid;gap:4px;cursor:pointer;color:inherit}.ac-age.on{border-color:#245c5b;box-shadow:inset 0 0 0 1px #245c5b}.ac-age span{font-size:10px;font-weight:800;letter-spacing:.05em}.ac-age b{font-size:14px}.ac-age small{color:var(--muted,#68757d)}
-      .ac-next{padding:18px;border-left:5px solid #55757a}.ac-next.bad{border-left-color:#b54b4b}.ac-next.warn{border-left-color:#b5822e}.ac-next.great{border-left-color:#2f8464}
-      .ac-metrics{padding:12px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.ac-metric{border:1px solid var(--line,#d9e0e2);border-radius:12px;padding:14px;display:grid;gap:5px;border-top:4px solid #718189}.ac-metric.bad{border-top-color:#b54b4b;background:rgba(181,75,75,.05)}.ac-metric.warn{border-top-color:#b5822e}.ac-metric.good,.ac-metric.great{border-top-color:#2f8464;background:rgba(47,132,100,.05)}.ac-metric.normal{border-top-color:#4d7884}.ac-metric.muted{opacity:.75}.ac-stage{font-size:10px;font-weight:900;letter-spacing:.1em}.ac-metric h4{margin:0;font-size:15px}.ac-values{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.ac-values b{font-size:23px}.ac-values span{font-size:12px;color:var(--muted,#68757d)}.ac-metric strong{font-size:13px}.ac-metric p,.ac-metric small{margin:0;color:var(--muted,#68757d);font-size:12px;line-height:1.4}
-      .ac-shell>.ac-controls,.ac-shell>.ac-metrics,.ac-shell>.ac-block,.ac-shell>.ac-full{border:1px solid var(--line,#d9e0e2);border-left:5px solid #55757a;border-radius:16px;background:var(--card,#fff);overflow:hidden}
-      .ac-shell>.ac-full{border-style:solid;padding:14px}.ac-shell>.ac-metrics{padding:14px}.ac-shell>.ac-controls{padding:18px}
-      .ac-block{padding:18px}.ac-block-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.ac-baseline-grid,.ac-channel{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.ac-baseline-grid>div,.ac-channel-card{padding:13px;border:1px solid var(--line,#d9e0e2);border-radius:11px;display:grid;gap:3px}.ac-baseline-grid span,.ac-channel-card span{font-size:11px;font-weight:800}.ac-baseline-grid b,.ac-channel-card b{font-size:20px}.ac-baseline-grid small,.ac-channel-card small{color:var(--muted,#68757d)}
-      .ac-pattern{border-left:5px solid #55757a}.ac-pattern.bad{border-left-color:#b54b4b}.ac-pattern.warn{border-left-color:#b5822e}
+      .ac-shell{display:grid;gap:24px}.ac-kicker{font-size:10px;font-weight:900;letter-spacing:.11em;text-transform:uppercase;color:var(--muted,#68757d)}
+      .ac-section{border:1px solid var(--line,#d9e0e2);border-left:6px solid #55757a;background:var(--card,#fff);border-radius:18px;overflow:hidden;box-shadow:0 1px 0 rgba(17,33,43,.025)}
+      .ac-section.bad{border-left-color:#b54b4b}.ac-section.warn{border-left-color:#b5822e}.ac-section.good,.ac-section.great{border-left-color:#2f8464}
+      .ac-section-head{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:14px;align-items:start;padding:20px 22px;border-bottom:1px solid var(--line,#d9e0e2);background:rgba(84,110,116,.035)}
+      .ac-section-head h2{margin:4px 0 6px;font-size:22px;line-height:1.16}.ac-section-head p{margin:0;line-height:1.5;color:var(--muted,#68757d)}
+      .ac-section-index{width:34px;height:34px;border:1px solid var(--line,#d9e0e2);border-radius:10px;display:grid;place-items:center;font-size:11px;font-weight:900;letter-spacing:.05em;background:var(--card,#fff);color:var(--muted,#68757d);flex:0 0 auto}
+      .ac-section-body{padding:20px 22px;display:grid;gap:18px}
+      .ac-top-badge{min-width:220px;max-width:340px;padding:14px;border-radius:12px;background:rgba(84,110,116,.08);display:grid;gap:4px}.ac-top-badge span{font-size:9px;font-weight:900;letter-spacing:.1em}.ac-top-badge b{font-size:17px}.ac-top-badge small{line-height:1.35;color:var(--muted,#68757d)}
+      .ac-video-controls{display:grid;gap:9px}.ac-video-controls>label{display:grid;gap:7px;font-weight:800}.ac-video-controls select{width:100%;font-size:15px}.ac-video-controls p{margin:0;color:var(--muted,#68757d)}
+      .ac-age-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.ac-age{border:1px solid var(--line,#d9e0e2);border-radius:12px;background:transparent;padding:11px;text-align:left;display:grid;gap:4px;cursor:pointer;color:inherit}.ac-age.on{border-color:#245c5b;box-shadow:inset 0 0 0 1px #245c5b;background:rgba(36,92,91,.035)}.ac-age span{font-size:10px;font-weight:800;letter-spacing:.05em}.ac-age b{font-size:14px}.ac-age small{color:var(--muted,#68757d)}
+      .ac-subsection{display:grid;gap:9px}.ac-subsection-label{font-size:10px;font-weight:900;letter-spacing:.09em;color:var(--muted,#68757d)}
+      .ac-metrics{border:0!important;background:transparent!important;border-radius:0!important;padding:0!important;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.ac-metric{border:1px solid var(--line,#d9e0e2);border-radius:12px;padding:14px;display:grid;gap:5px;border-top:4px solid #718189}.ac-metric.bad{border-top-color:#b54b4b;background:rgba(181,75,75,.05)}.ac-metric.warn{border-top-color:#b5822e;background:rgba(181,130,46,.045)}.ac-metric.good,.ac-metric.great{border-top-color:#2f8464;background:rgba(47,132,100,.05)}.ac-metric.normal{border-top-color:#4d7884}.ac-metric.muted{opacity:.72}.ac-stage{font-size:10px;font-weight:900;letter-spacing:.1em}.ac-metric h4{margin:0;font-size:15px}.ac-values{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.ac-values b{font-size:23px}.ac-values span{font-size:12px;color:var(--muted,#68757d)}.ac-metric strong{font-size:13px}.ac-metric p,.ac-metric small{margin:0;color:var(--muted,#68757d);font-size:12px;line-height:1.4}
+      .ac-next-inline{border:1px solid var(--line,#d9e0e2);border-left:5px solid #55757a;border-radius:12px;padding:14px 15px;display:grid;grid-template-columns:minmax(180px,280px) minmax(0,1fr);gap:16px;align-items:center;background:rgba(84,110,116,.03)}.ac-next-inline.bad{border-left-color:#b54b4b}.ac-next-inline.warn{border-left-color:#b5822e}.ac-next-inline.good,.ac-next-inline.great{border-left-color:#2f8464}.ac-next-inline span{font-size:9px;font-weight:900;letter-spacing:.09em}.ac-next-inline b{display:block;margin-top:3px}.ac-next-inline p{margin:0;line-height:1.45}
+      .ac-video-actions{padding-top:2px}
+      .ac-baseline-grid,.ac-channel{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.ac-baseline-grid>div,.ac-channel-card{padding:13px;border:1px solid var(--line,#d9e0e2);border-radius:11px;display:grid;gap:3px}.ac-baseline-grid span,.ac-channel-card span{font-size:11px;font-weight:800}.ac-baseline-grid b,.ac-channel-card b{font-size:20px}.ac-baseline-grid small,.ac-channel-card small{color:var(--muted,#68757d)}
+      .ac-decision-callout{border:1px solid var(--line,#d9e0e2);border-radius:12px;padding:14px;background:rgba(84,110,116,.035);display:grid;gap:4px}.ac-decision-callout span{font-size:9px;font-weight:900;letter-spacing:.09em}.ac-decision-callout b{line-height:1.45}
       .ac-badge{display:inline-flex;align-items:center;width:max-content;max-width:100%;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:800;background:rgba(84,110,116,.1)}.ac-badge.bad,.ac-row strong.bad{color:#a23d3d}.ac-badge.warn,.ac-row strong.warn{color:#956713}.ac-badge.great,.ac-row strong.great,.ac-badge.good,.ac-row strong.good{color:#237055}
-      .ac-recent{display:grid}.ac-row{display:grid;grid-template-columns:minmax(0,1fr) 78px minmax(150px,auto);gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line,#d9e0e2)}.ac-row:last-child{border-bottom:0}.ac-row>div{display:grid;gap:3px}.ac-row small{color:var(--muted,#68757d)}.ac-row strong{text-align:right}
-      .ac-full{border:1px dashed var(--line,#c9d1d5);border-radius:14px;padding:14px}.ac-full>summary{cursor:pointer}.ac-full-inner{margin-top:14px}.ac-full-inner>.cg-native-section:first-child{margin-top:0}
+      .ac-recent{display:grid}.ac-row{display:grid;grid-template-columns:minmax(0,1fr) 78px minmax(150px,auto);gap:12px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line,#d9e0e2)}.ac-row:last-child{border-bottom:0}.ac-row>div{display:grid;gap:3px}.ac-row small{color:var(--muted,#68757d)}.ac-row strong{text-align:right}
+      .ac-full{padding:0}.ac-full>summary{cursor:pointer;display:grid;grid-template-columns:44px 1fr;gap:14px;align-items:center;padding:16px 22px;list-style:none}.ac-full>summary::-webkit-details-marker{display:none}.ac-full>summary span:last-child{display:grid;gap:2px}.ac-full>summary small{font-weight:400;color:var(--muted,#68757d)}.ac-full-inner{padding:0 22px 20px;border-top:1px solid var(--line,#d9e0e2);margin-top:0}.ac-full-inner>.cg-native-section:first-child{margin-top:18px}
       .ac-diagnosis-evidence{border-left:5px solid #55757a!important}.ac-diagnosis-evidence.bad{border-left-color:#b54b4b!important}.ac-diagnosis-evidence.warn{border-left-color:#b5822e!important}.ac-mini-evidence p{padding:7px 0;border-bottom:1px solid var(--line,#ddd);margin:0}
-      @media(max-width:900px){.ac-top{grid-template-columns:1fr}.ac-age-grid,.ac-metrics,.ac-baseline-grid,.ac-channel{grid-template-columns:repeat(2,minmax(0,1fr))}}
-      @media(max-width:560px){.ac-age-grid,.ac-metrics,.ac-baseline-grid,.ac-channel{grid-template-columns:1fr}.ac-block-head{display:grid}.ac-row{grid-template-columns:1fr auto}.ac-row .ac-badge{grid-column:1/-1}.ac-top,.ac-block,.ac-controls{border-radius:12px}.ac-top{padding:16px}.ac-metrics{padding:9px}}
-    `;
+      @media(max-width:900px){.ac-section-head{grid-template-columns:40px minmax(0,1fr)}.ac-section-head>.ac-top-badge,.ac-section-head>.ac-badge,.ac-section-head>.btn{grid-column:2}.ac-age-grid,.ac-metrics,.ac-baseline-grid,.ac-channel{grid-template-columns:repeat(2,minmax(0,1fr))}.ac-next-inline{grid-template-columns:1fr}}
+      @media(max-width:560px){.ac-shell{gap:16px}.ac-section{border-radius:13px}.ac-section-head{grid-template-columns:32px minmax(0,1fr);padding:15px 14px;gap:10px}.ac-section-index{width:28px;height:28px;border-radius:8px}.ac-section-head h2{font-size:18px}.ac-section-body{padding:14px}.ac-age-grid,.ac-metrics,.ac-baseline-grid,.ac-channel{grid-template-columns:1fr}.ac-row{grid-template-columns:1fr auto}.ac-row .ac-badge{grid-column:1/-1}.ac-full>summary{grid-template-columns:32px 1fr;padding:14px}.ac-full-inner{padding:0 14px 14px}}
+`
     win.document.head.appendChild(style);
 
     win.document.addEventListener('change',ev=>{
