@@ -168,8 +168,11 @@
     }
     function ageOverview(c,v){
       return [24,48,168,672].map(h=>{
-        const b=matchingBaseline(c,v,h),rec=baselineRecord(c,b),out=baselineOutcome(rec);
-        return '<button class="ac-age '+(W.prefs(c).hours===h?'on':'')+'" data-ac-window="'+h+'"><span>'+AGES[h].label+' · '+AGES[h].name+'</span><b>'+(out.current===null?'No normal yet':fmtCount(out.current)+' '+(out.key==='engagedViews'?'engaged':'views'))+'</b><small>'+esc(AGES[h].purpose)+'</small></button>';
+        const read=readFor(c,v,h),d=read?.d;
+        const score=d?.outcomeMultiple!=null?fmtMultiple(d.outcomeMultiple):'No comparison yet';
+        const status=d?.kind==='diagnosed'?(d.hardIssues?.length?d.bottleneck:d.winner?'Winner':d.softIssues?.length?'Check context':'In range'):AGES[h].purpose;
+        const tone=d?.tone||'muted';
+        return '<button class="ac-age '+tone+' '+(W.prefs(c).hours===h?'on':'')+'" data-ac-window="'+h+'"><span>'+AGES[h].label+' · '+AGES[h].name+'</span><b>'+esc(score)+'</b><small>'+esc(status)+'</small></button>';
       }).join('');
     }
     function metricCard(stage,label,x,signal,format){
@@ -192,7 +195,8 @@
       if(!rec)return '<section class="ac-block"><div class="ac-kicker">YOUR NORMAL</div><h3>No matched '+AGES[h].label+' baseline yet</h3><p>Build the same-age baseline first so the dashboard has a fair definition of normal.</p>'+action('baseline','Build '+AGES[h].label+' baseline')+'</section>';
       const o=baselineOutcome(rec),watch=n(rec.values.retention30)!==null?['First 30 sec',rec.values.retention30]:['APV',rec.values.apv];
       const evo=o.growth===null?'No earlier saved version to compare yet.':Math.abs(o.growth-1)<.001?'Normal has not moved from the first saved version.':'Normal is '+((o.growth-1)*100>=0?'+':'')+((o.growth-1)*100).toFixed(1)+'% vs the first saved version.';
-      return '<section class="ac-block"><div class="ac-kicker">YOUR NORMAL RIGHT NOW · '+AGES[h].label+'</div><div class="ac-block-head"><div><h3>'+esc(rec.label)+'</h3><p>'+esc(evo)+' Built from '+esc(rec.sample)+' comparable video'+(rec.sample===1?'':'s')+'.</p></div><button class="btn" data-aw="edit-baseline">Review baseline</button></div><div class="ac-baseline-grid">'+
+      const startLine=o.first===null||o.first===undefined?'Starting normal not recorded yet.':'Started at '+fmtCount(o.first)+' '+(o.key==='engagedViews'?'engaged views':'views')+' → now '+fmtCount(o.current)+'.';
+      return '<section class="ac-block"><div class="ac-kicker">YOUR NORMAL RIGHT NOW · '+AGES[h].label+'</div><div class="ac-block-head"><div><h3>'+esc(rec.label)+'</h3><p><b>'+esc(startLine)+'</b> '+esc(evo)+' Built from '+esc(rec.sample)+' comparable video'+(rec.sample===1?'':'s')+'.</p></div><button class="btn" data-aw="edit-baseline">Review baseline</button></div><div class="ac-baseline-grid">'+
         '<div><span>Outcome</span><b>'+fmtCount(o.current)+'</b><small>'+(o.key==='engagedViews'?'Engaged views':'Views')+'</small></div>'+
         '<div><span>Show</span><b>'+fmtCount(rec.values.impressions)+'</b><small>Impressions</small></div>'+
         '<div><span>Click</span><b>'+fmtRate(rec.values.ctr)+'</b><small>CTR</small></div>'+
