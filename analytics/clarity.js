@@ -18,23 +18,33 @@
   const fmtRate=v=>n(v)===null?'—':(n(v)*100).toFixed(1)+'%';
   const fmtMultiple=v=>n(v)===null?'—':n(v).toFixed(2)+'×';
   const signedPp=v=>n(v)===null?'—':(n(v)>=0?'+':'')+n(v).toFixed(1)+' pp';
+  const signedPctFromMultiple=v=>n(v)===null?'—':((n(v)-1)>=0?'+':'')+((n(v)-1)*100).toFixed(0)+'%';
   const stageLabel=stages=>stages.map(x=>STAGE[x]||x).join(' + ');
 
   function countSignal(x){
     const m=n(x?.multiple);
     if(m===null) return {tone:'muted',label:'Not enough data',detail:'No fair comparison yet',range:'Usual range: 0.70–1.30×'};
-    if(m<.7) return {tone:'bad',label:'Looks weak',detail:fmtMultiple(m)+' of usual',range:'Usual range: 0.70–1.30×'};
-    if(m<1.3) return {tone:'normal',label:'Looks normal',detail:fmtMultiple(m)+' of usual',range:'Usual range: 0.70–1.30×'};
-    if(m<1.7) return {tone:'good',label:'Above normal',detail:fmtMultiple(m)+' of usual',range:'1.30×+ is above usual'};
-    if(m<2.5) return {tone:'great',label:'Strong',detail:fmtMultiple(m)+' of usual',range:'1.70×+ is a strong result'};
-    return {tone:'great',label:'Big win',detail:fmtMultiple(m)+' of usual',range:'2.50×+ is a very strong result'};
+    const detail=fmtMultiple(m)+' normal · '+signedPctFromMultiple(m)+' vs normal';
+    if(m<.7) return {tone:'bad',label:'Looks weak',detail,range:'Usual range: 0.70–1.30×'};
+    if(m<1.3) return {tone:'normal',label:'Looks normal',detail,range:'Usual range: 0.70–1.30×'};
+    if(m<1.7) return {tone:'good',label:'Above normal',detail,range:'1.30×+ is above usual'};
+    if(m<2.5) return {tone:'great',label:'Strong',detail,range:'1.70×+ is a strong result'};
+    return {tone:'great',label:'Big win',detail,range:'2.50×+ is a very strong result'};
   }
   function rateSignal(x,threshold){
-    const d=n(x?.deltaPp);
-    if(d===null) return {tone:'muted',label:'Not enough data',detail:'No fair comparison yet',range:'Compare it with what this creator usually gets'};
-    if(d<-threshold) return {tone:'bad',label:'Looks weak',detail:signedPp(d)+' vs usual',range:'Usually okay within ±'+threshold+' pp'};
-    if(d>threshold) return {tone:'good',label:'Strong',detail:signedPp(d)+' vs usual',range:'Usually okay within ±'+threshold+' pp'};
-    return {tone:'normal',label:'Looks normal',detail:signedPp(d)+' vs usual',range:'Usually okay within ±'+threshold+' pp'};
+    const d=n(x?.deltaPp),m=n(x?.multiple),detail=[m!==null?fmtMultiple(m)+' normal':null,d!==null?signedPp(d):null].filter(Boolean).join(' · ');
+    if(d===null&&m===null) return {tone:'muted',label:'Not enough data',detail:'No fair comparison yet',range:'Compare it with what this creator usually gets'};
+    if(d!==null&&d<-threshold) return {tone:'bad',label:'Looks weak',detail,range:'Usually okay within ±'+threshold+' pp'};
+    if(d!==null&&d>threshold) return {tone:'good',label:'Strong',detail,range:'Usually okay within ±'+threshold+' pp'};
+    return {tone:'normal',label:'Looks normal',detail,range:'Usually okay within ±'+threshold+' pp'};
+  }
+  function durationSignal(x){
+    const m=n(x?.multiple),d=n(x?.deltaSeconds),detail=[m!==null?fmtMultiple(m)+' normal':null,d!==null?(d>=0?'+':'')+Math.round(d)+' sec':null].filter(Boolean).join(' · ');
+    if(m===null&&d===null)return {tone:'muted',label:'Not enough data',detail:'No fair comparison yet',range:'Compare AVD with this creator’s normal'};
+    if(m!==null&&m<.7)return {tone:'bad',label:'Looks weak',detail,range:'AVD is well below this creator’s normal'};
+    if(m!==null&&m<.85)return {tone:'warn',label:'A little soft',detail,range:'AVD is below this creator’s normal'};
+    if(m!==null&&m>1.15)return {tone:'good',label:'Strong',detail,range:'AVD is above this creator’s normal'};
+    return {tone:'normal',label:'Looks normal',detail,range:'AVD is close to this creator’s normal'};
   }
   function metricRead(r){
     const c=r?.comparisons||{};
@@ -44,6 +54,7 @@
     const click=rateSignal(c.ctr,.5);
     let watchKey='retention30',watch=rateSignal(c.retention30,3);
     if(n(c.retention30?.deltaPp)===null && n(c.apv?.deltaPp)!==null){watchKey='apv';watch=rateSignal(c.apv,3);}
+    else if(n(c.retention30?.deltaPp)===null && n(c.apv?.deltaPp)===null && (n(c.avdSeconds?.multiple)!==null||n(c.avdSeconds?.deltaSeconds)!==null)){watchKey='avdSeconds';watch=durationSignal(c.avdSeconds);}
     return {outcomeKey,outcome,show,click,watch,watchKey};
   }
   function nextFor(stages,winner){
@@ -214,11 +225,12 @@
       const c=r?.comparisons||{},m=d.metrics;
       const outcomeX=c[m.outcomeKey]||{};
       const watchX=c[m.watchKey]||{};
+      const watchLabel=m.watchKey==='retention30'?'First 30 sec':m.watchKey==='apv'?'Average % viewed':'Average view duration',watchFormat=m.watchKey==='avdSeconds'?(v=>n(v)===null?'—':Math.round(n(v))+' sec'):fmtRate;
       return viewCountsHtml(r)+'<div class="ac-metrics">'+
         metricCard('OUTCOME',m.outcomeKey==='engagedViews'?'Engaged views':'Views',outcomeX,m.outcome,fmtCount)+
         metricCard('SHOW','Impressions',c.impressions||{},m.show,fmtCount)+
         metricCard('CLICK','CTR',c.ctr||{},m.click,fmtRate)+
-        metricCard('WATCH',m.watchKey==='retention30'?'First 30 sec':'Average % viewed',watchX,m.watch,fmtRate)+
+        metricCard('WATCH',watchLabel,watchX,m.watch,watchFormat)+
       '</div>'+sourceMixHtml(r);
     }
     function normalCell(label,value,format=fmtCount,note=''){
@@ -443,5 +455,5 @@
     if(win.AcceleratorDeskBridge?.analyticsActive?.()) rerender();
   }
 
-  return {countSignal,rateSignal,metricRead,diagnose,patternFromDiagnoses,install};
+  return {countSignal,rateSignal,durationSignal,metricRead,diagnose,patternFromDiagnoses,install};
 });
