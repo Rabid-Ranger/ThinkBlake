@@ -368,7 +368,7 @@ ${JSON.stringify(schema,null,2)}`;
       paid:'unknown',
       traffic:'all',
       source:'ACTUAL REPORT AND FILTERS',
-      metrics:{views:null,engagedViews:null,impressions:null,ctr:null,retention30:null,apv:null,avdSeconds:null}
+      metrics:{views:null,engagedViews:null,impressions:null,ctr:null,retention30:null,apv:null,avdSeconds:null,browsePct:null,suggestedPct:null,searchPct:null,externalPct:null}
     });
     const channelPeriod={
       start:'YYYY-MM-DD',end:'YYYY-MM-DD',
@@ -410,7 +410,7 @@ For EACH checkpoint independently:
 - Do not substitute lifetime totals, realtime totals, last calendar days, or a different age window.
 - Do not remove flops or outliers unless the video is structurally incomparable, paid/promoted when judging organic, a different format, or from a genuinely different strategy era.
 
-For every video/checkpoint row request all seven metrics when Studio can report them:
+For every video/checkpoint row request these metrics when Studio can report them:
 1. views
 2. engagedViews
 3. registered impressions
@@ -418,14 +418,19 @@ For every video/checkpoint row request all seven metrics when Studio can report 
 5. first-30-second / Intro retention
 6. average percentage viewed / APV
 7. average view duration / AVD in seconds
+8. Browse %
+9. Suggested %
+10. Search %
+11. External %
 
 VIDEO-METRIC RULES
 - Keep Views and Engaged Views separate.
-- CTR, retention30, and APV are percentage numbers where 6.2 means 6.2%.
+- CTR, retention30, APV, browsePct, suggestedPct, searchPct, and externalPct are percentage numbers where 6.2 means 6.2%.
 - avdSeconds is seconds.
 - Do NOT derive APV from AVD or video length.
 - Do NOT estimate 0:30 retention from a graph.
-- If an exact checkpoint metric is unavailable or still processing, use null.
+- If an exact checkpoint metric or traffic-source split is unavailable or still processing, use null.
+- Do not renormalize Browse / Suggested / Search / External to 100%. They are context fields and other sources may exist.
 - Use coverage "exact" only when the report really represents the exact first 24h / 48h / 7d / 28d lifespan. Otherwise use "unknown" or "partial".
 - Use actual video IDs/URLs, publication timestamps, capture timestamps, filters, traffic scope, and measurement definitions.
 
