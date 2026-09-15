@@ -24,9 +24,10 @@
     const apv=median(values('apv').map(x=>x?.deltaPp));
     const watch=r30!==null?r30:apv;
     const watchMetric=r30!==null?'0:30':'APV';
+    const avd=median(values('avdSeconds').map(x=>x?.multiple));
     const audience=ADC?.audienceRead?ADC.audienceRead(c):{};
     const overall=ADC?.overallRead?ADC.overallRead(c,W,(typeof globalThis!=='undefined'?globalThis.__acceleratorCoachGuide:null)):null;
-    return {p,reads,outcome,show,click,watch,watchMetric,audience,overall};
+    return {p,reads,outcome,show,click,watch,watchMetric,avd,audience,overall};
   }
   function countVerdict(v,kind='result'){
     if(v===null)return {tone:'muted',label:'Need data',line:'No fair matched read yet.'};
@@ -44,12 +45,15 @@
   function questionAnswers(c,W,ADC){
     const r=channelQuestionRead(c,W,ADC),out=countVerdict(r.outcome),show=countVerdict(r.show,'show'),click=rateVerdict(r.click,.5,'CTR'),watch=rateVerdict(r.watch,3,r.watchMetric);
     const a=r.audience||{},retTone=a.loyaltyBand==='weak'?'bad':a.loyaltyBand==='strong'?'good':a.loyaltyBand==='steady'?'normal':'muted';
-    const returnLine=a.loyalty!==null&&a.loyalty!==undefined
-      ? ((a.loyaltyKey==='regular'?'Regular':a.loyaltyKey==='casual'?'Casual':'Returning')+' viewers '+signedPct(a.loyalty)+' vs prior 90-day report.')
-      : 'No comparable repeat-audience trend yet.';
+    const trend=(key,label)=>{
+      const cur=n(a.current?.[key]),prev=n(a.previous?.[key]),rr=cur!==null&&prev!==null&&prev!==0?cur/prev:null;
+      return rr===null?null:label+' '+signedPct(rr);
+    };
+    const audienceParts=[trend('newViewers','New'),trend('casual','Casual'),trend('regular','Regular'),trend('returning','Returning')].filter(Boolean);
+    const returnLine=audienceParts.length?audienceParts.join(' · '):'No comparable repeat-audience trend yet.';
     const resultStage=r.overall?.stages?.find(x=>x.key==='result');
     const resultLine=resultStage?.value||'Business result is not connected yet.';
-    const returnVerdict={tone:retTone,label:retTone==='bad'?'Return is weakening':retTone==='good'?'Return is strengthening':retTone==='normal'?'Return is roughly steady':'Need audience trend',line:returnLine+' '+resultLine};
+    const returnVerdict={tone:retTone,label:retTone==='bad'?'Return is weakening':retTone==='good'?'Return is strengthening':retTone==='normal'?'Return is roughly steady':'Need audience trend',line:returnLine+'. '+resultLine};
     return {raw:r,outcome:out,show,click,watch,returnResult:returnVerdict};
   }
   function proposal(c,W,ADC){
@@ -105,7 +109,7 @@
       ['1 · OUTCOME',q.outcome,'Across '+q.raw.reads.length+' recent mature 7-day videos.'],
       ['2 · SHOW',q.show,'Same-age impression opportunity across the recent 7-day set.'],
       ['3 · CLICK',q.click,q.raw.show>=1.7&&q.raw.click<-.5?'Important: impressions are expanded, so check source/audience breadth before blaming packaging.':'CTR is compared with creator normal in percentage points.'],
-      ['4 · WATCH',q.watch,(q.raw.watchMetric||'WATCH')+' is the current usable matched signal. 0:30 is preferred; APV is the fallback.'],
+      ['4 · WATCH',q.watch,(q.raw.watchMetric||'WATCH')+' is the current usable matched signal. 0:30 is preferred; APV is the fallback.'+(q.raw.avd!==null?' AVD is '+mult(q.raw.avd)+' normal as supporting context.':'')],
       ['5 · RETURN + RESULT',q.returnResult,'Use 90-day audience trend and the video/channel job. No universal loyalty target.']
     ];
     for(const [label,val,detail] of map){
@@ -176,8 +180,8 @@
   function liveReviewHtml(read){
     if(!read||read.status==='needs_baseline')return '<section class="awf-live muted" id="awf-live-review"><div class="awf-kicker">LIVE SAME-AGE READ</div><h3>No matched baseline yet</h3><p>Build the same-age baseline before treating this checkpoint like a diagnosis.</p></section>';
     if(read.status==='needs_data')return '<section class="awf-live muted" id="awf-live-review"><div class="awf-kicker">LIVE SAME-AGE READ</div><h3>Add the checkpoint numbers</h3><p>As you enter the results below, this panel will update against the creator’s same-age normal.</p></section>';
-    const c=read.comparisons,d=read.d||{},watch=n(c.retention30.deltaPp)!==null?['0:30',pp(c.retention30.deltaPp)]:['APV',pp(c.apv.deltaPp)];
-    return '<section class="awf-live '+esc(d.tone||'normal')+'" id="awf-live-review"><div class="awf-live-head"><div><div class="awf-kicker">LIVE SAME-AGE READ · '+esc(read.rw.hours===24?'24H':read.rw.hours===48?'48H':read.rw.hours===168?'7D':'28D')+'</div><h3>'+esc(d.headline||'Current read')+'</h3><p>'+esc(d.explain||'Compared with this creator’s same-age normal.')+'</p></div><div class="awf-bottleneck"><span>BOTTLENECK</span><b>'+esc(d.bottleneck||'—')+'</b></div></div><div class="awf-live-metrics"><div><span>OUTCOME</span><b>'+mult(c[read.outcomeKey]?.multiple)+'</b><small>vs normal</small></div><div><span>SHOW</span><b>'+mult(c.impressions.multiple)+'</b><small>impressions</small></div><div><span>CLICK</span><b>'+pp(c.ctr.deltaPp)+'</b><small>CTR vs normal</small></div><div><span>WATCH</span><b>'+esc(watch[1])+'</b><small>'+esc(watch[0])+' vs normal</small></div></div><p><b>What I would do next:</b> '+esc(d.next||'Keep collecting evidence before changing strategy.')+'</p><button class="btn" data-awf-use-read>Use this read in the review</button></section>';
+    const c=read.comparisons,d=read.d||{},watch=n(c.retention30.deltaPp)!==null?['0:30',pp(c.retention30.deltaPp)]:['APV',pp(c.apv.deltaPp)],avd=n(c.avdSeconds?.multiple)!==null?mult(c.avdSeconds.multiple):'—';
+    return '<section class="awf-live '+esc(d.tone||'normal')+'" id="awf-live-review"><div class="awf-live-head"><div><div class="awf-kicker">LIVE SAME-AGE READ · '+esc(read.rw.hours===24?'24H':read.rw.hours===48?'48H':read.rw.hours===168?'7D':'28D')+'</div><h3>'+esc(d.headline||'Current read')+'</h3><p>'+esc(d.explain||'Compared with this creator’s same-age normal.')+'</p></div><div class="awf-bottleneck"><span>BOTTLENECK</span><b>'+esc(d.bottleneck||'—')+'</b></div></div><div class="awf-live-metrics"><div><span>OUTCOME</span><b>'+mult(c[read.outcomeKey]?.multiple)+'</b><small>vs normal</small></div><div><span>SHOW</span><b>'+mult(c.impressions.multiple)+'</b><small>impressions</small></div><div><span>CLICK</span><b>'+pp(c.ctr.deltaPp)+'</b><small>CTR vs normal</small></div><div><span>WATCH</span><b>'+esc(watch[1])+'</b><small>'+esc(watch[0])+' vs normal · AVD '+esc(avd)+'</small></div></div><p><b>What I would do next:</b> '+esc(d.next||'Keep collecting evidence before changing strategy.')+'</p><button class="btn" data-awf-use-read>Use this read in the review</button></section>';
   }
   function fillReview(drawer,read){
     if(!read?.d)return;
