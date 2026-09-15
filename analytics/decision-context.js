@@ -564,7 +564,7 @@ ${JSON.stringify(schema,null,2)}`;
       }
     }
     function injectChannelButton(){
-      const c=current(),tools=win.document.querySelector('#studio-tools .actions');if(!c||!tools||tools.querySelector('[data-adc-channel-prompt]'))return;
+      const c=current(),tools=win.document.querySelector('#studio-tools .actions');if(!c||!tools||win.document.querySelector('#studio-tools [data-studio="channel-prompt"],#studio-tools [data-adc-channel-prompt]'))return;
       const b=win.document.createElement('button');b.className='btn';b.dataset.adcChannelPrompt='1';b.textContent='Copy 90-day channel + audience prompt';b.onclick=()=>openChannelPrompt(win,c);tools.appendChild(b);
     }
     let queued=false;
