@@ -168,8 +168,8 @@
     };
     const has=Object.values(comparisons).some(x=>n(x.current)!==null&&n(x.baseline)!==null);
     if(!has)return {rw,status:'needs_data',b,cur,comparisons};
-    const d=root.AcceleratorAnalyticsClarity?.diagnose
-      ?root.AcceleratorAnalyticsClarity.diagnose({status:'compared',comparisons},rw.hours)
+    const d=W?.clarityDiagnose
+      ?W.clarityDiagnose({status:'compared',comparisons},rw.hours)
       :null;
     return {rw,status:'compared',b,cur,comparisons,d,outcomeKey};
   }
