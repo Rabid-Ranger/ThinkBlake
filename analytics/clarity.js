@@ -230,7 +230,7 @@
       const label=p.stages.length?stageLabel(p.stages):'NOTHING REPEATING YET';
       let explain,next;
       if(!reads.length){explain='We do not have enough 7-day results yet to call a channel-wide problem.';next='Get a 7-day normal in place and add the first few 7-day video results.';}
-      else if(p.max){explain=p.max+' of '+p.n+' recent 7-day videos point to '+label.toLowerCase()+'. '+(p.source==='soft'?'These are mostly soft spots, not rescue-level failures.':'This is the most repeated hard issue in the recent sample.');next=nextFor(p.stages,false);}
+      else if(p.max){explain=p.max+' of '+p.n+' recent 7-day videos point to '+label.toLowerCase()+'. '+(p.source==='soft'?'These are mostly small weak spots, not major problems.':'This is the most repeated hard issue in the recent sample.');next=nextFor(p.stages,false);}
       else{explain='Across '+p.n+' recent 7-day videos, nothing is repeating often enough to call it the main channel issue.';next='Keep using the diagnosis questions. Protect what is working and wait for a repeated pattern before making a big channel-wide change.';}
       return {...p,reads,label,explain,next};
     }
@@ -280,7 +280,7 @@
       const comparable=d.comparable;
       return '<div class="ac-shell">'+
         '<section class="ac-section ac-channel-section '+(comparable?'normal':'warn')+'">'+
-          '<div class="ac-section-head"><div class="ac-section-index">02</div><div><div class="ac-kicker">90-DAY CHANNEL TREND</div><h2>'+(comparable?'Is the whole channel moving?':'Need two verified 90-day reports')+'</h2><p>Use this for channel direction. Do not use 90-day totals as a per-video baseline.</p></div><div class="ac-top-badge"><span>STATUS</span><b>'+(comparable?'COMPARABLE':'NEED DATA')+'</b><small>Video bottlenecks still come from same-age video comparisons.</small></div></div>'+
+          '<div class="ac-section-head"><div class="ac-section-index">02</div><div><div class="ac-kicker">90-DAY CHANNEL TREND</div><h2>'+(comparable?'Is the whole channel moving?':'Need two verified 90-day reports')+'</h2><p>Use this for channel direction. Do not use 90-day totals as a per-video baseline.</p></div><div class="ac-top-badge"><span>STATUS</span><b>'+(comparable?'READY':'NOT ENOUGH DATA')+'</b><small>Video bottlenecks still come from same-age video comparisons.</small></div></div>'+
           '<div class="ac-section-body"><div class="ac-channel">'+keys.map(([k,l])=>{
             const a=n(d.starting?.[k]),z=n(d.current?.[k]);let change='Not comparable yet';
             if(comparable&&a!==null&&z!==null) change=k==='ctr'?((z-a)>=0?'+':'')+(z-a).toFixed(1)+' pp':a?((z/a-1)*100>=0?'+':'')+((z/a-1)*100).toFixed(1)+'%':'—';
