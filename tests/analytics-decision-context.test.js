@@ -58,6 +58,7 @@ test('channel prompt explicitly requests audience segments and preserves missing
 });
 
 test('JSON block parser accepts fenced Ask Studio responses',()=>{
-  const x=A.parseJsonBlock('\\`\\`\\`json\n{"schemaVersion":1,"channelPeriods":[]}\n\\`\\`\\`');
+  const fence=String.fromCharCode(96,96,96),nl=String.fromCharCode(10);
+  const x=A.parseJsonBlock(fence+'json'+nl+'{"schemaVersion":1,"channelPeriods":[]}'+nl+fence);
   assert.equal(x.schemaVersion,1);
 });
