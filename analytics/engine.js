@@ -308,7 +308,7 @@
       p25: row ? row.p25 : null, p75: row ? row.p75 : null, sampleLevel: sampleLevel(row ? row.n : 0), status: 'unavailable' };
     if (!sourceCompatible) { result.status = 'definition_mismatch'; return result; }
     if (!valid || !Number.isFinite(normal)) return result;
-    if (normal > 0) { result.relativeChangePct = 100 * (current - normal) / normal; if (rule.unit === 'count') result.multiple = current / normal; }
+    if (normal > 0) { result.relativeChangePct = 100 * (current - normal) / normal; result.multiple = current / normal; }
     if (rule.unit === 'ratio') {
       result.deltaPp = 100 * (current - normal);
       result.status = row.n < 10 ? 'limited_sample' : current < row.p25 ? 'below_typical_range' : current > row.p75 ? 'above_typical_range' : 'inside_typical_range';
