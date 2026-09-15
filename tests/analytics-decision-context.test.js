@@ -13,7 +13,7 @@ test('audience read keeps missing data unknown and reads comparable 90-day trend
   ]}}};
   r=A.audienceRead(c);
   assert.equal(r.acquisitionBand,'weak');
-  assert.equal(r.loyaltyKey,'regular');
+  assert.equal(r.loyaltyKey,'repeat audience');
   assert.equal(r.loyaltyBand,'strong');
   assert.equal(r.depthBand,'strong');
 });
@@ -78,4 +78,20 @@ test('plan suggestion maps channel focus into Reach Trust Convert and the right 
   s=A.planSuggestion({focus:'Promise / opening / viewing experience',action:{job:'Keep intended job',video:'Improve the opening',metric:'0:30 + APV/AVD'}});
   assert.equal(s.primaryMetricKey,'ret30');
   assert.match(s.success,/0:30/);
+});
+
+
+test('audience read combines Casual Regular and Returning instead of letting one segment stand in for Trust',()=>{
+  const c={coachOS:{analytics:{snapshots:[
+    {period:'90d',date:'2026-03-31',newViewers:100000,casual:50000,regular:10000,returning:60000,avgViewsPerViewer:1.4},
+    {period:'90d',date:'2026-06-29',newViewers:200000,casual:40000,regular:7000,returning:45000,avgViewsPerViewer:1.1}
+  ]}}};
+  const r=A.audienceRead(c);
+  assert.equal(r.loyaltyKey,'repeat audience');
+  assert.equal(r.loyaltyBand,'weak');
+  assert.equal(r.acquisitionBand,'strong');
+  assert.equal(r.changes.casual,.8);
+  assert.equal(r.changes.regular,.7);
+  assert.equal(r.changes.returning,.75);
+  assert.match(r.focus,/Trust/i);
 });
