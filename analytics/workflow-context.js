@@ -223,9 +223,11 @@
   }
   function diagnosisQuestionSupport(c,W,ADC,index=c?.diagnosis?.index||0){
     const q=questionAnswers(c,W,ADC),r=q.raw,a=r.audience||{},cur=a.current||{},prev=a.previous||{};
+    const channelRows=(c?.coachOS?.analytics?.snapshots||[]).filter(x=>x&&x.period==='90d').slice().sort((x,y)=>String(x.date||'').localeCompare(String(y.date||'')));
+    const channelCur=channelRows.at(-1)||{},channelPrev=channelRows.at(-2)||{},channelData={current:channelCur,previous:channelPrev};
     const base={tone:'muted',verdict:'Analytics cannot answer this yet.',line:'There is not enough matching data for this question.',meaning:'Use the question itself and collect the missing data before letting analytics sway the answer.',next:'Choose NOT SURE if the non-analytics evidence is also missing.',metrics:[],note:''};
     if(index===0){
-      const published=n(cur.uploadsPublished),previousPublished=n(prev.uploadsPublished),planned=n(cur.uploadsPlanned),ratioV=published!==null&&planned!==null&&planned>0?published/planned:null;
+      const published=n(channelCur.uploadsPublished),previousPublished=n(channelPrev.uploadsPublished),planned=n(channelCur.uploadsPlanned),ratioV=published!==null&&planned!==null&&planned>0?published/planned:null;
       if(ratioV===null){
         const metrics=published===null?[]:[{label:'Published in latest 90d',value:String(Math.round(published)),compare:previousPublished===null?'No prior upload count':Math.round(previousPublished)+' in prior 90d',tone:'normal'}];
         return {...base,
@@ -249,7 +251,7 @@
       return {tone:weak?'bad':healthy?'good':'warn',verdict:weak?'Analytics lean NO: discovery / Reach looks weak.':healthy?'Analytics support YES: enough people appear to be getting a chance to see the videos.':'Analytics are mixed on Reach.',line:'This question uses impressions against the creator’s usual result plus the New-viewer trend.',meaning:weak?'The first issue may be getting in front of enough of the right new people, before CTR or retention.':'Reach does not look like the clearest break from the data we have.',next:weak?'Check topic demand and traffic sources before changing the title/thumbnail.':'Keep moving to audience fit and click unless the creator context says otherwise.',metrics,note:'New viewers help with Reach. They do not tell you by themselves whether those viewers are the right audience.'};
     }
     if(index===2){
-      const leads=businessMetric(a,'qualifiedLeads','Qualified leads');
+      const leads=businessMetric(channelData,'qualifiedLeads','Qualified leads');
       const metrics=[
         audienceMetric(a,'newViewers','New viewers','How much new audience is entering'),
         audienceMetric(a,'returning','Returning viewers','Whether people choose the channel again'),
@@ -298,17 +300,17 @@
       return {tone,verdict,line:'Read Casual, Regular, and Returning together, then use Average views per viewer as depth context. New viewers tells you whether Reach is expanding at the same time.',meaning,next:tone==='bad'||tone==='warn'?'Test clearer follow-ups, series, bridge videos, and stronger next-video paths. Keep the core audience promise clear.':'Trust does not look like the first obvious break. Continue to leads / next-step behavior.',metrics,note:'Regular viewers are a stricter long-term segment than Returning viewers. Do not treat New → Casual → Regular as a proven person-by-person conversion path.'};
     }
     if(index===6){
-      const lead=businessMetric(a,'qualifiedLeads','Qualified leads'),book=businessMetric(a,'bookings','Bookings / applications');
-      const has=n(cur.qualifiedLeads)!==null||n(cur.bookings)!==null;
+      const lead=businessMetric(channelData,'qualifiedLeads','Qualified leads'),book=businessMetric(channelData,'bookings','Bookings / applications');
+      const has=n(channelCur.qualifiedLeads)!==null||n(channelCur.bookings)!==null;
       if(!has)return {...base,verdict:'YouTube analytics cannot answer the lead question yet.',line:'Connect qualified clicks / leads / bookings or use CRM / funnel data.',metrics:[lead,book],note:'Views and returning viewers are not a substitute for lead tracking.'};
-      const leadR=n(cur.qualifiedLeads)!==null&&n(prev.qualifiedLeads)!==null&&n(prev.qualifiedLeads)!==0?cur.qualifiedLeads/prev.qualifiedLeads:null;
+      const leadR=n(channelCur.qualifiedLeads)!==null&&n(channelPrev.qualifiedLeads)!==null&&n(channelPrev.qualifiedLeads)!==0?channelCur.qualifiedLeads/channelPrev.qualifiedLeads:null;
       return {tone:leadR!==null&&leadR<.85?'bad':leadR!==null&&leadR>1.05?'good':'normal',verdict:leadR!==null&&leadR<.85?'Business data raises a lead-path concern.':'The lead data does not show an obvious break by itself.',line:'Use qualified leads / bookings from the same reporting periods, then check which video jobs actually created them.',meaning:'This tells you whether deeper action is moving. It does not tell you whether the CTA, resource, offer fit, or attribution caused the change.',next:'Check CTA continuity, lead quality, and which Trust / Convert videos created action.',metrics:[lead,book],note:'Use a consistent qualified-lead definition. Compare similar business jobs, not every video against one lead target.'};
     }
     if(index===7){
-      const book=businessMetric(a,'bookings','Bookings / applications'),sales=businessMetric(a,'sales','Sales / purchases');
-      const has=n(cur.sales)!==null||n(cur.bookings)!==null;
+      const book=businessMetric(channelData,'bookings','Bookings / applications'),sales=businessMetric(channelData,'sales','Sales / purchases');
+      const has=n(channelCur.sales)!==null||n(channelCur.bookings)!==null;
       if(!has)return {...base,verdict:'Analytics cannot answer the sales question yet.',line:'Connect bookings / applications / sales and use sales-call notes for the reasons people do or do not buy.',metrics:[book,sales],note:'YouTube platform metrics cannot diagnose objections, price, fit, or the sales process.'};
-      const salesR=n(cur.sales)!==null&&n(prev.sales)!==null&&n(prev.sales)!==0?cur.sales/prev.sales:null;
+      const salesR=n(channelCur.sales)!==null&&n(channelPrev.sales)!==null&&n(channelPrev.sales)!==0?channelCur.sales/channelPrev.sales:null;
       return {tone:salesR!==null&&salesR<.85?'bad':salesR!==null&&salesR>1.05?'good':'normal',verdict:salesR!==null&&salesR<.85?'Business results raise a sales / decision concern.':'Business results do not show an obvious sales decline by themselves.',line:'Bookings and sales can flag a change, but the reason still comes from objections, lead quality, offer fit, price / ROI, and the sales process.',meaning:'Treat this as business evidence supporting the diagnosis, not a YouTube performance grade.',next:'Review close rate, repeated objections, lead quality, and what good prospects say before deciding this is the break.',metrics:[book,sales],note:'Do not try to solve a sales problem with more views until you know what happens to qualified people who are already close to buying.'};
     }
     return base;
