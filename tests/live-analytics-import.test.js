@@ -49,3 +49,31 @@ test('channel import rejects impossible traffic percentages instead of saving th
   assert.equal(out.periods.length,0);
   assert.match(out.limitations.join(' '),/Invalid channel metric browsePct/);
 });
+
+
+test('one combined Studio response can import all four checkpoints and 90-day channel data together',()=>{
+  const base=Date.parse('2026-01-01T12:00:00Z');
+  const observations=[];
+  for(const hours of [24,48,168,672]){
+    for(let n=0;n<5;n++){
+      observations.push({
+        videoId:'combo-'+n,title:'Combo '+n,publishedAt:new Date(base+n*86400000).toISOString(),
+        capturedAt:new Date(base+n*86400000+hours*3600000).toISOString(),
+        windowHours:hours,format:'long',eraId:'a',definitionId:'studio-current',coverage:'exact',paid:'organic',traffic:'all',source:'Exact Studio '+hours+'h',
+        metrics:{views:1000+n*10,engagedViews:800+n*10,impressions:10000+n*100,ctr:6,retention30:65,apv:45,avdSeconds:300}
+      });
+    }
+  }
+  const payload=JSON.stringify({
+    schemaVersion:1,creatorId:'c',channelName:'Test',observations,
+    channelPeriods:[
+      {start:'2025-07-03',end:'2025-09-30',source:'Studio 90d A',metricDefinitionId:'studio-current',metrics:{views:10000,newViewers:6000,casual:1800,regular:700,returning:2500,avgViewsPerViewer:1.6,browsePct:45}},
+      {start:'2025-10-01',end:'2025-12-29',source:'Studio 90d B',metricDefinitionId:'studio-current',metrics:{views:12000,newViewers:7000,casual:2000,regular:800,returning:2900,avgViewsPerViewer:1.7,browsePct:48}}
+    ]
+  });
+  const out=I.parse(payload,c,A.emptyStore(),'2026-02-01T00:00:00Z');
+  assert.equal(out.added,20);
+  assert.equal(out.periods.length,2);
+  for(const hours of [24,48,168,672])assert.equal(out.next.policies.some(p=>p.windowHours===hours),true);
+  assert.equal(out.periods[1].metrics.regular,800);
+});
