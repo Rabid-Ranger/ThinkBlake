@@ -4,6 +4,8 @@ const Engine=require('../analytics/engine');
 const Import=require('../analytics/import');
 const Decision=require('../analytics/decision-context');
 const Workflow=require('../analytics/workflow-context');
+const Workspace=require('../analytics/workspace');
+const Clarity=require('../analytics/clarity');
 
 const creator={id:'c',name:'QA Creator'};
 const day=86400000;
@@ -117,4 +119,38 @@ test('Question 1 uses 90-day upload output while Question 6 uses 28-day audience
   const q6=Workflow.diagnosisQuestionSupport(c,W,ADC,5);
   assert.match(q6.verdict,/repeat viewing is weakening/i);
   assert.deepEqual(q6.metrics.map(x=>x.label),['New','Casual','Regular','Returning','Avg views / viewer']);
+});
+
+
+test('comparison display keeps x-normal plus percent, points, and AVD seconds',()=>{
+  const c={id:'c',name:'QA Creator',videos:[{id:'v1',title:'Target',job:'Reach',publishDate:'2026-01-01',analytics:{_7d:{views:1200,engagedViews:null,impressions:12000,ctr:6,ret30:null,apv:48,avdSeconds:132,sourceRef:'Studio target',windowVerified:true,metricDefinitionId:'same-def'}}}],coachOS:{baseline:{sets:[{id:'b1',name:'Reach 7d',window:'_7d',job:'Reach',n:'10',confirmedComparable:true,sourceRef:'Studio baseline',metricDefinitionId:'same-def',views:'1000',engagedViews:'',impressions:'10000',ctr:'5',ret30:'',apv:'40',avdSeconds:'120'}]}}};
+  const v=Workspace.videos(c)[0],b=Workspace.baselines(c,168)[0],r=Workspace.compare(c,v,b,168);
+  assert.equal(r.comparisons.views.multiple,1.2);
+  assert.ok(Math.abs(r.comparisons.views.relativeChangePct-20)<1e-9);
+  assert.equal(r.comparisons.ctr.multiple,1.2);
+  assert.ok(Math.abs(r.comparisons.ctr.deltaPp-1)<1e-9);
+  assert.equal(r.comparisons.apv.multiple,1.2);
+  assert.ok(Math.abs(r.comparisons.apv.deltaPp-8)<1e-9);
+  assert.equal(r.comparisons.avdSeconds.multiple,1.1);
+  assert.equal(r.comparisons.avdSeconds.deltaSeconds,12);
+  const html=Workspace.body(c);
+  assert.match(html,/1\.20× normal · \+20% vs normal/i);
+  assert.match(html,/1\.20× normal · \+1\.0 percentage points/i);
+  assert.match(html,/1\.10× normal · \+12\.0 sec/i);
+});
+
+test('AVD becomes the WATCH fallback when exact 0:30 and APV are unavailable',()=>{
+  const read=Clarity.metricRead({comparisons:{views:{multiple:1},engagedViews:{multiple:null},impressions:{multiple:1},ctr:{multiple:1,deltaPp:0},retention30:{current:null,baseline:null,multiple:null,deltaPp:null},apv:{current:null,baseline:null,multiple:null,deltaPp:null},avdSeconds:{current:100,baseline:200,multiple:.5,deltaSeconds:-100}}});
+  assert.equal(read.watchKey,'avdSeconds');
+  assert.equal(read.watch.tone,'bad');
+  assert.match(read.watch.detail,/0\.50× normal/);
+  assert.match(read.watch.detail,/-100 sec/);
+
+  const W={clarityPattern:()=>({reads:[{r:{comparisons:{views:{multiple:1},engagedViews:{multiple:null},impressions:{multiple:1},ctr:{current:6,baseline:6,multiple:1,deltaPp:0},retention30:{current:null,baseline:null,multiple:null,deltaPp:null},apv:{current:null,baseline:null,multiple:null,deltaPp:null},avdSeconds:{current:100,baseline:200,multiple:.5,deltaSeconds:-100}}}}]})};
+  const ADC={audienceRead:()=>({}),overallRead:()=>({stages:[]})};
+  const q=Workflow.questionAnswers({},W,ADC);
+  assert.equal(q.raw.watchMetric,'AVD');
+  assert.match(q.watch.line,/AVD 100 sec vs 200 sec normal/i);
+  assert.match(q.watch.line,/0\.50× normal/);
+  assert.match(q.watch.line,/-100 sec/);
 });
