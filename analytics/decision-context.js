@@ -181,7 +181,7 @@
         '<div class="adc-baselines">'+baselinePills(r)+'</div>'+
         '<div class="adc-subhead"><b>Channel health</b><span>Are we getting attention, bringing people back, getting them to watch more, and creating a result? A weak area tells you where to look next, not why it happened.</span></div>'+
         '<div class="adc-stages">'+r.stages.map(s=>'<div class="adc-stage '+s.band+'"><span>'+esc(s.label)+'</span><b>'+esc(s.value)+'</b><small>'+esc(s.sub)+'</small></div>').join('')+'</div>'+
-        '<div class="adc-subhead"><b>Audience growth + loyalty</b><span>Use direction over time. These are audience segments, not a person-by-person funnel.</span></div>'+
+        '<div class="adc-subhead"><b>Audience growth + loyalty · 28 days</b><span>Monthly audience is a rolling 28-day view. Use direction over time. These are audience segments, not a person-by-person funnel.</span></div>'+
         '<div class="adc-audience-read"><b>'+esc(a.read)+'</b><span>'+esc(a.focus)+'</span></div>'+
         '<div class="adc-audience">'+
           audienceCard('New viewers',a.newViewers,a.changes?.newViewers??null,'First-time viewers in the selected period. This is the Reach signal.')+
@@ -191,6 +191,7 @@
           audienceCard('Avg views / viewer',a.avgViewsPerViewer,a.changes?.avgViewsPerViewer??null,'A channel-depth clue. Repeat views of the same video can count.')+
         '</div>'+
         '<small class="adc-audience-note">Do not read this as New → Casual → Regular conversion. Studio does not prove that specific people moved between those groups.</small>'+
+        (a.legacyWindow?'<small class="adc-audience-note"><b>Refresh recommended:</b> these audience values came from an older import. Use Studio prompts again to replace them with dedicated 28-day audience snapshots.</small>':'')+
         '<div class="adc-overall-foot"><span><b>Suggested video job if you are addressing this focus:</b> '+esc(r.action.job)+'</span><span><b>Measure:</b> '+esc(r.action.metric)+'</span><button class="btn" data-ac-mode="channel">View 90-day channel progress</button></div>'+
       '</div>'+
     '</section>';
@@ -284,13 +285,15 @@
       start:'YYYY-MM-DD',end:'YYYY-MM-DD',source:'ACTUAL YOUTUBE STUDIO REPORT(S) + FILTERS',metricDefinitionId:'ACTUAL DEFINITION OR unknown',
       metrics:{
         views:null,engagedViews:null,impressions:null,ctr:null,watchTime:null,
-        newViewers:null,casual:null,regular:null,returning:null,avgViewsPerViewer:null,
         browsePct:null,suggestedPct:null,searchPct:null,externalPct:null,
         uploadsPublished:null,newUploadViews:null,libraryViews:null,
         qualifiedLeads:null,bookings:null,sales:null,revenue:null
       },
       context:{paidNote:null,sourceNote:null,libraryNote:null,attributionNote:null,notes:null}
-    }],limitations:[]};
+    }],audienceSnapshots:[
+      {asOf:'YYYY-MM-DD',windowDays:28,source:'YouTube Studio Audience · Monthly audience',metricDefinitionId:'youtube-monthly-audience-28d',metrics:{monthlyAudience:null,newViewers:null,casual:null,regular:null,returning:null,avgViewsPerViewer:null},notes:null},
+      {asOf:'YYYY-MM-DD',windowDays:28,source:'YouTube Studio Audience · Monthly audience',metricDefinitionId:'youtube-monthly-audience-28d',metrics:{monthlyAudience:null,newViewers:null,casual:null,regular:null,returning:null,avgViewsPerViewer:null},notes:null}
+    ],limitations:[]};
     return `In Ask Studio, return RAW YouTube Studio channel analytics for ${JSON.stringify(c?.name||'this channel')} so Accelerator can update the Analytics page and support the channel diagnosis. Do not coach, diagnose, estimate, infer missing values, or calculate trends for me. Return the measurements only.
 
 PERIODS
@@ -307,21 +310,29 @@ For each exact 90-day period request:
 - impressions CTR
 - watchTime in hours
 
-AUDIENCE GROWTH + LOYALTY
-For the SAME exact 90-day dates, request these as RAW Studio-reported values when available:
+AUDIENCE GROWTH + LOYALTY · SEPARATE 28-DAY SNAPSHOTS
+Do NOT put New / Casual / Regular into the 90-day channelPeriods. Monthly audience is a rolling 28-day audience view.
+
+Return TWO comparable audienceSnapshots when available:
+1. the latest fully processed 28-day Monthly audience snapshot;
+2. a previous non-overlapping 28-day snapshot, ideally 28 days earlier.
+
+For each audienceSnapshot request:
+- monthlyAudience
 - newViewers
-- casual viewers
-- regular viewers
-- returning viewers
-- average views per viewer
+- casual
+- regular
+- returning for the same 28-day window when available
+- avgViewsPerViewer for the same 28-day window when available
 
 Audience rules:
-- New, Casual, Regular, and Returning are different Studio audience measures. Do not substitute one for another.
+- asOf is the latest fully processed audience date and windowDays must be 28.
+- New, Casual, Regular, and Returning are separate Studio measures. Do not substitute one for another.
 - Do not derive Casual or Regular from Returning, New, subscribers, or percentages.
 - Do not convert a percentage into a viewer count.
-- avgViewsPerViewer must be the raw reported metric. Do not calculate views / unique viewers yourself.
-- If Studio only exposes an audience value on a rolling 28-day window or some other window instead of the exact requested 90 days, put null in the 90-day field and explain the actual available window in limitations. Never label a 28-day value as 90-day data.
-- Audience data can update with delay. If it is unavailable or still processing, use null.
+- avgViewsPerViewer must be the raw reported metric. Do not calculate it yourself.
+- If audience data has processing delay, use the latest fully processed asOf date and explain the delay in notes.
+- If an exact audience value is unavailable, use null.
 
 TRAFFIC-SOURCE CONTEXT
 For those same 90-day dates, request the percentage of views from these sources when Studio can report them:
@@ -353,7 +364,7 @@ MEASUREMENT RULES
 - metricDefinitionId describes the measurement definitions/version, not the date-range precision. Do not set it to "exact". Include the post-August-24 Views / Engaged views regime when verified; otherwise use "unknown".
 - Keep creatorId exactly ${JSON.stringify(c?.id||'')}.
 - channelName must be the actual channel being inspected.
-- Return observations as an empty array. This request is only for channel + audience health.
+- Return observations as an empty array. This request is for 90-day channel health plus separate 28-day audience snapshots.
 - Return ONLY the JSON object. No prose before or after it.
 
 JSON SHAPE:
@@ -383,7 +394,6 @@ ${JSON.stringify(schema,null,2)}`;
       metricDefinitionId:'ACTUAL DEFINITION OR unknown',
       metrics:{
         views:null,engagedViews:null,impressions:null,ctr:null,watchTime:null,
-        newViewers:null,casual:null,regular:null,returning:null,avgViewsPerViewer:null,
         browsePct:null,suggestedPct:null,searchPct:null,externalPct:null,
         uploadsPublished:null,newUploadViews:null,libraryViews:null,
         qualifiedLeads:null,bookings:null,sales:null,revenue:null
@@ -396,6 +406,10 @@ ${JSON.stringify(schema,null,2)}`;
       channelName:'ACTUAL CHANNEL',
       observations:[24,48,168,672].map(videoRow),
       channelPeriods:[channelPeriod,{...channelPeriod}],
+      audienceSnapshots:[
+        {asOf:'YYYY-MM-DD',windowDays:28,source:'YouTube Studio Audience · Monthly audience',metricDefinitionId:'youtube-monthly-audience-28d',metrics:{monthlyAudience:null,newViewers:null,casual:null,regular:null,returning:null,avgViewsPerViewer:null},notes:null},
+        {asOf:'YYYY-MM-DD',windowDays:28,source:'YouTube Studio Audience · Monthly audience',metricDefinitionId:'youtube-monthly-audience-28d',metrics:{monthlyAudience:null,newViewers:null,casual:null,regular:null,returning:null,avgViewsPerViewer:null},notes:null}
+      ],
       limitations:[]
     };
     return `In Ask Studio, collect ALL analytics needed by Accelerator for ${JSON.stringify(c?.name||'this channel')} in ONE response. Return raw measurements only. Do not coach, diagnose, estimate, infer, average, or calculate missing metrics.
@@ -457,11 +471,7 @@ CORE
 - watchTime hours
 
 AUDIENCE
-- newViewers
-- casual viewers
-- regular viewers
-- returning viewers
-- average views per viewer
+Do not put New / Casual / Regular / Returning into the 90-day channelPeriods. Those are collected separately as rolling 28-day audienceSnapshots in Part 3.
 
 TRAFFIC SOURCE
 - browsePct
@@ -481,12 +491,26 @@ In context:
 - attributionNote = null
 - notes = raw measurement/context notes only, not strategy advice
 
+PART 3 — 28-DAY AUDIENCE SNAPSHOTS
+Return TWO comparable audienceSnapshots when available:
+1. latest fully processed rolling 28-day Monthly audience snapshot;
+2. previous non-overlapping 28-day snapshot, ideally 28 days earlier.
+
+For each snapshot request:
+- monthlyAudience
+- newViewers
+- casual
+- regular
+- returning for the same 28-day window when available
+- avgViewsPerViewer for the same 28-day window when available
+
 AUDIENCE RULES
+- asOf is the latest fully processed audience date and windowDays is 28.
 - New, Casual, Regular, and Returning are separate Studio measures. Never substitute one for another.
-- Do not derive Casual or Regular from Returning, New, subscribers, or percentages.
-- avgViewsPerViewer must be Studio's reported metric. Do not calculate it yourself.
-- If an audience metric is only available for a rolling 28-day or another window instead of the exact requested 90 days, put null in the 90-day field and explain the available window in limitations.
-- Audience data may update with delay. Use null when unavailable or still processing.
+- Do not derive Casual or Regular from Returning, New, subscribers, percentages, or the 90-day channel report.
+- avgViewsPerViewer must be Studio's raw reported metric. Do not calculate it yourself.
+- If audience reporting lags, use the latest fully processed asOf date and explain the lag in notes.
+- Use null when an exact value is unavailable.
 - Do not treat New → Casual → Regular as a tracked person-by-person conversion funnel.
 
 NOT YOUTUBE STUDIO METRICS
@@ -618,5 +642,5 @@ ${JSON.stringify(schema,null,2)}`;
     paint();
   }
 
-  return {snapshots,audienceRead,baselineTrajectory,deriveFocus,focusAction,overallRead,planSuggestion,channelPrompt,masterPrompt,parseJsonBlock,install};
+  return {snapshots,audienceSnapshots,audienceRead,baselineTrajectory,deriveFocus,focusAction,overallRead,planSuggestion,channelPrompt,masterPrompt,parseJsonBlock,install};
 });
