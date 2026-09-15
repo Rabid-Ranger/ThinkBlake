@@ -82,8 +82,8 @@
     if(hard.length){
       bottleneck=stageLabel(hard);
       tone=hours<168?'warn':'bad';
-      headline=(hours<168?'Early concern: ':'Main bottleneck: ')+bottleneck;
-      explain='This is the clearest weak part of SHOW → CLICK → WATCH compared with this creator’s own same-age normal.';
+      headline=(hours<168?'This may be the issue: ':'Main issue: ')+bottleneck;
+      explain='This is the clearest weak part of the video compared with what this creator usually gets at the same point after publishing.';
     }else if(winner){
       bottleneck=soft.length?'NO RESCUE NEEDED · soft spot: '+stageLabel(soft):'NO CLEAR ISSUE';
       tone='great';
@@ -95,14 +95,14 @@
       headline='This video is below normal, but we can’t tell why yet.';
       explain='The video is at '+fmtMultiple(outcomeMultiple)+' of its normal result, but the numbers do not point to one clear reason yet.';
     }else if(soft.length){
-      bottleneck='CHECK CONTEXT · '+stageLabel(soft);
+      bottleneck='CHECK THIS · '+stageLabel(soft);
       tone='warn';
-      headline=stageLabel(soft)+' needs context, not a panic change.';
-      explain='One metric is soft, but audience expansion or the total result makes a simple failure call unsafe.';
+      headline=stageLabel(soft)+' looks a little soft, but don’t overreact.';
+      explain='One number is below normal, but the video may have reached a broader audience or still performed well overall.';
     }else{
       bottleneck='NO CLEAR ISSUE';
-      headline='In range. Nothing obvious is broken.';
-      explain='The available funnel metrics are inside the working range versus this creator’s own same-age normal.';
+      headline='Nothing looks clearly wrong here.';
+      explain='These numbers are close to what this creator usually gets at this point after publishing.';
     }
     const all=[...new Set([...hard,...soft])];
     const expansionContext=expandedAudience&&soft.includes('packaging')&&!winner;
@@ -120,7 +120,7 @@
     let source='hard',max=top(hard),counts=hard;
     if(!max){source='soft';max=top(soft);counts=soft;}
     const stages=max?Object.keys(counts).filter(k=>counts[k]===max):[];
-    const confidence=max>=3?'Pattern emerging':max===2?'Worth watching':max===1?'One clue only':'No repeated bottleneck';
+    const confidence=max>=3?'This is becoming a pattern':max===2?'Worth watching':max===1?'One clue so far':'Nothing repeating yet';
     return {n:usable.length,source,max,stages,confidence,countsHard:hard,countsSoft:soft};
   }
 
@@ -177,7 +177,7 @@
     }
     function metricCard(stage,label,x,signal,format){
       const current=n(x?.current),base=n(x?.baseline);
-      return '<div class="ac-metric '+signal.tone+'"><div class="ac-stage">'+esc(stage)+'</div><h4>'+esc(label)+'</h4><div class="ac-values"><b>'+format(current)+'</b><span>normal '+format(base)+'</span></div><strong>'+esc(signal.label)+'</strong><p>'+esc(signal.detail)+'</p><small>'+esc(signal.range)+'</small></div>';
+      return '<div class="ac-metric '+signal.tone+'"><div class="ac-stage">'+esc(stage)+'</div><h4>'+esc(label)+'</h4><div class="ac-values"><b>'+format(current)+'</b><span>usual '+format(base)+'</span></div><strong>'+esc(signal.label)+'</strong><p>'+esc(signal.detail)+'</p><small>'+esc(signal.range)+'</small></div>';
     }
     function metricsHtml(r,d){
       const c=r?.comparisons||{},m=d.metrics;
@@ -227,11 +227,11 @@
     }
     function pattern(c){
       const reads=sevenDayReads(c,6),p=patternFromDiagnoses(reads.map(x=>x.d));
-      const label=p.stages.length?stageLabel(p.stages):'NO REPEATED BOTTLENECK';
+      const label=p.stages.length?stageLabel(p.stages):'NOTHING REPEATING YET';
       let explain,next;
       if(!reads.length){explain='We do not have enough 7-day results yet to call a channel-wide problem.';next='Get a 7-day normal in place and add the first few 7-day video results.';}
       else if(p.max){explain=p.max+' of '+p.n+' recent 7-day videos point to '+label.toLowerCase()+'. '+(p.source==='soft'?'These are mostly soft spots, not rescue-level failures.':'This is the most repeated hard issue in the recent sample.');next=nextFor(p.stages,false);}
-      else{explain='Across '+p.n+' recent 7-day videos, no SHOW → CLICK → WATCH failure repeats often enough to call it the channel bottleneck.';next='Keep using the diagnosis questions. Protect what is working and wait for a repeated pattern before making a big channel-wide change.';}
+      else{explain='Across '+p.n+' recent 7-day videos, nothing is repeating often enough to call it the main channel issue.';next='Keep using the diagnosis questions. Protect what is working and wait for a repeated pattern before making a big channel-wide change.';}
       return {...p,reads,label,explain,next};
     }
     function recentHtml(c){
@@ -248,8 +248,8 @@
     function patternHtml(c){
       const p=pattern(c),tone=p.max?(p.source==='hard'?'bad':'warn'):'normal';
       return '<section class="ac-section ac-pattern-section '+tone+'">'+
-        '<div class="ac-section-head"><div class="ac-section-index">04</div><div><div class="ac-kicker">CHANNEL PATTERN · RECENT 7-DAY VIDEOS</div><h2>'+(p.max?'Overall bottleneck: '+esc(p.label):'No repeated bottleneck yet')+'</h2><p>'+esc(p.explain)+'</p></div><span class="ac-badge '+tone+'">'+esc(p.confidence)+'</span></div>'+
-        '<div class="ac-section-body"><div class="ac-decision-callout"><span>WHAT I WOULD DO</span><b>'+esc(p.next)+'</b></div><small>1 result = interesting. 2 similar = watch it. 3+ similar = a pattern may be emerging. This is coaching discipline, not a statistical law.</small></div>'+
+        '<div class="ac-section-head"><div class="ac-section-index">04</div><div><div class="ac-kicker">CHANNEL PATTERN · RECENT 7-DAY VIDEOS</div><h2>'+(p.max?'Main issue showing up: '+esc(p.label):'Nothing is repeating yet')+'</h2><p>'+esc(p.explain)+'</p></div><span class="ac-badge '+tone+'">'+esc(p.confidence)+'</span></div>'+
+        '<div class="ac-section-body"><div class="ac-decision-callout"><span>WHAT I’D DO NEXT</span><b>'+esc(p.next)+'</b></div><small>1 result = interesting. 2 similar = watch it. 3+ similar = a pattern may be emerging. This is coaching discipline, not a statistical law.</small></div>'+
       '</section>';
     }
     function videoSummary(c,full){
@@ -262,7 +262,7 @@
       const actions='<div class="actions ac-video-actions">'+(v.native&&!v.engineId?action('result','Update this video’s results'):action('import',v.engineId?'Update imported results':'Import results'))+action('baseline','Build / update baseline')+action('diagnosis','Use this in Diagnosis')+'</div>';
       return '<div class="ac-shell">'+
         '<section class="ac-section ac-video-section '+d.tone+'">'+
-          '<div class="ac-section-head ac-video-head"><div class="ac-section-index">02</div><div><div class="ac-kicker">THIS VIDEO READ · '+age.label+' · '+age.name+'</div><h2>'+esc(d.headline)+'</h2><p>'+esc(d.explain)+'</p></div><div class="ac-top-badge"><span>BOTTLENECK</span><b>'+esc(d.bottleneck)+'</b><small>'+esc(age.act)+'</small></div></div>'+
+          '<div class="ac-section-head ac-video-head"><div class="ac-section-index">02</div><div><div class="ac-kicker">THIS VIDEO READ · '+age.label+' · '+age.name+'</div><h2>'+esc(d.headline)+'</h2><p>'+esc(d.explain)+'</p></div><div class="ac-top-badge"><span>MAIN ISSUE</span><b>'+esc(d.bottleneck)+'</b><small>'+esc(age.act)+'</small></div></div>'+
           '<div class="ac-section-body">'+
             controls+
             '<div class="ac-subsection"><div class="ac-subsection-label">HOW THE NUMBERS LOOK</div>'+metricsHtml(r,d)+'</div>'+
@@ -306,8 +306,8 @@
       let title,lead,tone='normal';
       if(!has){title='We do not have enough 7-day data yet.';lead='Use the diagnosis questions for now. Get a few fair 7-day comparisons before letting the numbers change the plan.';tone='warn';}
       else if(p.max&&p.source==='hard'){title='Analytics are backing: '+p.label;lead=p.explain;tone='bad';}
-      else if(p.max){title='No rescue-level pattern. Most common soft spot: '+p.label;lead=p.explain;tone='warn';}
-      else{title='Analytics are not showing a repeated bottleneck.';lead=p.explain;tone='normal';}
+      else if(p.max){title='Nothing looks badly broken. The most common weak spot is '+p.label;lead=p.explain;tone='warn';}
+      else{title='The data is not showing one repeated channel problem.';lead=p.explain;tone='normal';}
       const latestLine=latest?'<p><b>Latest 7-day read:</b> '+esc(latest.v.title)+' · '+(latest.d.outcomeMultiple===null?'no outcome multiple':fmtMultiple(latest.d.outcomeMultiple)+' normal')+' · '+esc(latest.d.bottleneck)+'.</p>':'';
       return '<section class="studio-evidence ac-diagnosis-evidence '+tone+'" id="studio-diagnosis-evidence"><div class="kicker">Analytics check</div><h3>'+esc(title)+'</h3><p>'+esc(lead)+'</p>'+latestLine+'<p><b>How to use this here:</b> Analytics support the diagnosis. They do not replace the rest of the diagnosis flow. If audience, offer, capacity, business goal or creator context disagree, investigate before locking the plan.</p><p><b>Check next:</b> '+esc(p.next)+'</p><details><summary>See the video evidence</summary>'+(reads.length?'<div class="ac-mini-evidence">'+reads.map(x=>'<p><b>'+esc(x.v.title)+'</b> · '+(x.d.outcomeMultiple===null?'—':fmtMultiple(x.d.outcomeMultiple))+' normal · '+esc(x.d.bottleneck)+'</p>').join('')+'</div>':'<p>No comparable 7-day video reads yet.</p>')+'</details><button class="btn" data-studio="analytics">Open Analytics</button></section>';
     }
