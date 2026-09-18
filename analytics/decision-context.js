@@ -453,9 +453,9 @@ Build comparable video rows for ALL FOUR checkpoints:
 - 28 days / 672 hours
 
 For EACH checkpoint independently:
-- Use previous comparable current-era long-form uploads that have fully completed that checkpoint.
-- 10–20 comparable rows is preferred; 5–9 is usable but less certain.
-- The currently reviewed video must not be included in its own baseline.
+- FIRST include the NEWEST eligible current-era long-form upload that has fully completed that checkpoint. This is the target row the coach may want to inspect right now.
+- THEN include previous comparable current-era uploads needed to establish the creator normal. 10–20 previous comparable rows is preferred; 5–9 is usable but less certain.
+- Do not omit the newest eligible upload just because it must not be used to judge itself. Accelerator excludes each target video from its own same-age baseline.
 - The eligible video set can differ by checkpoint. A recent upload can qualify for 24h but not 28d.
 - The same video may appear up to four times, once for each exact checkpoint.
 - Keep only ONE row per video + checkpoint.
