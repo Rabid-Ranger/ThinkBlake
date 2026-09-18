@@ -236,7 +236,7 @@
         const next=win.AcceleratorLiveAnalytics?.apply?win.AcceleratorLiveAnalytics.apply(c,{next:nextStore,periods:[],audienceSnapshots:[]}):clone(c);
         next.analyticsFoundation=nextStore;
         const expected=win.AcceleratorAI?.revision?.(c);if(expected===undefined)throw Error('Save revision check is unavailable.');
-        B.commitAI(next,expected,false);d.close();rerender();
+        B.commitAI(next,expected,false);d.close();rerender();if(win.__analyticsMissingFlow){win.__analyticsMissingFlow=false;setTimeout(()=>win.AcceleratorLiveAnalytics?.openMissing?.(),0);}
       }catch(err){const box=d.querySelector('.ac-manual-error');if(box)box.textContent=err.message;else alert(err.message);}
     }
     function action(a,t,extra=''){return '<button class="btn" data-aw="'+a+'" '+extra+'>'+esc(t)+'</button>';}
@@ -710,7 +710,7 @@
     });
     win.document.addEventListener('click',ev=>{
       if(ev.target.closest?.('[data-ac-manual-edit]')){openManualEditor();return;}
-      if(ev.target.closest?.('[data-ac-manual-close]')){win.document.getElementById('ac-manual-dialog')?.close();return;}
+      if(ev.target.closest?.('[data-ac-manual-close]')){win.__analyticsMissingFlow=false;win.document.getElementById('ac-manual-dialog')?.close();return;}
       if(ev.target.closest?.('[data-ac-manual-save]')){saveManualEditor();return;}
       const quick=ev.target.closest?.('[data-ac-quick-toggle],[data-ac-quick-run],[data-ac-quick-clear]');
       if(quick){
