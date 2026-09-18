@@ -76,6 +76,8 @@ function studioJson(text,expectedCreatorId){
  parsed.sort((a,b)=>b.score-a.score||b.start-a.start);
  const best=parsed[0];
  if(best.score<0)throw Error('Ask Studio returned structured JSON, but it does not look like this dashboard\'s analytics payload. Nothing was saved.');
+ const top=parsed.filter(x=>x.score===best.score),uniqueTop=new Set(top.map(x=>JSON.stringify(x.data)));
+ if(uniqueTop.size>1)throw Error('Ask Studio returned multiple conflicting Accelerator JSON objects with the same confidence. Nothing was saved. Paste only the final response or use Copy format follow-up.');
  const repairs=best.repairs.slice();
  if(found.candidates.length>1)repairs.unshift('found '+found.candidates.length+' JSON objects and selected the best matching Accelerator payload');
  if(best.start>0||best.end<found.raw.length)repairs.unshift('ignored extra text, prompt/prose, or other content outside the selected JSON object');
