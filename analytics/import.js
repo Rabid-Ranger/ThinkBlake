@@ -60,15 +60,17 @@ function parse(text,c,prior,now=new Date().toISOString()){
  if(!data||typeof data!=='object'||Array.isArray(data))throw Error('Paste the complete structured response, not a single value. Nothing was saved.');
  if(data.schemaVersion!==1||data.creatorId!==c.id)throw Error('This response belongs to a different creator or prompt version. Copy a fresh prompt for the selected creator.');
  if(!data.channelName||!Array.isArray(data.observations)||data.observations.length>500)throw Error('Channel name and an observations array (at most 500 rows) are required.');
- let next=prior||A.emptyStore(),added=0,duplicates=0;const groups=new Map(),seen=new Set();
+ let next=JSON.parse(JSON.stringify(prior||A.emptyStore())),added=0,duplicates=0;const groups=new Map(),seen=new Set();
+ for(const existing of next.observations||[]){if(!existing.metricDefinitions||!Object.keys(existing.metricDefinitions).length)existing.metricDefinitions=metricDefs(existing);}
  for(const row of data.observations){
   if(!row||!windows[row.windowHours]||!row.metrics)throw Error('Each row needs a supported exact age window and metrics.');
   const clean={};for(const k of metrics){const v=row.metrics[k],isRate=['ctr','retention30','apv','browsePct','suggestedPct','searchPct','externalPct'].includes(k);if(v!==null&&v!==undefined&&(typeof v!=='number'||!Number.isFinite(v)||v<0||(isRate&&v>100)))throw Error(k+' must be a valid non-negative number or null'+(isRate?' (0–100%)':'')+'.');clean[k]=v==null?null:isRate?v/100:v;}
   const source=typeof row.source==='string'?row.source:'';if(!source.trim())throw Error('Each observation needs its actual source report.');
   const o={id:'studio:'+hash([row.videoId,row.windowHours,clean,row.capturedAt,row.definitionId,row.publishedAt,row.coverage,row.format,row.eraId,row.job,row.paid,row.traffic,source]),creatorId:c.id,videoId:row.videoId,title:String(row.title||row.videoId),publishedAt:row.publishedAt,capturedAt:row.capturedAt,windowHours:row.windowHours,format:row.format,eraId:row.eraId,job:row.job||null,definitionId:row.definitionId||'unknown',metricDefinitions:metricDefs(row),coverage:row.coverage||'unknown',paid:row.paid||'unknown',traffic:row.traffic||'all',source,metrics:clean};
   const key=A.canonicalVideoId(o.videoId)+':'+o.windowHours;if(seen.has(key))throw Error('The response contains duplicate video/window rows. Keep one report per checkpoint.');seen.add(key);
-  if(next.observations.some(x=>x.id===o.id)){duplicates++;continue;}next=A.acceptObservation(next,o,now);added++;
   const g=[c.id,o.windowHours,o.format,o.eraId,o.definitionId,o.paid,o.traffic];groups.set(hash(g),o);
+  const existing=next.observations.find(x=>x.id===o.id);
+  if(existing){if(!existing.metricDefinitions||!Object.keys(existing.metricDefinitions).length)existing.metricDefinitions=o.metricDefinitions;duplicates++;continue;}next=A.acceptObservation(next,o,now);added++;
  }
  for(const [id,o] of groups){
   const policyId='studio-policy:'+id;if(next.policies.some(p=>p.id===policyId))continue;
