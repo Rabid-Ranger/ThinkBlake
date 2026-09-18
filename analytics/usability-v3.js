@@ -6,11 +6,11 @@
   'use strict';
 
   const PHASES={
-    24:{label:'24h · Launch',question:'Is anything obviously broken?',decision:'Usually do not change anything yet. Only flag a severe SHOW, CLICK, or WATCH problem and keep collecting data.'},
-    48:{label:'48h · Triage',question:'Did the early signal persist?',decision:'Decide what deserves investigation. Still avoid a channel-wide strategy change from this alone.'},
-    168:{label:'7d · Diagnosis',question:'What actually under- or over-performed?',decision:'This is the main video decision point. Name a real bottleneck, or explicitly decide there is no fix needed.'},
-    672:{label:'28d · Programming',question:'What did the full run teach us?',decision:'Decide what to repeat, change, stop, and what the next video should do.'},
-    2160:{label:'90d · Channel Health',question:'Is the channel actually moving?',decision:'Track whether the creator’s floor, audience, library contribution, and business result are improving after several videos.'}
+    24:{label:'24h · Launch',question:'How did the video start?',decision:'Early directional read. Notice something obviously broken, but usually do not make a big change yet.'},
+    48:{label:'48h · Triage',question:'Is there a clear SHOW, CLICK, or WATCH problem?',decision:'Problem check. Decide what deserves inspection, but avoid a channel-wide strategy change from one early result.'},
+    168:{label:'7d · Diagnosis',question:'Compared with this creator’s normal, what actually happened?',decision:'Main video decision point. Name the leading bottleneck, or explicitly decide there is no fix needed.'},
+    672:{label:'28d · Programming',question:'What did this video become after it matured?',decision:'Turn the lesson into programming: what to repeat, change, stop, and what the next video should do.'},
+    2160:{label:'90d · Channel Health',question:'Is the channel actually moving after several videos?',decision:'Track whole-channel attention, audience, library depth, and result. This does not set a per-video baseline.'}
   };
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
@@ -179,5 +179,5 @@
     `;win.document.head.appendChild(style);
   }
 
-  return {PHASES,promptAppendix,phaseLabels,winnerCall,transformHtml,install};
+  return {PHASES,promptAppendix,phaseLabels,winnerCall,flowHtml,transformHtml,install};
 });
