@@ -324,6 +324,13 @@
         next='Assign the video as Reach, Trust, or Convert in the video strategy when possible. Until then, use the funnel diagnosis only and avoid making a channel-wide strategy change from this one result.';
         tone='warn';
       }
+      if(d.winner&&job!=='Unassigned'&&soft.length){
+        const names={reach:'SHOW / Reach',packaging:'CLICK / packaging',retention:'WATCH / viewing experience'},lesson=soft.map(x=>names[x]||x).join(' + '),multiple=d.outcomeMultiple==null?'well above normal':Number(d.outcomeMultiple).toFixed(2)+'× normal';
+        meaning='The video still won on the available platform outcome at '+multiple+'. '+lesson+' is a learning / efficiency lane, not a reason to rescue a winning video. '+(job==='Reach'?'The Reach mechanism deserves protection while you improve the softer stage.':job==='Trust'?'This does not by itself prove the Trust job succeeded; use continuation / repeat-audience evidence for that judgment.':'This does not prove the Convert job succeeded; the business RESULT still decides that.');
+        if(job==='Reach')next='Do not panic-change the winning video. Protect the idea / audience doorway that created the win, check traffic-source context, and carry '+lesson+' into the next comparable Reach video as one controlled improvement.';
+        if(job==='Trust')next='Do not rescue the current winner from one soft platform metric. Protect what worked, verify continuation / repeat-audience behavior, and use '+lesson+' as the next controlled Trust-content improvement only if the pattern repeats or the Trust result is weak.';
+        if(job==='Convert')next='Do not rescue the current video from a soft platform metric before checking qualified action. Protect the working attention path, verify leads / bookings / sales, and only prioritize '+lesson+' if the business result is also weak or the pattern repeats.';
+      }
       return {job,goal,desiredAudience,goalLink,jobMeaning,meaning,next,measure,protect,tone};
     }
     function strategistReadHtml(c,v,r,d,h){
