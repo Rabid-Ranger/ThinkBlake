@@ -12,13 +12,13 @@ const result=(x={})=>({status:'compared',comparisons:{
 }});
 
 test('same-age count and rate ranges stay simple and explicit',()=>{
-  assert.equal(A.countSignal({multiple:.69}).label,'Needs attention');
-  assert.equal(A.countSignal({multiple:1}).label,'In range');
-  assert.equal(A.countSignal({multiple:1.5}).label,'Promising');
+  assert.equal(A.countSignal({multiple:.69}).label,'Looks weak');
+  assert.equal(A.countSignal({multiple:1}).label,'Looks normal');
+  assert.equal(A.countSignal({multiple:1.5}).label,'Above normal');
   assert.equal(A.countSignal({multiple:2}).label,'Strong');
-  assert.equal(A.countSignal({multiple:3}).label,'Big outlier');
-  assert.equal(A.rateSignal({deltaPp:-.6},.5).label,'Needs attention');
-  assert.equal(A.rateSignal({deltaPp:-.4},.5).label,'In range');
+  assert.equal(A.countSignal({multiple:3}).label,'Big win');
+  assert.equal(A.rateSignal({deltaPp:-.6},.5).label,'Looks weak');
+  assert.equal(A.rateSignal({deltaPp:-.4},.5).label,'Looks normal');
 });
 
 test('diagnosis isolates reach packaging retention and combinations',()=>{
@@ -40,17 +40,17 @@ test('CTR cooling during expansion checks audience context before package change
   const d=A.diagnose(result({outcome:1.2,imp:2,ctr:-.9}),168);
   assert.deepEqual(d.hardIssues,[]);
   assert.deepEqual(d.softIssues,['packaging']);
-  assert.match(d.next,/Check traffic source, audience breadth/);
-  assert.match(d.next,/not automatically a thumbnail problem/);
+  assert.match(d.next,/check where the views came from|broader audience/i);
+  assert.match(d.next,/does not automatically mean the thumbnail is bad/i);
 });
 
 test('repeated 7-day issues become a pattern only after repeated evidence',()=>{
   const packaging=A.diagnose(result({outcome:.8,ctr:-1}),168);
   const normal=A.diagnose(result({outcome:1.05}),168);
-  assert.equal(A.patternFromDiagnoses([packaging]).confidence,'One clue only');
+  assert.equal(A.patternFromDiagnoses([packaging]).confidence,'One clue so far');
   assert.equal(A.patternFromDiagnoses([packaging,packaging]).confidence,'Worth watching');
   const p=A.patternFromDiagnoses([packaging,packaging,packaging,normal]);
-  assert.equal(p.confidence,'Pattern emerging');
+  assert.equal(p.confidence,'This is becoming a pattern');
   assert.deepEqual(p.stages,['packaging']);
 });
 
