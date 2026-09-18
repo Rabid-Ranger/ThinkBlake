@@ -455,7 +455,7 @@
   }
 
   function channelReadHtml(c,W,guide){
-    const r=overallRead(c,W,guide),tone=toneFor(r),a=r.audience,latestChannel=snapshots(c).at(-1)||{},manualAction=latestChannel.id?'analytics-snapshot-edit:'+latestChannel.id:'analytics-snapshot-new';
+    const r=overallRead(c,W,guide),tone=toneFor(r),a=r.audience;
     const mini=(label,value,change)=>'<div class="adc-audience-mini"><span>'+esc(label)+'</span><b>'+esc(fmt(value))+'</b><small>'+esc(change===null?'No prior read':signed(change-1)+' vs prior')+'</small></div>';
     const health=r.stages.map(s=>'<div class="adc-stage '+s.band+'"><span>'+esc(s.label)+'</span><b>'+esc(s.value)+'</b><small>'+esc(s.sub)+'</small></div>').join('');
     const healthHelp=r.stages.map(s=>'<p><b>'+esc(s.label)+':</b> '+esc(s.action||'')+'</p>').join('');
@@ -463,7 +463,6 @@
       '<div class="ac-section-head adc-overall-head"><div class="ac-section-index">01</div><div><div class="adc-kicker">OVERALL CHANNEL READ</div><h2>'+esc(r.focus)+'</h2><p>'+esc(r.why.slice(0,2).join(' '))+'</p><div class="adc-program-context"><b>Program goal:</b> '+esc(c.coachOS?.plan90?.outcome||c.coachOS?.baseline?.context?.channelGoal||'Not set yet')+(c.coachOS?.plan90?.primaryMetric?'<span> · Main measure: '+esc(c.coachOS.plan90.primaryMetric)+'</span>':'')+'</div></div><div class="adc-focus"><span>WHAT I’D DO NOW</span><b>'+esc(r.action.video)+'</b><small>'+esc(r.confidence)+' confidence · '+esc(r.source)+'</small></div></div>'+
       '<div class="ac-section-body">'+
         normalsAtGlance(c,W)+
-        missingDataHtml(c,W)+
         '<div class="adc-compact-block"><div class="adc-subhead"><b>Channel health</b><span>What does the combination mean?</span></div><div class="adc-stages">'+health+'</div>'+
           '<div class="adc-current-read '+r.channelHealth.tone+'"><span>CURRENT CHANNEL-HEALTH READ</span><b>'+esc(r.channelHealth.headline)+'</b><p>'+esc(r.channelHealth.meaning)+'</p><div><strong>Coach action</strong><p>'+esc(r.channelHealth.action)+'</p></div><small><b>Protect / limits:</b> '+esc(r.channelHealth.protect)+'</small></div>'+
           '<details class="adc-help"><summary>How do I read Attention / Return / Library Depth / Result?</summary>'+healthHelp+'</details></div>'+
@@ -478,7 +477,7 @@
           '<p><b>How to use this read:</b> '+esc(a.focus)+'</p>'+
           (a.overlapDays?'<p><b>Caution:</b> these rolling snapshots overlap by about '+esc(a.overlapDays)+' day'+(a.overlapDays===1?'':'s')+', so treat the direction as a clue rather than a clean before/after experiment.</p>':'')+
         '</details></div>'+
-        '<div class="adc-manual-data"><span><b>Missing verified data?</b> Add or correct channel, audience, library, traffic-source, upload-count, or business-result fields manually when Studio cannot return them.</span><button class="btn" data-cg="'+esc(manualAction)+'">'+(latestChannel.id?'Add / edit verified channel data':'Add verified channel data')+'</button></div>'+ '<div class="adc-overall-foot"><span><b>Program job:</b> '+esc(r.action.job)+'</span><span><b>Main measure:</b> '+esc(r.action.metric)+'</span></div>'+
+        '<div class="adc-overall-foot"><span><b>Program job:</b> '+esc(r.action.job)+'</span><span><b>Main measure:</b> '+esc(r.action.metric)+'</span></div>'+
       '</div>'+
     '</section>';
   }
