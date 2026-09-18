@@ -177,9 +177,9 @@
       protect='Keep the Trust / follow-up videos that are still bringing people back.';
     }else if(attBand==='weak'&&retBand==='weak'){
       tone='bad';headline='Both reach/views and repeat viewing are under pressure.';
-      meaning='This is a broader channel problem. The research says to separate new uploads from library, then inspect audience, traffic/reach, packaging, viewing experience, portfolio, and market before naming one dominant bottleneck.';
-      action='Run the channel audit in order and choose ONE dominant 90-day bottleneck. Do not hand the creator ten equal fixes.';
-      protect='Change one major strategic lane at a time so the next 2–3 comparable reps can actually teach us something.';
+      meaning='This is a broader channel problem. Separate new uploads from older videos, then check the audience, traffic source / Reach, packaging, watch experience, content mix, and current demand before naming the main problem.';
+      action='Run the channel check in order and choose ONE main 90-day problem. Do not hand the creator ten equal fixes.';
+      protect='Change one major thing at a time so the next 2–3 comparable videos can actually teach us something.';
     }else if(['steady','strong'].includes(attBand)&&['steady','strong'].includes(retBand)){
       tone='good';headline='Reach/views and repeat viewing are both holding or improving.';
       meaning='Reach/views and repeat viewing are not the obvious problem. Next, check whether people are watching more videos and whether business results are moving.';
@@ -316,11 +316,11 @@
     if(!b)return {h,label:'No matching baseline',sample:0,values:Object.fromEntries(metricKeys.map(k=>[k,null])),samples:Object.fromEntries(metricKeys.map(k=>[k,0])),source:'No baseline saved yet'};
     if(b.engine){
       const rows=(c.analyticsFoundation?.baselines||[]).filter(x=>x.policyId===b.id&&x.kind==='operating'),last=rows.at(-1);
-      if(!last)return {h,label:b.label,sample:0,values:Object.fromEntries(metricKeys.map(k=>[k,null])),samples:Object.fromEntries(metricKeys.map(k=>[k,0])),source:'No operating baseline built yet'};
+      if(!last)return {h,label:b.label,sample:0,values:Object.fromEntries(metricKeys.map(k=>[k,null])),samples:Object.fromEntries(metricKeys.map(k=>[k,0])),source:'No current normal built yet'};
       const values=Object.fromEntries(metricKeys.map(k=>[k,n(last?.metrics?.[k]?.median)]));
       const samples=Object.fromEntries(metricKeys.map(k=>[k,n(last?.metrics?.[k]?.n)||0]));
       const sample=Math.max(0,...Object.values(samples));
-      return {h,label:b.label,sample,values,samples,source:'Automatic · matched current-era videos'};
+      return {h,label:b.label,sample,values,samples,source:'Automatic · matched current-strategy videos'};
     }
     const values=W.values(b.manual),sample=n(b.manual?.n)||0;
     const samples=Object.fromEntries(metricKeys.map(k=>[k,n(values?.[k])===null?0:sample]));
