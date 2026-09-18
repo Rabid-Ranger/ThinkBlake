@@ -202,11 +202,11 @@
       const o=latestObservation(c,v,p.hours),d=win.document.getElementById('ac-manual-dialog');if(!o||!d)return;
       const val=id=>{const raw=d.querySelector('#'+id)?.value?.trim();if(!raw)return null;const x=Number(raw);if(!Number.isFinite(x)||x<0)throw Error('Use non-negative numbers only.');return x;};
       const count=id=>{const x=val(id);if(x===null)return null;if(!Number.isInteger(x))throw Error('Views, Engaged views, and Impressions must be whole numbers.');return x;};
-      const rate=id=>{const x=val(id);if(x===null)return null;if(x>100)throw Error('Percentages must be between 0 and 100.');return x/100;};
+      const rate=(id,max100=true)=>{const x=val(id);if(x===null)return null;if(max100&&x>100)throw Error('That percentage must be between 0 and 100.');return x/100;};
       try{
-        const metrics={...o.metrics,views:count('acm-views'),engagedViews:count('acm-engaged'),impressions:count('acm-impressions'),ctr:rate('acm-ctr'),retention30:rate('acm-ret30'),apv:rate('acm-apv'),avdSeconds:val('acm-avd'),browsePct:rate('acm-browse'),suggestedPct:rate('acm-suggested'),searchPct:rate('acm-search'),externalPct:rate('acm-external')};
+        const metrics={...o.metrics,views:count('acm-views'),engagedViews:count('acm-engaged'),impressions:count('acm-impressions'),ctr:rate('acm-ctr'),retention30:rate('acm-ret30'),apv:rate('acm-apv',false),avdSeconds:val('acm-avd'),browsePct:rate('acm-browse'),suggestedPct:rate('acm-suggested'),searchPct:rate('acm-search'),externalPct:rate('acm-external')};
         const defs={...(o.metricDefinitions||{})};
-        if(metrics.engagedViews!==null&&!defs.engagedViews)defs.engagedViews='youtube-studio-engaged-views-advanced-mode-v1';
+        if(metrics.engagedViews!==null&&(!defs.engagedViews||/unknown|unverified/i.test(String(defs.engagedViews))))defs.engagedViews='youtube-studio-engaged-views-advanced-mode-v1';
         const sourceNote=d.querySelector('#acm-source')?.value?.trim()||'YouTube Studio manual correction';
         const input={...clone(o),metrics,metricDefinitions:defs,capturedAt:new Date().toISOString(),source:{kind:'manual',report:sourceNote}};
         delete input.acceptedAt;delete input.logicalKey;delete input.revision;delete input.revisionId;delete input.supersedesId;
