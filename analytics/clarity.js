@@ -313,7 +313,7 @@
       const hard=d.hardIssues||[],soft=d.softIssues||[],first=['reach','packaging','retention'].find(x=>hard.includes(x))||['reach','packaging','retention'].find(x=>soft.includes(x))||null;
       let meaning='',next='',measure='',protect='',jobMeaning='',goalLink='',tone=d.tone;
       if(job==='Reach'){
-        jobMeaning='Reach videos should get in front of more of the right new viewers. SHOW / impressions and views matter first; CTR and WATCH tell you whether that reach is healthy.';goalLink='This video's job is to bring in more of the right new viewers. Do not force this one video to also carry the full Trust or Convert job.';
+        jobMeaning='Reach videos should get in front of more of the right new viewers. SHOW / impressions and views matter first; CTR and WATCH tell you whether that reach is healthy.';goalLink='This video’s job is to bring in more of the right new viewers. Do not force this one video to also carry the full Trust or Convert job.';
         measure=savedMetric||'Impressions / outcome volume + new-viewer growth';
         protect=savedGuard||'CTR, WATCH quality, and audience fit';
         if(first==='reach'){meaning='The earliest break is SHOW. For a Reach video, investigate topic opportunity, audience breadth, and distribution before blaming the opening.';next='Check topic / audience opportunity and traffic-source context. Keep the package and opening stable enough to learn what actually limited distribution.';}
@@ -321,7 +321,7 @@
         else if(first==='retention'){meaning='Reach and CLICK are not the clearest break, but WATCH is soft. The idea may be getting the opportunity and the click without delivering the promise strongly enough.';next='Improve promise delivery / opening structure without making the topic smaller just to raise retention.';}
         else{meaning='Nothing in SHOW → CLICK → WATCH is clearly broken for this Reach video.';next='Do not manufacture a fix. Protect what worked in the topic/package and use the next comparable Reach video as another clean test.';}
       }else if(job==='Trust'){
-        jobMeaning='Trust videos should get the right viewers to watch longer, watch another video, and come back. That matters more than maximizing raw reach by itself.';goalLink='This video's job is to help the right viewer stay, watch the next useful video, or come back. Do not widen the idea just to chase Reach if that weakens the Trust job.';
+        jobMeaning='Trust videos should get the right viewers to watch longer, watch another video, and come back. That matters more than maximizing raw reach by itself.';goalLink='This video’s job is to help the right viewer stay, watch the next useful video, or come back. Do not widen the idea just to chase Reach if that weakens the Trust job.';
         measure=savedMetric||'0:30 / APV / AVD + returning-viewer / next-video trends';
         protect=savedGuard||'Audience fit and enough Reach to keep bringing the right viewers in';
         if(first==='reach'){meaning='SHOW is soft, but lower reach alone does not prove a Trust video failed. A narrower Trust video can still do its job if the right people watch deeply and move to the next useful video.';next='Check WATCH, next-video behavior, and returning-viewer trends before widening the topic. Only treat Reach as the main problem if the intended audience is not being reached enough to do the job.';}
@@ -330,7 +330,7 @@
         else{meaning='SHOW → CLICK → WATCH does not show a clear Trust problem.';next='Protect the viewing experience and make the next logical follow-up obvious. Watch returning-viewer and next-video trends before changing the strategy.';}
       }else if(job==='Convert'){
         const resultMissing=['qualifiedLeads','bookings','sales','revenue'].every(k=>n(c.coachOS?.analytics?.snapshots?.at?.(-1)?.[k])===null);
-        jobMeaning='Convert videos are judged by whether the right viewers take the intended business action. YouTube metrics help explain the path, but Views alone are not the score.';goalLink='This video's job is to turn the right viewer into the intended business action. Judge the result against the offer / business goal, not a Reach-video views target.';
+        jobMeaning='Convert videos are judged by whether the right viewers take the intended business action. YouTube metrics help explain the path, but Views alone are not the score.';goalLink='This video’s job is to turn the right viewer into the intended business action. Judge the result against the offer / business goal, not a Reach-video views target.';
         measure=savedMetric||'Qualified leads / bookings / sales or the creator-specific business result';
         protect=savedGuard||'Audience fit, trust, and enough of the right viewers';
         if(resultMissing){meaning='YouTube can tell us whether the video got reach, clicks, and watch time, but the business result is not connected. A Convert verdict is incomplete without it.';next='Pull the relevant CRM / booking / sales result before calling this video a win or loss. Use SHOW / CLICK / WATCH only as clues about where the path to the business action may be breaking.';}
