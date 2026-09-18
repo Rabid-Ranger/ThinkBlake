@@ -59,3 +59,28 @@ test('leaves valid strict JSON unchanged',()=>{
 test('still rejects content that cannot be repaired safely',()=>{
   assert.throws(()=>Import.parse('not json at all',creator,Engine.emptyStore(),now),/JSON object|malformed JSON/i);
 });
+
+
+test('selects the real Accelerator payload when Studio echoes the prompt and multiple JSON objects',()=>{
+  const actual=JSON.stringify({
+    schemaVersion:1,creatorId:creator.id,channelName:'Fanathem',
+    observations:[{
+      videoId:'TggWdhi0MTY',title:'Real video',publishedAt:'2026-08-11T15:38:27Z',capturedAt:'2026-09-18T08:46:06Z',
+      windowHours:24,format:'edited-long-form',eraId:'current',job:null,definitionId:'unknown',coverage:'exact',paid:'unknown',traffic:'all',
+      source:'YouTube Studio Analytics · Video Analytics (First 24 Hours)',
+      metrics:{views:39882,engagedViews:null,impressions:270891,ctr:9.22,retention30:null,apv:41.92,avdSeconds:321,browsePct:null,suggestedPct:null,searchPct:null,externalPct:null}
+    }],channelPeriods:[],audienceSnapshots:[],limitations:[]
+  });
+  const example=JSON.stringify({
+    schemaVersion:1,creatorId:creator.id,channelName:'ACTUAL CHANNEL',
+    observations:[{videoId:'ACTUAL YOUTUBE URL OR ID',title:'ACTUAL TITLE',publishedAt:'ISO TIMESTAMP',capturedAt:'ISO TIMESTAMP',windowHours:24,format:'edited-long-form',eraId:'current',job:null,definitionId:'unknown',coverage:'unknown',paid:'unknown',traffic:'all',source:'ACTUAL REPORT AND FILTERS',metrics:{views:null,engagedViews:null,impressions:null,ctr:null,retention30:null,apv:null,avdSeconds:null,browsePct:null,suggestedPct:null,searchPct:null,externalPct:null}}],
+    channelPeriods:[],audienceSnapshots:[],limitations:[]
+  });
+  const raw=actual+'\n\nCOLLECT ALL ANALYTICS\nJSON SHAPE:\n'+example+'\n\n'+actual;
+  const out=Import.parse(raw,creator,Engine.emptyStore(),now);
+  assert.equal(out.channelName,'Fanathem');
+  assert.equal(out.added,1);
+  assert.equal(out.next.observations[0].videoId,'TggWdhi0MTY');
+  assert.ok(out.formatRepairs.some(x=>/found 3 JSON objects/i.test(x)));
+  assert.ok(out.formatRepairs.some(x=>/ignored prompt\/prose/i.test(x)));
+});
