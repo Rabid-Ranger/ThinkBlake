@@ -219,26 +219,20 @@
     function dataCoverageHtml(c,b,h){
       const rec=baselineRecord(c,b),obs=(c.analyticsFoundation?.observations||[]).filter(o=>o.windowHours===h);
       const rawN=k=>obs.filter(o=>n(o?.metrics?.[k])!==null).length,sample=k=>n(rec?.samples?.[k])||0;
-      const items=[
-        ['Impressions','impressions',sample('impressions'),rawN('impressions'),'Studio returned this for the matched baseline.'],
-        ['CTR','ctr',sample('ctr'),rawN('ctr'),'Read with impression expansion and traffic-source context.'],
-        ['WATCH · 0:30','retention30',sample('retention30'),rawN('retention30'),'Best opening signal when Studio reports the exact Intro value.'],
-        ['WATCH · APV','apv',sample('apv'),rawN('apv'),'Useful fallback for overall viewing quality.'],
-        ['WATCH · AVD','avdSeconds',sample('avdSeconds'),rawN('avdSeconds'),'Useful fallback for viewing quality when 0:30 is unavailable.'],
-        ['Views · new count','views',sample('views'),rawN('views'),'Raw Views can be collected while creator-normal comparison stays blocked across an unclear measurement-definition change.'],
-        ['Engaged views','engagedViews',sample('engagedViews'),rawN('engagedViews'),'Use the retained original view-count metric from Advanced Mode when available.']
-      ];
+      const checks=[['Impressions','impressions'],['CTR','ctr'],['0:30','retention30'],['APV','apv'],['AVD','avdSeconds'],['Views','views'],['Engaged views','engagedViews']];
+      const ready=checks.filter(([,k])=>sample(k)>=5),partial=checks.filter(([,k])=>sample(k)>0&&sample(k)<5),missing=checks.filter(([,k])=>sample(k)===0);
       const sourceSample=Math.min(...['browsePct','suggestedPct','searchPct','externalPct'].map(sample));
-      const sourceRaw=Math.min(...['browsePct','suggestedPct','searchPct','externalPct'].map(rawN));
-      const source=coverageStatus(sourceSample,sourceRaw);
-      const missing=[];
-      if(sample('retention30')<5)missing.push('<li><b>Exact 0:30 / Intro:</b> Studio → Content → open the video → Analytics → Engagement (or Overview) → Audience retention → Intro. Enter the exact percentage still watching after 30 seconds. Do not eyeball the curve.</li>');
-      if(sample('engagedViews')<5)missing.push('<li><b>Engaged views:</b> Studio → Analytics → Advanced Mode / SEE MORE → add <i>Engaged views</i>. Use the same lifespan and comparable videos. Never copy public Views into this field.</li>');
-      if(sourceSample<5)missing.push('<li><b>Per-video traffic source:</b> Content → open video → Analytics → Reach/Content → How viewers found this video (or Advanced Mode). Use Browse, Suggested, Search, and External for the same lifespan when Studio lets you isolate it. If it cannot, leave it missing.</li>');
-      if(sample('views')<5&&rawN('views')>=5)missing.push('<li><b>Views normal:</b> the raw counts are saved, but the imported rows did not verify one compatible Views definition across the cohort. Keep using Impressions/CTR/WATCH now. Add a Views baseline only after the comparison set is verified under the same view-count definition.</li>');
-      return '<section class="ac-data-coverage"><div class="ac-subsection-label">DATA READINESS · '+esc(AGES[h]?.label||h+'h')+'</div><div class="ac-coverage-grid">'+items.map(([label,key,s,raw,note])=>{const st=coverageStatus(s,raw);return '<div class="ac-coverage '+st.tone+'"><span>'+esc(label)+'</span><b>'+esc(st.label)+'</b><small>'+esc(st.detail)+' · '+esc(note)+'</small></div>';}).join('')+'<div class="ac-coverage '+source.tone+'"><span>Traffic-source normal</span><b>'+esc(source.label)+'</b><small>'+esc(source.detail)+' · Needed to interpret CTR in distribution context.</small></div></div>'+
-        (missing.length?'<details class="ac-missing"><summary><b>Missing data · what to fill manually and where to find it</b><span>'+missing.length+' gap'+(missing.length===1?'':'s')+' worth knowing about</span></summary><ul>'+missing.join('')+'</ul><p><b>For a new/current video:</b> use Quick Check below to type the available numbers without saving the video first.</p><button class="btn" data-aw="baseline">Build / edit this checkpoint baseline manually</button></details>':'<p class="ac-ready-note">The core matched data for this checkpoint is ready.</p>')+
-      '</section>';
+      const instructions=[];
+      if(sample('retention30')<5)instructions.push('<li><b>Exact 0:30 / Intro:</b> Studio → Content → open the video → Analytics → Engagement / Audience retention → Intro. Enter the exact percentage only if Studio reports it. Do not eyeball the curve.</li>');
+      if(sample('engagedViews')<5)instructions.push('<li><b>Engaged views:</b> Studio → Analytics → Advanced Mode / SEE MORE → add Engaged views for the same lifespan. Never copy public Views into this field.</li>');
+      if(sourceSample<5)instructions.push('<li><b>Per-video traffic source:</b> open the video → Analytics → Reach/Content → How viewers found this video. Use Browse / Suggested / Search / External for the same lifespan when Studio lets you isolate it.</li>');
+      if(sample('views')<5&&rawN('views')>=5)instructions.push('<li><b>Views normal:</b> raw Views were collected, but one compatible Views definition was not verified across the cohort. Keep using Impressions / CTR / WATCH until a same-definition set is verified.</li>');
+      const readyText=ready.length?ready.map(x=>x[0]).join(' · '):'No comparison metrics ready';
+      const missingText=[...missing.map(x=>x[0]),sourceSample<5?'Traffic source':null].filter(Boolean).join(' · ');
+      return '<details class="ac-data-compact"><summary><span><b>Data check</b> · '+esc(readyText)+'</span><small>'+(missingText?esc('Missing / blocked: '+missingText):'Core comparison data ready')+'</small></summary><div class="ac-data-compact-body">'+
+        (partial.length?'<p><b>Limited sample:</b> '+esc(partial.map(x=>x[0]).join(' · '))+'.</p>':'')+
+        (instructions.length?'<p><b>Fill these manually only if they matter for the decision:</b></p><ul>'+instructions.join('')+'</ul>':'<p>The main matched fields for this checkpoint are ready.</p>')+
+        '<div class="actions"><button class="btn" data-aw="baseline">Edit / add checkpoint data</button></div></div></details>';
     }
     function quickCompare(c,b,h,q){
       const rec=baselineRecord(c,b),comparisons={};
@@ -261,30 +255,28 @@
     }
     function diagnosisWhyHtml(r,d){
       const m=d.metrics,c=r?.comparisons||{},watchLabel=m.watchKey==='retention30'?'exact 0:30':m.watchKey==='apv'?'APV':'AVD';
-      const evidence=[
-        'SHOW: '+(m.show.detail||'No fair impression comparison yet.'),
-        'CLICK: '+(m.click.detail||'No fair CTR comparison yet.'),
-        'WATCH ('+watchLabel+'): '+(m.watch.detail||'No fair WATCH comparison yet.')
-      ];
+      const evidence=['SHOW: '+(m.show.detail||'No fair impression comparison yet.'),'CLICK: '+(m.click.detail||'No fair CTR comparison yet.'),'WATCH ('+watchLabel+'): '+(m.watch.detail||'No fair WATCH comparison yet.')];
       const missing=[];
       if(n(c.retention30?.current)===null||n(c.retention30?.baseline)===null)missing.push('exact 0:30');
-      if(!['browsePct','suggestedPct','searchPct','externalPct'].some(k=>n(c[k]?.current)!==null&&n(c[k]?.baseline)!==null))missing.push('matched traffic-source context');
-      if(n(c.engagedViews?.current)===null||n(c.engagedViews?.baseline)===null)missing.push('Engaged views outcome');
+      if(!['browsePct','suggestedPct','searchPct','externalPct'].some(k=>n(c[k]?.current)!==null&&n(c[k]?.baseline)!==null))missing.push('traffic-source context');
+      if(n(c.engagedViews?.current)===null||n(c.engagedViews?.baseline)===null)missing.push('Engaged views');
       let logic='No stage is clearly weak enough to justify inventing a fix.';
-      if(d.hardIssues?.includes('reach'))logic='SHOW is clearly weak versus this creator’s normal. That makes topic / audience opportunity / distribution the first place to investigate. It does not prove why impressions are low.';
-      else if(d.hardIssues?.includes('packaging'))logic='SHOW is not the main break, while CLICK is clearly weak. Packaging becomes a candidate only after traffic-source / audience-expansion context is checked.';
-      else if(d.hardIssues?.includes('retention'))logic=m.watchKey==='retention30'?'WATCH is clearly weak on the exact 0:30 comparison. Inspect the opening and retention curve, but the number still does not prove the cause.':'WATCH is clearly weak based on '+watchLabel+'. Exact 0:30 is missing, so this is a viewing-experience clue, not proof that the first 30 seconds are the problem.';
-      else if(d.softIssues?.length)logic='A metric is soft, but the overall result/context does not justify a strategy change yet. Treat it as a watch item and look for repetition.';
-      const change=d.hardIssues?.includes('reach')?'The call changes if matched source/topic evidence shows normal opportunity while CLICK or WATCH becomes the clearer repeated break.':d.hardIssues?.includes('packaging')?'The call weakens if CTR looks normal inside a comparable traffic source or the drop is explained by wider distribution.':d.hardIssues?.includes('retention')?'The call weakens if the exact retention curve / 0:30 is healthy and the APV/AVD difference is explained by length or audience mix.':'A repeated abnormal stage across comparable videos would raise confidence.';
-      return '<div class="ac-why"><div class="ac-subsection-label">WHY THIS IS THE CALL</div><p><b>Logic:</b> '+esc(logic)+'</p><ul>'+evidence.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul><p><b>This does not prove:</b> one weak metric caused another. In particular, weak WATCH does not prove it caused low impressions.</p><p><b>What would change the call:</b> '+esc(change)+'</p>'+(missing.length?'<p class="ac-why-missing"><b>Confidence is limited by missing evidence:</b> '+esc(missing.join(', '))+'.</p>':'')+'</div>';
+      if(d.hardIssues?.includes('reach'))logic='SHOW is clearly weak versus this creator’s normal. Topic / opportunity / distribution is the first place to investigate. This does not prove why impressions are low.';
+      else if(d.hardIssues?.includes('packaging'))logic='SHOW is not the main break while CLICK is clearly weak. Packaging becomes a candidate after traffic-source / audience-expansion context is checked.';
+      else if(d.hardIssues?.includes('retention'))logic=m.watchKey==='retention30'?'WATCH is clearly weak on exact 0:30. Inspect the opening and retention curve, but the number still does not prove the cause.':'WATCH is clearly weak based on '+watchLabel+'. Exact 0:30 is missing, so this is a viewing-experience clue, not proof that the opening is the cause.';
+      else if(d.softIssues?.length)logic='A metric is soft, but the result/context does not justify a strategy change yet. Watch for repetition.';
+      const change=d.hardIssues?.includes('reach')?'The call changes if comparable topic/source evidence looks healthy while CLICK or WATCH becomes the clearer repeated break.':d.hardIssues?.includes('packaging')?'The call weakens if CTR looks normal inside a comparable traffic source or wider distribution explains the drop.':d.hardIssues?.includes('retention')?'The call weakens if exact 0:30 / the retention curve is healthy and APV/AVD is explained by length or audience mix.':'A repeated abnormal stage across comparable videos would raise confidence.';
+      return '<details class="ac-why-compact"><summary><b>Why this diagnosis?</b><span>'+esc(missing.length?'Confidence limited by '+missing.join(', '):'See the evidence behind the call')+'</span></summary><div class="ac-why-body"><p><b>Logic:</b> '+esc(logic)+'</p><ul>'+evidence.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul><p><b>What would change the call:</b> '+esc(change)+'</p></div></details>';
     }
     function quickCheckHtml(c,b,h){
-      const p=W.prefs(c);if(!p.quickOpen)return '<button class="btn ac-quick-open" data-ac-quick-toggle>Quick check a custom / newest video</button>';
+      const p=W.prefs(c);if(!p.quickOpen)return '<button class="btn ac-quick-open" data-ac-quick-toggle>Quick check newest / custom video</button>';
       p.quick=p.quick||{};const q=p.quick,r=quickCompare(c,b,h,q),d=diagnose(r,h);
-      return '<section class="ac-quick"><div class="ac-quick-head"><div><div class="ac-subsection-label">QUICK CHECK · NOT SAVED</div><h3>Compare any current video with the '+esc(AGES[h]?.label||h+'h')+' normal</h3><p>Use this when the newest video is not in the imported list yet. Type only what you have. Nothing is added to the creator unless you explicitly import/save it elsewhere.</p></div><button class="btn" data-ac-quick-toggle>Close</button></div><div class="ac-quick-fields">'+
-        quickInput('views','Views',q.views)+quickInput('engagedViews','Engaged views',q.engagedViews)+quickInput('impressions','Impressions',q.impressions)+quickInput('ctr','CTR %',q.ctr,'0.01')+quickInput('retention30','0:30 / Intro %',q.retention30,'0.01')+quickInput('apv','APV %',q.apv,'0.01')+quickInput('avdSeconds','AVD seconds',q.avdSeconds,'1')+
-        quickInput('browsePct','Browse %',q.browsePct,'0.01')+quickInput('suggestedPct','Suggested %',q.suggestedPct,'0.01')+quickInput('searchPct','Search %',q.searchPct,'0.01')+quickInput('externalPct','External %',q.externalPct,'0.01')+
-      '</div><div class="actions"><button class="btn dark" data-ac-quick-run>Run quick check</button><button class="btn" data-ac-quick-clear>Clear</button></div>'+metricsHtml(r,d)+diagnosisWhyHtml(r,d)+'</section>';
+      return '<section class="ac-quick"><div class="ac-quick-head"><div><div class="ac-subsection-label">QUICK CHECK · NOT SAVED</div><h3>Compare a current video with the '+esc(AGES[h]?.label||h+'h')+' normal</h3><p>Type only what you have. This does not add the video to the creator.</p></div><button class="btn" data-ac-quick-toggle>Close</button></div>'+
+        '<div class="ac-quick-fields ac-quick-primary">'+quickInput('impressions','Impressions',q.impressions)+quickInput('ctr','CTR %',q.ctr,'0.01')+quickInput('retention30','0:30 / Intro %',q.retention30,'0.01')+quickInput('apv','APV %',q.apv,'0.01')+quickInput('avdSeconds','AVD seconds',q.avdSeconds,'1')+quickInput('views','Views',q.views)+'</div>'+
+        '<details class="ac-quick-advanced"><summary>Optional advanced fields</summary><div class="ac-quick-fields">'+quickInput('engagedViews','Engaged views',q.engagedViews)+quickInput('browsePct','Browse %',q.browsePct,'0.01')+quickInput('suggestedPct','Suggested %',q.suggestedPct,'0.01')+quickInput('searchPct','Search %',q.searchPct,'0.01')+quickInput('externalPct','External %',q.externalPct,'0.01')+'</div></details>'+
+        '<div class="actions"><button class="btn dark" data-ac-quick-run>Run quick check</button><button class="btn" data-ac-quick-clear>Clear</button></div>'+
+        (r.status==='compared'?'<div class="ac-subsection"><div class="ac-subsection-label">QUICK READ</div>'+metricsHtml(r,d)+'</div><div class="ac-next-inline '+d.tone+'"><div><span>WHAT TO DO NEXT</span><b>'+esc(d.bottleneck)+'</b></div><p>'+esc(d.next)+'</p></div>'+diagnosisWhyHtml(r,d):'<p class="ac-ready-note">'+esc(r.message||'Enter at least one comparable metric.')+'</p>')+
+      '</section>';
     }
     function ageOverview(c,v){
       return [24,48,168,672].map(h=>{
@@ -435,27 +427,18 @@
       const p=W.prefs(c),v=selectedVideo(c);if(!v)return full;
       const b=matchingBaseline(c,v,p.hours); if(b)p.baselineId=b.id;
       let r;try{r=W.compare(c,v,b,p.hours);}catch(e){r={status:'needs_evidence',comparisons:{},message:e.message};}
-      const d=diagnose(r,p.hours),age=AGES[p.hours];
-      const baselineName=b?.label||'No usual result saved yet';
-      const controls='<div class="ac-video-controls"><label>Video<select id="ac-video">'+W.videos(c).map(x=>'<option value="'+esc(x.id)+'" '+(x.id===v.id?'selected':'')+'>'+esc(x.title)+'</option>').join('')+'</select></label><div class="ac-age-grid">'+ageOverview(c,v)+'</div><p>Comparing this video with <b>'+esc(baselineName)+'</b> at the same point after publishing.</p></div>';
+      const d=diagnose(r,p.hours),age=AGES[p.hours],baselineName=b?.label||'No usual result saved yet';
+      const controls='<div class="ac-video-controls"><div class="ac-video-select-row"><label>Video<select id="ac-video">'+W.videos(c).map(x=>'<option value="'+esc(x.id)+'" '+(x.id===v.id?'selected':'')+'>'+esc(x.title)+'</option>').join('')+'</select></label>'+quickCheckHtml(c,b,p.hours)+'</div><div class="ac-age-grid">'+ageOverview(c,v)+'</div><p>Comparing this video with <b>'+esc(baselineName)+'</b> at the same point after publishing.</p></div>';
       const actions='<div class="actions ac-video-actions">'+(v.native&&!v.engineId?action('result','Update this video’s results'):action('import',v.engineId?'Update imported results':'Import results'))+action('baseline','Build / update baseline')+action('diagnosis','Use this in Diagnosis')+'</div>';
       return '<div class="ac-shell">'+
-        '<section class="ac-section ac-video-section '+d.tone+'">'+
-          '<div class="ac-section-head ac-video-head"><div class="ac-section-index">02</div><div><div class="ac-kicker">THIS VIDEO READ · '+age.label+' · '+age.name+'</div><h2>'+esc(d.headline)+'</h2><p>'+esc(d.explain)+'</p></div><div class="ac-top-badge"><span>MAIN ISSUE</span><b>'+esc(d.bottleneck)+'</b><small>'+esc(age.act)+'</small></div></div>'+
-          '<div class="ac-section-body">'+
-            controls+
-            dataCoverageHtml(c,b,p.hours)+
-            '<div class="ac-subsection"><div class="ac-subsection-label">HOW THE NUMBERS LOOK</div>'+metricsHtml(r,d)+'</div>'+
-            diagnosisWhyHtml(r,d)+
-            '<div class="ac-next-inline '+d.tone+'"><div><span>WHAT TO DO NEXT</span><b>'+esc(d.bottleneck)+'</b></div><p>'+esc(d.next)+'</p></div>'+
-            quickCheckHtml(c,b,p.hours)+
-            actions+
-          '</div>'+
-        '</section>'+
-        allNormalsHtml(c,v)+
-        baselineHtml(c,v,p.hours,b)+
-        patternHtml(c)+
-        recentHtml(c)+
+        '<section class="ac-section ac-video-section '+d.tone+'"><div class="ac-section-head ac-video-head"><div class="ac-section-index">02</div><div><div class="ac-kicker">THIS VIDEO READ · '+age.label+' · '+age.name+'</div><h2>'+esc(d.headline)+'</h2><p>'+esc(d.explain)+'</p></div><div class="ac-top-badge"><span>CURRENT CALL</span><b>'+esc(d.bottleneck)+'</b><small>'+esc(age.act)+'</small></div></div>'+
+        '<div class="ac-section-body">'+controls+
+          '<div class="ac-subsection"><div class="ac-subsection-label">HOW THE NUMBERS LOOK</div>'+metricsHtml(r,d)+'</div>'+
+          '<div class="ac-next-inline '+d.tone+'"><div><span>WHAT TO DO NEXT</span><b>'+esc(d.bottleneck)+'</b></div><p>'+esc(d.next)+'</p></div>'+
+          '<div class="ac-support-row">'+diagnosisWhyHtml(r,d)+dataCoverageHtml(c,b,p.hours)+'</div>'+
+          actions+
+        '</div></section>'+
+        baselineHtml(c,v,p.hours,b)+patternHtml(c)+recentHtml(c)+
       '</div>';
     }
     function channelSummary(c,full){
@@ -540,6 +523,9 @@
       .ac-diagnosis-evidence{border-left:5px solid #55757a!important}.ac-diagnosis-evidence.bad{border-left-color:#b54b4b!important}.ac-diagnosis-evidence.warn{border-left-color:#b5822e!important}.ac-mini-evidence p{padding:7px 0;border-bottom:1px solid var(--line,#ddd);margin:0}
       @media(max-width:900px){.ac-section-head{grid-template-columns:40px minmax(0,1fr)}.ac-section-head>.ac-top-badge,.ac-section-head>.ac-badge,.ac-section-head>.btn{grid-column:2}.ac-age-grid,.ac-metrics,.ac-baseline-grid,.ac-channel,.ac-normal-source,.ac-source-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ac-next-inline{grid-template-columns:1fr}}
       @media(max-width:560px){.ac-normal-grid,.ac-normal-source,.ac-source-grid,.ac-view-counts,.ac-coverage-grid,.ac-quick-fields{grid-template-columns:1fr}.ac-shell{gap:16px}.ac-section{border-radius:13px}.ac-section-head{grid-template-columns:32px minmax(0,1fr);padding:15px 14px;gap:10px}.ac-section-index{width:28px;height:28px;border-radius:8px}.ac-section-head h2{font-size:18px}.ac-section-body{padding:14px}.ac-age-grid,.ac-metrics,.ac-baseline-grid,.ac-channel{grid-template-columns:1fr}.ac-row{grid-template-columns:1fr auto}.ac-row .ac-badge{grid-column:1/-1}.ac-full>summary{grid-template-columns:32px 1fr;padding:14px}.ac-full-inner{padding:0 14px 14px}}
+      .ac-support-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.ac-data-compact,.ac-why-compact{border:1px solid var(--line,#d9e0e2);border-radius:10px;background:var(--card,#fff)}.ac-data-compact summary,.ac-why-compact summary{cursor:pointer;padding:11px 12px;display:grid;gap:3px}.ac-data-compact summary span,.ac-why-compact summary b{font-size:12px}.ac-data-compact summary small,.ac-why-compact summary span{font-size:10px;color:var(--muted,#68757d)}.ac-data-compact-body,.ac-why-body{padding:0 12px 12px}.ac-data-compact-body p,.ac-why-body p{margin:7px 0;line-height:1.4}.ac-data-compact-body li,.ac-why-body li{margin:6px 0}.ac-video-select-row{display:flex;gap:10px;align-items:end}.ac-video-select-row label{flex:1}.ac-video-select-row .ac-quick-open{white-space:nowrap}.ac-quick-primary{grid-template-columns:repeat(3,minmax(0,1fr))}.ac-quick-advanced summary{cursor:pointer;font-weight:800;font-size:11px}.ac-baseline-section{opacity:.94}
+      @media(max-width:760px){.ac-support-row{grid-template-columns:1fr}.ac-video-select-row{display:grid}.ac-quick-primary{grid-template-columns:1fr 1fr}}
+
 `
     win.document.head.appendChild(style);
 
