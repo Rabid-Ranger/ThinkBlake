@@ -32,8 +32,8 @@ test('winner soft spots do not become rescue recommendations',()=>{
   const d=A.diagnose(result({outcome:3.1,imp:3.2,ctr:-1.1}),168);
   assert.deepEqual(d.hardIssues,[]);
   assert.deepEqual(d.softIssues,['packaging']);
-  assert.match(d.bottleneck,/NO RESCUE NEEDED/);
-  assert.match(d.next,/Do not panic-change a winner/);
+  assert.match(d.bottleneck,/NO FIX NEEDED/);
+  assert.match(d.next,/Do not change a winning strategy|winning video|keep/i);
 });
 
 test('CTR cooling during expansion checks audience context before package changes',()=>{
@@ -52,4 +52,22 @@ test('repeated 7-day issues become a pattern only after repeated evidence',()=>{
   const p=A.patternFromDiagnoses([packaging,packaging,packaging,normal]);
   assert.equal(p.confidence,'Pattern emerging');
   assert.deepEqual(p.stages,['packaging']);
+});
+
+
+test('APV fallback does not pretend the first 30 seconds caused the problem',()=>{
+  const r={status:'compared',comparisons:{
+    views:{current:null,baseline:null,multiple:null},
+    engagedViews:{current:null,baseline:null,multiple:null},
+    impressions:{current:50000,baseline:100000,multiple:.5,relativeChangePct:-50},
+    ctr:{current:.08,baseline:.08,multiple:1,deltaPp:0},
+    retention30:{current:null,baseline:null,deltaPp:null},
+    apv:{current:.25,baseline:.35,multiple:.714,deltaPp:-10},
+    avdSeconds:{current:180,baseline:240,multiple:.75,deltaSeconds:-60}
+  }};
+  const d=A.diagnose(r,168);
+  assert.match(d.headline,/More than one stage is weak/i);
+  assert.match(d.bottleneck,/WATCH \/ VIEWING EXPERIENCE/);
+  assert.match(d.next,/Exact 0:30 is missing/i);
+  assert.match(d.next,/not proof/i);
 });
