@@ -105,8 +105,13 @@
     if(hard.length){
       bottleneck=stageLabel(hard);
       tone=hours<168?'warn':'bad';
-      headline=(hours<168?'This may be the issue: ':'Main issue: ')+bottleneck;
-      explain='This is the clearest weak part of the video compared with what this creator usually gets at the same point after publishing.';
+      if(hard.length>1){
+        headline=(hours<168?'More than one stage may be weak: ':'More than one stage is weak: ')+bottleneck;
+        explain='These are separate abnormal signals, not one proven cause. Start with the earliest weak stage in SHOW → CLICK → WATCH order, then use the later stage as supporting context.';
+      }else{
+        headline=(hours<168?'This may be the issue: ':'Main issue: ')+bottleneck;
+        explain='This is the clearest weak part of the video compared with what this creator usually gets at the same point after publishing.';
+      }
     }else if(winner){
       bottleneck=soft.length?'NO FIX NEEDED · '+stageLabel(soft)+' A LITTLE SOFT':'NO CLEAR ISSUE';
       tone='great';
@@ -134,8 +139,9 @@
       ? 'First check where the views came from and whether YouTube showed the video to a broader audience. Lower CTR during wider distribution does not automatically mean the thumbnail is bad. Only test the title or thumbnail if CTR still looks clearly weak after that check.'
       : nextFor(all,winner);
     if(all.includes('retention')&&m.watchKey!=='retention30'){
-      const watchName=m.watchKey==='apv'?'APV':'AVD';
-      next='WATCH is soft based on '+watchName+', not an exact 0:30 reading. Open the retention curve and pull the exact Intro / first-30-second value if available before deciding the opening is the problem. Treat this as a viewing-experience clue, not proof of cause.';
+      const watchName=m.watchKey==='apv'?'APV':'AVD',note=' Exact 0:30 is missing, so WATCH is being flagged from '+watchName+'. Treat that as a viewing-experience clue, not proof that the opening caused the problem.';
+      if(all.length===1)next='Open the retention curve and pull the exact Intro / first-30-second value if available before deciding the opening is the problem.'+note;
+      else next=next+note;
     }
     if(sourceContext&&(all.includes('packaging')||all.includes('reach')))next=sourceContext+' '+next;
     if(all.includes('retention')&&m.watchKey!=='retention30'){
@@ -460,7 +466,9 @@
           '<div class="ac-section-head"><div class="ac-section-index">02</div><div><div class="ac-kicker">90-DAY CHANNEL TREND</div><h2>'+(comparable?'Is the whole channel moving?':'Need two verified 90-day reports')+'</h2><p>Use this to track whether the whole channel moved after several videos. Come back to individual video analytics to diagnose why.</p><button class="btn ac-channel-back" data-ac-mode="video">← Back to video analytics</button></div><div class="ac-top-badge"><span>STATUS</span><b>'+(comparable?'READY':'NOT ENOUGH DATA')+'</b><small>Video issues still come from comparing each video with what this creator usually gets at the same point after publishing.</small></div></div>'+
           '<div class="ac-section-body"><div class="ac-channel">'+keys.map(([k,l])=>{
             const a=n(d.starting?.[k]),z=n(d.current?.[k]);let change='Not comparable yet';
-            if(comparable&&a!==null&&z!==null) change=k==='ctr'?((z-a)>=0?'+':'')+(z-a).toFixed(1)+' pp':a?((z/a-1)*100>=0?'+':'')+((z/a-1)*100).toFixed(1)+'%':'—';
+            const metricOk=typeof d.metricComparable==='function'?d.metricComparable(k):comparable;
+            if(metricOk&&a!==null&&z!==null) change=k==='ctr'?((z-a)>=0?'+':'')+(z-a).toFixed(1)+' pp':a?((z/a-1)*100>=0?'+':'')+((z/a-1)*100).toFixed(1)+'%':'—';
+            else if(comparable&&['views','engagedViews'].includes(k))change='Definition not verified';
             const val=k==='ctr'?(z===null?'—':Number(z).toFixed(1)+'%'):fmtCount(z);
             return '<div class="ac-channel-card"><span>'+l+'</span><b>'+val+'</b><small>'+change+' vs starting report</small></div>';
           }).join('')+'</div><div class="actions"><button class="btn" data-cg="analytics-snapshot-new">Add 90-day report</button><button class="btn" data-ac-mode="video">Back to video diagnosis</button></div></div>'+
