@@ -44,9 +44,29 @@ test('dated audience snapshots can be edited independently of 90-day channel per
   assert.match(page,/analytics-audience-save/);
 });
 
-test('import completion screen points coach to exact missing data checklist',()=>{
+test('import completion screen makes missing rows directly editable',()=>{
   assert.match(live,/Missing Data Checklist/);
   assert.match(live,/Video checkpoint gaps/);
-  assert.match(live,/Open Missing Data Checklist/);
+  assert.match(live,/Complete Missing Data/);
+  assert.match(live,/data-studio="missing-video"/);
+  assert.match(live,/data-studio="missing-audience"/);
+  assert.match(live,/data-studio="missing-channel"/);
+  assert.match(live,/AcceleratorAnalyticsManual\?\.openCheckpoint/);
+  assert.match(live,/AcceleratorAnalyticsManualData\?\.audience/);
+  assert.match(live,/AcceleratorAnalyticsManualData\?\.channel/);
   assert.match(live,/Nothing missing is estimated/);
+});
+
+test('Studio tools keeps a permanent complete-missing-data entry point',()=>{
+  assert.match(live,/Complete missing data \('/);
+  assert.match(live,/missingCount/);
+});
+
+test('manual page editors are exposed for direct workflow handoff',()=>{
+  assert.match(page,/AcceleratorAnalyticsManualData=\{channel:analyticsSnapshot,audience:analyticsAudienceSnapshot\}/);
+});
+
+test('missing audience and channel rows are deduplicated before rendering',()=>{
+  assert.match(decision,/const audMap=new Map\(\)/);
+  assert.match(decision,/const chMap=new Map\(\)/);
 });
