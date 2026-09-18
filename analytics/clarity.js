@@ -678,5 +678,5 @@
     if(win.AcceleratorDeskBridge?.analyticsActive?.()) rerender();
   }
 
-  return {countSignal,rateSignal,durationSignal,metricRead,diagnose,patternFromDiagnoses,strategistRead,install};
+  return {countSignal,rateSignal,durationSignal,metricRead,diagnose,patternFromDiagnoses,install};
 });
