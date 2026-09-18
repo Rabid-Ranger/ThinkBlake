@@ -41,9 +41,9 @@
     section.className='ar-flow au3-flow';
     const steps=[24,48,168,672,2160].map(h=>{
       const p=PHASES[h],active=h===2160?prefs.mode==='channel':prefs.mode!=='channel'&&Number(prefs.hours)===h;
-      return '<button type="button" class="au3-phase '+(h===168?'primary ':'')+(active?'active':'')+'" data-au3-phase="'+h+'"><span>'+esc(p.label)+'</span><b>'+esc(p.question)+'</b><small>'+esc(p.decision)+'</small></button>';
+      return '<div class="au3-phase '+(h===168?'primary ':'')+(active?'active':'')+'"><span>'+esc(p.label)+'</span><b>'+esc(p.question)+'</b><small>'+esc(p.decision)+'</small></div>';
     }).join('');
-    section.innerHTML='<div class="au3-flow-head"><div><div class="ar-kicker">HOW TO USE THIS PAGE</div><h2>Check the right thing at the right time</h2><p>Click a checkpoint to open that read. <b>7 days is the main video diagnosis.</b> 28 days turns the result into programming. 90 days tracks whether the channel is moving after several videos.</p></div></div><div class="au3-phases">'+steps+'</div>';
+    section.innerHTML='<div class="au3-flow-head"><div><div class="ar-kicker">HOW TO USE THIS PAGE</div><h2>Check the right thing at the right time</h2><p>This is a decision guide, not navigation. <b>24h is an early read.</b> <b>48h is a problem check.</b> <b>7d is the main diagnosis.</b> <b>28d turns the lesson into programming.</b> <b>90d tracks whole-channel health</b> and does not set the per-video baseline.</p></div></div><div class="au3-phases">'+steps+'</div>';
     return section;
   }
 
@@ -162,25 +162,15 @@
     }
 
     win.document.addEventListener('click',e=>{
-      const phase=e.target.closest?.('[data-au3-phase]'),back=e.target.closest?.('[data-au3-back-video]');
-      if(!phase&&!back)return;
+      const back=e.target.closest?.('[data-au3-back-video]');if(!back)return;
       let c=null;try{c=win.AcceleratorDeskBridge?.current?.()}catch(_){}if(!c)return;
-      const p=W.prefs(c);
-      if(phase){
-        const h=Number(phase.dataset.au3Phase);
-        if(h===2160)p.mode='channel';
-        else{p.mode='video';p.hours=h;p.baselineId='';}
-      }else p.mode='video';
+      W.prefs(c).mode='video';
       try{guide?.analyticsPage?.()}catch(_){}
-      setTimeout(()=>{
-        const target=Number(phase?.dataset?.au3Phase)===2160?win.document.querySelector('.ac-channel-section'):win.document.querySelector('.ac-video-section');
-        target?.scrollIntoView?.({behavior:'smooth',block:'start'});
-      },0);
     });
 
     const style=win.document.createElement('style');style.id='analytics-usability-v3-style';style.textContent=`
       #studio-tools .actions{display:inline-flex!important;align-items:center;gap:8px!important;flex-wrap:wrap!important;margin:4px 6px 8px 0!important}#studio-tools .actions .btn{margin:0!important}
-      .au3-flow{padding:16px 18px!important;gap:12px!important}.au3-flow-head h2{margin:3px 0 5px!important}.au3-flow-head p{margin:0;max-width:900px;line-height:1.45;color:var(--muted,#68757d)}.au3-phases{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}.au3-phase{border:1px solid var(--line,#d9e0e2);border-radius:10px;padding:10px;display:grid;gap:4px;min-width:0;text-align:left;background:var(--card,#fff);color:inherit;font:inherit;cursor:pointer}.au3-phase:hover{border-color:#55757a}.au3-phase.primary{border-color:#356f78;box-shadow:inset 0 0 0 1px #356f78}.au3-phase.active{background:rgba(53,111,120,.10);box-shadow:inset 0 0 0 2px #356f78}.au3-phase span{font-size:10px;font-weight:900;letter-spacing:.04em}.au3-phase b{font-size:13px}.au3-phase small{font-size:11px;line-height:1.35;color:var(--muted,#68757d)}
+      .au3-flow{padding:16px 18px!important;gap:12px!important}.au3-flow-head h2{margin:3px 0 5px!important}.au3-flow-head p{margin:0;max-width:900px;line-height:1.45;color:var(--muted,#68757d)}.au3-phases{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}.au3-phase{border:1px solid var(--line,#d9e0e2);border-radius:10px;padding:10px;display:grid;gap:4px;min-width:0;text-align:left;background:var(--card,#fff);color:inherit}.au3-phase.primary{border-color:#356f78;box-shadow:inset 0 0 0 1px #356f78}.au3-phase.active{background:rgba(53,111,120,.10);box-shadow:inset 0 0 0 2px #356f78}.au3-phase span{font-size:10px;font-weight:900;letter-spacing:.04em}.au3-phase b{font-size:13px}.au3-phase small{font-size:11px;line-height:1.35;color:var(--muted,#68757d)}
       .ac-next-inline{border-left-width:5px!important;padding:15px 17px!important}.ac-next-inline>div span{font-size:10px!important;letter-spacing:.08em}.ac-next-inline>div b{font-size:15px!important}.ac-next-inline p{font-size:14px!important;line-height:1.5!important}
       .au3-compact-normals .ac-section-head{padding-bottom:10px!important}.au3-compact-normals .ac-section-body{padding-top:8px!important}.au3-compact-normals .ac-normal-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:8px!important}.au3-compact-normals .ac-normal-card,.au3-compact-normals .ac-normal-channel{padding:10px!important;border-radius:10px!important}.au3-compact-normals .ac-normal-card-head{margin-bottom:6px!important}.au3-compact-normals .ac-normal-card-head b{font-size:13px!important}.au3-compact-normals .ac-normal-card p,.au3-compact-normals .ac-normal-channel p{font-size:11px!important;line-height:1.35!important;margin:5px 0!important}.au3-compact-normals .ac-normal-cells{gap:5px!important}.au3-compact-normals .ac-normal-cell{padding:6px!important;min-height:0!important}.au3-compact-normals .ac-normal-cell span{font-size:9px!important}.au3-compact-normals .ac-normal-cell b{font-size:14px!important}.au3-compact-normals .ac-normal-cell small{font-size:9px!important}.au3-compact-normals .ac-normal-note{font-size:11px!important}
       .ac-baseline-section[data-au3-collapsed="1"]{padding:0!important;border-style:dashed!important}.au3-details>summary{cursor:pointer;padding:13px 16px;display:flex;justify-content:space-between;gap:14px;align-items:center}.au3-details>summary b{font-size:14px}.au3-details>summary span{font-size:11px;color:var(--muted,#68757d)}.au3-details[open]>summary{border-bottom:1px solid var(--line,#d9e0e2)}.au3-details[open]>.ac-section-head,.au3-details[open]>.ac-section-body{display:block}
