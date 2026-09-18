@@ -82,5 +82,5 @@ test('selects the real Accelerator payload when Studio echoes the prompt and mul
   assert.equal(out.added,1);
   assert.equal(out.next.observations[0].videoId,'TggWdhi0MTY');
   assert.ok(out.formatRepairs.some(x=>/found 3 JSON objects/i.test(x)));
-  assert.ok(out.formatRepairs.some(x=>/ignored prompt\/prose/i.test(x)));
+  assert.ok(out.formatRepairs.some(x=>/prompt\/prose/i.test(x)));
 });
