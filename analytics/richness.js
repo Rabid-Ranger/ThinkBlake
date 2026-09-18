@@ -17,9 +17,9 @@
   function flowStrip(){
     const steps=[
       ['24h','Launch','Early signal. Notice obvious problems, do not overreact.'],
-      ['48h','Triage','Check whether an early issue is still showing up.'],
+      ['48h','Check','Check whether an early issue is still showing up.'],
       ['7d','Diagnosis','Default video read. Decide what actually deserves attention.'],
-      ['28d','Programming','Turn the result into a lesson about what to repeat, change, or make next.'],
+      ['28d','What to make next','Turn the result into a lesson about what to repeat, change, or make next.'],
       ['90d','Channel health','Check channel movement, audience, traffic, library contribution, and results.']
     ];
     return '<section class="ar-flow"><div class="ar-flow-head"><div><div class="ar-kicker">HOW TO USE ANALYTICS</div><h2>Read the right question at the right time</h2></div><small>7 days is the main video diagnosis. 90 days is channel health, not a per-video baseline.</small></div><div class="ar-flow-grid">'+steps.map((s,i)=>'<div class="ar-flow-step '+(i===2?'primary':'')+'"><span>'+esc(s[0])+'</span><b>'+esc(s[1])+'</b><small>'+esc(s[2])+'</small></div>').join('')+'</div></section>';
@@ -52,10 +52,10 @@
   function channelMissingHtml(c,W){
     const d=W?.channel?W.channel(c):{current:{}},z=d.current||{},aud=latestAudience(c),az=aud.current||{},missing=[];
     if(n(z.engagedViews)===null)missing.push(['Engaged views','Studio → Analytics → Advanced Mode / SEE MORE → Engaged views. Keep it separate from public Views. If Studio cannot expose it, leave it missing.']);
-    if(n(az.avgViewsPerViewer)===null)missing.push(['Average views per viewer','Studio → Analytics → Advanced Mode / SEE MORE → Average views per viewer for the same 28-day audience window. This is a library-depth clue.']);
+    if(n(az.avgViewsPerViewer)===null)missing.push(['Average views per viewer','Studio → Analytics → Advanced Mode / SEE MORE → Average views per viewer for the same 28-day audience window. This helps show whether people are watching more than one video.']);
     if(n(z.newUploadViews)===null||n(z.libraryViews)===null)missing.push(['New-upload vs older-library views','Advanced Mode: use the exact 90-day date range and isolate views from videos published inside that period versus videos published before it. If Studio cannot isolate the split exactly, leave it missing.']);
     if(n(z.uploadsPublished)===null)missing.push(['Long-form uploads published','Count long-form uploads published inside the exact 90-day period. Do not use an all-content count that mixes Shorts and long-form.']);
-    if(['qualifiedLeads','bookings','sales','revenue'].every(k=>n(z[k])===null))missing.push(['Business RESULT','Use the creator’s CRM / booking / sales system. Add qualified leads, bookings, sales, or revenue only when the attribution/definition is understood. These are not YouTube Studio metrics.']);
+    if(['qualifiedLeads','bookings','sales','revenue'].every(k=>n(z[k])===null))missing.push(['Business result','Use the creator’s CRM / booking / sales system. Add qualified leads, bookings, sales, or revenue only when the attribution/definition is understood. These are not YouTube Studio metrics.']);
     if(!missing.length)return '<p class="ar-muted"><b>Missing-data check:</b> the main channel-health fields needed for this creator are connected.</p>';
     return '<details class="ar-missing"><summary><b>'+missing.length+' channel-health data gap'+(missing.length===1?'':'s')+'</b><span>What is missing and where to find it</span></summary><div class="ar-missing-list">'+missing.map(([name,path])=>'<div><b>'+esc(name)+'</b><p>'+esc(path)+'</p></div>').join('')+'</div></details>';
   }
@@ -70,7 +70,7 @@
       return '<div class="ar-card"><span>'+esc(label)+'</span><b>'+esc(format(z[key]))+'</b><strong>Comparison unavailable</strong><small>'+esc(note||(['views','engagedViews'].includes(key)?'The view-count definition was not verified across both 90-day periods. Current value is shown without a trend claim.':'Add a comparable prior value before reading the trend.'))+'</small></div>';
     };
     return '<section class="ar-deep"><div class="ar-deep-head"><div><div class="ar-kicker">FULL CHANNEL HEALTH · 90 DAYS + 28-DAY AUDIENCE</div><h2>Track channel movement, then go back to videos to diagnose why</h2><p>This compares whole-channel periods after several uploads. It is a progress scoreboard, not a single-video diagnosis. Missing fields stay missing and are called out below.</p></div><span class="ar-status">'+(d.comparable?'Starting → latest':'Latest report / comparison incomplete')+'</span></div>'+ 
-      '<div class="ar-sub"><div><h3>Attention + viewing</h3><p>Whole-channel movement. These are 90-day totals, not per-video normals.</p></div><div class="ar-grid">'+
+      '<div class="ar-sub"><div><h3>Reach + viewing</h3><p>Whole-channel movement. These are 90-day totals, not per-video normals.</p></div><div class="ar-grid">'+
         channelCard('views','Views · new count','count',count)+
         channelCard('engagedViews','Engaged views · old/original count','count',count)+
         channelCard('impressions','Impressions','count',count)+
@@ -83,13 +83,13 @@
         card('Search',a.searchPct,z.searchPct,'rate',pct)+
         card('External',a.externalPct,z.externalPct,'rate',pct)+
       '</div></div>'+ 
-      '<div class="ar-sub"><div><h3>Programming + library contribution</h3><p>This answers whether recent publishing or the older library is carrying the channel. Studio may not always isolate this exactly, so unavailable stays unavailable.</p></div><div class="ar-grid ar-grid4">'+
+      '<div class="ar-sub"><div><h3>New uploads + older videos</h3><p>This answers whether recent uploads or older videos are carrying the channel. Studio may not always isolate this exactly, so unavailable stays unavailable.</p></div><div class="ar-grid ar-grid4">'+
         card('Uploads published',a.uploadsPublished,z.uploadsPublished,'count',count,'Exact long-form count when Studio can retrieve it')+
         card('Views from new uploads',a.newUploadViews,z.newUploadViews,'count',count,'Videos published inside the same 90-day period')+
         card('Views from older library',a.libraryViews,z.libraryViews,'count',count,'Videos published before the 90-day period')+
         '<div class="ar-card"><span>New-upload share of isolated split</span><b>'+esc(newShare===null?'Not recorded':newShare.toFixed(1)+'%')+'</b><strong>'+(newShare===null?'Needs both exact split fields':'New uploads vs older library')+'</strong><small>This is only calculated when both exact split fields are available.</small></div>'+ 
       '</div></div>'+ 
-      '<div class="ar-sub"><div><h3>Audience growth + loyalty · rolling 28 days</h3><p>New, Casual, Regular, Returning, and average views/viewer are separate signals. They are not a person-by-person funnel.</p></div><div class="ar-grid">'+
+      '<div class="ar-sub"><div><h3>New + returning viewers · rolling 28 days</h3><p>New, Casual, Regular, Returning, and average views/viewer are separate numbers. They do not track the same person step by step.</p></div><div class="ar-grid">'+
         card('Monthly audience',ap.monthlyAudience,az.monthlyAudience,'count',count)+
         card('New viewers',ap.newViewers,az.newViewers,'count',count)+
         card('Casual viewers',ap.casual,az.casual,'count',count)+
