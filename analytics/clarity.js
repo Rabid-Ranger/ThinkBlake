@@ -180,6 +180,12 @@
     function manualInput(id,label,value,step='any'){
       return '<label><span>'+esc(label)+'</span><input id="'+id+'" type="number" step="'+step+'" value="'+esc(value??'')+'" placeholder="optional"></label>';
     }
+    function manualText(id,label,value,placeholder=''){
+      return '<label><span>'+esc(label)+'</span><input id="'+id+'" value="'+esc(value??'')+'" placeholder="'+esc(placeholder)+'"></label>';
+    }
+    function manualSelect(id,label,value,options){
+      return '<label><span>'+esc(label)+'</span><select id="'+id+'">'+options.map(x=>'<option value="'+esc(x)+'" '+(String(value||'')===String(x)?'selected':'')+'>'+esc(x)+'</option>').join('')+'</select></label>';
+    }
     function openManualEditor(){
       const c=current(),p=c&&W.prefs(c),v=c&&selectedVideo(c);if(!c||!p||!v)return;
       const o=latestObservation(c,v,p.hours);
@@ -194,8 +200,21 @@
         manualInput('acm-views','Views',o.metrics?.views)+manualInput('acm-engaged','Engaged views',o.metrics?.engagedViews)+manualInput('acm-impressions','Impressions',o.metrics?.impressions)+
         manualInput('acm-ctr','CTR %',pct('ctr'),'0.01')+manualInput('acm-ret30','0:30 / Intro %',pct('retention30'),'0.01')+manualInput('acm-apv','APV %',pct('apv'),'0.01')+manualInput('acm-avd','AVD seconds',o.metrics?.avdSeconds,'1')+
         manualInput('acm-browse','Browse %',pct('browsePct'),'0.01')+manualInput('acm-suggested','Suggested %',pct('suggestedPct'),'0.01')+manualInput('acm-search','Search %',pct('searchPct'),'0.01')+manualInput('acm-external','External %',pct('externalPct'),'0.01')+
+      '</div><div class="ac-manual-grid ac-manual-context">'+
+        manualText('acm-definition','Measurement definition',o.definitionId||'unknown','Use the exact verified definition or leave unknown')+
+        manualSelect('acm-coverage','Checkpoint coverage',o.coverage||'unknown',['exact','partial','unknown'])+
+        manualSelect('acm-paid','Traffic type',o.paid||'unknown',['organic','paid','mixed','unknown'])+
       '</div><label class="ac-manual-source"><span>Source / report note</span><input id="acm-source" value="'+esc(o.source?.report||'YouTube Studio manual correction')+'"></label><div class="actions"><button class="btn dark" data-ac-manual-save>Save verified checkpoint</button><button class="btn" data-ac-manual-close>Cancel</button></div><p role="alert" class="ac-manual-error"></p>';
       if(!d.open)d.showModal();
+    }
+    function openManualEditorFor(videoId,hours){
+      const c=current();if(!c)return;
+      const p=W.prefs(c),vs=W.videos(c),v=vs.find(x=>x.id===videoId||(x.engineId||x.id)===videoId);
+      if(v)p.videoId=v.id;
+      const h=Number(hours);if([24,48,168,672].includes(h))p.hours=h;
+      p.mode='video';p.baselineId='';
+      rerender();
+      setTimeout(openManualEditor,0);
     }
     function saveManualEditor(){
       const c=current(),p=c&&W.prefs(c),v=c&&selectedVideo(c),A=win.AcceleratorAnalytics,B=win.AcceleratorDeskBridge;if(!c||!p||!v||!A||!B?.commitAI)return;
@@ -208,7 +227,10 @@
         const defs={...(o.metricDefinitions||{})};
         if(metrics.engagedViews!==null&&(!defs.engagedViews||/unknown|unverified/i.test(String(defs.engagedViews))))defs.engagedViews='youtube-studio-engaged-views-advanced-mode-v1';
         const sourceNote=d.querySelector('#acm-source')?.value?.trim()||'YouTube Studio manual correction';
-        const input={...clone(o),metrics,metricDefinitions:defs,capturedAt:new Date().toISOString(),source:{kind:'manual',report:sourceNote}};
+        const definitionId=d.querySelector('#acm-definition')?.value?.trim()||o.definitionId||'unknown';
+        const coverage=d.querySelector('#acm-coverage')?.value||o.coverage||'unknown';
+        const paid=d.querySelector('#acm-paid')?.value||o.paid||'unknown';
+        const input={...clone(o),metrics,metricDefinitions:defs,definitionId,coverage,paid,capturedAt:new Date().toISOString(),source:{kind:'manual',report:sourceNote}};
         delete input.acceptedAt;delete input.logicalKey;delete input.revision;delete input.revisionId;delete input.supersedesId;
         const nextStore=A.acceptObservation(c.analyticsFoundation||A.emptyStore(),input,new Date().toISOString());
         const next=win.AcceleratorLiveAnalytics?.apply?win.AcceleratorLiveAnalytics.apply(c,{next:nextStore,periods:[],audienceSnapshots:[]}):clone(c);
@@ -703,6 +725,7 @@
       if(el.dataset.acMode)p.mode=el.dataset.acMode;
       rerender();
     });
+    win.AcceleratorAnalyticsManual={openCheckpoint:openManualEditorFor};
     if(win.AcceleratorDeskBridge?.analyticsActive?.()) rerender();
   }
 
