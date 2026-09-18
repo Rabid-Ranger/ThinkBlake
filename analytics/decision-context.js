@@ -419,15 +419,22 @@
       if(!o.paid||o.paid==='unknown')context.push('Organic / paid status is unverified');
       return {videoId:o.videoId,title:o.title||o.videoId,hours:Number(o.windowHours),missing,context};
     }).filter(x=>x.missing.length||x.context.length);
-    const audRows=audienceSnapshots(c).map(a=>({asOf:a.asOf||a.date||'',missing:AUDIENCE_COMPLETION_FIELDS.filter(([k])=>n(a[k])===null)})).filter(x=>x.missing.length);
-    const chRows=snapshots(c).map(s=>{
-      const missing=CHANNEL_COMPLETION_FIELDS.filter(([k])=>n(s[k])===null);
-      const context=[];
+    const audMap=new Map();
+    for(const a of audienceSnapshots(c)){
+      const asOf=a.asOf||a.date||'',missing=AUDIENCE_COMPLETION_FIELDS.filter(([k])=>n(a[k])===null),prev=audMap.get(asOf);
+      if(!prev||missing.length<prev.missing.length)audMap.set(asOf,{asOf,missing});
+    }
+    const audRows=[...audMap.values()].filter(x=>x.missing.length);
+    const chMap=new Map();
+    for(const s of snapshots(c)){
+      const missing=CHANNEL_COMPLETION_FIELDS.filter(([k])=>n(s[k])===null),context=[];
       if(!s.metricDefinitionId||/unknown|unverified/i.test(String(s.metricDefinitionId)))context.push('Measurement definition is unverified');
       if(!s.paidNote||/unable to verify|unknown/i.test(String(s.paidNote)))context.push('Organic / paid context is unverified');
       if(businessResultIsExpected(c)&&['qualifiedLeads','bookings','sales','revenue'].every(k=>n(s[k])===null))context.push('Business result is not connected. Pull it from the CRM / sales system, not YouTube Studio.');
-      return {id:s.id,date:s.date||String(s.periodEndExclusive||'').slice(0,10),missing,context};
-    }).filter(x=>x.missing.length||x.context.length);
+      const date=s.date||String(s.periodEndExclusive||'').slice(0,10),key=String(s.periodStart||'')+'|'+String(s.periodEndExclusive||'')+'|'+date,prev=chMap.get(key),row={id:s.id,date,missing,context};
+      if(!prev||(missing.length+context.length)<(prev.missing.length+prev.context.length))chMap.set(key,row);
+    }
+    const chRows=[...chMap.values()].filter(x=>x.missing.length||x.context.length);
     const baselineDepth=AGE_ORDER.map(h=>{const d=baselineDetail(c,W,h),sample=n(d.sample)||0;return {hours:h,sample,need:Math.max(0,10-sample)};});
     return {videoRows,audRows,chRows,baselineDepth,total:videoRows.length+audRows.length+chRows.length};
   }
