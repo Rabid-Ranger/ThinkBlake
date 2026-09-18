@@ -8,8 +8,10 @@ test('checkpoint guide uses the exact decision language requested',()=>{
   assert.equal(U.PHASES[168].label,'7d · Diagnosis');
   assert.equal(U.PHASES[672].label,'28d · Programming');
   assert.equal(U.PHASES[2160].label,'90d · Channel Health');
+  assert.match(U.PHASES[48].question,/SHOW, CLICK, or WATCH/i);
   assert.match(U.PHASES[168].decision,/main video decision point/i);
   assert.match(U.PHASES[672].decision,/what the next video should do/i);
+  assert.match(U.PHASES[2160].decision,/does not set a per-video baseline/i);
 });
 
 test('optional checkpoint wording is removed everywhere',()=>{
@@ -41,4 +43,15 @@ test('channel prompt explicitly requires exact 90-day traffic source',()=>{
   assert.match(out,/EACH returned 90-day period/);
   assert.match(out,/exact same 90-day date range/);
   assert.match(out,/actual report\/filter/i);
+});
+
+
+test('checkpoint guide is informational and does not navigate',()=>{
+  const doc={createElement:()=>({className:'',innerHTML:''})};
+  const flow=U.flowHtml(doc,{mode:'video',hours:168});
+  assert.match(flow.innerHTML,/decision guide, not navigation/i);
+  assert.match(flow.innerHTML,/24h · Launch/);
+  assert.match(flow.innerHTML,/90d · Channel Health/);
+  assert.doesNotMatch(flow.innerHTML,/data-au3-phase/);
+  assert.doesNotMatch(flow.innerHTML,/<button[^>]*au3-phase/);
 });
