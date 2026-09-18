@@ -367,6 +367,14 @@ MEASUREMENT RULES
 - Return observations as an empty array. This request is for 90-day channel health plus separate 28-day audience snapshots.
 - Return ONLY the JSON object. No prose before or after it.
 
+STRICT JSON OUTPUT
+- Return one parseable JSON object only.
+- Do not wrap the object in Markdown code fences.
+- Do not escape underscores or hyphens in IDs. Write c_123, not c\_123.
+- Escape quotation marks inside titles, source names, notes, or other text values with \".
+- Do not append SVG, charts, citations, explanations, or any text after the final }.
+- Before responding, ensure the object would parse with JSON.parse.
+
 JSON SHAPE:
 ${JSON.stringify(schema,null,2)}`;
   }
@@ -516,6 +524,14 @@ AUDIENCE RULES
 NOT YOUTUBE STUDIO METRICS
 qualifiedLeads, bookings, sales, revenue, and context.attributionNote must be null. Do not infer them.
 Do not infer planned uploads or capacity from Studio.
+
+STRICT JSON OUTPUT
+- Return one parseable JSON object only.
+- Do not wrap the object in Markdown code fences.
+- Do not escape underscores or hyphens in IDs. Write c_123, not c\_123.
+- Escape quotation marks inside titles, source names, notes, or other text values with \".
+- Do not append SVG, charts, citations, explanations, or any text after the final }.
+- Before responding, ensure the object would parse with JSON.parse.
 
 OUTPUT RULES
 - Keep creatorId exactly ${JSON.stringify(c?.id||'')}.
