@@ -182,14 +182,14 @@
       rrTone=loyaltyWeak?'bad':loyaltyStrong?'good':'normal';
       rrLabel=loyaltyWeak?'RETURN is weakening.':loyaltyStrong?'RETURN is strengthening.':'RETURN is roughly steady.';
       rrMeaning=a.acquisitionBand==='weak'&&['steady','strong'].includes(a.loyaltyBand)
-        ?'Existing viewers are healthier than new-viewer acquisition. That points more toward Reach / gateway pressure.'
+        ?'Existing viewers are holding better than new viewers. That points more toward a Reach problem.'
         :['steady','strong'].includes(a.acquisitionBand)&&a.loyaltyBand==='weak'
-        ?'New people are arriving, but repeat behavior is weaker. That points more toward Trust / pathway pressure.'
+        ?'New people are arriving, but fewer are coming back. That points more toward a Trust / follow-up problem.'
         :'Audience movement does not isolate one simple Reach-vs-Trust problem yet.';
       rrNext=a.acquisitionBand==='weak'&&['steady','strong'].includes(a.loyaltyBand)
         ?'Bias the plan toward Reach ideas aimed at the right people while protecting click and watch.'
         :['steady','strong'].includes(a.acquisitionBand)&&a.loyaltyBand==='weak'
-        ?'Bias the plan toward Trust/pathway videos, follow-ups and continuation.'
+        ?'Bias the plan toward Trust videos, follow-ups, and clearer next-video paths.'
         :'Use the video job scorecard and business result to decide what the next content mix should prove.';
     }
     const returnResult={
@@ -252,7 +252,7 @@
         };
       }
       const tone=ratioV<.7?'bad':ratioV<.9?'warn':'good';
-      return {tone,verdict:ratioV<.7?'Analytics lean NO: execution is getting in the way.':ratioV<.9?'Analytics say this is worth checking.':'Analytics support YES: execution looks consistent enough to keep diagnosing.',line:Math.round(published)+' of '+Math.round(planned)+' planned long-form uploads were published in the latest report.',meaning:ratioV<.7?'The team may not be shipping enough of the plan to judge the strategy fairly.':'Publishing does not look like the first obvious break from the data we have.',next:ratioV<.7?'Fix scope, ownership, or capacity before over-diagnosing creative strategy.':'Keep moving downstream unless the call context says execution is still unstable.',metrics:[{label:'Published',value:String(Math.round(published)),compare:'Planned '+Math.round(planned),tone}],note:'Cadence is context, not a universal grade.'};
+      return {tone,verdict:ratioV<.7?'Analytics lean NO: execution is getting in the way.':ratioV<.9?'Analytics say this is worth checking.':'Analytics support YES: execution looks consistent enough to keep diagnosing.',line:Math.round(published)+' of '+Math.round(planned)+' planned long-form uploads were published in the latest report.',meaning:ratioV<.7?'The team may not be shipping enough of the plan to judge the strategy fairly.':'Publishing does not look like the first obvious break from the data we have.',next:ratioV<.7?'Fix scope, ownership, or capacity before over-diagnosing creative strategy.':'Keep checking the next part of the diagnosis unless the call context says execution is still unstable.',metrics:[{label:'Published',value:String(Math.round(published)),compare:'Planned '+Math.round(planned),tone}],note:'Upload schedule is context, not a universal grade.'};
     }
     if(index===1){
       const newTrend=n(a.acquisition),show=n(r.show),weak=(show!==null&&show<.7)||(newTrend!==null&&newTrend<.85),healthy=(show===null||show>=.7)&&(newTrend===null||newTrend>=.85);
@@ -270,7 +270,7 @@
         leads
       ];
       const warning=n(a.acquisition)!==null&&a.acquisition>1.05&&n(a.loyalty)!==null&&a.loyalty<.85;
-      return {tone:warning?'warn':'muted',verdict:warning?'Analytics raise an audience-fit question, but do not prove it.':'Analytics can support this question, but cannot decide audience fit by themselves.',line:warning?'New viewers are growing while repeat-audience signals are weakening. That can happen when growth attracts people who do not connect with the broader channel.':'Aggregate analytics cannot tell us exactly who the viewer is or whether they fit the business.',meaning:'Use this alongside comments, topics driving growth, returning behavior by topic, subscriber behavior, and lead quality.',next:'Do not choose YES or NO from total views alone. Check who the strongest topics are attracting and whether those viewers connect to the core promise.',metrics,note:'This is intentionally not auto-scored. Audience fit needs qualitative and topic-level evidence too.'};
+      return {tone:warning?'warn':'muted',verdict:warning?'Analytics raise an audience-fit question, but do not prove it.':'Analytics can support this question, but cannot decide audience fit by themselves.',line:warning?'New viewers are growing while returning-viewer numbers are weakening. That can happen when growth attracts people who do not connect with the broader channel.':'Aggregate analytics cannot tell us exactly who the viewer is or whether they fit the business.',meaning:'Use this alongside comments, topics driving growth, returning behavior by topic, subscriber behavior, and lead quality.',next:'Do not choose YES or NO from total views alone. Check who the strongest topics are attracting and whether those viewers connect to the core promise.',metrics,note:'This is intentionally not auto-scored. Audience fit needs qualitative and topic-level evidence too.'};
     }
     if(index===3){
       const ctr=displayRate(r.click),show=n(r.show);
@@ -308,15 +308,15 @@
       if(loyalty!==null&&loyalty<.85){tone='bad';verdict='Analytics lean NO: repeat viewing is weakening.';meaning='Casual / Regular / Returning trends say fewer people are building a repeat relationship with the channel.';}
       else if(loyalty!==null&&loyalty>1.05){tone='good';verdict='Analytics support YES: repeat viewing is strengthening.';meaning='Casual / Regular / Returning trends are moving in the right direction.';}
       else if(newTrend!==null&&newTrend>1.05&&loyalty!==null&&loyalty<=1.05){tone='warn';verdict='Reach is growing faster than Trust.';meaning='More new people are arriving, but repeat-audience growth is not keeping pace yet.';}
-      if(depth!==null&&depth<.85)meaning+=' Average views per viewer is also down, which adds a channel-depth concern.';
+      if(depth!==null&&depth<.85)meaning+=' Average views per viewer is also down, which suggests people may be watching fewer videos across the channel.';
       return {tone,verdict,line:'Read Casual, Regular, and Returning together, then use Average views per viewer as depth context. New viewers tells you whether Reach is expanding at the same time.',meaning,next:tone==='bad'||tone==='warn'?'Test clearer follow-ups, series, bridge videos, and stronger next-video paths. Keep the core audience promise clear.':'Trust does not look like the first obvious break. Continue to leads / next-step behavior.',metrics,note:'Regular viewers are a stricter long-term segment than Returning viewers. Do not treat New → Casual → Regular as a proven person-by-person conversion path.'};
     }
     if(index===6){
       const lead=businessMetric(channelData,'qualifiedLeads','Qualified leads'),book=businessMetric(channelData,'bookings','Bookings / applications');
       const has=n(channelCur.qualifiedLeads)!==null||n(channelCur.bookings)!==null;
-      if(!has)return {...base,verdict:'YouTube analytics cannot answer the lead question yet.',line:'Connect qualified clicks / leads / bookings or use CRM / funnel data.',metrics:[lead,book],note:'Views and returning viewers are not a substitute for lead tracking.'};
+      if(!has)return {...base,verdict:'YouTube analytics cannot answer the lead question yet.',line:'Connect qualified clicks / leads / bookings or use CRM / sales data.',metrics:[lead,book],note:'Views and returning viewers are not a substitute for lead tracking.'};
       const leadR=n(channelCur.qualifiedLeads)!==null&&n(channelPrev.qualifiedLeads)!==null&&n(channelPrev.qualifiedLeads)!==0?channelCur.qualifiedLeads/channelPrev.qualifiedLeads:null;
-      return {tone:leadR!==null&&leadR<.85?'bad':leadR!==null&&leadR>1.05?'good':'normal',verdict:leadR!==null&&leadR<.85?'Business data raises a lead-path concern.':'The lead data does not show an obvious break by itself.',line:'Use qualified leads / bookings from the same reporting periods, then check which video jobs actually created them.',meaning:'This tells you whether deeper action is moving. It does not tell you whether the CTA, resource, offer fit, or attribution caused the change.',next:'Check CTA continuity, lead quality, and which Trust / Convert videos created action.',metrics:[lead,book],note:'Use a consistent qualified-lead definition. Compare similar business jobs, not every video against one lead target.'};
+      return {tone:leadR!==null&&leadR<.85?'bad':leadR!==null&&leadR>1.05?'good':'normal',verdict:leadR!==null&&leadR<.85?'Business data raises a lead-path concern.':'The lead data does not show an obvious break by itself.',line:'Use qualified leads / bookings from the same reporting periods, then check which video jobs actually created them.',meaning:'This tells you whether deeper action is moving. It does not tell you whether the CTA, resource, offer fit, or attribution caused the change.',next:'Check CTA fit, lead quality, and which Trust / Convert videos created action.',metrics:[lead,book],note:'Use a consistent qualified-lead definition. Compare similar business jobs, not every video against one lead target.'};
     }
     if(index===7){
       const book=businessMetric(channelData,'bookings','Bookings / applications'),sales=businessMetric(channelData,'sales','Sales / purchases');
