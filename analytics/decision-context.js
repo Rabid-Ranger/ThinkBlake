@@ -71,43 +71,43 @@
     };
   }
   function audienceCoachRead(a){
-    if(!a?.hasCurrent)return {tone:'muted',headline:'Audience trend is not connected yet.',meaning:'We cannot tell whether attention is becoming an audience until at least one 28-day audience snapshot is saved.',action:'Add the current 28-day audience snapshot. After a second comparable snapshot, use the direction of New + Casual / Regular / Returning together.',protect:'Do not infer loyalty from subscribers or one viral video.'};
-    if(!a.hasComparison)return {tone:'warn',headline:'We have an audience snapshot, but not a trend yet.',meaning:'The current audience mix is useful context, but one rolling 28-day snapshot cannot tell us whether acquisition or loyalty is improving.',action:'Add the next comparable 28-day snapshot before changing programming from audience movement alone.',protect:'Keep the current plan unless video-level evidence gives a separate reason to change it.'};
+    if(!a?.hasCurrent)return {tone:'muted',headline:'Audience trend is not connected yet.',meaning:'We cannot tell whether new viewers are turning into people who come back until at least one 28-day audience snapshot is saved.',action:'Add the current 28-day audience snapshot. After a second comparable snapshot, use the direction of New + Casual / Regular / Returning together.',protect:'Do not assume people are coming back just because subscribers grew or one video went viral.'};
+    if(!a.hasComparison)return {tone:'warn',headline:'We have an audience snapshot, but not a trend yet.',meaning:'The current audience mix is useful context, but one rolling 28-day snapshot cannot tell us whether new-viewer growth or repeat viewing is improving.',action:'Add the next comparable 28-day snapshot before changing the content plan based on audience movement alone.',protect:'Keep the current plan unless video-level evidence gives a separate reason to change it.'};
     const acq=a.acquisitionBand,loy=a.loyaltyBand,depth=a.depthBand;
     let tone='normal',headline='',meaning='',action='',protect='';
     if(acq==='weak'&&['steady','strong'].includes(loy)){
-      tone='warn';headline='Acquisition is the pressure. Repeat-audience signals are holding better.';
-      meaning='The channel appears to serve existing viewers better than it is bringing in enough new ones. This points toward a Gateway / Reach problem before a loyalty rebuild.';
-      action='For the next 2–3 programming reps, strengthen the doorway: broader problem-aware Reach ideas around proven audience pain, while keeping the Trust / follow-up content that is still bringing people back.';
-      protect='Protect the topics, formats, and continuation paths that are supporting repeat viewing.';
+      tone='warn';headline='Bringing in new viewers is the weak spot. Returning-viewer numbers are holding up better.';
+      meaning='The channel appears to serve existing viewers better than it is bringing in enough new ones. Look at Reach ideas before changing the content meant to bring people back.';
+      action='For the next 2–3 videos, test broader Reach ideas around proven audience problems, while keeping the Trust / follow-up videos that are still bringing people back.';
+      protect='Protect the topics, formats, and follow-up paths that are helping people come back.';
     }else if(['steady','strong'].includes(acq)&&loy==='weak'){
-      tone='warn';headline='Acquisition is working better than loyalty. Attention is not turning into repeat viewing strongly enough.';
-      meaning='New people are arriving, but Casual / Regular / Returning behavior is not keeping pace. The research treats this as a Gateway → Bridge → Core / Trust-pathway pressure, not a reason to shrink the Reach strategy.';
-      action='Protect the Reach mechanism. Build an obvious bridge from the winning gateway topic into a closely related Trust / core follow-up, then inspect own-Suggested, end-screen behavior, and Average views per viewer.';
-      protect='Do not kill a successful gateway just because repeat viewing has not caught up yet.';
+      tone='warn';headline='New-viewer growth is stronger than repeat viewing. More people are finding the channel, but not enough are coming back yet.';
+      meaning='New people are arriving, but Casual / Regular / Returning viewers are not keeping pace. Keep the Reach working, then build a clearer bridge into the next useful Trust / follow-up video.';
+      action='Protect the Reach video that is working. Build an obvious bridge from that winning topic into a closely related Trust / follow-up video, then check own-Suggested, end screens, and Average views per viewer.';
+      protect='Do not kill a successful Reach video just because repeat viewing has not caught up yet.';
     }else if(acq==='weak'&&loy==='weak'){
-      tone='bad';headline='Acquisition and repeat-audience signals are both under pressure.';
+      tone='bad';headline='New viewers and returning viewers are both under pressure.';
       meaning='This is broader than one weak audience metric. The channel may be losing both new-viewer opportunity and reasons to return, or the prior period may have been inflated by a spike.';
       action='Do not blame one upload. Check new-upload vs library contribution, traffic-source change, topic / market demand, and the recent SHOW → CLICK → WATCH pattern. Then choose one dominant bottleneck for the next 2–3 reps.';
-      protect='Avoid changing topic, packaging, cadence, and format all at once. We still need a readable test.';
+      protect='Avoid changing topic, packaging, upload schedule, and format all at once. We still need a clean test.';
     }else if(['steady','strong'].includes(acq)&&['steady','strong'].includes(loy)){
-      tone='good';headline='Acquisition and repeat-audience signals are both healthy.';
+      tone='good';headline='New viewers and returning viewers are both healthy.';
       meaning='The audience side is not the obvious bottleneck right now. The channel is bringing people in while also maintaining or improving repeat viewing.';
-      action='Protect the current acquisition + continuation pattern. Look next at library depth, the business RESULT, or the repeated video-level bottleneck before changing audience strategy.';
+      action='Protect the current Reach + follow-up pattern. Next, check whether viewers are watching more than one video, whether business results are moving, or whether the same video-level problem keeps showing up.';
       protect='Do not manufacture an audience problem just because another metric on the page is available.';
     }else{
       tone='warn';headline='Audience direction is mixed or partly unavailable.';
-      meaning='We have some audience evidence, but not enough compatible movement to make a clean acquisition-versus-loyalty call.';
-      action='Use the available direction as context and wait for the next comparable 28-day snapshot before making audience programming the dominant plan.';
+      meaning='We have some audience evidence, but not enough clean movement yet to say whether the issue is bringing in new viewers or getting viewers to come back.';
+      action='Use the available direction as context and wait for the next comparable 28-day snapshot before making audience changes a major part of the content plan.';
       protect='Let the stronger video-level and 90-day evidence carry more weight for now.';
     }
     if(depth==='weak'){
       meaning+=' Average views per viewer is also down, which adds evidence that viewers are going less deep into the channel.';
-      action+=' Add a library-pathway check: own-Suggested, end screens, gateway → bridge → core, and whether the next useful video is obvious.';
+      action+=' Check the next-video path: own-Suggested, end screens, Reach video → bridge video → deeper follow-up, and whether the next useful video is obvious.';
     }else if(depth==='strong'){
       meaning+=' Average views per viewer is up, which supports stronger channel depth even if some audience segments are soft.';
     }else if(depth==='unknown'){
-      protect+=' Average views per viewer is missing, so library depth is not fully proven yet.';
+      protect+=' Average views per viewer is missing, so we cannot fully judge whether people are watching more videos yet.';
     }
     if(a.overlapDays){
       protect+=' The rolling 28-day snapshots overlap by about '+a.overlapDays+' day'+(a.overlapDays===1?'':'s')+', so treat the direction as a clue rather than a clean before/after experiment.';
@@ -154,10 +154,10 @@
     const resultRatio=resultKey?ratio(cur[resultKey],prev[resultKey]):null;
     const phrase=(r,label)=>r===null?'No comparable trend yet':label+' '+signed(r-1)+' vs prior';
     return [
-      {key:'attention',label:'ATTENTION',band:stageBand(attention),value:phrase(attention,attentionLabel),sub:(defsKnown?'':'Views definition is not verified across these reports, so this read uses Impressions instead. ')+(watchTime===null?'':'Watch time '+signed(watchTime-1)+' vs prior.'),action:attention!==null&&attention<.85?'Check whether the decline is new-upload opportunity, traffic mix, market demand, or library contribution before changing packaging.':'Keep checking whether attention is translating into repeat viewing, not just raw reach.'},
-      {key:'return',label:'RETURN',band:stageBand(returnRatio),value:returnRatio===null?'No comparable repeat-audience trend yet':'Repeat-audience trend '+signed(returnRatio-1),sub:'Casual + Regular + Returning viewers, read together.',action:returnRatio===null?'Add/verify comparable 28-day audience snapshots.':returnRatio<.85?'Test stronger follow-ups, series, consistent promises, and obvious next-video paths.':'Repeat viewing is not the obvious break; protect what is bringing people back.'},
-      {key:'depth',label:'LIBRARY DEPTH',band:stageBand(depth),value:depth===null?'Average views/viewer not connected yet':'Avg views/viewer '+signed(depth-1)+' vs prior',sub:'Is attention turning into more viewing across the channel?',action:depth===null?'Manually pull Average views per viewer in Studio Advanced Mode / SEE MORE. Also add exact new-upload vs older-library views if Studio can isolate them.':depth<.85?'Inspect own-Suggested, end screens, follow-up paths, and whether viewers have an obvious second video.':'Channel depth is holding; keep checking continuation on the videos driving it.'},
-      {key:'result',label:'RESULT',band:stageBand(resultRatio),value:resultRatio===null?'Business result not connected yet':(resultKey==='qualifiedLeads'?'Qualified leads':resultKey==='bookings'?'Bookings':'Sales')+' '+signed(resultRatio-1),sub:'Is attention producing the intended business outcome?',action:resultRatio===null?'If this creator has a business goal, enter qualified leads / bookings / sales from the CRM or business system. Do not invent these from YouTube.':resultRatio<.85?'Check CTA/offer alignment and attribution before changing Reach or Trust content.':'Business result is keeping pace; protect the path that is working.'}
+      {key:'attention',label:'REACH / VIEWS',band:stageBand(attention),value:phrase(attention,attentionLabel),sub:(defsKnown?'':'Views definition is not verified across these reports, so this read uses Impressions instead. ')+(watchTime===null?'':'Watch time '+signed(watchTime-1)+' vs prior.'),action:attention!==null&&attention<.85?'Check whether the decline is new-upload opportunity, traffic mix, market demand, or library contribution before changing packaging.':'Keep checking whether more reach/views are also leading to more people coming back.'},
+      {key:'return',label:'COME BACK',band:stageBand(returnRatio),value:returnRatio===null?'No comparable repeat-audience trend yet':'Repeat-audience trend '+signed(returnRatio-1),sub:'Casual + Regular + Returning viewers, read together.',action:returnRatio===null?'Add/verify comparable 28-day audience snapshots.':returnRatio<.85?'Test stronger follow-ups, series, consistent promises, and obvious next-video paths.':'Repeat viewing is not the obvious break; protect what is bringing people back.'},
+      {key:'depth',label:'WATCH MORE',band:stageBand(depth),value:depth===null?'Average views/viewer not connected yet':'Avg views/viewer '+signed(depth-1)+' vs prior',sub:'Are people watching more than one video across the channel?',action:depth===null?'Manually pull Average views per viewer in Studio Advanced Mode / SEE MORE. Also add exact new-upload vs older-library views if Studio can isolate them.':depth<.85?'Inspect own-Suggested, end screens, follow-up paths, and whether viewers have an obvious second video.':'Average views per viewer is holding; keep checking the follow-up videos driving it.'},
+      {key:'result',label:'BUSINESS RESULT',band:stageBand(resultRatio),value:resultRatio===null?'Business result not connected yet':(resultKey==='qualifiedLeads'?'Qualified leads':resultKey==='bookings'?'Bookings':'Sales')+' '+signed(resultRatio-1),sub:'Are the views turning into the business result we care about?',action:resultRatio===null?'If this creator has a business goal, enter qualified leads / bookings / sales from the CRM or business system. Do not invent these from YouTube.':resultRatio<.85?'Check CTA/offer alignment and attribution before changing Reach or Trust content.':'Business result is keeping pace; protect the path that is working.'}
     ];
   }
   function channelHealthRead(c,stages,audience){
@@ -166,25 +166,25 @@
     const attBand=att.band||'unknown',retBand=ret.band||'unknown',depthBand=depth.band||'unknown',resultBand=result.band||'unknown';
     let tone='normal',headline='',meaning='',action='',protect='';
     if(attBand==='strong'&&retBand==='weak'){
-      tone='warn';headline='Attention expanded, but repeat-audience behavior weakened.';
-      meaning='The channel is getting more opportunity / attention, but that attention is not becoming repeat viewing at the same rate. This is closer to a bridge / loyalty pressure than a reason to shrink the Reach mechanism.';
-      action='Protect the topics and packages creating attention. Use the next programming slots to create obvious Gateway → Bridge → Core follow-ups and measure repeat-audience / continuation.';
-      protect='Do not “fix” growing attention by making the doorway smaller.';
+      tone='warn';headline='Reach/views grew, but fewer viewers are coming back.';
+      meaning='The channel is getting more reach/views, but repeat viewing is not keeping up. Keep the Reach working and improve the bridge into the next useful video.';
+      action='Protect the topics and packages creating reach. Use the next few videos to create obvious Reach → bridge → follow-up paths and watch whether more viewers come back.';
+      protect='Do not “fix” growing reach by making the idea smaller.';
     }else if(attBand==='weak'&&['steady','strong'].includes(retBand)){
-      tone='warn';headline='Existing audience behavior is holding better than acquisition.';
-      meaning='People who already know the channel appear relatively healthier than the channel’s ability to earn new attention. Gateway / Reach opportunity is the first channel-level pressure.';
-      action='Investigate new-upload opportunity, Browse/Suggested reach, current topic demand, and gateway idea breadth before rebuilding loyalty content.';
-      protect='Keep the Trust / core programming that is still bringing people back.';
+      tone='warn';headline='Returning viewers are holding better than new-viewer growth.';
+      meaning='People who already know the channel are holding up better than the channel’s ability to reach new viewers. Reach ideas are the first place to look.';
+      action='Check new-upload reach, Browse/Suggested, current topic demand, and how broad the Reach ideas are before changing Trust/follow-up content.';
+      protect='Keep the Trust / follow-up videos that are still bringing people back.';
     }else if(attBand==='weak'&&retBand==='weak'){
-      tone='bad';headline='Both attention and repeat-audience health are under pressure.';
+      tone='bad';headline='Both reach/views and repeat viewing are under pressure.';
       meaning='This is a broader channel problem. The research says to separate new uploads from library, then inspect audience, traffic/reach, packaging, viewing experience, portfolio, and market before naming one dominant bottleneck.';
       action='Run the channel audit in order and choose ONE dominant 90-day bottleneck. Do not hand the creator ten equal fixes.';
       protect='Change one major strategic lane at a time so the next 2–3 comparable reps can actually teach us something.';
     }else if(['steady','strong'].includes(attBand)&&['steady','strong'].includes(retBand)){
-      tone='good';headline='Attention and repeat-audience health are both holding or improving.';
-      meaning='The channel’s top two health layers are not the obvious break. Look deeper at library consumption and business result before changing acquisition or loyalty strategy.';
-      action='Protect the current attention + return engine. Use Library Depth and RESULT to decide whether the next priority is sequencing, conversion, or simply continued execution.';
-      protect='Do not change a healthy Reach / loyalty system just because a lower-level metric is missing.';
+      tone='good';headline='Reach/views and repeat viewing are both holding or improving.';
+      meaning='Reach/views and repeat viewing are not the obvious problem. Next, check whether people are watching more videos and whether business results are moving.';
+      action='Protect the current Reach + return pattern. Next, use Average views per viewer and business results to decide whether the priority is better follow-ups, better conversion, or simply continuing what is working.';
+      protect='Do not change healthy Reach and repeat viewing just because another metric is missing.';
     }else{
       tone='warn';headline='Channel-health evidence is incomplete or mixed.';
       meaning='We can read individual pieces, but there is not yet enough compatible evidence to name a channel-wide bottleneck with confidence.';
@@ -193,16 +193,16 @@
     }
 
     if(depthBand==='weak'){
-      meaning+=' Library depth is also weakening, which strengthens the case for a continuation / sequencing problem.';
+      meaning+=' Average views per viewer is also falling, which makes a weak follow-up / next-video path more likely.';
       action+=' Inspect Average views per viewer, own-Suggested, final-20-second retention, end-screen relevance, and related-library lift.';
     }else if(depthBand==='strong'){
-      meaning+=' Library depth is improving, so the channel appears to be converting attention into more viewing.';
+      meaning+=' Average views per viewer is improving, so people appear to be watching more videos across the channel.';
     }else{
-      protect+=' Library depth is not fully connected yet.';
+      protect+=' Average views per viewer is not fully connected yet.';
     }
 
     if(resultBand==='weak'){
-      meaning+=' Platform attention is not translating into the tracked business result strongly enough.';
+      meaning+=' The views are not turning into the tracked business result strongly enough.';
       action+=' Keep platform diagnosis separate from business diagnosis: inspect CTA / offer fit, audience quality, and attribution before changing Reach or Trust.';
     }else if(resultBand==='strong'){
       meaning+=' The tracked business RESULT is also improving.';
@@ -216,8 +216,8 @@
       if(share!==null)meaning+=' Older-library views make up '+Math.round(share*100)+'% of the recorded new+library split in the latest 90-day report.';
       if(newPrev!==null&&libPrev!==null){
         const nr=ratio(newCur,newPrev),lr=ratio(libCur,libPrev);
-        if(nr!==null&&lr!==null&&nr>=1&&lr<.85)action+=' New uploads are holding better than the back catalog, so investigate library decay separately from current programming.';
-        if(nr!==null&&lr!==null&&nr<.85&&lr>=1)action+=' The library is holding better than new programming, so current-upload opportunity / execution deserves priority.';
+        if(nr!==null&&lr!==null&&nr>=1&&lr<.85)action+=' New uploads are holding better than older videos, so check the older library separately from the current content plan.';
+        if(nr!==null&&lr!==null&&nr<.85&&lr>=1)action+=' Older videos are holding better than new uploads, so the current videos deserve priority.';
       }
     }else{
       protect+=' New-upload vs older-library contribution is missing, so we cannot yet tell whether the channel movement is launch-driven or library-driven.';
@@ -235,9 +235,9 @@
     const d=input.diagnosis||{},p=input.pattern||{},a=input.audience||{},t=input.trajectory||[];
     if(d.leading&&!['Not enough data yet','Not enough evidence yet'].includes(d.leading)&&d.confidence!=='Low')return {focus:d.leading,confidence:d.confidence||'Low',source:'channel diagnosis'};
     if(p.max&&p.source==='hard')return {focus:patternFocus(p)||'Video funnel pattern',confidence:p.max>=3?'Medium':'Low',source:'repeated 7-day videos'};
-    if(a.acquisitionBand==='weak'&&['steady','strong'].includes(a.loyaltyBand))return {focus:'Acquisition / gateway',confidence:'Medium',source:'audience trend'};
-    if(['steady','strong'].includes(a.acquisitionBand)&&a.loyaltyBand==='weak')return {focus:'Loyalty / pathway',confidence:'Medium',source:'audience trend'};
-    if(a.acquisitionBand==='weak'&&a.loyaltyBand==='weak')return {focus:'Audience growth + loyalty pressure',confidence:a.overlapDays?'Low':'Medium',source:'audience trend'};
+    if(a.acquisitionBand==='weak'&&['steady','strong'].includes(a.loyaltyBand))return {focus:'New viewers / Reach',confidence:'Medium',source:'audience trend'};
+    if(['steady','strong'].includes(a.acquisitionBand)&&a.loyaltyBand==='weak')return {focus:'Repeat viewing / follow-ups',confidence:'Medium',source:'audience trend'};
+    if(a.acquisitionBand==='weak'&&a.loyaltyBand==='weak')return {focus:'New viewers + repeat viewing',confidence:a.overlapDays?'Low':'Medium',source:'audience trend'};
     const seven=t.find(x=>x.hours===168);
     if(seven?.growth!==null&&seven.growth>=1.1&&!p.max)return {focus:'Growth pattern worth protecting',confidence:'Medium',source:'rising 7-day normal'};
     if(p.max)return {focus:patternFocus(p)||'A small pattern worth checking',confidence:'Low',source:'small 7-day pattern'};
@@ -248,12 +248,12 @@
     const x=String(focus||'').toLowerCase();
     if(x.includes('packag'))return {job:'Keep the video’s intended job',metric:'CTR + engaged views',video:'Plan the title + thumbnail promise before production, then change one meaningful packaging variable without changing the whole idea.'};
     if(x.includes('opening')||x.includes('viewing')||x.includes('retention'))return {job:'Trust or the video’s intended job',metric:'0:30 + APV/AVD',video:'Focus the next test on the first 30–60 seconds and delivering the promise faster. Do not make the idea smaller just to improve retention.'};
-    if(x.includes('discovery')||x.includes('acquisition')||x.includes('gateway'))return {job:'Reach',metric:'Engaged views + impressions + new viewers',video:'Make a broader Reach video around a proven audience problem. Try to get in front of more of the right people without hurting CTR or watch quality.'};
-    if(x.includes('audience growth + loyalty'))return {job:'Reach + Trust',metric:'New viewers + Casual / Regular / Returning',video:'Do not blame one video. Check whether the prior audience period was spike-driven, then pair stronger gateway ideas with obvious follow-ups so qualified new attention has somewhere to go next.'};
-    if(x.includes('loyalty')||x.includes('pathway'))return {job:'Trust',metric:'Returning / casual / regular viewers',video:'Make the next video feel like the obvious thing to watch next: a follow-up, series, or deeper answer for the same viewer.'};
+    if(x.includes('discovery')||x.includes('acquisition')||x.includes('gateway')||x.includes('new viewers / reach'))return {job:'Reach',metric:'Engaged views + impressions + new viewers',video:'Make a broader Reach video around a proven audience problem. Try to get in front of more of the right people without hurting CTR or watch quality.'};
+    if(x.includes('audience growth + loyalty')||x.includes('new viewers + repeat viewing'))return {job:'Reach + Trust',metric:'New viewers + Casual / Regular / Returning',video:'Do not blame one video. Check whether the prior audience period was spike-driven, then pair stronger gateway ideas with obvious follow-ups so qualified new attention has somewhere to go next.'};
+    if(x.includes('loyalty')||x.includes('pathway')||x.includes('repeat viewing')||x.includes('follow-up'))return {job:'Trust',metric:'Returning / casual / regular viewers',video:'Make the next video feel like the obvious thing to watch next: a follow-up, series, or deeper answer for the same viewer.'};
     if(x.includes('business')||x.includes('convert'))return {job:'Convert',metric:'Qualified leads / bookings',video:'Make the audience-to-offer path explicit without turning the video into an ad. Judge the video by its job, not only views.'};
     if(x.includes('growth')||x.includes('protect'))return {job:'Use the job that produced the win',metric:'7-day result + the numbers that need to stay healthy',video:'Protect what is clearly working and make one nearby follow-up instead of changing everything.'};
-    if(x.includes('capacity')||x.includes('cadence'))return {job:'Any',metric:'Completed strategic reps',video:'Reduce complexity so the team can actually ship the learning rep without lowering topic, package or watch quality.'};
+    if(x.includes('capacity')||x.includes('cadence'))return {job:'Any',metric:'Completed planned videos',video:'Reduce complexity so the team can actually ship the learning rep without lowering topic, package or watch quality.'};
     return {job:'Decide from the video purpose',metric:'Use the number that matches the video’s job',video:'Use the diagnosis questions. Do not invent a problem just because the dashboard has numbers.'};
   }
   function overallRead(c,W,guide){
@@ -465,15 +465,15 @@
         normalsAtGlance(c,W)+
         '<div class="adc-compact-block"><div class="adc-subhead"><b>Channel health</b><span>What does the combination mean?</span></div><div class="adc-stages">'+health+'</div>'+
           '<div class="adc-current-read '+r.channelHealth.tone+'"><span>CURRENT CHANNEL-HEALTH READ</span><b>'+esc(r.channelHealth.headline)+'</b><p>'+esc(r.channelHealth.meaning)+'</p><div><strong>Coach action</strong><p>'+esc(r.channelHealth.action)+'</p></div><small><b>Protect / limits:</b> '+esc(r.channelHealth.protect)+'</small></div>'+
-          '<details class="adc-help"><summary>How do I read Attention / Return / Library Depth / Result?</summary>'+healthHelp+'</details></div>'+
+          '<details class="adc-help"><summary>How do I read Reach / Views, Come Back, Watch More, and Business Result?</summary>'+healthHelp+'</details></div>'+
         '<div class="adc-compact-block"><div class="adc-subhead"><b>Audience · rolling 28 days</b><span>'+esc(a.read)+'</span></div><div class="adc-audience-mini-grid">'+
           mini('New',a.newViewers,a.changes?.newViewers??null)+mini('Casual',a.casual,a.changes?.casual??null)+mini('Regular',a.regular,a.changes?.regular??null)+mini('Returning',a.returning,a.changes?.returning??null)+
         '</div><div class="adc-current-read '+r.audienceCoach.tone+'"><span>WHAT THIS AUDIENCE DATA MEANS NOW</span><b>'+esc(r.audienceCoach.headline)+'</b><p>'+esc(r.audienceCoach.meaning)+'</p><div><strong>Coach action</strong><p>'+esc(r.audienceCoach.action)+'</p></div><small><b>Protect / limits:</b> '+esc(r.audienceCoach.protect)+'</small></div><details class="adc-help"><summary>What do these audience groups mean?</summary>'+
-          '<p><b>Important:</b> New → Casual → Regular is a programming lens, not a tracked person-by-person conversion funnel. Read the direction of the groups together over time.</p>'+
-          '<p><b>New:</b> fresh people reached. If this falls while repeat viewing holds, inspect stronger gateway / Reach ideas.</p>'+
+          '<p><b>Important:</b> New → Casual → Regular is a simple way to read the audience, not a tracked person-by-person path. Read the direction of the groups together over time.</p>'+
+          '<p><b>New:</b> fresh people reached. If this falls while repeat viewing holds, inspect stronger Reach ideas.</p>'+
           '<p><b>Casual:</b> occasional repeat viewers. If this weakens, inspect follow-ups, series, consistency, and whether a viewer has an obvious next video.</p>'+
           '<p><b>Regular:</b> long-term consistent viewers. The definition is strict, so direction over several snapshots matters more than the raw size.</p>'+
-          '<p><b>Returning:</b> prior viewers who came back. If this falls, check continuation, cadence, topic consistency, and watch-next paths.</p>'+
+          '<p><b>Returning:</b> prior viewers who came back. If this falls, check follow-ups, upload schedule, topic consistency, and watch-next paths.</p>'+
           '<p><b>How to use this read:</b> '+esc(a.focus)+'</p>'+
           (a.overlapDays?'<p><b>Caution:</b> these rolling snapshots overlap by about '+esc(a.overlapDays)+' day'+(a.overlapDays===1?'':'s')+', so treat the direction as a clue rather than a clean before/after experiment.</p>':'')+
         '</details></div>'+
@@ -515,13 +515,13 @@
       guard='Do not make the idea or package smaller just to manufacture retention.';
     }else if(x.includes('acquisition')||x.includes('gateway')||x.includes('discovery')){
       primaryMetricKey='newViewers';job='Reach';
-      mix='Bias the next stretch toward qualified Reach / gateway videos, while keeping enough Trust and Convert follow-through.';
-      hypothesis='If Reach is the problem, stronger gateway ideas should bring in more New viewers and better engaged-view results without hurting CTR or watch quality.';
+      mix='Bias the next stretch toward strong Reach videos, while keeping enough Trust and Convert follow-through.';
+      hypothesis='If Reach is the problem, stronger Reach ideas should bring in more New viewers and better engaged-view results without hurting CTR or watch quality.';
       success='New viewers improve versus the previous 90-day period and Reach videos perform better at the same point after publishing.';
       guard='Do not grow with viewers who do not fit the channel promise.';
-    }else if(x.includes('loyalty')||x.includes('pathway')){
+    }else if(x.includes('loyalty')||x.includes('pathway')||x.includes('repeat viewing')||x.includes('follow-up')){
       primaryMetricKey='returning';job='Trust';
-      mix='Bias the next stretch toward Trust / pathway videos, follow-ups, series and obvious second-watch opportunities.';
+      mix='Bias the next stretch toward Trust videos, follow-ups, series, and obvious next-video opportunities.';
       hypothesis='If Trust is the problem, clearer follow-ups and next-video paths should improve Returning / Regular viewers and average views per viewer.';
       success='Returning or Regular viewers and average views per viewer improve versus the previous 90-day period.';
       guard='Do not sacrifice new-viewer clarity just to serve the core.';
@@ -595,7 +595,7 @@ For each exact 90-day period request:
 - impressions CTR
 - watchTime in hours
 
-AUDIENCE GROWTH + LOYALTY · SEPARATE 28-DAY SNAPSHOTS
+NEW + RETURNING VIEWERS · SEPARATE 28-DAY SNAPSHOTS
 Do NOT put New / Casual / Regular into the 90-day channelPeriods. Monthly audience is a rolling 28-day audience view.
 
 Return TWO comparable audienceSnapshots when available:
@@ -628,7 +628,7 @@ For those same 90-day dates, request the percentage of views from these sources 
 Use the raw percentages. Do not renormalize them to 100%.
 In context.sourceNote, include concise raw source evidence when available, such as the leading Suggested source videos or leading Search queries. Do not interpret them.
 
-PROGRAMMING / LIBRARY CONTEXT
+NEW UPLOADS / OLDER VIDEOS
 - uploadsPublished = exact count of long-form uploads published inside that 90-day period, only if Studio can retrieve that exact count. Do not infer it from cadence.
 - newUploadViews = views during the period from videos published inside that same period, only if Studio can isolate that exact slice.
 - libraryViews = views during the period from videos published before the period began, only if Studio can isolate that exact slice.
@@ -937,7 +937,7 @@ ${JSON.stringify(schema,null,2)}`;
         setEmpty('cg-p-guard',s.guard);
         const metric=win.document.getElementById('cg-p-metric');
         if(metric&&!c.coachOS?.plan90?.primaryMetricKey){metric.value=s.primaryMetricKey;metric.dataset.adcAuto='done';metric.dispatchEvent(new Event('change',{bubbles:true}));}
-        const outcome=win.document.getElementById('cg-p-outcome');if(outcome&&!String(outcome.value||'').trim()){outcome.value='Improve '+s.focus+' while protecting the rest of the funnel.';outcome.dispatchEvent(new Event('input',{bubbles:true}));}
+        const outcome=win.document.getElementById('cg-p-outcome');if(outcome&&!String(outcome.value||'').trim()){outcome.value='Improve '+s.focus+' while protecting the rest of the viewer journey.';outcome.dispatchEvent(new Event('input',{bubbles:true}));}
         fill.textContent='Added to empty fields';
         return;
       }
