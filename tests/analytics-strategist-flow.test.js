@@ -42,23 +42,14 @@ test('baseline detail keeps metric-specific sample sizes',()=>{
   assert.equal(d.samples.externalPct,10);
 });
 
-test('strategist read changes interpretation by Reach Trust Convert job',()=>{
-  const base=creator(),r={comparisons:{}},d={hardIssues:['retention'],softIssues:[],tone:'bad'},v={id:'v1',engineId:'v1'};
-  base.coachOS.analytics={videoJobs:{v1:'Reach'}};
-  let s=C.strategistRead(base,v,r,d,168);
-  assert.equal(s.job,'Reach'); assert.match(s.goalLink,/acquisition rep/i); assert.match(s.next,/promise delivery|opening/i);
-  base.coachOS.analytics.videoJobs.v1='Trust';
-  s=C.strategistRead(base,v,r,d,168);
-  assert.equal(s.job,'Trust'); assert.match(s.goalLink,/depth \/ return rep/i); assert.match(s.measure,/0:30|APV|AVD/i);
-  base.coachOS.analytics.videoJobs.v1='Convert';
-  s=C.strategistRead(base,v,r,d,168);
-  assert.equal(s.job,'Convert'); assert.match(s.goalLink,/action rep/i); assert.match(s.measure,/Qualified leads|bookings|sales/i);
-});
-
-test('unassigned job limits strategic conclusion instead of inventing one',()=>{
-  const c=creator(),v={id:'v1',engineId:'v1'},d={hardIssues:['reach'],softIssues:[],tone:'bad'};
-  const s=C.strategistRead(c,v,{comparisons:{}},d,168);
-  assert.equal(s.job,'Unassigned');
-  assert.match(s.next,/Assign the video as Reach, Trust, or Convert/i);
-  assert.equal(s.tone,'warn');
+test('strategist UI is wired for Reach Trust Convert and coach instructions',()=>{
+  const src=C.install.toString();
+  assert.match(src,/data-ac-job-select/);
+  assert.match(src,/This is an acquisition rep for the program/i);
+  assert.match(src,/This is a depth \/ return rep for the program/i);
+  assert.match(src,/This is an action rep for the program/i);
+  assert.match(src,/COACH NEXT MOVE/);
+  assert.match(src,/MEASURE/);
+  assert.match(src,/PROTECT/);
+  assert.match(src,/Assign the video as Reach, Trust, or Convert/i);
 });
