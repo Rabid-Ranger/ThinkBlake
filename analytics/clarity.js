@@ -342,7 +342,7 @@
         jobMeaning='This video has not been assigned a Reach / Trust / Convert job, so the dashboard can diagnose SHOW → CLICK → WATCH but cannot fully judge whether the result accomplished its strategic purpose.';goalLink='The system cannot connect this upload cleanly to the program goal until you tell it whether the video is Reach, Trust, or Convert.';
         measure=savedMetric||'Use the metric closest to the intended job';
         protect=savedGuard||'The other healthy parts of SHOW → CLICK → WATCH';
-        meaning=first?'SHOW → CLICK → WATCH shows '+(first==='reach'?'a SHOW / Reach issue':first==='packaging'?'a CLICK / packaging issue':'a WATCH / viewing-experience issue')+', but the strategic meaning is limited until the video job is set.':'No clear funnel break is visible, but the system still needs the video job to know what “success” should mean.';
+        meaning=first?'SHOW → CLICK → WATCH shows '+(first==='reach'?'a SHOW / Reach issue':first==='packaging'?'a CLICK / packaging issue':'a WATCH / viewing-experience issue')+', but the strategic meaning is limited until the video job is set.':'No clear SHOW → CLICK → WATCH problem is visible, but the system still needs the video job to know what “success” should mean.';
         next='Assign the video as Reach, Trust, or Convert in the video strategy when possible. Until then, use the SHOW → CLICK → WATCH diagnosis only and avoid making a channel-wide strategy change from this one result.';
         tone='warn';
       }
@@ -364,13 +364,13 @@
         protect+=' Check audience expansion and traffic-source context before reacting to a modest CTR or reach difference.';
       }else if(h===672){
         const evidence=d.outcomeMultiple==null?'the mature result':Number(d.outcomeMultiple).toFixed(2)+'× normal at 28 days';
-        meaning='28-day programming read: '+meaning;
+        meaning='28-day what-to-make-next read: '+meaning;
         if(d.winner){
-          next='Use '+evidence+' as evidence for what to make next. Create an adjacent follow-up that preserves the transferable promise / mechanism and the same strategic job, rather than literally copying the video. '+next+' One mature winner is strong evidence, but repeated 28-day proof is safer before turning it into a permanent programming rule.';
+          next='Use '+evidence+' as evidence for what to make next. Create an adjacent follow-up that preserves the transferable promise / mechanism and the same strategic job, rather than literally copying the video. '+next+' One mature winner is strong evidence, but repeated 28-day proof is safer before turning it into a permanent content rule.';
         }else if(hard.length||d.under){
-          next='Use '+evidence+' to change the NEXT comparable programming rep rather than endlessly rescuing the old upload. '+next+' Keep one dominant variable readable so you learn whether the change worked.';
+          next='Use '+evidence+' to change the NEXT comparable video rather than endlessly rescuing the old upload. '+next+' Keep one dominant variable readable so you learn whether the change worked.';
         }else{
-          next='This mature result is useful context, but it is not strong enough by itself to rewrite programming. Keep the next planned job, use nearby 7-day / 28-day winners as evidence, and wait for repetition before creating a permanent rule.';
+          next='This mature result is useful context, but it is not strong enough by itself to rewrite the content plan. Keep the next planned video job, use nearby 7-day / 28-day winners as evidence, and wait for repetition before creating a permanent rule.';
         }
         protect+=' At 28 days, the question is what this video teaches the slate, not whether every launch metric can still be optimized.';
       }
