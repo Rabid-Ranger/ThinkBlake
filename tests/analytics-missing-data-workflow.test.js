@@ -19,7 +19,7 @@ test('master Studio prompt asks for enough comparable rows and explains missing 
   }
 });
 
-test('persistent missing-data checklist covers video audience and channel gaps',()=>{
+test('missing-data workflow covers video audience and channel gaps without rendering on the main read',()=>{
   assert.match(decision,/Missing Data Checklist/);
   assert.match(decision,/Video checkpoint gaps/);
   assert.match(decision,/Audience snapshot gaps/);
@@ -27,6 +27,8 @@ test('persistent missing-data checklist covers video audience and channel gaps',
   assert.match(decision,/Where do I find this\?/);
   assert.match(decision,/data-adc-fill-checkpoint/);
   assert.match(decision,/Average views \/ viewer/);
+  assert.doesNotMatch(decision,/normalsAtGlance\(c,W\)\+\s*missingDataHtml\(c,W\)\+/);
+  assert.doesNotMatch(decision,/Missing verified data\?/);
 });
 
 test('manual video editor can fill metrics plus checkpoint verification context',()=>{
@@ -69,4 +71,11 @@ test('manual page editors are exposed for direct workflow handoff',()=>{
 test('missing audience and channel rows are deduplicated before rendering',()=>{
   assert.match(decision,/const audMap=new Map\(\)/);
   assert.match(decision,/const chMap=new Map\(\)/);
+});
+
+
+test('manual saves return to the active import completion flow',()=>{
+  assert.match(clarity,/AcceleratorLiveAnalytics\?\.openMissing\?\.\(\)/);
+  assert.match(page,/function finishAnalyticsManualFlow\(\)/);
+  assert.match(page,/AcceleratorLiveAnalytics\?\.openMissing\?\.\(\)/);
 });
