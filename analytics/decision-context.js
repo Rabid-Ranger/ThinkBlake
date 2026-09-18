@@ -390,6 +390,7 @@
         '<div class="adc-compact-block"><div class="adc-subhead"><b>Audience · rolling 28 days</b><span>'+esc(a.read)+'</span></div><div class="adc-audience-mini-grid">'+
           mini('New',a.newViewers,a.changes?.newViewers??null)+mini('Casual',a.casual,a.changes?.casual??null)+mini('Regular',a.regular,a.changes?.regular??null)+mini('Returning',a.returning,a.changes?.returning??null)+
         '</div><div class="adc-current-read '+r.audienceCoach.tone+'"><span>WHAT THIS AUDIENCE DATA MEANS NOW</span><b>'+esc(r.audienceCoach.headline)+'</b><p>'+esc(r.audienceCoach.meaning)+'</p><div><strong>Coach action</strong><p>'+esc(r.audienceCoach.action)+'</p></div><small><b>Protect / limits:</b> '+esc(r.audienceCoach.protect)+'</small></div><details class="adc-help"><summary>What do these audience groups mean?</summary>'+
+          '<p><b>Important:</b> New → Casual → Regular is a programming lens, not a tracked person-by-person conversion funnel. Read the direction of the groups together over time.</p>'+
           '<p><b>New:</b> fresh people reached. If this falls while repeat viewing holds, inspect stronger gateway / Reach ideas.</p>'+
           '<p><b>Casual:</b> occasional repeat viewers. If this weakens, inspect follow-ups, series, consistency, and whether a viewer has an obvious next video.</p>'+
           '<p><b>Regular:</b> long-term consistent viewers. The definition is strict, so direction over several snapshots matters more than the raw size.</p>'+
