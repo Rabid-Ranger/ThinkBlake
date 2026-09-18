@@ -181,6 +181,76 @@
     if(change!==null){tone=change<.85?'bad':change>1.05?'good':'normal';delta=signed(change-1)+' vs prior';}
     return '<div class="adc-audience-card '+tone+'"><span>'+esc(label)+'</span><b>'+fmt(value)+'</b><strong>'+esc(delta)+'</strong><small>'+esc(meaning)+'</small></div>';
   }
+  function normalConfidence(sample){
+    const x=n(sample)||0;
+    if(x>=10)return {label:'Good working normal',tone:'good'};
+    if(x>=5)return {label:'Usable · less confidence',tone:'normal'};
+    if(x>0)return {label:'Provisional · under 5',tone:'warn'};
+    return {label:'Not available',tone:'muted'};
+  }
+  function selectedVideoFor(c,W){
+    const p=W.prefs(c),vs=W.videos(c);
+    return vs.find(v=>v.id===p.videoId)||vs[0]||null;
+  }
+  function matchingBaselineFor(c,W,v,h){
+    const bs=W.baselines(c,h);if(!bs.length)return null;
+    const obs=(c.analyticsFoundation?.observations||[]).filter(o=>o.videoId===(v?.engineId||v?.id)&&o.windowHours===h).at(-1);
+    return bs.find(b=>b.engine&&obs&&b.engine.format===obs.format&&b.engine.eraId===obs.eraId&&b.engine.definitionId===obs.definitionId&&b.engine.traffic===obs.traffic&&b.engine.paid===obs.paid)
+      ||bs.find(b=>b.manual&&(b.manual.job==='All'||b.manual.job===v?.native?.coachOS?.intent?.job||b.manual.job===v?.native?.job))
+      ||bs[0];
+  }
+  function baselineDetail(c,W,h){
+    const v=selectedVideoFor(c,W),b=matchingBaselineFor(c,W,v,h);
+    const metricKeys=['views','engagedViews','impressions','ctr','retention30','apv','avdSeconds','browsePct','suggestedPct','searchPct','externalPct'];
+    if(!b)return {h,label:'No matching baseline',sample:0,values:Object.fromEntries(metricKeys.map(k=>[k,null])),samples:Object.fromEntries(metricKeys.map(k=>[k,0])),source:'No baseline saved yet'};
+    if(b.engine){
+      const rows=(c.analyticsFoundation?.baselines||[]).filter(x=>x.policyId===b.id&&x.kind==='operating'),last=rows.at(-1);
+      if(!last)return {h,label:b.label,sample:0,values:Object.fromEntries(metricKeys.map(k=>[k,null])),samples:Object.fromEntries(metricKeys.map(k=>[k,0])),source:'No operating baseline built yet'};
+      const values=Object.fromEntries(metricKeys.map(k=>[k,n(last?.metrics?.[k]?.median)]));
+      const samples=Object.fromEntries(metricKeys.map(k=>[k,n(last?.metrics?.[k]?.n)||0]));
+      const sample=Math.max(0,...Object.values(samples));
+      return {h,label:b.label,sample,values,samples,source:'Automatic · matched current-era videos'};
+    }
+    const values=W.values(b.manual),sample=n(b.manual?.n)||0;
+    const samples=Object.fromEntries(metricKeys.map(k=>[k,n(values?.[k])===null?0:sample]));
+    return {h,label:b.label,sample,values,samples,source:'Coach-selected baseline'};
+  }
+  function normalValue(key,value){
+    if(n(value)===null)return '—';
+    if(['ctr','retention30','apv','browsePct','suggestedPct','searchPct','externalPct'].includes(key))return (n(value)*100).toFixed(1)+'%';
+    if(key==='avdSeconds'){const sec=Math.round(n(value));return Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0');}
+    return Math.round(n(value)).toLocaleString();
+  }
+  function normalMetricCell(label,key,detail,note=''){
+    const value=detail.values?.[key],sample=n(detail.samples?.[key])||0,conf=normalConfidence(sample);
+    return '<div class="adc-normal-metric '+conf.tone+'"><span>'+esc(label)+'</span><b>'+esc(normalValue(key,value))+'</b><small>'+esc(sample?('n='+sample+' · '+conf.label):'Not available')+'</small>'+(note?'<em>'+esc(note)+'</em>':'')+'</div>';
+  }
+  function normalsAtGlance(c,W){
+    const p=W.prefs(c),h=AGE_ORDER.includes(Number(p.hours))?Number(p.hours):168,d=baselineDetail(c,W,h),conf=normalConfidence(d.sample);
+    const tabs=AGE_ORDER.map(x=>'<button class="adc-normal-tab '+(x===h?'active':'')+'" data-adc-baseline-window="'+x+'">'+AGE_NAME[x]+'</button>').join('');
+    return '<div class="adc-normal-panel">'+
+      '<div class="adc-normal-head"><div><div class="adc-subhead"><b>Normals at a glance</b><span>Click a checkpoint. The selected video below switches to the same age.</span></div><h3>'+esc(AGE_NAME[h]+' creator normal')+'</h3><p>'+esc(d.label)+' · '+esc(d.source)+'</p></div><div class="adc-normal-confidence '+conf.tone+'"><span>BASELINE CONFIDENCE</span><b>'+esc(conf.label)+'</b><small>Each metric keeps its own compatible n.</small></div></div>'+
+      '<div class="adc-normal-tabs">'+tabs+'<button class="adc-normal-tab channel" data-ac-mode="channel">90d channel</button></div>'+
+      '<div class="adc-normal-groups">'+
+        '<div><div class="adc-normal-group-label">OUTCOME + SHOW</div><div class="adc-normal-metrics">'+
+          normalMetricCell('Views · new count','views',d,'Outcome volume')+
+          normalMetricCell('Engaged views · original count','engagedViews',d,'Use only when Studio verifies it')+
+          normalMetricCell('Impressions','impressions',d,'How often the package was shown')+
+        '</div></div>'+
+        '<div><div class="adc-normal-group-label">CLICK + WATCH</div><div class="adc-normal-metrics">'+
+          normalMetricCell('CTR','ctr',d,'Choice after an impression')+
+          normalMetricCell('First 30 sec','retention30',d,'Exact Intro value when available')+
+          normalMetricCell('APV','apv',d,'Average percentage viewed')+
+          normalMetricCell('AVD','avdSeconds',d,'Average view duration')+
+        '</div></div>'+
+        '<div><div class="adc-normal-group-label">TRAFFIC SOURCE MIX</div><div class="adc-normal-metrics traffic">'+
+          normalMetricCell('Browse','browsePct',d)+normalMetricCell('Suggested','suggestedPct',d)+normalMetricCell('Search','searchPct',d)+normalMetricCell('External','externalPct',d)+
+        '</div></div>'+
+      '</div>'+
+      '<p class="adc-normal-note"><b>How to use this:</b> this is the reference point, not the diagnosis. First see what is normal for the creator at this exact age. Then compare the selected video below, find the first meaningful break, and only change strategy when the evidence repeats or clearly matters for the video’s job.</p>'+
+    '</div>';
+  }
+
   function baselinePills(read){
     const countFmt=v=>n(v)===null?'—':Math.round(n(v)).toLocaleString();
     const rateFmt=v=>n(v)===null?'—':n(v).toFixed(1)+'%';
@@ -199,10 +269,9 @@
     const health=r.stages.map(s=>'<div class="adc-stage '+s.band+'"><span>'+esc(s.label)+'</span><b>'+esc(s.value)+'</b><small>'+esc(s.sub)+'</small></div>').join('');
     const healthHelp=r.stages.map(s=>'<p><b>'+esc(s.label)+':</b> '+esc(s.action||'')+'</p>').join('');
     return '<section class="ac-section adc-overall '+tone+'" id="adc-overall-read">'+
-      '<div class="ac-section-head adc-overall-head"><div class="ac-section-index">01</div><div><div class="adc-kicker">OVERALL CHANNEL READ</div><h2>'+esc(r.focus)+'</h2><p>'+esc(r.why.slice(0,2).join(' '))+'</p></div><div class="adc-focus"><span>WHAT I’D DO NOW</span><b>'+esc(r.action.video)+'</b><small>'+esc(r.confidence)+' confidence · '+esc(r.source)+'</small></div></div>'+
+      '<div class="ac-section-head adc-overall-head"><div class="ac-section-index">01</div><div><div class="adc-kicker">OVERALL CHANNEL READ</div><h2>'+esc(r.focus)+'</h2><p>'+esc(r.why.slice(0,2).join(' '))+'</p><div class="adc-program-context"><b>Program goal:</b> '+esc(c.coachOS?.plan90?.outcome||c.coachOS?.baseline?.context?.channelGoal||'Not set yet')+(c.coachOS?.plan90?.primaryMetric?'<span> · Main measure: '+esc(c.coachOS.plan90.primaryMetric)+'</span>':'')+'</div></div><div class="adc-focus"><span>WHAT I’D DO NOW</span><b>'+esc(r.action.video)+'</b><small>'+esc(r.confidence)+' confidence · '+esc(r.source)+'</small></div></div>'+
       '<div class="ac-section-body">'+
-        '<div class="adc-subhead"><b>Normals at a glance</b><span>Click a checkpoint to inspect that same-age read. These use every compatible metric, not Views alone.</span></div>'+
-        '<div class="adc-baselines">'+baselinePills(r)+'<button class="adc-baseline-pill adc-90-pill" data-ac-mode="channel"><span>90d · Channel Health</span><b>Open progress</b><small>Whole-channel movement, not a per-video normal</small></button></div>'+
+        normalsAtGlance(c,W)+
         '<div class="adc-compact-block"><div class="adc-subhead"><b>Channel health</b><span>Where should I look next?</span></div><div class="adc-stages">'+health+'</div><details class="adc-help"><summary>How do I read these?</summary>'+healthHelp+'</details></div>'+
         '<div class="adc-compact-block"><div class="adc-subhead"><b>Audience · rolling 28 days</b><span>'+esc(a.read)+'</span></div><div class="adc-audience-mini-grid">'+
           mini('New',a.newViewers,a.changes?.newViewers??null)+mini('Casual',a.casual,a.changes?.casual??null)+mini('Regular',a.regular,a.changes?.regular??null)+mini('Returning',a.returning,a.changes?.returning??null)+
@@ -651,7 +720,7 @@ ${JSON.stringify(schema,null,2)}`;
         e.preventDefault();const c=current();if(!c)return;
         const p=W.prefs(c);p.mode='video';p.hours=Number(baselineJump.dataset.adcBaselineWindow);p.baselineId='';
         try{guide?.analyticsPage?.()}catch(_){}
-        setTimeout(()=>win.document.querySelector('.ac-video-section')?.scrollIntoView({behavior:'smooth',block:'start'}),0);
+        setTimeout(()=>win.document.querySelector('.adc-normal-panel')?.scrollIntoView({behavior:'smooth',block:'nearest'}),0);
         return;
       }
       const fill=e.target.closest?.('[data-adc-plan-fill]');
@@ -687,6 +756,9 @@ ${JSON.stringify(schema,null,2)}`;
 
       .adc-baselines{grid-template-columns:repeat(5,minmax(0,1fr))}.adc-baseline-pill{padding:9px 10px;gap:2px;min-height:0}.adc-baseline-pill span{font-size:9px}.adc-baseline-pill b{font-size:13px}.adc-baseline-pill small{font-size:9px;line-height:1.25}.adc-90-pill{border-style:dashed}.adc-compact-block{display:grid;gap:8px}.adc-compact-block+.adc-compact-block{border-top:1px solid var(--line,#d9e0e2);padding-top:12px}.adc-stages{grid-template-columns:repeat(4,minmax(0,1fr))}.adc-stage{padding:9px}.adc-stage em{display:none}.adc-help summary{cursor:pointer;font-size:11px;font-weight:800;color:var(--muted,#68757d)}.adc-help p{font-size:11px;line-height:1.45;margin:7px 0}.adc-audience-mini-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}.adc-audience-mini{border:1px solid var(--line,#d9e0e2);border-radius:9px;padding:8px;display:grid;gap:2px}.adc-audience-mini span{font-size:9px;font-weight:900;text-transform:uppercase}.adc-audience-mini b{font-size:15px}.adc-audience-mini small{font-size:9px;color:var(--muted,#68757d)}.adc-audience{display:none}.adc-audience-read,.adc-audience-note{display:none}
       @media(max-width:1000px){.adc-baselines{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:650px){.adc-baselines,.adc-stages,.adc-audience-mini-grid{grid-template-columns:1fr 1fr}}
+
+      .adc-program-context{margin-top:8px;font-size:11px;color:var(--muted,#68757d)}.adc-normal-panel{border:1px solid var(--line,#d9e0e2);border-radius:13px;padding:14px;display:grid;gap:12px;background:rgba(84,110,116,.025)}.adc-normal-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:start}.adc-normal-head h3{margin:5px 0 3px}.adc-normal-head p{margin:0;font-size:11px;color:var(--muted,#68757d)}.adc-normal-confidence{border:1px solid var(--line,#d9e0e2);border-radius:9px;padding:8px 10px;display:grid;gap:2px;min-width:170px}.adc-normal-confidence span{font-size:8px;font-weight:900;letter-spacing:.08em}.adc-normal-confidence b{font-size:12px}.adc-normal-confidence small{font-size:9px;opacity:.7}.adc-normal-confidence.good{border-top:3px solid #2f8464}.adc-normal-confidence.normal{border-top:3px solid #55757a}.adc-normal-confidence.warn{border-top:3px solid #b5822e}.adc-normal-confidence.muted{opacity:.65}.adc-normal-tabs{display:flex;gap:6px;flex-wrap:wrap}.adc-normal-tab{border:1px solid var(--line,#d9e0e2);background:var(--card,#fff);color:inherit;border-radius:999px;padding:7px 12px;font:inherit;font-size:11px;font-weight:800;cursor:pointer}.adc-normal-tab.active{background:#203d3e;color:#fff;border-color:#203d3e}.adc-normal-tab.channel{margin-left:auto;border-style:dashed}.adc-normal-groups{display:grid;gap:12px}.adc-normal-group-label{font-size:9px;font-weight:900;letter-spacing:.09em;color:var(--muted,#68757d);margin-bottom:6px}.adc-normal-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}.adc-normal-metrics.traffic{grid-template-columns:repeat(4,minmax(0,1fr))}.adc-normal-metric{border:1px solid var(--line,#d9e0e2);border-radius:9px;padding:9px;display:grid;gap:2px;min-width:0}.adc-normal-metric span{font-size:9px;font-weight:900;text-transform:uppercase}.adc-normal-metric b{font-size:16px}.adc-normal-metric small{font-size:9px;opacity:.7}.adc-normal-metric em{font-style:normal;font-size:9px;line-height:1.25;color:var(--muted,#68757d)}.adc-normal-metric.good{border-top:3px solid #2f8464}.adc-normal-metric.normal{border-top:3px solid #55757a}.adc-normal-metric.warn{border-top:3px solid #b5822e}.adc-normal-metric.muted{opacity:.58}.adc-normal-note{font-size:11px;line-height:1.45;color:var(--muted,#68757d)}
+      @media(max-width:900px){.adc-normal-head{grid-template-columns:1fr}.adc-normal-confidence{min-width:0}.adc-normal-metrics,.adc-normal-metrics.traffic{grid-template-columns:repeat(2,minmax(0,1fr))}.adc-normal-tab.channel{margin-left:0}}@media(max-width:560px){.adc-normal-metrics,.adc-normal-metrics.traffic{grid-template-columns:1fr 1fr}}
     `;win.document.head.appendChild(style);
     paint();
   }
