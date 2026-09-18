@@ -223,7 +223,7 @@
       const bs=W.baselines(c,h); if(!bs.length)return null;
       const obs=(c.analyticsFoundation?.observations||[]).filter(o=>o.videoId===(v?.engineId||v?.id)&&o.windowHours===h).at(-1);
       return bs.find(b=>b.engine&&obs&&b.engine.format===obs.format&&b.engine.eraId===obs.eraId&&b.engine.definitionId===obs.definitionId&&b.engine.traffic===obs.traffic&&b.engine.paid===obs.paid)
-        ||bs.find(b=>b.manual&&(b.manual.job==='All'||b.manual.job===v?.native?.job))
+        ||bs.find(b=>b.manual&&(b.manual.job==='All'||b.manual.job===(c.coachOS?.analytics?.videoJobs?.[v?.engineId||v?.id]||v?.native?.coachOS?.intent?.job||v?.native?.job)))
         ||bs[0];
     }
     function readFor(c,v,h){
