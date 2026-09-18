@@ -285,13 +285,13 @@
     }
     function strategistRead(c,v,r,d,h){
       const job=videoJob(c,v,h),plan=c.coachOS?.plan90||{},ctx=c.coachOS?.baseline?.context||{},intent=v?.native?.coachOS?.intent||{};
-      const goal=plan.outcome||ctx.channelGoal||ctx.businessGoal||'No 90-day goal saved yet';
+      const goal=plan.outcome||ctx.channelGoal||ctx.businessGoal||'No 90-day goal saved yet',desiredAudience=ctx.desiredAudience||'';
       const savedMetric=intent.primaryMetric||plan.primaryMetric||'';
       const savedGuard=intent.guardrails||plan.guardrails||'';
       const hard=d.hardIssues||[],soft=d.softIssues||[],first=['reach','packaging','retention'].find(x=>hard.includes(x))||['reach','packaging','retention'].find(x=>soft.includes(x))||null;
-      let meaning='',next='',measure='',protect='',jobMeaning='',tone=d.tone;
+      let meaning='',next='',measure='',protect='',jobMeaning='',goalLink='',tone=d.tone;
       if(job==='Reach'){
-        jobMeaning='Reach videos should earn qualified discovery. SHOW / impressions and outcome volume matter first; CTR and WATCH tell you whether that reach is healthy.';
+        jobMeaning='Reach videos should earn qualified discovery. SHOW / impressions and outcome volume matter first; CTR and WATCH tell you whether that reach is healthy.';goalLink='This is an acquisition rep for the program: bring more of the right people in. Do not force this one video to also carry the full Trust or Convert job.';
         measure=savedMetric||'Impressions / outcome volume + new-viewer growth';
         protect=savedGuard||'CTR, WATCH quality, and audience fit';
         if(first==='reach'){meaning='The earliest break is SHOW. For a Reach video, investigate topic opportunity, audience breadth, and distribution before blaming the opening.';next='Check topic / audience opportunity and traffic-source context. Keep the package and opening stable enough to learn what actually limited distribution.';}
@@ -299,7 +299,7 @@
         else if(first==='retention'){meaning='Reach and CLICK are not the clearest break, but WATCH is soft. The idea may be getting the opportunity and the click without delivering the promise strongly enough.';next='Improve promise delivery / opening structure without making the topic smaller just to raise retention.';}
         else{meaning='Nothing in SHOW → CLICK → WATCH is clearly broken for this Reach video.';next='Do not manufacture a fix. Protect the topic/package mechanism and use the next comparable Reach video as another learning rep.';}
       }else if(job==='Trust'){
-        jobMeaning='Trust videos deepen the relationship with the right audience. WATCH, continuation, and repeat-audience behavior matter more than maximizing raw reach by itself.';
+        jobMeaning='Trust videos deepen the relationship with the right audience. WATCH, continuation, and repeat-audience behavior matter more than maximizing raw reach by itself.';goalLink='This is a depth / return rep for the program: help the right viewer stay, continue, or come back. Do not widen the idea just to chase Reach if that weakens the relationship job.';
         measure=savedMetric||'0:30 / APV / AVD + repeat-audience / continuation signals';
         protect=savedGuard||'Audience fit and enough Reach to keep feeding the relationship';
         if(first==='reach'){meaning='SHOW is soft, but lower reach alone does not prove a Trust video failed. A narrower Trust video can still do its job if the right people watch deeply and continue.';next='Check WATCH, continuation, and repeat-audience signals before widening the topic. Only treat Reach as the main problem if the intended audience is not being reached enough to do the job.';}
@@ -308,7 +308,7 @@
         else{meaning='The core video funnel does not show a clear Trust problem.';next='Protect the viewing experience and make the next logical follow-up obvious. Watch repeat-audience and continuation trends before changing the strategy.';}
       }else if(job==='Convert'){
         const resultMissing=['qualifiedLeads','bookings','sales','revenue'].every(k=>n(c.coachOS?.analytics?.snapshots?.at?.(-1)?.[k])===null);
-        jobMeaning='Convert videos are judged by qualified action from the right viewer. Platform metrics are guardrails; Views alone are not the score.';
+        jobMeaning='Convert videos are judged by qualified action from the right viewer. Platform metrics are guardrails; Views alone are not the score.';goalLink='This is an action rep for the program: turn qualified trust into the intended business outcome. Judge the result against the offer / business goal, not a Reach-video views target.';
         measure=savedMetric||'Qualified leads / bookings / sales or the creator-specific business result';
         protect=savedGuard||'Audience fit, trust, and enough qualified attention';
         if(resultMissing){meaning='YouTube can tell us whether the video earned attention, clicks, and watch, but the business RESULT is not connected. A Convert verdict is incomplete without it.';next='Pull the relevant CRM / booking / sales result before calling this video a win or loss. Use SHOW / CLICK / WATCH only as clues about where the conversion path may be breaking.';}
@@ -317,18 +317,18 @@
         else if(first==='retention'){meaning='WATCH is soft. If the viewer leaves before the value / CTA is earned, the conversion path may be breaking before the ask.';next='Inspect promise delivery, proof, and CTA timing. Confirm the business result before deciding retention is the main commercial constraint.';}
         else{meaning='The platform funnel does not show a clear break. The Convert decision should now come from the business result.';next='Judge qualified action and yield. Do not change a healthy platform strategy because the video has fewer views than a Reach video.';}
       }else{
-        jobMeaning='This video has not been assigned a Reach / Trust / Convert job, so the dashboard can diagnose the funnel but cannot fully judge whether the result accomplished its strategic purpose.';
+        jobMeaning='This video has not been assigned a Reach / Trust / Convert job, so the dashboard can diagnose the funnel but cannot fully judge whether the result accomplished its strategic purpose.';goalLink='The system cannot connect this upload cleanly to the program goal until you tell it whether the video is Reach, Trust, or Convert.';
         measure=savedMetric||'Use the metric closest to the intended job';
         protect=savedGuard||'The other healthy parts of SHOW → CLICK → WATCH';
         meaning=first?'The funnel shows '+(first==='reach'?'a SHOW / Reach issue':first==='packaging'?'a CLICK / packaging issue':'a WATCH / viewing-experience issue')+', but the strategic meaning is limited until the video job is set.':'No clear funnel break is visible, but the system still needs the video job to know what “success” should mean.';
         next='Assign the video as Reach, Trust, or Convert in the video strategy when possible. Until then, use the funnel diagnosis only and avoid making a channel-wide strategy change from this one result.';
         tone='warn';
       }
-      return {job,goal,jobMeaning,meaning,next,measure,protect,tone};
+      return {job,goal,desiredAudience,goalLink,jobMeaning,meaning,next,measure,protect,tone};
     }
     function strategistReadHtml(c,v,r,d,h){
       const s=strategistRead(c,v,r,d,h);
-      return '<section class="ac-strategist '+s.tone+'"><div class="ac-strategist-top"><div><span>VIDEO JOB</span><div class="ac-job-row"><select data-ac-job-select><option value="Unassigned" '+(s.job==='Unassigned'?'selected':'')+'>Unassigned</option><option value="Reach" '+(s.job==='Reach'?'selected':'')+'>Reach</option><option value="Trust" '+(s.job==='Trust'?'selected':'')+'>Trust</option><option value="Convert" '+(s.job==='Convert'?'selected':'')+'>Convert</option></select><small>Changes how the system interprets success, not the imported analytics.</small></div><small>'+esc(s.jobMeaning)+'</small></div><div><span>PROGRAM GOAL</span><b>'+esc(s.goal)+'</b></div></div>'+
+      return '<section class="ac-strategist '+s.tone+'"><div class="ac-strategist-top"><div><span>VIDEO JOB</span><div class="ac-job-row"><select data-ac-job-select><option value="Unassigned" '+(s.job==='Unassigned'?'selected':'')+'>Unassigned</option><option value="Reach" '+(s.job==='Reach'?'selected':'')+'>Reach</option><option value="Trust" '+(s.job==='Trust'?'selected':'')+'>Trust</option><option value="Convert" '+(s.job==='Convert'?'selected':'')+'>Convert</option></select><small>Changes how the system interprets success, not the imported analytics.</small></div><small>'+esc(s.jobMeaning)+'</small></div><div><span>PROGRAM GOAL</span><b>'+esc(s.goal)+'</b>'+(s.desiredAudience?'<small>Desired audience: '+esc(s.desiredAudience)+'</small>':'')+'<small>'+esc(s.goalLink)+'</small></div></div>'+
         '<div class="ac-strategist-read"><span>SYSTEM INTERPRETATION</span><b>'+esc(s.meaning)+'</b></div>'+
         '<div class="ac-strategist-next"><div><span>COACH NEXT MOVE</span><b>'+esc(s.next)+'</b></div><div><span>MEASURE</span><b>'+esc(s.measure)+'</b></div><div><span>PROTECT</span><b>'+esc(s.protect)+'</b></div></div>'+
       '</section>';
