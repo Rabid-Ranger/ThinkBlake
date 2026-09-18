@@ -172,6 +172,51 @@
 
     function current(){try{return win.AcceleratorDeskBridge?.current?.()||null}catch(_){return null}}
     function rerender(){try{win.__acceleratorCoachGuide?.analyticsPage?.()}catch(_){}}
+    const clone=x=>JSON.parse(JSON.stringify(x));
+    function latestObservation(c,v,h){
+      const id=v?.engineId||v?.id;
+      return (c.analyticsFoundation?.observations||[]).filter(o=>o.videoId===id&&o.windowHours===h).sort((a,b)=>(a.revision||0)-(b.revision||0)).at(-1)||null;
+    }
+    function manualInput(id,label,value,step='any'){
+      return '<label><span>'+esc(label)+'</span><input id="'+id+'" type="number" step="'+step+'" value="'+esc(value??'')+'" placeholder="optional"></label>';
+    }
+    function openManualEditor(){
+      const c=current(),p=c&&W.prefs(c),v=c&&selectedVideo(c);if(!c||!p||!v)return;
+      const o=latestObservation(c,v,p.hours);
+      if(!o){
+        if(v.native&&win.__acceleratorCoachGuide?.review){const map={24:'_24h',48:'_48h',168:'_7d',672:'_28d'};return win.__acceleratorCoachGuide.review(map[p.hours],v.id);}
+        alert('No saved checkpoint exists for this video yet. Use Quick Check for a temporary read, or import the video first.');return;
+      }
+      let d=win.document.getElementById('ac-manual-dialog');
+      if(!d){d=win.document.createElement('dialog');d.id='ac-manual-dialog';d.className='ac-manual-dialog';win.document.body.appendChild(d);}
+      const pct=k=>o.metrics?.[k]==null?'':Number(o.metrics[k])*100;
+      d.innerHTML='<h2>Edit '+esc(AGES[p.hours].label)+' checkpoint</h2><p><b>'+esc(v.title)+'</b></p><p>Use verified Studio values only. Blank means unavailable. This creates a revised checkpoint and keeps the earlier import history.</p><div class="ac-manual-grid">'+
+        manualInput('acm-views','Views',o.metrics?.views)+manualInput('acm-engaged','Engaged views',o.metrics?.engagedViews)+manualInput('acm-impressions','Impressions',o.metrics?.impressions)+
+        manualInput('acm-ctr','CTR %',pct('ctr'),'0.01')+manualInput('acm-ret30','0:30 / Intro %',pct('retention30'),'0.01')+manualInput('acm-apv','APV %',pct('apv'),'0.01')+manualInput('acm-avd','AVD seconds',o.metrics?.avdSeconds,'1')+
+        manualInput('acm-browse','Browse %',pct('browsePct'),'0.01')+manualInput('acm-suggested','Suggested %',pct('suggestedPct'),'0.01')+manualInput('acm-search','Search %',pct('searchPct'),'0.01')+manualInput('acm-external','External %',pct('externalPct'),'0.01')+
+      '</div><label class="ac-manual-source"><span>Source / report note</span><input id="acm-source" value="'+esc(o.source?.report||'YouTube Studio manual correction')+'"></label><div class="actions"><button class="btn dark" data-ac-manual-save>Save verified checkpoint</button><button class="btn" data-ac-manual-close>Cancel</button></div><p role="alert" class="ac-manual-error"></p>';
+      if(!d.open)d.showModal();
+    }
+    function saveManualEditor(){
+      const c=current(),p=c&&W.prefs(c),v=c&&selectedVideo(c),A=win.AcceleratorAnalytics,B=win.AcceleratorDeskBridge;if(!c||!p||!v||!A||!B?.commitAI)return;
+      const o=latestObservation(c,v,p.hours),d=win.document.getElementById('ac-manual-dialog');if(!o||!d)return;
+      const val=id=>{const raw=d.querySelector('#'+id)?.value?.trim();if(!raw)return null;const x=Number(raw);if(!Number.isFinite(x)||x<0)throw Error('Use non-negative numbers only.');return x;};
+      const count=id=>{const x=val(id);if(x===null)return null;if(!Number.isInteger(x))throw Error('Views, Engaged views, and Impressions must be whole numbers.');return x;};
+      const rate=id=>{const x=val(id);if(x===null)return null;if(x>100)throw Error('Percentages must be between 0 and 100.');return x/100;};
+      try{
+        const metrics={...o.metrics,views:count('acm-views'),engagedViews:count('acm-engaged'),impressions:count('acm-impressions'),ctr:rate('acm-ctr'),retention30:rate('acm-ret30'),apv:rate('acm-apv'),avdSeconds:val('acm-avd'),browsePct:rate('acm-browse'),suggestedPct:rate('acm-suggested'),searchPct:rate('acm-search'),externalPct:rate('acm-external')};
+        const defs={...(o.metricDefinitions||{})};
+        if(metrics.engagedViews!==null&&!defs.engagedViews)defs.engagedViews='youtube-studio-engaged-views-advanced-mode-v1';
+        const sourceNote=d.querySelector('#acm-source')?.value?.trim()||'YouTube Studio manual correction';
+        const input={...clone(o),metrics,metricDefinitions:defs,capturedAt:new Date().toISOString(),source:{kind:'manual',report:sourceNote}};
+        delete input.acceptedAt;delete input.logicalKey;delete input.revision;delete input.revisionId;delete input.supersedesId;
+        const nextStore=A.acceptObservation(c.analyticsFoundation||A.emptyStore(),input,new Date().toISOString());
+        const next=win.AcceleratorLiveAnalytics?.apply?win.AcceleratorLiveAnalytics.apply(c,{next:nextStore,periods:[],audienceSnapshots:[]}):clone(c);
+        next.analyticsFoundation=nextStore;
+        const expected=win.AcceleratorAI?.revision?.(c);if(expected===undefined)throw Error('Save revision check is unavailable.');
+        B.commitAI(next,expected,false);d.close();rerender();
+      }catch(err){const box=d.querySelector('.ac-manual-error');if(box)box.textContent=err.message;else alert(err.message);}
+    }
     function action(a,t,extra=''){return '<button class="btn" data-aw="'+a+'" '+extra+'>'+esc(t)+'</button>';}
     function selectedVideo(c){const p=W.prefs(c),vs=W.videos(c);return vs.find(v=>v.id===p.videoId)||vs[0]||null;}
     function matchingBaseline(c,v,h){
@@ -232,7 +277,7 @@
       return '<details class="ac-data-compact"><summary><span><b>Data check</b> · '+esc(readyText)+'</span><small>'+(missingText?esc('Missing / blocked: '+missingText):'Core comparison data ready')+'</small></summary><div class="ac-data-compact-body">'+
         (partial.length?'<p><b>Limited sample:</b> '+esc(partial.map(x=>x[0]).join(' · '))+'.</p>':'')+
         (instructions.length?'<p><b>Fill these manually only if they matter for the decision:</b></p><ul>'+instructions.join('')+'</ul>':'<p>The main matched fields for this checkpoint are ready.</p>')+
-        '<div class="actions"><button class="btn" data-aw="baseline">Edit / add checkpoint data</button></div></div></details>';
+        '<div class="actions"><button class="btn dark" data-ac-manual-edit>Edit this video\'s checkpoint</button><button class="btn" data-aw="baseline">Edit creator normal</button></div></div></details>';
     }
     function quickCompare(c,b,h,q){
       const rec=baselineRecord(c,b),comparisons={};
@@ -528,6 +573,8 @@
       .ac-support-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.ac-data-compact,.ac-why-compact{border:1px solid var(--line,#d9e0e2);border-radius:10px;background:var(--card,#fff)}.ac-data-compact summary,.ac-why-compact summary{cursor:pointer;padding:11px 12px;display:grid;gap:3px}.ac-data-compact summary span,.ac-why-compact summary b{font-size:12px}.ac-data-compact summary small,.ac-why-compact summary span{font-size:10px;color:var(--muted,#68757d)}.ac-data-compact-body,.ac-why-body{padding:0 12px 12px}.ac-data-compact-body p,.ac-why-body p{margin:7px 0;line-height:1.4}.ac-data-compact-body li,.ac-why-body li{margin:6px 0}.ac-video-select-row{display:flex;gap:10px;align-items:end}.ac-video-select-row label{flex:1}.ac-video-select-row .ac-quick-open{white-space:nowrap}.ac-quick-primary{grid-template-columns:repeat(3,minmax(0,1fr))}.ac-quick-advanced summary{cursor:pointer;font-weight:800;font-size:11px}.ac-baseline-section{opacity:.94}
       @media(max-width:760px){.ac-support-row{grid-template-columns:1fr}.ac-video-select-row{display:grid}.ac-quick-primary{grid-template-columns:1fr 1fr}}
 
+      .ac-manual-dialog{width:min(850px,94vw);max-height:90vh;overflow:auto;border:1px solid var(--line,#bbc7c7);border-radius:14px;padding:20px;background:var(--card,#fff);color:inherit}.ac-manual-dialog h2{margin-top:0}.ac-manual-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:14px 0}.ac-manual-grid label,.ac-manual-source{display:grid;gap:4px}.ac-manual-grid span,.ac-manual-source span{font-size:10px;font-weight:800}.ac-manual-source{margin:10px 0}.ac-manual-error{color:#a23d3d;font-size:12px}@media(max-width:650px){.ac-manual-grid{grid-template-columns:1fr 1fr}}
+
 `
     win.document.head.appendChild(style);
 
@@ -541,6 +588,9 @@
       const c=current();if(!c)return;const p=W.prefs(c);p.quick=p.quick||{};p.quick[field]=ev.target.value;
     });
     win.document.addEventListener('click',ev=>{
+      if(ev.target.closest?.('[data-ac-manual-edit]')){openManualEditor();return;}
+      if(ev.target.closest?.('[data-ac-manual-close]')){win.document.getElementById('ac-manual-dialog')?.close();return;}
+      if(ev.target.closest?.('[data-ac-manual-save]')){saveManualEditor();return;}
       const quick=ev.target.closest?.('[data-ac-quick-toggle],[data-ac-quick-run],[data-ac-quick-clear]');
       if(quick){
         const c=current();if(!c)return;const p=W.prefs(c);
