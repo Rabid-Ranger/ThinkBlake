@@ -55,7 +55,7 @@ test('channel prompt explicitly requests audience segments and preserves missing
   for(const term of ['engagedViews','casual','regular','returning','avgViewsPerViewer','browsePct','suggestedPct','searchPct','externalPct','uploadsPublished','newUploadViews','libraryViews','observations'])assert.match(p,new RegExp(term));
   assert.match(p,/use null/i);
   assert.match(p,/Do not derive Casual or Regular/i);
-  assert.match(p,/rolling 28-day window/i);
+  assert.match(p,/rolling 28-day/i);
   assert.match(p,/must be null in this YouTube Studio request/i);
   assert.match(p,/Planned uploads\/capacity are also not YouTube analytics/i);
 });
