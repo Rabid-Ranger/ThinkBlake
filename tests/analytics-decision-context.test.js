@@ -108,3 +108,35 @@ test('master Studio prompt requests all four video checkpoints plus channel audi
   assert.match(p,/same video may appear up to four times/i);
   assert.match(p,/do NOT fail the whole request/i);
 });
+
+
+test('overlapping rolling audience snapshots are flagged and both-weak audience trend stays low confidence',()=>{
+  const c={coachOS:{analytics:{audienceSnapshots:[
+    {asOf:'2026-08-20',newViewers:373510,casual:145853,regular:6640,returning:null,avgViewsPerViewer:null},
+    {asOf:'2026-09-15',newViewers:231935,casual:52792,regular:2660,returning:null,avgViewsPerViewer:null}
+  ]}}};
+  const a=A.audienceRead(c);
+  assert.equal(a.overlapDays,2);
+  assert.equal(a.acquisitionBand,'weak');
+  assert.equal(a.loyaltyBand,'weak');
+  const f=A.deriveFocus({diagnosis:{leading:'Promise / opening / viewing experience',confidence:'Low'},pattern:{max:0},audience:a,trajectory:[]});
+  assert.equal(f.focus,'Audience growth + loyalty pressure');
+  assert.equal(f.confidence,'Low');
+});
+
+test('confident saved diagnosis still outranks fallback audience or pattern clues',()=>{
+  const f=A.deriveFocus({
+    diagnosis:{leading:'Packaging / click',confidence:'Medium'},
+    pattern:{max:3,source:'hard',stages:['retention']},
+    audience:{acquisitionBand:'weak',loyaltyBand:'strong'},
+    trajectory:[]
+  });
+  assert.equal(f.focus,'Packaging / click');
+  assert.equal(f.source,'channel diagnosis');
+});
+
+test('all-in-one Studio prompt asks for newest eligible target without putting it in its own baseline',()=>{
+  const p=A.masterPrompt({id:'c1',name:'Test Creator'});
+  assert.match(p,/FIRST include the NEWEST eligible/i);
+  assert.match(p,/excludes each target video from its own same-age baseline/i);
+});
