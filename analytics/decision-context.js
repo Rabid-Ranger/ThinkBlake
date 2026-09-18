@@ -375,6 +375,78 @@
       return '<button class="adc-baseline-pill" data-adc-baseline-window="'+x.hours+'"><span>'+AGE_NAME[x.hours]+' · '+esc(x.sample||'—')+' videos</span><b>Impr. '+esc(countFmt(m.impressions?.current))+'</b><small>CTR '+esc(rateFmt(m.ctr?.current))+' · '+esc(watch[0]+' '+watch[1])+'</small><small>'+esc(views+movement)+'</small></button>';
     }).join('');
   }
+  const VIDEO_COMPLETION_FIELDS=[
+    ['views','Views','Studio → Content → open the video → Analytics → Advanced Mode / SEE MORE. Set the exact video-age lifespan and use Views.'],
+    ['engagedViews','Engaged views','Studio → Analytics → Advanced Mode / SEE MORE → Engaged views. Keep the exact same video-age lifespan. Do not substitute public Views.'],
+    ['impressions','Impressions','Studio → Content → open the video → Analytics → Reach / Advanced Mode. Use the exact same video-age lifespan.'],
+    ['ctr','CTR','Studio → Content → open the video → Analytics → Reach / Advanced Mode → Impressions click-through rate. Use the exact same lifespan.'],
+    ['retention30','First 30 sec / Intro','Studio → Content → open the video → Analytics → Engagement → Audience retention / Key moments → Intro. Enter the exact reported 0:30 value only; never estimate the curve.'],
+    ['apv','APV','Studio → Content → open the video → Analytics → Engagement / Advanced Mode → Average percentage viewed. Use the exact same lifespan.'],
+    ['avdSeconds','AVD','Studio → Content → open the video → Analytics → Engagement / Advanced Mode → Average view duration. Use the exact same lifespan.'],
+    ['browsePct','Browse %','Studio → Content → open the video → Analytics → Reach / Content → How viewers found this video. Match the checkpoint lifespan when Studio can isolate it.'],
+    ['suggestedPct','Suggested %','Studio → Content → open the video → Analytics → Reach / Content → How viewers found this video. Match the checkpoint lifespan when Studio can isolate it.'],
+    ['searchPct','Search %','Studio → Content → open the video → Analytics → Reach / Content → How viewers found this video. Match the checkpoint lifespan when Studio can isolate it.'],
+    ['externalPct','External %','Studio → Content → open the video → Analytics → Reach / Content → How viewers found this video. Match the checkpoint lifespan when Studio can isolate it.']
+  ];
+  const AUDIENCE_COMPLETION_FIELDS=[
+    ['monthlyAudience','Monthly audience'],['newViewers','New viewers'],['casual','Casual viewers'],['regular','Regular viewers'],['returning','Returning viewers'],['avgViewsPerViewer','Average views / viewer']
+  ];
+  const CHANNEL_COMPLETION_FIELDS=[
+    ['views','Views'],['engagedViews','Engaged views'],['impressions','Impressions'],['ctr','CTR'],['watchTime','Watch time'],
+    ['browsePct','Browse %'],['suggestedPct','Suggested %'],['searchPct','Search %'],['externalPct','External %'],
+    ['uploadsPublished','Long-form uploads published'],['newUploadViews','New-upload views'],['libraryViews','Older-library views']
+  ];
+  function latestCheckpointRows(c){
+    const rows=(c?.analyticsFoundation?.observations||[]).filter(o=>o&&AGE_ORDER.includes(Number(o.windowHours))),map=new Map();
+    const rank=o=>[(n(o.revision)||0),Date.parse(o.capturedAt||o.acceptedAt||0)||0];
+    for(const o of rows){
+      const key=String(o.videoId)+'|'+String(o.windowHours),prev=map.get(key);
+      if(!prev){map.set(key,o);continue;}
+      const a=rank(prev),b=rank(o);if(b[0]>a[0]||(b[0]===a[0]&&b[1]>=a[1]))map.set(key,o);
+    }
+    return [...map.values()].sort((a,b)=>(Number(a.windowHours)-Number(b.windowHours))||String(b.publishedAt||'').localeCompare(String(a.publishedAt||'')));
+  }
+  function businessResultIsExpected(c){
+    const text=[c?.coachOS?.plan90?.primaryMetricKey,c?.coachOS?.plan90?.primaryMetric,c?.coachOS?.plan90?.outcome,c?.coachOS?.baseline?.context?.channelGoal].filter(Boolean).join(' ').toLowerCase();
+    return /lead|book|sale|revenue|customer|client|convert|conversion|application/.test(text);
+  }
+  function missingDataReport(c,W){
+    const videoRows=latestCheckpointRows(c).map(o=>{
+      const missing=VIDEO_COMPLETION_FIELDS.filter(([k])=>n(o?.metrics?.[k])===null);
+      const context=[];
+      if(o.coverage!=='exact')context.push(o.coverage==='partial'?'Checkpoint is partial, not the full '+AGE_NAME[o.windowHours]+' lifespan':'Exact checkpoint coverage is not verified');
+      if(!o.definitionId||/unknown|unverified/i.test(String(o.definitionId)))context.push('Measurement definition is unverified');
+      if(!o.paid||o.paid==='unknown')context.push('Organic / paid status is unverified');
+      return {videoId:o.videoId,title:o.title||o.videoId,hours:Number(o.windowHours),missing,context};
+    }).filter(x=>x.missing.length||x.context.length);
+    const audRows=audienceSnapshots(c).map(a=>({asOf:a.asOf||a.date||'',missing:AUDIENCE_COMPLETION_FIELDS.filter(([k])=>n(a[k])===null)})).filter(x=>x.missing.length);
+    const chRows=snapshots(c).map(s=>{
+      const missing=CHANNEL_COMPLETION_FIELDS.filter(([k])=>n(s[k])===null);
+      const context=[];
+      if(!s.metricDefinitionId||/unknown|unverified/i.test(String(s.metricDefinitionId)))context.push('Measurement definition is unverified');
+      if(!s.paidNote||/unable to verify|unknown/i.test(String(s.paidNote)))context.push('Organic / paid context is unverified');
+      if(businessResultIsExpected(c)&&['qualifiedLeads','bookings','sales','revenue'].every(k=>n(s[k])===null))context.push('Business result is not connected. Pull it from the CRM / sales system, not YouTube Studio.');
+      return {id:s.id,date:s.date||String(s.periodEndExclusive||'').slice(0,10),missing,context};
+    }).filter(x=>x.missing.length||x.context.length);
+    const baselineDepth=AGE_ORDER.map(h=>{const d=baselineDetail(c,W,h),sample=n(d.sample)||0;return {hours:h,sample,need:Math.max(0,10-sample)};});
+    return {videoRows,audRows,chRows,baselineDepth,total:videoRows.length+audRows.length+chRows.length};
+  }
+  function missingDataHtml(c,W){
+    const r=missingDataReport(c,W);
+    const fieldList=items=>items.map(x=>x[1]).join(', ');
+    const videoPaths=items=>[...new Map(items.map(x=>[x[2],x])).values()].map(x=>'<li><b>'+esc(x[1])+':</b> '+esc(x[2])+'</li>').join('');
+    const depth=r.baselineDepth.map(x=>'<div class="adc-gap-depth '+(x.need?'warn':'good')+'"><span>'+AGE_NAME[x.hours]+' BASELINE</span><b>n='+x.sample+'</b><small>'+(x.need?'Aim for 10+ · need about '+x.need+' more comparable row'+(x.need===1?'':'s'):'Good working sample')+'</small>'+(x.need?'<button class="btn" data-studio="prompt-view-'+x.hours+'">Get more '+AGE_NAME[x.hours]+' rows</button>':'')+'</div>').join('');
+    const videos=r.videoRows.map(x=>'<div class="adc-gap-row"><div><b>'+esc(x.title)+' · '+AGE_NAME[x.hours]+'</b>'+(x.missing.length?'<span><strong>Missing:</strong> '+esc(fieldList(x.missing))+'</span>':'')+(x.context.length?'<span><strong>Verify:</strong> '+esc(x.context.join(' · '))+'</span>':'')+'<details><summary>Where do I find this?</summary><ul>'+videoPaths(x.missing)+(x.context.some(y=>/definition/i.test(y))?'<li><b>Measurement definition:</b> Verify the Views / Engaged views definition in the report or Advanced Mode and enter the exact definition label. If it cannot be verified, leave it unknown.</li>':'')+(x.context.some(y=>/paid/i.test(y))?'<li><b>Organic / paid:</b> Confirm whether the video was organically distributed, promoted, or mixed. Use the report/filter or campaign history.</li>':'')+(x.context.some(y=>/partial/i.test(y))?'<li><b>Partial checkpoint:</b> Return after the full '+AGE_NAME[x.hours]+' has processed and replace the partial values with the exact lifespan.</li>':'')+'</ul></details></div><button class="btn" data-adc-fill-checkpoint data-video-id="'+esc(x.videoId)+'" data-hours="'+x.hours+'">Enter verified values</button></div>').join('');
+    const audience=r.audRows.map(x=>'<div class="adc-gap-row"><div><b>Audience · '+esc(x.asOf||'undated')+' · rolling 28d</b><span><strong>Missing:</strong> '+esc(fieldList(x.missing))+'</span><details><summary>Where do I find this?</summary><ul><li><b>Monthly / New / Casual / Regular / Returning:</b> Studio → Analytics → Audience, using the same fully processed rolling 28-day window.</li><li><b>Average views / viewer:</b> Studio → Analytics → Advanced Mode / SEE MORE for that same 28-day window.</li></ul></details></div><button class="btn" data-cg="analytics-audience-edit:'+esc(x.asOf)+'">Enter audience data</button></div>').join('');
+    const channel=r.chRows.map(x=>'<div class="adc-gap-row"><div><b>Channel · 90d ending '+esc(x.date||'unknown')+'</b>'+(x.missing.length?'<span><strong>Missing:</strong> '+esc(fieldList(x.missing))+'</span>':'')+(x.context.length?'<span><strong>Verify / external:</strong> '+esc(x.context.join(' · '))+'</span>':'')+'<details><summary>Where do I find this?</summary><ul><li><b>Core / traffic:</b> Studio → Analytics → Advanced Mode using the exact 90-day period and Traffic source breakdown.</li><li><b>New upload vs library:</b> Advanced Mode → exact 90-day range → separate videos published inside the period from videos published before the period.</li><li><b>Business results:</b> CRM / booking / sales system. Do not infer them from YouTube.</li></ul></details></div><button class="btn" data-cg="'+esc(x.id?'analytics-snapshot-edit:'+x.id:'analytics-snapshot-new')+'">Enter channel data</button></div>').join('');
+    return '<div class="adc-missing-data" id="adc-missing-data"><div class="adc-subhead"><b>Missing Data Checklist</b><span>Studio AI fills what it can. You complete the verified gaps.</span></div><p class="adc-gap-intro">A blank metric stays unavailable. It is never estimated. Use the list below to finish the dataset, then the dashboard will automatically use the completed evidence.</p><div class="adc-gap-depth-grid">'+depth+'</div>'+
+      (videos?'<details open class="adc-gap-group"><summary>Video checkpoint gaps · '+r.videoRows.length+'</summary>'+videos+'</details>':'<div class="adc-gap-complete">Video checkpoint fields are complete for the saved rows.</div>')+
+      (audience?'<details class="adc-gap-group"><summary>Audience snapshot gaps · '+r.audRows.length+'</summary>'+audience+'</details>':'')+
+      (channel?'<details class="adc-gap-group"><summary>Channel / business gaps · '+r.chRows.length+'</summary>'+channel+'</details>':'')+
+      (!r.total?'<div class="adc-gap-complete"><b>No saved-data gaps detected.</b> Keep adding new checkpoints as videos mature.</div>':'')+
+    '</div>';
+  }
+
   function channelReadHtml(c,W,guide){
     const r=overallRead(c,W,guide),tone=toneFor(r),a=r.audience,latestChannel=snapshots(c).at(-1)||{},manualAction=latestChannel.id?'analytics-snapshot-edit:'+latestChannel.id:'analytics-snapshot-new';
     const mini=(label,value,change)=>'<div class="adc-audience-mini"><span>'+esc(label)+'</span><b>'+esc(fmt(value))+'</b><small>'+esc(change===null?'No prior read':signed(change-1)+' vs prior')+'</small></div>';
@@ -384,6 +456,7 @@
       '<div class="ac-section-head adc-overall-head"><div class="ac-section-index">01</div><div><div class="adc-kicker">OVERALL CHANNEL READ</div><h2>'+esc(r.focus)+'</h2><p>'+esc(r.why.slice(0,2).join(' '))+'</p><div class="adc-program-context"><b>Program goal:</b> '+esc(c.coachOS?.plan90?.outcome||c.coachOS?.baseline?.context?.channelGoal||'Not set yet')+(c.coachOS?.plan90?.primaryMetric?'<span> · Main measure: '+esc(c.coachOS.plan90.primaryMetric)+'</span>':'')+'</div></div><div class="adc-focus"><span>WHAT I’D DO NOW</span><b>'+esc(r.action.video)+'</b><small>'+esc(r.confidence)+' confidence · '+esc(r.source)+'</small></div></div>'+
       '<div class="ac-section-body">'+
         normalsAtGlance(c,W)+
+        missingDataHtml(c,W)+
         '<div class="adc-compact-block"><div class="adc-subhead"><b>Channel health</b><span>What does the combination mean?</span></div><div class="adc-stages">'+health+'</div>'+
           '<div class="adc-current-read '+r.channelHealth.tone+'"><span>CURRENT CHANNEL-HEALTH READ</span><b>'+esc(r.channelHealth.headline)+'</b><p>'+esc(r.channelHealth.meaning)+'</p><div><strong>Coach action</strong><p>'+esc(r.channelHealth.action)+'</p></div><small><b>Protect / limits:</b> '+esc(r.channelHealth.protect)+'</small></div>'+
           '<details class="adc-help"><summary>How do I read Attention / Return / Library Depth / Result?</summary>'+healthHelp+'</details></div>'+
@@ -426,7 +499,7 @@
     let guard='Do not improve one number by attracting the wrong audience or hurting another important part of the video.';
     if(x.includes('packag')){
       primaryMetricKey='ctr';
-      hypothesis='If the title/thumbnail is the real problem, stronger packaging should move CTR closer to what this what this creator usually getsly gets while retention stays healthy.';
+      hypothesis='If the title/thumbnail is the real problem, stronger packaging should move CTR closer to what this creator usually gets while retention stays healthy.';
       success='CTR improves across several similar videos without a meaningful drop in 0:30 / APV.';
       guard='Do not chase CTR with a promise the video cannot deliver.';
     }else if(x.includes('opening')||x.includes('viewing')||x.includes('retention')){
@@ -637,7 +710,8 @@ Build comparable video rows for ALL FOUR checkpoints:
 
 For EACH checkpoint independently:
 - FIRST include the NEWEST eligible current-era long-form upload that has fully completed that checkpoint. This is the target row the coach may want to inspect right now.
-- THEN include previous comparable current-era uploads needed to establish the creator normal. 10–20 previous comparable rows is preferred; 5–9 is usable but less certain.
+- THEN include previous comparable current-era uploads needed to establish the creator normal. Return 10–20 previous comparable rows whenever at least 10 eligible uploads exist. Do NOT stop at five merely because five is enough to form a provisional baseline.
+- If fewer than 10 previous comparable rows are returned for any checkpoint, limitations MUST state how many eligible comparable uploads were found and the exact reason fewer than 10 could be returned.
 - Do not omit the newest eligible upload just because it must not be used to judge itself. Accelerator excludes each target video from its own same-age baseline.
 - The eligible video set can differ by checkpoint. A recent upload can qualify for 24h but not 28d.
 - The same video may appear up to four times, once for each exact checkpoint.
@@ -664,7 +738,7 @@ VIDEO-METRIC RULES
 - avdSeconds is seconds.
 - Do NOT derive APV from AVD or video length.
 - For retention30, first look for an exact YouTube Studio Key moments / Intro / first-30-second value. Use it only if Studio reports an exact number. If only a visual retention curve is available, do NOT eyeball or estimate the graph; return null.
-- If an exact checkpoint metric or traffic-source split is unavailable or still processing, use null.
+- If an exact checkpoint metric or traffic-source split is unavailable or still processing, use null AND identify the missing metric/report in limitations so the coach knows what must be filled manually.
 - Do not renormalize Browse / Suggested / Search / External to 100%. They are context fields and other sources may exist.
 - Use coverage "exact" only when the report really represents the exact first 24h / 48h / 7d / 28d lifespan. Otherwise use "unknown" or "partial".
 - definitionId describes the measurement definitions/version, not whether the time window is exact. Do not set definitionId to "exact". Include the post-August-24 Views / Engaged views regime when verified; otherwise use "unknown".
@@ -830,6 +904,13 @@ ${JSON.stringify(schema,null,2)}`;
     const paint=()=>{if(queued)return;queued=true;win.requestAnimationFrame(()=>{queued=false;injectDiagnosis();injectPlan();injectVideoFocus();injectChannelButton();});};
     new MutationObserver(paint).observe(win.document.documentElement,{childList:true,subtree:true});
     win.document.addEventListener('click',e=>{
+      const missingFill=e.target.closest?.('[data-adc-fill-checkpoint]');
+      if(missingFill){
+        e.preventDefault();
+        const api=win.AcceleratorAnalyticsManual;
+        if(api?.openCheckpoint)api.openCheckpoint(missingFill.dataset.videoId,Number(missingFill.dataset.hours));
+        return;
+      }
       const baselineJump=e.target.closest?.('[data-adc-baseline-window]');
       if(baselineJump){
         e.preventDefault();const c=current();if(!c)return;
@@ -861,7 +942,7 @@ ${JSON.stringify(schema,null,2)}`;
       .adc-overall{margin-bottom:24px}.adc-overall.focus{border-left-color:#366f7a}.adc-overall.warn{border-left-color:#b5822e}.adc-overall.great{border-left-color:#2f8464}
       .adc-overall-head{grid-template-columns:44px minmax(0,1fr) minmax(260px,420px)}.adc-overall h2{margin:4px 0 6px}.adc-overall p{margin:0;line-height:1.5}.adc-focus{padding:14px;border-radius:12px;background:rgba(75,104,110,.08);display:grid;gap:5px}.adc-focus span{font-size:10px;font-weight:900;letter-spacing:.08em}.adc-focus b{line-height:1.4}.adc-focus small{opacity:.7}
       .adc-baselines,.adc-stages{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.adc-audience{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}.adc-baseline-pill,.adc-audience-card,.adc-stage{border:1px solid var(--line,#d9e0e2);border-radius:11px;padding:12px;display:grid;gap:3px}.adc-baseline-pill{font:inherit;text-align:left;background:var(--card,#fff);color:inherit;cursor:pointer}.adc-baseline-pill:hover{border-color:#55757a}.adc-stage em{font-style:normal;font-size:10px;line-height:1.35;padding-top:5px;border-top:1px solid var(--line,#d9e0e2);opacity:.82}.adc-stage span{font-size:10px;font-weight:900;letter-spacing:.07em}.adc-stage b{font-size:13px;line-height:1.35}.adc-stage small{opacity:.65;line-height:1.35}.adc-stage.weak{border-top:4px solid #b54b4b}.adc-stage.strong{border-top:4px solid #2f8464}.adc-stage.steady{border-top:4px solid #55757a}.adc-stage.unknown{opacity:.65}.adc-baseline-pill span,.adc-audience-card span{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}.adc-baseline-pill b,.adc-audience-card b{font-size:19px}.adc-baseline-pill small,.adc-audience-card small{opacity:.65;line-height:1.35}.adc-baseline-pill.muted,.adc-audience-card.muted{opacity:.6}.adc-audience-card.bad{border-top:4px solid #b54b4b}.adc-audience-card.good{border-top:4px solid #2f8464}.adc-audience-card.normal{border-top:4px solid #55757a}.adc-audience-card strong{font-size:11px}
-      .adc-subhead{display:flex;gap:10px;align-items:baseline;justify-content:space-between}.adc-subhead span{font-size:12px;opacity:.65}.adc-audience-read{margin:0 0 10px;padding:12px;border-radius:10px;background:rgba(75,104,110,.07);display:grid;gap:3px}.adc-audience-read span,.adc-audience-note{font-size:12px;line-height:1.45;opacity:.72}.adc-audience-note{display:block;margin-top:8px}.adc-manual-data{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 12px;border:1px dashed var(--line,#d9e0e2);border-radius:10px;font-size:12px}.adc-manual-data span{line-height:1.4}.adc-manual-data .btn{flex:0 0 auto}.adc-overall-foot{display:flex;gap:18px;justify-content:space-between;flex-wrap:wrap;font-size:12px}
+      .adc-subhead{display:flex;gap:10px;align-items:baseline;justify-content:space-between}.adc-subhead span{font-size:12px;opacity:.65}.adc-audience-read{margin:0 0 10px;padding:12px;border-radius:10px;background:rgba(75,104,110,.07);display:grid;gap:3px}.adc-audience-read span,.adc-audience-note{font-size:12px;line-height:1.45;opacity:.72}.adc-audience-note{display:block;margin-top:8px}.adc-missing-data{display:grid;gap:10px;border:1px solid var(--line,#d9e0e2);border-radius:12px;padding:13px;background:rgba(181,130,46,.035)}.adc-gap-intro{font-size:11px!important;color:var(--muted,#68757d)}.adc-gap-depth-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}.adc-gap-depth{border:1px solid var(--line,#d9e0e2);border-radius:9px;padding:9px;display:grid;gap:3px}.adc-gap-depth span{font-size:9px;font-weight:900;letter-spacing:.07em}.adc-gap-depth b{font-size:15px}.adc-gap-depth small{font-size:9px;color:var(--muted,#68757d)}.adc-gap-depth.warn{border-top:3px solid #b5822e}.adc-gap-depth.good{border-top:3px solid #2f8464}.adc-gap-group{border-top:1px solid var(--line,#d9e0e2);padding-top:9px}.adc-gap-group>summary{cursor:pointer;font-size:11px;font-weight:900}.adc-gap-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:start;padding:10px 0;border-bottom:1px solid var(--line,#d9e0e2)}.adc-gap-row>div{display:grid;gap:4px}.adc-gap-row span{font-size:11px;line-height:1.4}.adc-gap-row details summary{cursor:pointer;font-size:10px;font-weight:800;color:var(--muted,#68757d)}.adc-gap-row li{font-size:10px;line-height:1.45;margin:4px 0}.adc-gap-complete{font-size:11px;padding:9px;border-radius:8px;background:rgba(47,132,100,.06)}.adc-manual-data{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 12px;border:1px dashed var(--line,#d9e0e2);border-radius:10px;font-size:12px}.adc-manual-data span{line-height:1.4}.adc-manual-data .btn{flex:0 0 auto}.adc-overall-foot{display:flex;gap:18px;justify-content:space-between;flex-wrap:wrap;font-size:12px}
       .adc-diagnosis{border-left:5px solid #55757a!important}.adc-diagnosis.focus{border-left-color:#366f7a!important}.adc-diagnosis.warn{border-left-color:#b5822e!important}.adc-diagnosis.great{border-left-color:#2f8464!important}.adc-decision-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.adc-decision-grid>div{border:1px solid var(--line,#ddd);border-radius:10px;padding:12px;display:grid;gap:4px}.adc-decision-grid span{font-size:10px;font-weight:800;text-transform:uppercase}.adc-decision-grid small{opacity:.65}
       .adc-plan-focus{margin:0 0 14px;border:1px solid var(--line,#d9e0e2);border-left:5px solid #55757a;border-radius:12px;padding:14px;background:var(--card,#fff);display:grid;gap:12px}.adc-plan-focus.focus{border-left-color:#366f7a}.adc-plan-focus.warn{border-left-color:#b5822e}.adc-plan-focus.great{border-left-color:#2f8464}.adc-plan-focus h3{margin:4px 0 5px}.adc-plan-focus p{margin:0;line-height:1.45}.adc-plan-focus small{opacity:.65}.adc-plan-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.adc-plan-grid>div{border:1px solid var(--line,#d9e0e2);border-radius:9px;padding:10px;display:grid;gap:4px}.adc-plan-grid span{font-size:9px;font-weight:900;letter-spacing:.07em}.adc-plan-grid b{font-size:12px;line-height:1.35}
       .adc-video-focus{margin:0 0 14px;border:1px solid var(--line,#d9e0e2);border-left:5px solid #55757a;border-radius:12px;padding:14px;background:var(--card,#fff);display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,420px);gap:15px}.adc-video-focus.focus{border-left-color:#366f7a}.adc-video-focus.warn{border-left-color:#b5822e}.adc-video-focus.great{border-left-color:#2f8464}.adc-video-focus h3{margin:4px 0 5px}.adc-video-focus p{margin:0;line-height:1.45}.adc-video-meta{display:grid;gap:5px;font-size:12px}.adc-video-meta small{opacity:.65}
@@ -877,10 +958,10 @@ ${JSON.stringify(schema,null,2)}`;
 
       .adc-normal-channel-link{display:flex;justify-content:space-between;align-items:center;gap:14px;border-top:1px dashed var(--line,#d9e0e2);padding-top:10px}.adc-normal-channel-link>div{display:grid;gap:2px}.adc-normal-channel-link span{font-size:9px;font-weight:900;letter-spacing:.08em;color:var(--muted,#68757d)}.adc-normal-channel-link b{font-size:13px}.adc-normal-channel-link small{font-size:10px;color:var(--muted,#68757d);line-height:1.35}
       .adc-current-read{border:1px solid var(--line,#d9e0e2);border-left:5px solid #55757a;border-radius:11px;padding:12px;display:grid;gap:6px;background:rgba(84,110,116,.025)}.adc-current-read.bad{border-left-color:#b54b4b}.adc-current-read.warn{border-left-color:#b5822e}.adc-current-read.good{border-left-color:#2f8464}.adc-current-read.muted{opacity:.72}.adc-current-read>span{font-size:9px;font-weight:900;letter-spacing:.08em}.adc-current-read>b{font-size:14px;line-height:1.35}.adc-current-read p{margin:0!important;font-size:11px!important;line-height:1.45!important}.adc-current-read>div{padding-top:6px;border-top:1px solid var(--line,#d9e0e2)}.adc-current-read strong{font-size:10px;text-transform:uppercase;letter-spacing:.05em}.adc-current-read small{font-size:10px;line-height:1.4;color:var(--muted,#68757d)}
-      @media(max-width:650px){.adc-normal-channel-link{display:grid}}
+      @media(max-width:650px){.adc-normal-channel-link{display:grid}.adc-gap-depth-grid{grid-template-columns:1fr 1fr}.adc-gap-row{grid-template-columns:1fr}.adc-gap-row>.btn{width:100%}}
     `;win.document.head.appendChild(style);
     paint();
   }
 
-  return {snapshots,audienceSnapshots,audienceRead,audienceCoachRead,baselineTrajectory,baselineDetail,normalsAtGlance,channelStages,channelHealthRead,deriveFocus,focusAction,overallRead,planSuggestion,channelPrompt,masterPrompt,parseJsonBlock,install};
+  return {snapshots,audienceSnapshots,audienceRead,audienceCoachRead,baselineTrajectory,baselineDetail,normalsAtGlance,missingDataReport,missingDataHtml,channelStages,channelHealthRead,deriveFocus,focusAction,overallRead,planSuggestion,channelPrompt,masterPrompt,parseJsonBlock,install};
 });
