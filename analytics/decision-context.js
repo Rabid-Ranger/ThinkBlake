@@ -122,11 +122,11 @@
   }
   function deriveFocus(input){
     const d=input.diagnosis||{},p=input.pattern||{},a=input.audience||{},t=input.trajectory||[];
+    if(d.leading&&!['Not enough data yet','Not enough evidence yet'].includes(d.leading)&&d.confidence!=='Low')return {focus:d.leading,confidence:d.confidence||'Low',source:'channel diagnosis'};
     if(p.max&&p.source==='hard')return {focus:patternFocus(p)||'Video funnel pattern',confidence:p.max>=3?'Medium':'Low',source:'repeated 7-day videos'};
     if(a.acquisitionBand==='weak'&&['steady','strong'].includes(a.loyaltyBand))return {focus:'Acquisition / gateway',confidence:'Medium',source:'audience trend'};
     if(['steady','strong'].includes(a.acquisitionBand)&&a.loyaltyBand==='weak')return {focus:'Loyalty / pathway',confidence:'Medium',source:'audience trend'};
     if(a.acquisitionBand==='weak'&&a.loyaltyBand==='weak')return {focus:'Audience growth + loyalty pressure',confidence:a.overlapDays?'Low':'Medium',source:'audience trend'};
-    if(d.leading&&!['Not enough data yet','Not enough evidence yet'].includes(d.leading)&&d.confidence!=='Low')return {focus:d.leading,confidence:d.confidence||'Low',source:'channel diagnosis'};
     const seven=t.find(x=>x.hours===168);
     if(seven?.growth!==null&&seven.growth>=1.1&&!p.max)return {focus:'Growth pattern worth protecting',confidence:'Medium',source:'rising 7-day normal'};
     if(p.max)return {focus:patternFocus(p)||'A small pattern worth checking',confidence:'Low',source:'small 7-day pattern'};
