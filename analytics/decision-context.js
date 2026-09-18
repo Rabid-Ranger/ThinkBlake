@@ -58,27 +58,36 @@
       if(depth!==null&&band(depth)==='weak')focus+=' Average views per viewer is also down, so viewers may not be going as deep into the channel.';
       if(depth!==null&&band(depth)==='strong')focus+=' Average views per viewer is up, which supports stronger channel depth.';
     }
+    const curDate=Date.parse(cur.asOf||cur.date||''),prevDate=Date.parse(prev.asOf||prev.date||''),gapDays=Number.isFinite(curDate)&&Number.isFinite(prevDate)?Math.round((curDate-prevDate)/86400000):null;
+    const overlapDays=gapDays!==null&&gapDays<28?28-gapDays:0;
     return {
       current:cur,previous:prev,hasCurrent:Boolean(rows.length),hasComparison:rows.length>=2,sourceWindow:cur.sourceWindow||'28-day monthly audience',legacyWindow:Boolean(cur.legacyWindow),
       changes,
       acquisition,acquisitionBand:band(acquisition),
       loyaltyKey:repeatEntries.length>1?'repeat audience':repeatEntries[0]?.[0]||null,
       loyalty,loyaltyBand:band(loyalty),loyaltySignals:repeatEntries,
-      depth,depthBand:band(depth),read,focus,
+      depth,depthBand:band(depth),read,focus,overlapDays,
       newViewers:n(cur.newViewers),casual:n(cur.casual),regular:n(cur.regular),returning:n(cur.returning),avgViewsPerViewer:n(cur.avgViewsPerViewer)
     };
   }
   function baselineTrajectory(c){
     const sets=(c?.coachOS?.baseline?.sets||[]).filter(x=>x&&!x.archived&&x.confirmedComparable);
     const history=c?.coachOS?.baseline?.history||[];
+    const metricKeys=['views','engagedViews','impressions','ctr','ret30','apv','avdSeconds'];
     return AGE_ORDER.map(hours=>{
       const key=WINDOW_KEY[hours],candidates=sets.filter(x=>x.window===key);
       const current=candidates.find(x=>x.primary)||candidates[0];
-      if(!current)return {hours,key,current:null,first:null,outcomeKey:null,growth:null};
-      const prior=history.filter(x=>x&&x.id===current.id).sort((a,b)=>String(a.effectiveFrom||a.savedAt||'').localeCompare(String(b.effectiveFrom||b.savedAt||'')));
-      const first=prior[0]||current;
-      const outcomeKey=n(current.engagedViews)!==null?'engagedViews':'views';
-      return {hours,key,current,first,outcomeKey,growth:ratio(current[outcomeKey],first[outcomeKey])};
+      if(!current)return {hours,key,current:null,first:null,outcomeKey:null,growth:null,metrics:{},hasHistory:false};
+      const prior=history.filter(x=>x&&(x.id===current.id||x.sourceBaselineId===current.id)).sort((a,b)=>String(a.effectiveFrom||a.savedAt||'').localeCompare(String(b.effectiveFrom||b.savedAt||'')));
+      const first=prior[0]||current,hasHistory=prior.length>0;
+      const metrics={};
+      for(const k of metricKeys){
+        const cur=n(current[k]),start=n(first[k]),isRate=['ctr','ret30','apv'].includes(k);
+        metrics[k]={current:cur,first:start,change:hasHistory&&cur!==null&&start!==null?(isRate?cur-start:ratio(cur,start)):null};
+      }
+      const outcomeKey=n(current.engagedViews)!==null?'engagedViews':n(current.views)!==null?'views':n(current.impressions)!==null?'impressions':null;
+      const growth=hasHistory&&outcomeKey?ratio(current[outcomeKey],first[outcomeKey]):null;
+      return {hours,key,current,first,outcomeKey,growth,metrics,hasHistory,sample:n(current.n)||0};
     });
   }
   function stageBand(r){
@@ -89,17 +98,21 @@
   }
   function channelStages(c,audience){
     const rows=snapshots(c),cur=rows.at(-1)||{},prev=rows.at(-2)||{};
-    const outcomeKey=n(cur.engagedViews)!==null&&n(prev.engagedViews)!==null?'engagedViews':'views';
-    const attention=ratio(cur[outcomeKey],prev[outcomeKey]),impressions=ratio(cur.impressions,prev.impressions);
+    const defsKnown=cur.metricDefinitionId&&prev.metricDefinitionId&&!/unknown|unspecified|unverified/i.test(String(cur.metricDefinitionId))&&cur.metricDefinitionId===prev.metricDefinitionId;
+    const engagedComparable=defsKnown&&n(cur.engagedViews)!==null&&n(prev.engagedViews)!==null;
+    const viewsComparable=defsKnown&&n(cur.views)!==null&&n(prev.views)!==null;
+    const impressions=ratio(cur.impressions,prev.impressions),watchTime=ratio(cur.watchTime,prev.watchTime);
+    const attention=engagedComparable?ratio(cur.engagedViews,prev.engagedViews):viewsComparable?ratio(cur.views,prev.views):impressions;
+    const attentionLabel=engagedComparable?'Engaged views':viewsComparable?'Views':'Impressions';
     const returnRatio=audience.loyalty,depth=audience.depth;
     const resultKey=['qualifiedLeads','bookings','sales'].find(k=>n(cur[k])!==null&&n(prev[k])!==null)||null;
     const resultRatio=resultKey?ratio(cur[resultKey],prev[resultKey]):null;
     const phrase=(r,label)=>r===null?'No comparable trend yet':label+' '+signed(r-1)+' vs prior';
     return [
-      {key:'attention',label:'ATTENTION',band:stageBand(attention),value:phrase(attention,outcomeKey==='engagedViews'?'Engaged views':'Views'),sub:impressions===null?'Impressions trend unavailable':'Impressions '+signed(impressions-1)+' vs prior'},
-      {key:'return',label:'RETURN',band:stageBand(returnRatio),value:returnRatio===null?'No comparable repeat-audience trend yet':'Repeat-audience trend '+signed(returnRatio-1),sub:'Casual + Regular + Returning viewers, read together.'},
-      {key:'depth',label:'LIBRARY DEPTH',band:stageBand(depth),value:depth===null?'Average views/viewer not comparable yet':'Avg views/viewer '+signed(depth-1)+' vs prior',sub:'Is attention turning into more viewing?'},
-      {key:'result',label:'RESULT',band:stageBand(resultRatio),value:resultRatio===null?'Business result not connected yet':(resultKey==='qualifiedLeads'?'Qualified leads':resultKey==='bookings'?'Bookings':'Sales')+' '+signed(resultRatio-1),sub:'Is attention producing the intended outcome?'}
+      {key:'attention',label:'ATTENTION',band:stageBand(attention),value:phrase(attention,attentionLabel),sub:(defsKnown?'':'Views definition is not verified across these reports, so this read uses Impressions instead. ')+(watchTime===null?'':'Watch time '+signed(watchTime-1)+' vs prior.'),action:attention!==null&&attention<.85?'Check whether the decline is new-upload opportunity, traffic mix, market demand, or library contribution before changing packaging.':'Keep checking whether attention is translating into repeat viewing, not just raw reach.'},
+      {key:'return',label:'RETURN',band:stageBand(returnRatio),value:returnRatio===null?'No comparable repeat-audience trend yet':'Repeat-audience trend '+signed(returnRatio-1),sub:'Casual + Regular + Returning viewers, read together.',action:returnRatio===null?'Add/verify comparable 28-day audience snapshots.':returnRatio<.85?'Test stronger follow-ups, series, consistent promises, and obvious next-video paths.':'Repeat viewing is not the obvious break; protect what is bringing people back.'},
+      {key:'depth',label:'LIBRARY DEPTH',band:stageBand(depth),value:depth===null?'Average views/viewer not connected yet':'Avg views/viewer '+signed(depth-1)+' vs prior',sub:'Is attention turning into more viewing across the channel?',action:depth===null?'Manually pull Average views per viewer in Studio Advanced Mode / SEE MORE. Also add exact new-upload vs older-library views if Studio can isolate them.':depth<.85?'Inspect own-Suggested, end screens, follow-up paths, and whether viewers have an obvious second video.':'Channel depth is holding; keep checking continuation on the videos driving it.'},
+      {key:'result',label:'RESULT',band:stageBand(resultRatio),value:resultRatio===null?'Business result not connected yet':(resultKey==='qualifiedLeads'?'Qualified leads':resultKey==='bookings'?'Bookings':'Sales')+' '+signed(resultRatio-1),sub:'Is attention producing the intended business outcome?',action:resultRatio===null?'If this creator has a business goal, enter qualified leads / bookings / sales from the CRM or business system. Do not invent these from YouTube.':resultRatio<.85?'Check CTA/offer alignment and attribution before changing Reach or Trust content.':'Business result is keeping pace; protect the path that is working.'}
     ];
   }
   function patternFocus(pattern){
@@ -109,13 +122,14 @@
   }
   function deriveFocus(input){
     const d=input.diagnosis||{},p=input.pattern||{},a=input.audience||{},t=input.trajectory||[];
-    if(d.leading&&!['Not enough data yet','Not enough evidence yet'].includes(d.leading))return {focus:d.leading,confidence:d.confidence||'Low',source:'channel diagnosis'};
     if(p.max&&p.source==='hard')return {focus:patternFocus(p)||'Video funnel pattern',confidence:p.max>=3?'Medium':'Low',source:'repeated 7-day videos'};
     if(a.acquisitionBand==='weak'&&['steady','strong'].includes(a.loyaltyBand))return {focus:'Acquisition / gateway',confidence:'Medium',source:'audience trend'};
     if(['steady','strong'].includes(a.acquisitionBand)&&a.loyaltyBand==='weak')return {focus:'Loyalty / pathway',confidence:'Medium',source:'audience trend'};
+    if(d.leading&&!['Not enough data yet','Not enough evidence yet'].includes(d.leading)&&d.confidence!=='Low')return {focus:d.leading,confidence:d.confidence||'Low',source:'channel diagnosis'};
     const seven=t.find(x=>x.hours===168);
     if(seven?.growth!==null&&seven.growth>=1.1&&!p.max)return {focus:'Growth pattern worth protecting',confidence:'Medium',source:'rising 7-day normal'};
     if(p.max)return {focus:patternFocus(p)||'A small pattern worth checking',confidence:'Low',source:'small 7-day pattern'};
+    if(d.leading&&!['Not enough data yet','Not enough evidence yet'].includes(d.leading))return {focus:d.leading,confidence:'Low',source:'low-confidence channel diagnosis'};
     return {focus:'No clear channel problem yet',confidence:'Low',source:'not enough repeated data yet'};
   }
   function focusAction(focus){
@@ -166,10 +180,15 @@
     return '<div class="adc-audience-card '+tone+'"><span>'+esc(label)+'</span><b>'+fmt(value)+'</b><strong>'+esc(delta)+'</strong><small>'+esc(meaning)+'</small></div>';
   }
   function baselinePills(read){
+    const countFmt=v=>n(v)===null?'—':Math.round(n(v)).toLocaleString();
+    const rateFmt=v=>n(v)===null?'—':n(v).toFixed(1)+'%';
+    const durationFmt=v=>n(v)===null?'—':Math.floor(n(v)/60)+':'+String(Math.round(n(v)%60)).padStart(2,'0');
     return read.trajectory.map(x=>{
-      if(!x.current)return '<div class="adc-baseline-pill muted"><span>'+AGE_NAME[x.hours]+'</span><b>No baseline</b><small>Not ready</small></div>';
-      const value=n(x.current[x.outcomeKey]),growth=x.growth;
-      return '<div class="adc-baseline-pill"><span>'+AGE_NAME[x.hours]+' normal</span><b>'+fmt(value)+'</b><small>'+(x.outcomeKey==='engagedViews'?'engaged views':'views')+(growth!==null?' · '+signed(growth-1)+' since start':'')+'</small></div>';
+      if(!x.current)return '<button class="adc-baseline-pill muted" data-adc-baseline-window="'+x.hours+'"><span>'+AGE_NAME[x.hours]+'</span><b>No baseline</b><small>Not ready</small></button>';
+      const m=x.metrics||{},watch=n(m.ret30?.current)!==null?['0:30',rateFmt(m.ret30.current)]:n(m.apv?.current)!==null?['APV',rateFmt(m.apv.current)]:['AVD',durationFmt(m.avdSeconds?.current)];
+      const views=n(m.engagedViews?.current)!==null?'Engaged '+countFmt(m.engagedViews.current):n(m.views?.current)!==null?'Views '+countFmt(m.views.current):'Views not comparable';
+      const movement=x.hasHistory&&x.outcomeKey&&x.growth!==null?' · '+signed(x.growth-1)+' since starting normal':' · starting normal';
+      return '<button class="adc-baseline-pill" data-adc-baseline-window="'+x.hours+'"><span>'+AGE_NAME[x.hours]+' · '+esc(x.sample||'—')+' videos</span><b>Impr. '+esc(countFmt(m.impressions?.current))+'</b><small>CTR '+esc(rateFmt(m.ctr?.current))+' · '+esc(watch[0]+' '+watch[1])+'</small><small>'+esc(views+movement)+'</small></button>';
     }).join('');
   }
   function channelReadHtml(c,W,guide){
@@ -177,20 +196,22 @@
     return '<section class="ac-section adc-overall '+tone+'" id="adc-overall-read">'+
       '<div class="ac-section-head adc-overall-head"><div class="ac-section-index">01</div><div><div class="adc-kicker">OVERALL CHANNEL READ</div><h2>'+esc(r.focus)+'</h2><p>'+esc(r.why.slice(0,3).join(' '))+'</p></div><div class="adc-focus"><span>WHAT I’D FOCUS ON NOW</span><b>'+esc(r.action.video)+'</b><small>'+esc(r.confidence)+' confidence · from '+esc(r.source)+'</small></div></div>'+
       '<div class="ac-section-body">'+
-        '<div class="adc-subhead"><b>Baseline movement</b><span>How the creator’s normal is evolving at each checkpoint.</span></div>'+
+        '<div class="adc-subhead"><b>Creator normals + movement</b><span>Click a checkpoint to jump there. These cards use every compatible metric, not Views alone.</span></div>'+
         '<div class="adc-baselines">'+baselinePills(r)+'</div>'+
         '<div class="adc-subhead"><b>Channel health</b><span>Are we getting attention, bringing people back, getting them to watch more, and creating a result? A weak area tells you where to look next, not why it happened.</span></div>'+
-        '<div class="adc-stages">'+r.stages.map(s=>'<div class="adc-stage '+s.band+'"><span>'+esc(s.label)+'</span><b>'+esc(s.value)+'</b><small>'+esc(s.sub)+'</small></div>').join('')+'</div>'+
+        '<div class="adc-stages">'+r.stages.map(s=>'<div class="adc-stage '+s.band+'"><span>'+esc(s.label)+'</span><b>'+esc(s.value)+'</b><small>'+esc(s.sub)+'</small><em>'+esc(s.action||'')+'</em></div>').join('')+'</div>'+
         '<div class="adc-subhead"><b>Audience growth + loyalty · 28 days</b><span>Monthly audience is a rolling 28-day view. Use direction over time. These are audience segments, not a person-by-person funnel.</span></div>'+
         '<div class="adc-audience-read"><b>'+esc(a.read)+'</b><span>'+esc(a.focus)+'</span></div>'+
         '<div class="adc-audience">'+
-          audienceCard('New viewers',a.newViewers,a.changes?.newViewers??null,'First-time viewers in the selected period. This is the Reach signal.')+
-          audienceCard('Casual viewers',a.casual,a.changes?.casual??null,'People who have watched occasionally. Use the trend as an early repeat-viewing signal.')+
-          audienceCard('Regular viewers',a.regular,a.changes?.regular??null,'Long-term consistent viewers. The definition is strict, so direction matters more than the raw size.')+
-          audienceCard('Returning viewers',a.returning,a.changes?.returning??null,'People coming back to the channel again. Read this with Casual + Regular, not by itself.')+
-          audienceCard('Avg views / viewer',a.avgViewsPerViewer,a.changes?.avgViewsPerViewer??null,'A channel-depth clue. Repeat views of the same video can count.')+
+          audienceCard('New viewers',a.newViewers,a.changes?.newViewers??null,'First-time viewers. If this falls while repeat viewing holds, test stronger gateway / Reach ideas for the right audience.')+
+          audienceCard('Casual viewers',a.casual,a.changes?.casual??null,'Occasional repeat viewers. If this weakens, inspect follow-ups, series, consistency, and whether a new viewer has an obvious next video.')+
+          audienceCard('Regular viewers',a.regular,a.changes?.regular??null,'Long-term consistent viewers. The bar is intentionally strict, so watch the trend over multiple snapshots and do not overreact to one period.')+
+          audienceCard('Returning viewers',a.returning,a.changes?.returning??null,'Prior viewers who came back. If this falls, check continuation, cadence, topic consistency, and obvious watch-next paths.')+
+          audienceCard('Avg views / viewer',a.avgViewsPerViewer,a.changes?.avgViewsPerViewer??null,'A depth clue. If missing, pull it manually in Advanced Mode / SEE MORE; if it falls, inspect library pathways and second-view behavior.')+
         '</div>'+
-        '<small class="adc-audience-note">Do not read this as New → Casual → Regular conversion. Studio does not prove that specific people moved between those groups.</small>'+
+        '<small class="adc-audience-note"><b>How to read this:</b> New tells you whether the channel is reaching fresh people. Casual / Regular / Returning tell you whether prior viewers are choosing to come back. Read their direction together over time; do not treat them as a person-by-person conversion funnel.</small>'+
+        '<small class="adc-audience-note"><b>What I would do with it:</b> '+esc(a.focus)+'</small>'+
+        (a.overlapDays?'<small class="adc-audience-note"><b>Comparison caution:</b> these rolling 28-day snapshots overlap by about '+esc(a.overlapDays)+' day'+(a.overlapDays===1?'':'s')+'. Use the direction as a clue, not a perfectly independent before/after test.</small>':'')+
         (a.legacyWindow?'<small class="adc-audience-note"><b>Refresh recommended:</b> these audience values came from an older import. Use Studio prompts again to replace them with dedicated 28-day audience snapshots.</small>':'')+
         '<div class="adc-overall-foot"><span><b>Suggested video job if you are addressing this focus:</b> '+esc(r.action.job)+'</span><span><b>Measure:</b> '+esc(r.action.metric)+'</span><button class="btn" data-ac-mode="channel">View 90-day channel progress</button></div>'+
       '</div>'+
@@ -624,6 +645,14 @@ ${JSON.stringify(schema,null,2)}`;
     const paint=()=>{if(queued)return;queued=true;win.requestAnimationFrame(()=>{queued=false;injectDiagnosis();injectPlan();injectVideoFocus();injectChannelButton();});};
     new MutationObserver(paint).observe(win.document.documentElement,{childList:true,subtree:true});
     win.document.addEventListener('click',e=>{
+      const baselineJump=e.target.closest?.('[data-adc-baseline-window]');
+      if(baselineJump){
+        e.preventDefault();const c=current();if(!c)return;
+        const p=W.prefs(c);p.mode='video';p.hours=Number(baselineJump.dataset.adcBaselineWindow);p.baselineId='';
+        try{guide?.analyticsPage?.()}catch(_){}
+        setTimeout(()=>win.document.querySelector('.ac-video-section')?.scrollIntoView({behavior:'smooth',block:'start'}),0);
+        return;
+      }
       const fill=e.target.closest?.('[data-adc-plan-fill]');
       if(fill){
         e.preventDefault();
@@ -646,7 +675,7 @@ ${JSON.stringify(schema,null,2)}`;
       .adc-kicker{font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;opacity:.65}
       .adc-overall{margin-bottom:24px}.adc-overall.focus{border-left-color:#366f7a}.adc-overall.warn{border-left-color:#b5822e}.adc-overall.great{border-left-color:#2f8464}
       .adc-overall-head{grid-template-columns:44px minmax(0,1fr) minmax(260px,420px)}.adc-overall h2{margin:4px 0 6px}.adc-overall p{margin:0;line-height:1.5}.adc-focus{padding:14px;border-radius:12px;background:rgba(75,104,110,.08);display:grid;gap:5px}.adc-focus span{font-size:10px;font-weight:900;letter-spacing:.08em}.adc-focus b{line-height:1.4}.adc-focus small{opacity:.7}
-      .adc-baselines,.adc-stages{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.adc-audience{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}.adc-baseline-pill,.adc-audience-card,.adc-stage{border:1px solid var(--line,#d9e0e2);border-radius:11px;padding:12px;display:grid;gap:3px}.adc-stage span{font-size:10px;font-weight:900;letter-spacing:.07em}.adc-stage b{font-size:13px;line-height:1.35}.adc-stage small{opacity:.65;line-height:1.35}.adc-stage.weak{border-top:4px solid #b54b4b}.adc-stage.strong{border-top:4px solid #2f8464}.adc-stage.steady{border-top:4px solid #55757a}.adc-stage.unknown{opacity:.65}.adc-baseline-pill span,.adc-audience-card span{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}.adc-baseline-pill b,.adc-audience-card b{font-size:19px}.adc-baseline-pill small,.adc-audience-card small{opacity:.65;line-height:1.35}.adc-baseline-pill.muted,.adc-audience-card.muted{opacity:.6}.adc-audience-card.bad{border-top:4px solid #b54b4b}.adc-audience-card.good{border-top:4px solid #2f8464}.adc-audience-card.normal{border-top:4px solid #55757a}.adc-audience-card strong{font-size:11px}
+      .adc-baselines,.adc-stages{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.adc-audience{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}.adc-baseline-pill,.adc-audience-card,.adc-stage{border:1px solid var(--line,#d9e0e2);border-radius:11px;padding:12px;display:grid;gap:3px}.adc-baseline-pill{font:inherit;text-align:left;background:var(--card,#fff);color:inherit;cursor:pointer}.adc-baseline-pill:hover{border-color:#55757a}.adc-stage em{font-style:normal;font-size:10px;line-height:1.35;padding-top:5px;border-top:1px solid var(--line,#d9e0e2);opacity:.82}.adc-stage span{font-size:10px;font-weight:900;letter-spacing:.07em}.adc-stage b{font-size:13px;line-height:1.35}.adc-stage small{opacity:.65;line-height:1.35}.adc-stage.weak{border-top:4px solid #b54b4b}.adc-stage.strong{border-top:4px solid #2f8464}.adc-stage.steady{border-top:4px solid #55757a}.adc-stage.unknown{opacity:.65}.adc-baseline-pill span,.adc-audience-card span{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}.adc-baseline-pill b,.adc-audience-card b{font-size:19px}.adc-baseline-pill small,.adc-audience-card small{opacity:.65;line-height:1.35}.adc-baseline-pill.muted,.adc-audience-card.muted{opacity:.6}.adc-audience-card.bad{border-top:4px solid #b54b4b}.adc-audience-card.good{border-top:4px solid #2f8464}.adc-audience-card.normal{border-top:4px solid #55757a}.adc-audience-card strong{font-size:11px}
       .adc-subhead{display:flex;gap:10px;align-items:baseline;justify-content:space-between}.adc-subhead span{font-size:12px;opacity:.65}.adc-audience-read{margin:0 0 10px;padding:12px;border-radius:10px;background:rgba(75,104,110,.07);display:grid;gap:3px}.adc-audience-read span,.adc-audience-note{font-size:12px;line-height:1.45;opacity:.72}.adc-audience-note{display:block;margin-top:8px}.adc-overall-foot{display:flex;gap:18px;justify-content:space-between;flex-wrap:wrap;font-size:12px}
       .adc-diagnosis{border-left:5px solid #55757a!important}.adc-diagnosis.focus{border-left-color:#366f7a!important}.adc-diagnosis.warn{border-left-color:#b5822e!important}.adc-diagnosis.great{border-left-color:#2f8464!important}.adc-decision-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.adc-decision-grid>div{border:1px solid var(--line,#ddd);border-radius:10px;padding:12px;display:grid;gap:4px}.adc-decision-grid span{font-size:10px;font-weight:800;text-transform:uppercase}.adc-decision-grid small{opacity:.65}
       .adc-plan-focus{margin:0 0 14px;border:1px solid var(--line,#d9e0e2);border-left:5px solid #55757a;border-radius:12px;padding:14px;background:var(--card,#fff);display:grid;gap:12px}.adc-plan-focus.focus{border-left-color:#366f7a}.adc-plan-focus.warn{border-left-color:#b5822e}.adc-plan-focus.great{border-left-color:#2f8464}.adc-plan-focus h3{margin:4px 0 5px}.adc-plan-focus p{margin:0;line-height:1.45}.adc-plan-focus small{opacity:.65}.adc-plan-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.adc-plan-grid>div{border:1px solid var(--line,#d9e0e2);border-radius:9px;padding:10px;display:grid;gap:4px}.adc-plan-grid span{font-size:9px;font-weight:900;letter-spacing:.07em}.adc-plan-grid b{font-size:12px;line-height:1.35}
