@@ -167,7 +167,7 @@
     policy.eraId = text(policy.eraId, 'eraId');
     if (!WINDOWS.includes(policy.windowHours)) fail('Unknown baseline window.');
     policy.primaryMetric = policy.primaryMetric || 'engagedViews';
-    if (!['views', 'engagedViews'].includes(policy.primaryMetric)) fail('A baseline needs views or engagedViews as its primary count metric.');
+    if (!['views', 'engagedViews', 'impressions'].includes(policy.primaryMetric)) fail('A baseline needs views, engagedViews, or impressions as its primary count metric.');
     policy.definitionId = text(policy.definitionId, 'definitionId');
     if (!knownDefinition(policy.definitionId)) fail('Validate the primary metric definition before saving a baseline policy.');
     policy.metricDefinitions = policy.metricDefinitions || {};
