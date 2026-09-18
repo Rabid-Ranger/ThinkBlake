@@ -302,7 +302,7 @@
         audienceMetric(a,'returning','Returning','People coming back again'),
         audienceMetric(a,'avgViewsPerViewer','Avg views / viewer','Channel-depth clue; repeat views can count')
       ];
-      if(!a.hasComparison)return {...base,verdict:'Not enough audience trend data yet.',line:'Add a second comparable 90-day audience report so we can see whether repeat viewing is strengthening or weakening.',metrics,note:'New / Casual / Regular are not a tracked conversion funnel.'};
+      if(!a.hasComparison)return {...base,verdict:'Not enough audience trend data yet.',line:'Add a second comparable 90-day audience report so we can see whether repeat viewing is strengthening or weakening.',metrics,note:'New / Casual / Regular do not track the same person step by step.'};
       const loyalty=n(a.loyalty),newTrend=n(a.acquisition),depth=n(a.depth);
       let tone='normal',verdict='Analytics do not show a clear Trust problem.',meaning='Repeat-audience signals are roughly steady.';
       if(loyalty!==null&&loyalty<.85){tone='bad';verdict='Analytics lean NO: repeat viewing is weakening.';meaning='Casual / Regular / Returning trends say fewer people are building a repeat relationship with the channel.';}
