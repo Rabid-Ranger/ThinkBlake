@@ -64,13 +64,18 @@
     const d=W?.channel?W.channel(c):{starting:{},current:{},comparable:false},a=d.starting||{},z=d.current||{},aud=latestAudience(c),ap=aud.previous||{},az=aud.current||{};
     const splitTotal=(n(z.newUploadViews)||0)+(n(z.libraryViews)||0),newShare=splitTotal>0?(n(z.newUploadViews)||0)/splitTotal*100:null;
     const hasBusiness=['qualifiedLeads','bookings','sales','revenue'].some(k=>n(z[k])!==null||n(a[k])!==null);
-    return '<section class="ar-deep"><div class="ar-deep-head"><div><div class="ar-kicker">FULL CHANNEL HEALTH · 90 DAYS + 28-DAY AUDIENCE</div><h2>Keep the deeper evidence visible</h2><p>This is the detail behind the overall read. Missing fields stay missing. Nothing is inferred or filled from a different metric.</p></div><span class="ar-status">'+(d.comparable?'Starting → latest':'Latest report / comparison incomplete')+'</span></div>'+ 
+    const channelCard=(key,label,kind,format,note='')=>{
+      const ok=typeof d.metricComparable==='function'?d.metricComparable(key):d.comparable;
+      if(ok)return card(label,a[key],z[key],kind,format,note);
+      return '<div class="ar-card"><span>'+esc(label)+'</span><b>'+esc(format(z[key]))+'</b><strong>Comparison unavailable</strong><small>'+esc(note||(['views','engagedViews'].includes(key)?'The view-count definition was not verified across both 90-day periods. Current value is shown without a trend claim.':'Add a comparable prior value before reading the trend.'))+'</small></div>';
+    };
+    return '<section class="ar-deep"><div class="ar-deep-head"><div><div class="ar-kicker">FULL CHANNEL HEALTH · 90 DAYS + 28-DAY AUDIENCE</div><h2>Track channel movement, then go back to videos to diagnose why</h2><p>This compares whole-channel periods after several uploads. It is a progress scoreboard, not a single-video diagnosis. Missing fields stay missing and are called out below.</p></div><span class="ar-status">'+(d.comparable?'Starting → latest':'Latest report / comparison incomplete')+'</span></div>'+ 
       '<div class="ar-sub"><div><h3>Attention + viewing</h3><p>Whole-channel movement. These are 90-day totals, not per-video normals.</p></div><div class="ar-grid">'+
-        card('Views · new count',a.views,z.views,'count',count)+
-        card('Engaged views · old/original count',a.engagedViews,z.engagedViews,'count',count)+
-        card('Impressions',a.impressions,z.impressions,'count',count)+
-        card('CTR',a.ctr,z.ctr,'rate',pct)+
-        card('Watch time',a.watchTime,z.watchTime,'count',v=>n(v)===null?'Not recorded':one(v)+' h')+
+        channelCard('views','Views · new count','count',count)+
+        channelCard('engagedViews','Engaged views · old/original count','count',count)+
+        channelCard('impressions','Impressions','count',count)+
+        channelCard('ctr','CTR','rate',pct)+
+        channelCard('watchTime','Watch time','count',v=>n(v)===null?'Not recorded':one(v)+' h')+
       '</div></div>'+ 
       '<div class="ar-sub"><div><h3>Where the views came from</h3><p>Use traffic mix as context before calling CTR or topic performance weak.</p></div><div class="ar-grid ar-grid4">'+
         card('Browse',a.browsePct,z.browsePct,'rate',pct)+
