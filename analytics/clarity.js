@@ -242,11 +242,13 @@
         ctr:n(q.ctr)===null?null:n(q.ctr)/100,retention30:n(q.retention30)===null?null:n(q.retention30)/100,apv:n(q.apv)===null?null:n(q.apv)/100,avdSeconds:n(q.avdSeconds),
         browsePct:n(q.browsePct)===null?null:n(q.browsePct)/100,suggestedPct:n(q.suggestedPct)===null?null:n(q.suggestedPct)/100,searchPct:n(q.searchPct)===null?null:n(q.searchPct)/100,externalPct:n(q.externalPct)===null?null:n(q.externalPct)/100
       };
+      let comparableCount=0;
       for(const k of Object.keys(current)){
         const cur=current[k],base=n(rec?.values?.[k]),sample=n(rec?.samples?.[k])||0,ready=cur!==null&&base!==null&&sample>0;
+        if(ready)comparableCount++;
         comparisons[k]={current:cur,baseline:base,n:sample,multiple:ready&&base>0&&!sourceKeys.has(k)?cur/base:null,relativeChangePct:ready&&base>0?100*(cur-base)/base:null,deltaPp:ready&&rateKeys.has(k)?(cur-base)*100:null,deltaSeconds:ready&&k==='avdSeconds'?cur-base:null,status:ready?'quick_check':'unavailable'};
       }
-      return {status:rec?'compared':'needs_evidence',comparisons,source:'Quick check · not saved',baselineName:rec?.label||'No matching baseline',message:rec?'Quick check against the selected creator normal. Nothing here is saved.':'Choose a matching baseline first.'};
+      return {status:rec&&comparableCount?'compared':'needs_evidence',comparisons,source:'Quick check · not saved',baselineName:rec?.label||'No matching baseline',message:!rec?'Choose a matching baseline first.':comparableCount?'Quick check against the selected creator normal. Nothing here is saved.':'Enter at least one metric that has a matching creator normal.'};
     }
     function quickInput(field,label,value,step='any'){
       return '<label><span>'+esc(label)+'</span><input type="number" step="'+esc(step)+'" data-ac-quick-field="'+esc(field)+'" value="'+esc(value??'')+'" placeholder="optional"></label>';
