@@ -397,7 +397,7 @@
           '<p><b>How to use this read:</b> '+esc(a.focus)+'</p>'+
           (a.overlapDays?'<p><b>Caution:</b> these rolling snapshots overlap by about '+esc(a.overlapDays)+' day'+(a.overlapDays===1?'':'s')+', so treat the direction as a clue rather than a clean before/after experiment.</p>':'')+
         '</details></div>'+
-        '<div class="adc-overall-foot"><span><b>Program job:</b> '+esc(r.action.job)+'</span><span><b>Main measure:</b> '+esc(r.action.metric)+'</span><button class="btn" data-ac-mode="channel">Open 90-day progress</button></div>'+
+        '<div class="adc-overall-foot"><span><b>Program job:</b> '+esc(r.action.job)+'</span><span><b>Main measure:</b> '+esc(r.action.metric)+'</span></div>'+
       '</div>'+
     '</section>';
   }
