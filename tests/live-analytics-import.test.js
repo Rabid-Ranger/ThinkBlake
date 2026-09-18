@@ -77,3 +77,25 @@ test('one combined Studio response can import all four checkpoints and 90-day ch
   for(const hours of [24,48,168,672])assert.equal(out.next.policies.some(p=>p.windowHours===hours),true);
   assert.equal(out.periods[1].metrics.regular,800);
 });
+
+
+test('mixed-format upload counts are discarded instead of treated as long-form output',()=>{
+  const payload=JSON.stringify({
+    schemaVersion:1,creatorId:'c',channelName:'Test',observations:[],
+    channelPeriods:[{
+      start:'2025-10-01',end:'2025-12-29',source:'Studio',metricDefinitionId:'unknown',
+      metrics:{views:10000,impressions:100000,ctr:5.5,uploadsPublished:33},
+      context:{notes:'Count includes both long-form and Shorts'}
+    }]
+  });
+  const out=I.parse(payload,c,A.emptyStore(),'2026-02-01T00:00:00Z');
+  assert.equal(out.periods.length,1);
+  assert.equal(out.periods[0].metrics.uploadsPublished,null);
+  assert.match(out.limitations.join(' '),/mixed formats|Shorts/i);
+});
+
+test('single-checkpoint Studio prompt explicitly requests newest eligible target row',()=>{
+  const p=I.prompt(c,24);
+  assert.match(p,/include the NEWEST eligible current-era long-form upload/i);
+  assert.match(p,/excludes each target video from its own same-age baseline/i);
+});
