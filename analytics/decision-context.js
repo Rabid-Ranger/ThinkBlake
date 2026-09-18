@@ -370,10 +370,10 @@ MEASUREMENT RULES
 STRICT JSON OUTPUT
 - Return one parseable JSON object only.
 - Do not wrap the object in Markdown code fences.
-- Do not escape underscores or hyphens in IDs. Write c_123, not c\_123.
-- Escape quotation marks inside titles, source names, notes, or other text values with \".
-- Do not append SVG, charts, citations, explanations, or any text after the final }.
-- Before responding, ensure the object would parse with JSON.parse.
+- IDs must contain literal underscores or hyphens with NO backslash characters before them.
+- If a text value contains quotation marks, encode each quotation mark as a backslash character followed by a quotation-mark character, as required by JSON.
+- Do not append SVG, charts, citations, explanations, the prompt itself, or any text after the final closing brace.
+- Before responding, verify the object would parse with JSON.parse.
 
 JSON SHAPE:
 ${JSON.stringify(schema,null,2)}`;
@@ -528,10 +528,10 @@ Do not infer planned uploads or capacity from Studio.
 STRICT JSON OUTPUT
 - Return one parseable JSON object only.
 - Do not wrap the object in Markdown code fences.
-- Do not escape underscores or hyphens in IDs. Write c_123, not c\_123.
-- Escape quotation marks inside titles, source names, notes, or other text values with \".
-- Do not append SVG, charts, citations, explanations, or any text after the final }.
-- Before responding, ensure the object would parse with JSON.parse.
+- IDs must contain literal underscores or hyphens with NO backslash characters before them.
+- If a text value contains quotation marks, encode each quotation mark as a backslash character followed by a quotation-mark character, as required by JSON.
+- Do not append SVG, charts, citations, explanations, the prompt itself, or any text after the final closing brace.
+- Before responding, verify the object would parse with JSON.parse.
 
 OUTPUT RULES
 - Keep creatorId exactly ${JSON.stringify(c?.id||'')}.
