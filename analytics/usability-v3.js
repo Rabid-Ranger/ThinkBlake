@@ -7,10 +7,10 @@
 
   const PHASES={
     24:{label:'24h · Launch',question:'How did the video start?',decision:'Early directional read. Notice something obviously broken, but usually do not make a big change yet.'},
-    48:{label:'48h · Triage',question:'Is there a clear SHOW, CLICK, or WATCH problem?',decision:'Problem check. Decide what deserves inspection, but avoid a channel-wide strategy change from one early result.'},
+    48:{label:'48h · Check',question:'Is there a clear SHOW, CLICK, or WATCH problem?',decision:'Problem check. Decide what deserves inspection, but avoid a channel-wide strategy change from one early result.'},
     168:{label:'7d · Diagnosis',question:'Compared with this creator’s normal, what actually happened?',decision:'Main video decision point. Name the leading bottleneck, or explicitly decide there is no fix needed.'},
-    672:{label:'28d · Programming',question:'What did this video become after it matured?',decision:'Turn the lesson into programming: what to repeat, change, stop, and what the next video should do.'},
-    2160:{label:'90d · Channel Health',question:'Is the channel actually moving after several videos?',decision:'Track whole-channel attention, audience, library depth, and result. This does not set a per-video baseline.'}
+    672:{label:'28d · What to make next',question:'What did this video become after it matured?',decision:'Turn the lesson into what to repeat, change, stop, and what the next video should do.'},
+    2160:{label:'90d · Channel Health',question:'Is the channel actually moving after several videos?',decision:'Track whole-channel reach/views, returning viewers, whether people watch more than one video, and business results. This does not set a per-video baseline.'}
   };
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
@@ -22,8 +22,8 @@
   function phaseLabels(html){
     let out=String(html||'');
     const swaps=[
-      ['>24 hours<','>24h · Launch<'],['>48 hours<','>48h · Triage<'],['>7 days<','>7d · Diagnosis<'],['>28 days · optional<','>28d · Programming<'],['>28 days<','>28d · Programming<'],
-      ['Build a 24 hours baseline','Build a 24h Launch baseline'],['Build a 48 hours baseline','Build a 48h Triage baseline'],['Build a 7 days baseline','Build a 7d Diagnosis baseline'],['Build a 28 days baseline','Build a 28d Programming baseline']
+      ['>24 hours<','>24h · Launch<'],['>48h · Check<','>48h · Check<'],['>7 days<','>7d · Diagnosis<'],['>28d · What to make next<','>28d · What to make next<'],['>28d · What to make next<','>28d · What to make next<'],
+      ['Build a 24 hours baseline','Build a 24h Launch baseline'],['Build a 48h Check baseline','Build a 48h Check baseline'],['Build a 7 days baseline','Build a 7d Diagnosis baseline'],['Build a 28d What-to-make-next baseline','Build a 28d What-to-make-next baseline']
     ];
     for(const [a,b] of swaps)out=out.split(a).join(b);
     return out;
@@ -43,7 +43,7 @@
       const p=PHASES[h],active=h===2160?prefs.mode==='channel':prefs.mode!=='channel'&&Number(prefs.hours)===h;
       return '<div class="au3-phase '+(h===168?'primary ':'')+(active?'active':'')+'"><span>'+esc(p.label)+'</span><b>'+esc(p.question)+'</b><small>'+esc(p.decision)+'</small></div>';
     }).join('');
-    section.innerHTML='<div class="au3-flow-head"><div><div class="ar-kicker">HOW TO USE THIS PAGE</div><h2>Check the right thing at the right time</h2><p>This is a decision guide, not navigation. <b>24h is an early read.</b> <b>48h is a problem check.</b> <b>7d is the main diagnosis.</b> <b>28d turns the lesson into programming.</b> <b>90d tracks whole-channel health</b> and does not set the per-video baseline.</p></div></div><div class="au3-phases">'+steps+'</div>';
+    section.innerHTML='<div class="au3-flow-head"><div><div class="ar-kicker">HOW TO USE THIS PAGE</div><h2>Check the right thing at the right time</h2><p>This is a decision guide, not navigation. <b>24h is an early read.</b> <b>48h is a problem check.</b> <b>7d is the main diagnosis.</b> <b>28d tells you what to make next.</b> <b>90d tracks whole-channel health</b> and does not set the per-video baseline.</p></div></div><div class="au3-phases">'+steps+'</div>';
     return section;
   }
 
@@ -133,11 +133,11 @@
 
       const deep=box.querySelector('.ar-deep');
       if(deep){
-        const h2=deep.querySelector('.ar-deep-head h2');if(h2)h2.textContent='Additional programming + business context';
-        const p=deep.querySelector('.ar-deep-head p');if(p)p.textContent='These are the pieces not already shown in the main 90-day tables. Use them for library health, programming, and business impact.';
+        const h2=deep.querySelector('.ar-deep-head h2');if(h2)h2.textContent='Additional content-plan + business context';
+        const p=deep.querySelector('.ar-deep-head p');if(p)p.textContent='These are the pieces not already shown in the main 90-day tables. Use them to understand older videos, what to make next, and business impact.';
         [...deep.querySelectorAll('.ar-sub')].forEach(sub=>{
           const title=(sub.querySelector('h3')?.textContent||'').trim();
-          if(['Attention + viewing','Where the views came from','Audience growth + loyalty · rolling 28 days'].includes(title))sub.remove();
+          if(['Reach + viewing','Where the views came from','New + returning viewers · rolling 28 days'].includes(title))sub.remove();
         });
       }
     }
