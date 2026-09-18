@@ -1,12 +1,22 @@
 (function(root,factory){if(typeof module==='object'&&module.exports)module.exports=factory(require('./engine'));else root.AcceleratorStudioImport=factory(root.AcceleratorAnalytics);})(typeof globalThis==='undefined'?this:globalThis,function(A){
 'use strict';const windows={24:'_24h',48:'_48h',168:'_7d',672:'_28d'},metrics=['views','engagedViews','impressions','ctr','retention30','apv','avdSeconds','browsePct','suggestedPct','searchPct','externalPct'],channelMetrics=['views','engagedViews','impressions','ctr','watchTime','newViewers','casual','regular','returning','avgViewsPerViewer','browsePct','suggestedPct','searchPct','externalPct','uploadsPublished','newUploadViews','libraryViews','qualifiedLeads','bookings','sales','revenue'],channelRates=new Set(['ctr','browsePct','suggestedPct','searchPct','externalPct']),channelContext=['paidNote','sourceNote','libraryNote','attributionNote','notes'],audienceMetrics=['monthlyAudience','newViewers','casual','regular','returning','avgViewsPerViewer'],windowNames={24:'24-hour launch',48:'48-hour check',168:'7-day main read',672:'28-day follow-up'};const hash=x=>{let h=2166136261;for(const c of JSON.stringify(x)){h^=c.charCodeAt(0);h=Math.imul(h,16777619);}return(h>>>0).toString(36)};
-function studioJson(text){
- let raw=String(text||'').trim().replace(/^\uFEFF/,'');const repairs=[];
- const blocks=[...raw.matchAll(/```(?:json)?\s*([\s\S]*?)```/gi)].map(m=>m[1]).filter(x=>x.includes('{'));
- if(blocks.length){raw=blocks.sort((a,b)=>b.length-a.length)[0].trim();repairs.push('used the structured JSON block');}
- const first=raw.indexOf('{'),last=raw.lastIndexOf('}');
- if(first<0||last<=first)throw Error('Ask Studio did not return a JSON object.');
- if(first>0||last<raw.length-1){raw=raw.slice(first,last+1);repairs.push('ignored extra text outside the JSON object');}
+function jsonObjectCandidates(text){
+ const raw=String(text||'').trim().replace(/^\uFEFF/,'');
+ const starts=[];const re=/\{\s*"schemaVersion"\s*:\s*1\s*,\s*"creatorId"\s*:/g;let m;
+ while((m=re.exec(raw)))starts.push(m.index);
+ const out=[];
+ for(const start of starts){
+   let depth=0,end=-1;
+   for(let i=start;i<raw.length;i++){
+     const ch=raw[i];
+     if(ch==='{')depth++;
+     else if(ch==='}'){depth--;if(depth===0){end=i+1;break;}}
+   }
+   if(end>start)out.push({start,end,text:raw.slice(start,end)});
+ }
+ return {raw,candidates:out};
+}
+function repairJsonCandidate(raw){
  let out='',inside=false,escapeFixes=0,quoteFixes=0,newlineFixes=0;
  const validEscapes=new Set(['"','\\','/','b','f','n','r','t','u']);
  for(let i=0;i<raw.length;i++){
@@ -22,7 +32,7 @@ function studioJson(text){
      let j=i+1;while(j<raw.length&&/\s/.test(raw[j]))j++;
      const next=raw[j];
      if(next===undefined||next===':'||next===','||next==='}'||next===']'){out+=ch;inside=false;}
-     else{out+='\\"';quoteFixes++;}
+     else{out+='\\\"';quoteFixes++;}
      continue;
    }
    if(ch==='\n'){out+='\\n';newlineFixes++;continue;}
@@ -30,11 +40,46 @@ function studioJson(text){
    if(ch==='\t'){out+='\\t';newlineFixes++;continue;}
    out+=ch;
  }
+ const repairs=[];
  if(escapeFixes)repairs.push('removed '+escapeFixes+' invalid Markdown-style escape'+(escapeFixes===1?'':'s'));
  if(quoteFixes)repairs.push('escaped '+quoteFixes+' unescaped quote'+(quoteFixes===1?'':'s')+' inside text fields');
  if(newlineFixes)repairs.push('escaped '+newlineFixes+' line break'+(newlineFixes===1?'':'s')+' inside text fields');
- let data;try{data=JSON.parse(out);}catch(err){throw Error('Ask Studio returned malformed JSON that could not be repaired safely. Nothing was saved. Use Copy format follow-up and paste the reformatted response.');}
+ let data;try{data=JSON.parse(out);}catch(_){return null;}
  return {data,repairs,raw:out};
+}
+function studioPayloadScore(data,expectedCreatorId){
+ if(!data||typeof data!=='object'||Array.isArray(data)||data.schemaVersion!==1)return -1e9;
+ let score=100;
+ if(expectedCreatorId&&data.creatorId===expectedCreatorId)score+=100;else if(expectedCreatorId)score-=100;
+ const channel=String(data.channelName||'');if(channel&&!/ACTUAL CHANNEL/i.test(channel))score+=40;
+ const observations=Array.isArray(data.observations)?data.observations:[];
+ const periods=Array.isArray(data.channelPeriods)?data.channelPeriods:[];
+ const audience=Array.isArray(data.audienceSnapshots)?data.audienceSnapshots:[];
+ for(const row of observations){
+   if(row&&/^\d{4}-\d{2}-\d{2}T/.test(String(row.publishedAt||''))&&!/^ACTUAL/i.test(String(row.videoId||'')))score+=10;
+   const vals=Object.values(row?.metrics||{}).filter(Number.isFinite).length;score+=Math.min(vals,8);
+ }
+ for(const row of periods)if(row&&/^\d{4}-\d{2}-\d{2}$/.test(String(row.start||''))&&/^\d{4}-\d{2}-\d{2}$/.test(String(row.end||'')))score+=20;
+ for(const row of audience)if(row&&/^\d{4}-\d{2}-\d{2}$/.test(String(row.asOf||'')))score+=10;
+ if(/ACTUAL YOUTUBE|YYYY-MM-DD|ACTUAL TITLE/.test(JSON.stringify(data)))score-=150;
+ return score;
+}
+function studioJson(text,expectedCreatorId){
+ const found=jsonObjectCandidates(text);
+ if(!found.candidates.length)throw Error('Ask Studio did not return an Accelerator JSON object.');
+ const parsed=[];
+ for(const candidate of found.candidates){
+   const repaired=repairJsonCandidate(candidate.text);if(!repaired)continue;
+   parsed.push({...repaired,start:candidate.start,end:candidate.end,score:studioPayloadScore(repaired.data,expectedCreatorId)});
+ }
+ if(!parsed.length)throw Error('Ask Studio returned JSON-like content, but none of the Accelerator payloads could be repaired safely. Nothing was saved. Use Copy format follow-up and paste the reformatted response.');
+ parsed.sort((a,b)=>b.score-a.score||b.start-a.start);
+ const best=parsed[0];
+ if(best.score<0)throw Error('Ask Studio returned structured JSON, but it does not look like this dashboard\'s analytics payload. Nothing was saved.');
+ const repairs=best.repairs.slice();
+ if(found.candidates.length>1)repairs.unshift('found '+found.candidates.length+' JSON objects and selected the best matching Accelerator payload');
+ if(best.start>0||best.end<found.raw.length)repairs.unshift('ignored prompt/prose or extra content outside the selected JSON object');
+ return {data:best.data,repairs,raw:best.raw};
 }
 function metricDefs(row){
  const overall=String(row?.definitionId||'unknown');
@@ -53,10 +98,10 @@ function metricDefs(row){
    externalPct:'youtube-studio-traffic-source-share-v1'
  };
 }
-function prompt(c,hours=168){const name=windowNames[hours]||`${hours}-hour`,short=hours===168?'7 days':hours===672?'28 days':`${hours} hours`;return `In Ask Studio, extract RAW per-video analytics for this channel to set up and update what this creator usually gets at the same point after publishing. Do not estimate, invent, extrapolate, average or calculate the baseline yourself; this dashboard calculates the MEDIAN from the returned rows. If a report or exact age window is unavailable, use null for missing values and list the limitation. Always request BOTH views and engagedViews as separate fields. Since August 24, 2026, Views is the new exposure count that starts when playback begins. Engaged views is the older/original view-count methodology retained in YouTube Analytics Advanced Mode, including long-form. Ask Studio should explicitly check Advanced Mode for Engaged views. Never copy Views into engagedViews. If Ask Studio cannot retrieve Engaged views through its own access, return engagedViews:null and say that Ask Studio could not access the Advanced Mode Engaged views metric. Do NOT claim Engaged views is Shorts-only.\n\nCollect the ${name} checkpoint: ONLY the exact first ${short} for videos that have completed this window. Do not substitute lifetime totals, realtime totals, last calendar days, or a 90-day channel report. Use previous comparable current-era uploads when available: 10-20 rows is preferred, 5-9 is usable but less certain, and under 5 is too early to trust. Do not exclude flops or outliers unless the video is structurally incomparable, a different format, paid/promoted when judging organic, or from a different strategic era. The current video must not be part of its own baseline.\n\nFor every eligible video request the core checkpoint metrics plus traffic-source context when Studio can report them: views, engaged views, registered impressions, impressions CTR, first-30-second / Intro retention, average percentage viewed (APV), average view duration (AVD), Browse %, Suggested %, Search %, and External % for that exact checkpoint. Do not derive APV from AVD or video length. For retention30, first look for an exact YouTube Studio Key moments / Intro / first-30-second value for that video. Use it only if Studio reports an exact number. If only a visual retention curve is available, do not eyeball or estimate the graph; return null. If a retention metric is still processing or unavailable for that exact checkpoint, return null. AVD is seconds. CTR, first-30-second retention, APV, Browse %, Suggested %, Search %, and External % are percentage numbers where 6.2 means 6.2%. Do not renormalize traffic sources to 100%. If the exact source mix is unavailable for that checkpoint, return null.\n\nUse actual publication and capture timestamps with timezone, actual video URL/ID, same traffic filter and measurement definitions. No credentials or private viewer information. 90-day data is separate whole-channel health; do not return it as a per-video median baseline.\nSTRICT JSON OUTPUT: Return one parseable JSON object only. Do not wrap it in Markdown. Do not escape underscores or hyphens in IDs. Escape quotation marks inside titles, source names, notes, or other text values with \\". Do not append charts, SVG, citations, explanations, or any text after the final }. Before responding, ensure the object would parse with JSON.parse.\n\nReturn a single JSON object in the schema below. Repeat rows for each eligible video and age window. Do not put example data into the output. Keep creatorId exactly ${JSON.stringify(c.id)}; channelName must be the actual channel you are inspecting. requestedCreatorName is ${JSON.stringify(c.name)}. Use coverage exact ONLY when the source actually reports that precise first-${short} lifespan, otherwise unknown or partial. definitionId must describe the actual measurement method/version consistently, including the current Views / Engaged views regime when relevant. Do not use "exact" as definitionId; exact belongs in coverage. Use a descriptive value such as youtube-views-playback-start-2026-08-24+engaged-views-original when verified, otherwise use unknown. paid is organic, paid, mixed or unknown. format identifies comparable format, eraId identifies a consistent strategy era; do not infer a changed era from an outlier. job is null unless known. Provide readable source report and filters for every row. Do not guess a missing field.\n${JSON.stringify({schemaVersion:1,creatorId:c.id,channelName:'ACTUAL CHANNEL',observations:[{videoId:'ACTUAL YOUTUBE URL OR ID',title:'ACTUAL TITLE',publishedAt:'ISO TIMESTAMP',capturedAt:'ISO TIMESTAMP',windowHours:hours,format:'edited-long-form',eraId:'current',job:null,definitionId:'unknown',coverage:'unknown',paid:'unknown',traffic:'all',source:'ACTUAL REPORT AND FILTERS',metrics:Object.fromEntries(metrics.map(k=>[k,null]))}],channelPeriods:[],audienceSnapshots:[],limitations:[]},null,2)}\nDo not include channelPeriods or audienceSnapshots for this video-baseline request; leave both arrays empty. The separate 90-day channel + audience prompt uses the same import format but returns channelPeriods instead of observations. If you cannot produce exact ${name} data, explain the unavailable reports in limitations and omit those observations rather than fabricate them. Return raw measurements, not coaching recommendations.`;}
+function prompt(c,hours=168){const name=windowNames[hours]||`${hours}-hour`,short=hours===168?'7 days':hours===672?'28 days':`${hours} hours`;return `In Ask Studio, extract RAW per-video analytics for this channel to set up and update what this creator usually gets at the same point after publishing. Do not estimate, invent, extrapolate, average or calculate the baseline yourself; this dashboard calculates the MEDIAN from the returned rows. If a report or exact age window is unavailable, use null for missing values and list the limitation. Always request BOTH views and engagedViews as separate fields. Since August 24, 2026, Views is the new exposure count that starts when playback begins. Engaged views is the older/original view-count methodology retained in YouTube Analytics Advanced Mode, including long-form. Ask Studio should explicitly check Advanced Mode for Engaged views. Never copy Views into engagedViews. If Ask Studio cannot retrieve Engaged views through its own access, return engagedViews:null and say that Ask Studio could not access the Advanced Mode Engaged views metric. Do NOT claim Engaged views is Shorts-only.\n\nCollect the ${name} checkpoint: ONLY the exact first ${short} for videos that have completed this window. Do not substitute lifetime totals, realtime totals, last calendar days, or a 90-day channel report. Use previous comparable current-era uploads when available: 10-20 rows is preferred, 5-9 is usable but less certain, and under 5 is too early to trust. Do not exclude flops or outliers unless the video is structurally incomparable, a different format, paid/promoted when judging organic, or from a different strategic era. The current video must not be part of its own baseline.\n\nFor every eligible video request the core checkpoint metrics plus traffic-source context when Studio can report them: views, engaged views, registered impressions, impressions CTR, first-30-second / Intro retention, average percentage viewed (APV), average view duration (AVD), Browse %, Suggested %, Search %, and External % for that exact checkpoint. Do not derive APV from AVD or video length. For retention30, first look for an exact YouTube Studio Key moments / Intro / first-30-second value for that video. Use it only if Studio reports an exact number. If only a visual retention curve is available, do not eyeball or estimate the graph; return null. If a retention metric is still processing or unavailable for that exact checkpoint, return null. AVD is seconds. CTR, first-30-second retention, APV, Browse %, Suggested %, Search %, and External % are percentage numbers where 6.2 means 6.2%. Do not renormalize traffic sources to 100%. If the exact source mix is unavailable for that checkpoint, return null.\n\nUse actual publication and capture timestamps with timezone, actual video URL/ID, same traffic filter and measurement definitions. No credentials or private viewer information. 90-day data is separate whole-channel health; do not return it as a per-video median baseline.\nSTRICT JSON OUTPUT: Return one parseable JSON object only. Do not wrap it in Markdown. IDs must contain literal underscores or hyphens with NO backslash characters before them. If a text value contains quotation marks, encode each quotation mark as a backslash character followed by a quotation-mark character, as required by JSON. Do not append charts, SVG, citations, explanations, the prompt itself, or any text after the final closing brace. Before responding, verify the object would parse with JSON.parse.\n\nReturn a single JSON object in the schema below. Repeat rows for each eligible video and age window. Do not put example data into the output. Keep creatorId exactly ${JSON.stringify(c.id)}; channelName must be the actual channel you are inspecting. requestedCreatorName is ${JSON.stringify(c.name)}. Use coverage exact ONLY when the source actually reports that precise first-${short} lifespan, otherwise unknown or partial. definitionId must describe the actual measurement method/version consistently, including the current Views / Engaged views regime when relevant. Do not use "exact" as definitionId; exact belongs in coverage. Use a descriptive value such as youtube-views-playback-start-2026-08-24+engaged-views-original when verified, otherwise use unknown. paid is organic, paid, mixed or unknown. format identifies comparable format, eraId identifies a consistent strategy era; do not infer a changed era from an outlier. job is null unless known. Provide readable source report and filters for every row. Do not guess a missing field.\n${JSON.stringify({schemaVersion:1,creatorId:c.id,channelName:'ACTUAL CHANNEL',observations:[{videoId:'ACTUAL YOUTUBE URL OR ID',title:'ACTUAL TITLE',publishedAt:'ISO TIMESTAMP',capturedAt:'ISO TIMESTAMP',windowHours:hours,format:'edited-long-form',eraId:'current',job:null,definitionId:'unknown',coverage:'unknown',paid:'unknown',traffic:'all',source:'ACTUAL REPORT AND FILTERS',metrics:Object.fromEntries(metrics.map(k=>[k,null]))}],channelPeriods:[],audienceSnapshots:[],limitations:[]},null,2)}\nDo not include channelPeriods or audienceSnapshots for this video-baseline request; leave both arrays empty. The separate 90-day channel + audience prompt uses the same import format but returns channelPeriods instead of observations. If you cannot produce exact ${name} data, explain the unavailable reports in limitations and omit those observations rather than fabricate them. Return raw measurements, not coaching recommendations.`;}
 function parse(text,c,prior,now=new Date().toISOString()){
  if(typeof text!=='string'||text.length>1500000)throw Error('Paste a response under 1.5 MB.');
- const parsedJson=studioJson(text),data=parsedJson.data,formatRepairs=parsedJson.repairs;
+ const parsedJson=studioJson(text,c.id),data=parsedJson.data,formatRepairs=parsedJson.repairs;
  if(!data||typeof data!=='object'||Array.isArray(data))throw Error('Paste the complete structured response, not a single value. Nothing was saved.');
  if(data.schemaVersion!==1||data.creatorId!==c.id)throw Error('This response belongs to a different creator or prompt version. Copy a fresh prompt for the selected creator.');
  if(!data.channelName||!Array.isArray(data.observations)||data.observations.length>500)throw Error('Channel name and an observations array (at most 500 rows) are required.');
@@ -97,5 +142,5 @@ function parse(text,c,prior,now=new Date().toISOString()){
    :String(x);
  return {next,added,duplicates,channelName:String(data.channelName),periods,audienceSnapshots,formatRepairs,limitations:[...(data.limitations||[]).map(normalizeLimitation),...periodWarnings,...audienceWarnings],signature:JSON.stringify(prior||A.emptyStore())};
 }
-return {prompt,parse,studioJson,metricDefs,hash,metrics,channelMetrics,channelContext,audienceMetrics,windows};
+return {prompt,parse,studioJson,jsonObjectCandidates,repairJsonCandidate,studioPayloadScore,metricDefs,hash,metrics,channelMetrics,channelContext,audienceMetrics,windows};
 });
