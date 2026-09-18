@@ -88,11 +88,11 @@
     }else if(acq==='weak'&&loy==='weak'){
       tone='bad';headline='New viewers and returning viewers are both under pressure.';
       meaning='This is broader than one weak audience metric. The channel may be losing both new-viewer opportunity and reasons to return, or the prior period may have been inflated by a spike.';
-      action='Do not blame one upload. Check new-upload vs library contribution, traffic-source change, topic / market demand, and the recent SHOW → CLICK → WATCH pattern. Then choose one dominant bottleneck for the next 2–3 reps.';
+      action='Do not blame one upload. Check new uploads vs older videos, traffic-source changes, topic / market demand, and the recent SHOW → CLICK → WATCH pattern. Then choose one main problem to work on across the next 2–3 videos.';
       protect='Avoid changing topic, packaging, upload schedule, and format all at once. We still need a clean test.';
     }else if(['steady','strong'].includes(acq)&&['steady','strong'].includes(loy)){
       tone='good';headline='New viewers and returning viewers are both healthy.';
-      meaning='The audience side is not the obvious bottleneck right now. The channel is bringing people in while also maintaining or improving repeat viewing.';
+      meaning='The audience is not the obvious problem right now. The channel is bringing people in while also keeping people coming back.';
       action='Protect the current Reach + follow-up pattern. Next, check whether viewers are watching more than one video, whether business results are moving, or whether the same video-level problem keeps showing up.';
       protect='Do not manufacture an audience problem just because another metric on the page is available.';
     }else{
@@ -187,7 +187,7 @@
       protect='Do not change healthy Reach and repeat viewing just because another metric is missing.';
     }else{
       tone='warn';headline='Channel-health evidence is incomplete or mixed.';
-      meaning='We can read individual pieces, but there is not yet enough compatible evidence to name a channel-wide bottleneck with confidence.';
+      meaning='We can read individual pieces, but there is not enough clean evidence yet to name one main channel problem with confidence.';
       action='Use the strongest verified stage as a watch item and keep collecting comparable 90-day / 28-day evidence before changing the whole program.';
       protect='Let repeated 7-day video evidence carry more weight until the channel trend is clearer.';
     }
