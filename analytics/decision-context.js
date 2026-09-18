@@ -195,27 +195,26 @@
   }
   function channelReadHtml(c,W,guide){
     const r=overallRead(c,W,guide),tone=toneFor(r),a=r.audience;
+    const mini=(label,value,change)=>'<div class="adc-audience-mini"><span>'+esc(label)+'</span><b>'+esc(fmt(value))+'</b><small>'+esc(change===null?'No prior read':signed(change-1)+' vs prior')+'</small></div>';
+    const health=r.stages.map(s=>'<div class="adc-stage '+s.band+'"><span>'+esc(s.label)+'</span><b>'+esc(s.value)+'</b><small>'+esc(s.sub)+'</small></div>').join('');
+    const healthHelp=r.stages.map(s=>'<p><b>'+esc(s.label)+':</b> '+esc(s.action||'')+'</p>').join('');
     return '<section class="ac-section adc-overall '+tone+'" id="adc-overall-read">'+
-      '<div class="ac-section-head adc-overall-head"><div class="ac-section-index">01</div><div><div class="adc-kicker">OVERALL CHANNEL READ</div><h2>'+esc(r.focus)+'</h2><p>'+esc(r.why.slice(0,3).join(' '))+'</p></div><div class="adc-focus"><span>WHAT I’D FOCUS ON NOW</span><b>'+esc(r.action.video)+'</b><small>'+esc(r.confidence)+' confidence · from '+esc(r.source)+'</small></div></div>'+
+      '<div class="ac-section-head adc-overall-head"><div class="ac-section-index">01</div><div><div class="adc-kicker">OVERALL CHANNEL READ</div><h2>'+esc(r.focus)+'</h2><p>'+esc(r.why.slice(0,2).join(' '))+'</p></div><div class="adc-focus"><span>WHAT I’D DO NOW</span><b>'+esc(r.action.video)+'</b><small>'+esc(r.confidence)+' confidence · '+esc(r.source)+'</small></div></div>'+
       '<div class="ac-section-body">'+
-        '<div class="adc-subhead"><b>Creator normals + movement</b><span>Click a checkpoint to jump there. These cards use every compatible metric, not Views alone.</span></div>'+
-        '<div class="adc-baselines">'+baselinePills(r)+'</div>'+
-        '<div class="adc-subhead"><b>Channel health</b><span>Are we getting attention, bringing people back, getting them to watch more, and creating a result? A weak area tells you where to look next, not why it happened.</span></div>'+
-        '<div class="adc-stages">'+r.stages.map(s=>'<div class="adc-stage '+s.band+'"><span>'+esc(s.label)+'</span><b>'+esc(s.value)+'</b><small>'+esc(s.sub)+'</small><em>'+esc(s.action||'')+'</em></div>').join('')+'</div>'+
-        '<div class="adc-subhead"><b>Audience growth + loyalty · 28 days</b><span>Monthly audience is a rolling 28-day view. Use direction over time. These are audience segments, not a person-by-person funnel.</span></div>'+
-        '<div class="adc-audience-read"><b>'+esc(a.read)+'</b><span>'+esc(a.focus)+'</span></div>'+
-        '<div class="adc-audience">'+
-          audienceCard('New viewers',a.newViewers,a.changes?.newViewers??null,'First-time viewers. If this falls while repeat viewing holds, test stronger gateway / Reach ideas for the right audience.')+
-          audienceCard('Casual viewers',a.casual,a.changes?.casual??null,'Occasional repeat viewers. If this weakens, inspect follow-ups, series, consistency, and whether a new viewer has an obvious next video.')+
-          audienceCard('Regular viewers',a.regular,a.changes?.regular??null,'Long-term consistent viewers. The bar is intentionally strict, so watch the trend over multiple snapshots and do not overreact to one period.')+
-          audienceCard('Returning viewers',a.returning,a.changes?.returning??null,'Prior viewers who came back. If this falls, check continuation, cadence, topic consistency, and obvious watch-next paths.')+
-          audienceCard('Avg views / viewer',a.avgViewsPerViewer,a.changes?.avgViewsPerViewer??null,'A depth clue. If missing, pull it manually in Advanced Mode / SEE MORE; if it falls, inspect library pathways and second-view behavior.')+
-        '</div>'+
-        '<small class="adc-audience-note"><b>How to read this:</b> New tells you whether the channel is reaching fresh people. Casual / Regular / Returning tell you whether prior viewers are choosing to come back. Read their direction together over time; do not treat them as a person-by-person conversion funnel.</small>'+
-        '<small class="adc-audience-note"><b>What I would do with it:</b> '+esc(a.focus)+'</small>'+
-        (a.overlapDays?'<small class="adc-audience-note"><b>Comparison caution:</b> these rolling 28-day snapshots overlap by about '+esc(a.overlapDays)+' day'+(a.overlapDays===1?'':'s')+'. Use the direction as a clue, not a perfectly independent before/after test.</small>':'')+
-        (a.legacyWindow?'<small class="adc-audience-note"><b>Refresh recommended:</b> these audience values came from an older import. Use Studio prompts again to replace them with dedicated 28-day audience snapshots.</small>':'')+
-        '<div class="adc-overall-foot"><span><b>Suggested video job if you are addressing this focus:</b> '+esc(r.action.job)+'</span><span><b>Measure:</b> '+esc(r.action.metric)+'</span><button class="btn" data-ac-mode="channel">View 90-day channel progress</button></div>'+
+        '<div class="adc-subhead"><b>Normals at a glance</b><span>Click a checkpoint to inspect that same-age read. These use every compatible metric, not Views alone.</span></div>'+
+        '<div class="adc-baselines">'+baselinePills(r)+'<button class="adc-baseline-pill adc-90-pill" data-ac-mode="channel"><span>90d · Channel Health</span><b>Open progress</b><small>Whole-channel movement, not a per-video normal</small></button></div>'+
+        '<div class="adc-compact-block"><div class="adc-subhead"><b>Channel health</b><span>Where should I look next?</span></div><div class="adc-stages">'+health+'</div><details class="adc-help"><summary>How do I read these?</summary>'+healthHelp+'</details></div>'+
+        '<div class="adc-compact-block"><div class="adc-subhead"><b>Audience · rolling 28 days</b><span>'+esc(a.read)+'</span></div><div class="adc-audience-mini-grid">'+
+          mini('New',a.newViewers,a.changes?.newViewers??null)+mini('Casual',a.casual,a.changes?.casual??null)+mini('Regular',a.regular,a.changes?.regular??null)+mini('Returning',a.returning,a.changes?.returning??null)+
+        '</div><details class="adc-help"><summary>What do these audience groups mean, and what do I do with them?</summary>'+
+          '<p><b>New:</b> fresh people reached. If this falls while repeat viewing holds, inspect stronger gateway / Reach ideas.</p>'+
+          '<p><b>Casual:</b> occasional repeat viewers. If this weakens, inspect follow-ups, series, consistency, and whether a viewer has an obvious next video.</p>'+
+          '<p><b>Regular:</b> long-term consistent viewers. The definition is strict, so direction over several snapshots matters more than the raw size.</p>'+
+          '<p><b>Returning:</b> prior viewers who came back. If this falls, check continuation, cadence, topic consistency, and watch-next paths.</p>'+
+          '<p><b>How to use this read:</b> '+esc(a.focus)+'</p>'+
+          (a.overlapDays?'<p><b>Caution:</b> these rolling snapshots overlap by about '+esc(a.overlapDays)+' day'+(a.overlapDays===1?'':'s')+', so treat the direction as a clue rather than a clean before/after experiment.</p>':'')+
+        '</details></div>'+
+        '<div class="adc-overall-foot"><span><b>Program job:</b> '+esc(r.action.job)+'</span><span><b>Main measure:</b> '+esc(r.action.metric)+'</span><button class="btn" data-ac-mode="channel">Open 90-day progress</button></div>'+
       '</div>'+
     '</section>';
   }
@@ -685,6 +684,9 @@ ${JSON.stringify(schema,null,2)}`;
       .adc-prompt-dialog{width:min(820px,94vw);border:1px solid #bbc7c7;border-radius:12px;padding:20px;background:var(--panel,#fff);color:var(--text,#17212a)}.adc-prompt-dialog textarea{width:100%;height:360px;box-sizing:border-box;margin:10px 0}
       @media(max-width:900px){.adc-plan-grid{grid-template-columns:1fr}.adc-overall-head{grid-template-columns:40px minmax(0,1fr)}.adc-overall-head .adc-focus{grid-column:2}.adc-video-focus{grid-template-columns:1fr}.adc-baselines,.adc-audience,.adc-stages{grid-template-columns:repeat(2,minmax(0,1fr))}}
       @media(max-width:560px){.adc-baselines,.adc-audience,.adc-stages,.adc-decision-grid{grid-template-columns:1fr}.adc-subhead{display:grid}.adc-overall{margin-bottom:16px}.adc-overall-head{grid-template-columns:32px minmax(0,1fr)}.adc-overall-head .adc-focus{grid-column:1/-1}}
+
+      .adc-baselines{grid-template-columns:repeat(5,minmax(0,1fr))}.adc-baseline-pill{padding:9px 10px;gap:2px;min-height:0}.adc-baseline-pill span{font-size:9px}.adc-baseline-pill b{font-size:13px}.adc-baseline-pill small{font-size:9px;line-height:1.25}.adc-90-pill{border-style:dashed}.adc-compact-block{display:grid;gap:8px}.adc-compact-block+.adc-compact-block{border-top:1px solid var(--line,#d9e0e2);padding-top:12px}.adc-stages{grid-template-columns:repeat(4,minmax(0,1fr))}.adc-stage{padding:9px}.adc-stage em{display:none}.adc-help summary{cursor:pointer;font-size:11px;font-weight:800;color:var(--muted,#68757d)}.adc-help p{font-size:11px;line-height:1.45;margin:7px 0}.adc-audience-mini-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}.adc-audience-mini{border:1px solid var(--line,#d9e0e2);border-radius:9px;padding:8px;display:grid;gap:2px}.adc-audience-mini span{font-size:9px;font-weight:900;text-transform:uppercase}.adc-audience-mini b{font-size:15px}.adc-audience-mini small{font-size:9px;color:var(--muted,#68757d)}.adc-audience{display:none}.adc-audience-read,.adc-audience-note{display:none}
+      @media(max-width:1000px){.adc-baselines{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:650px){.adc-baselines,.adc-stages,.adc-audience-mini-grid{grid-template-columns:1fr 1fr}}
     `;win.document.head.appendChild(style);
     paint();
   }
