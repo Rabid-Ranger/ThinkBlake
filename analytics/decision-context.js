@@ -763,5 +763,5 @@ ${JSON.stringify(schema,null,2)}`;
     paint();
   }
 
-  return {snapshots,audienceSnapshots,audienceRead,baselineTrajectory,deriveFocus,focusAction,overallRead,planSuggestion,channelPrompt,masterPrompt,parseJsonBlock,install};
+  return {snapshots,audienceSnapshots,audienceRead,baselineTrajectory,baselineDetail,normalsAtGlance,deriveFocus,focusAction,overallRead,planSuggestion,channelPrompt,masterPrompt,parseJsonBlock,install};
 });
