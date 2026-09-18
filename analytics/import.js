@@ -66,7 +66,7 @@ function studioPayloadScore(data,expectedCreatorId){
 }
 function studioJson(text,expectedCreatorId){
  const found=jsonObjectCandidates(text);
- if(!found.candidates.length)throw Error('Ask Studio did not return an Accelerator JSON object.');
+ if(!found.candidates.length)throw Error('Ask Studio did not return an Accelerator JSON object. Nothing was saved.');
  const parsed=[];
  for(const candidate of found.candidates){
    const repaired=repairJsonCandidate(candidate.text);if(!repaired)continue;
@@ -78,7 +78,7 @@ function studioJson(text,expectedCreatorId){
  if(best.score<0)throw Error('Ask Studio returned structured JSON, but it does not look like this dashboard\'s analytics payload. Nothing was saved.');
  const repairs=best.repairs.slice();
  if(found.candidates.length>1)repairs.unshift('found '+found.candidates.length+' JSON objects and selected the best matching Accelerator payload');
- if(best.start>0||best.end<found.raw.length)repairs.unshift('ignored prompt/prose or extra content outside the selected JSON object');
+ if(best.start>0||best.end<found.raw.length)repairs.unshift('ignored extra text, prompt/prose, or other content outside the selected JSON object');
  return {data:best.data,repairs,raw:best.raw};
 }
 function metricDefs(row){
