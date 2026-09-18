@@ -331,6 +331,27 @@
         if(job==='Trust')next='Do not rescue the current winner from one soft platform metric. Protect what worked, verify continuation / repeat-audience behavior, and use '+lesson+' as the next controlled Trust-content improvement only if the pattern repeats or the Trust result is weak.';
         if(job==='Convert')next='Do not rescue the current video from a soft platform metric before checking qualified action. Protect the working attention path, verify leads / bookings / sales, and only prioritize '+lesson+' if the business result is also weak or the pattern repeats.';
       }
+
+      if(h===24){
+        meaning='24-hour early read: '+meaning;
+        next=(hard.length?'Flag this as a real watch item and verify the source / metric definition now. ':'Treat this as directional evidence. ')+'Do not make a major creator-strategy decision from the first day. Recheck at 48 hours, then let the 7-day read carry the main diagnosis. '+(hard.length?'Only intervene immediately when the signal is unusually large, clean, and operationally useful.':'');
+        protect+=' Protect against reacting to warm-audience launch noise or incomplete processing.';
+      }else if(h===48){
+        meaning='48-hour problem check: '+meaning;
+        next='Use this to decide what deserves investigation, not to rewrite the whole channel strategy. '+next+' Confirm whether the same issue is still present at 7 days before turning it into a creator-wide rule.';
+        protect+=' Check audience expansion and traffic-source context before reacting to a modest CTR or reach difference.';
+      }else if(h===672){
+        const evidence=d.outcomeMultiple==null?'the mature result':Number(d.outcomeMultiple).toFixed(2)+'× normal at 28 days';
+        meaning='28-day programming read: '+meaning;
+        if(d.winner){
+          next='Use '+evidence+' as evidence for what to make next. Create an adjacent follow-up that preserves the transferable promise / mechanism and the same strategic job, rather than literally copying the video. '+next+' One mature winner is strong evidence, but repeated 28-day proof is safer before turning it into a permanent programming rule.';
+        }else if(hard.length||d.under){
+          next='Use '+evidence+' to change the NEXT comparable programming rep rather than endlessly rescuing the old upload. '+next+' Keep one dominant variable readable so you learn whether the change worked.';
+        }else{
+          next='This mature result is useful context, but it is not strong enough by itself to rewrite programming. Keep the next planned job, use nearby 7-day / 28-day winners as evidence, and wait for repetition before creating a permanent rule.';
+        }
+        protect+=' At 28 days, the question is what this video teaches the slate, not whether every launch metric can still be optimized.';
+      }
       return {job,goal,desiredAudience,goalLink,jobMeaning,meaning,next,measure,protect,tone};
     }
     function strategistReadHtml(c,v,r,d,h){
