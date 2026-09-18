@@ -8,7 +8,7 @@
   const PHASES={
     24:{label:'24h · Launch',question:'How did the video start?',decision:'Early directional read. Notice something obviously broken, but usually do not make a big change yet.'},
     48:{label:'48h · Check',question:'Is there a clear SHOW, CLICK, or WATCH problem?',decision:'Problem check. Decide what deserves inspection, but avoid a channel-wide strategy change from one early result.'},
-    168:{label:'7d · Diagnosis',question:'Compared with this creator’s normal, what actually happened?',decision:'Main video decision point. Name the leading bottleneck, or explicitly decide there is no fix needed.'},
+    168:{label:'7d · Diagnosis',question:'Compared with this creator’s normal, what actually happened?',decision:'Main video decision point. Name the main problem, or explicitly decide there is no fix needed.'},
     672:{label:'28d · What to make next',question:'What did this video become after it matured?',decision:'Turn the lesson into what to repeat, change, stop, and what the next video should do.'},
     2160:{label:'90d · Channel Health',question:'Is the channel actually moving after several videos?',decision:'Track whole-channel reach/views, returning viewers, whether people watch more than one video, and business results. This does not set a per-video baseline.'}
   };
