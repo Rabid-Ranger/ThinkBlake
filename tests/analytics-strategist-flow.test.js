@@ -92,3 +92,31 @@ test('strategist UI protects a winner and carries the soft lesson forward',()=>{
   assert.match(src,/Do not panic-change the winning video/i);
   assert.match(src,/business RESULT still decides/i);
 });
+
+
+test('checkpoint-specific coaching keeps 24h 48h 7d and 28d decisions distinct',()=>{
+  const src=C.install.toString();
+  assert.match(src,/h===24/);
+  assert.match(src,/Do not make a major creator-strategy decision from the first day/i);
+  assert.match(src,/h===48/);
+  assert.match(src,/decide what deserves investigation, not to rewrite the whole channel strategy/i);
+  assert.match(src,/h===672/);
+  assert.match(src,/28-day programming read/i);
+  assert.match(src,/what to make next/i);
+});
+
+test('manual baseline validation follows the coach-assigned video job',()=>{
+  const W=require('../analytics/workspace');
+  const c={
+    id:'c1',
+    coachOS:{analytics:{videoJobs:{v1:'Trust'}}},
+    videos:[{id:'v1',title:'Video 1',analytics:{_7d:{views:1000,impressions:10000,ctr:5,ret30:60,apv:40,avdSeconds:200,metricDefinitionId:'def',sourceRef:'Studio',windowVerified:true}}}],
+    analyticsFoundation:{observations:[]}
+  };
+  const v=W.videos(c)[0];
+  const make=job=>({label:job+' normal',manual:{job,n:10,confirmedComparable:true,sourceRef:'Studio baseline',metricDefinitionId:'def',views:900,impressions:9000,ctr:5,ret30:60,apv:40,avdSeconds:200}});
+  const trust=W.compare(c,v,make('Trust'),168);
+  assert.equal(trust.reasons.includes('This video has a different job than the videos used for this normal.'),false);
+  const reach=W.compare(c,v,make('Reach'),168);
+  assert.equal(reach.reasons.includes('This video has a different job than the videos used for this normal.'),true);
+});
