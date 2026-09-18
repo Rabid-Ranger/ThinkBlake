@@ -281,7 +281,7 @@
     }
     function videoJob(c,v,h){
       const o=latestObservation(c,v,h);
-      return v?.native?.coachOS?.intent?.job||v?.native?.job||o?.job||'Unassigned';
+      return c.coachOS?.analytics?.videoJobs?.[v?.engineId||v?.id]||v?.native?.coachOS?.intent?.job||v?.native?.job||o?.job||'Unassigned';
     }
     function strategistRead(c,v,r,d,h){
       const job=videoJob(c,v,h),plan=c.coachOS?.plan90||{},ctx=c.coachOS?.baseline?.context||{},intent=v?.native?.coachOS?.intent||{};
@@ -328,7 +328,7 @@
     }
     function strategistReadHtml(c,v,r,d,h){
       const s=strategistRead(c,v,r,d,h);
-      return '<section class="ac-strategist '+s.tone+'"><div class="ac-strategist-top"><div><span>VIDEO JOB</span><b>'+esc(s.job)+'</b><small>'+esc(s.jobMeaning)+'</small></div><div><span>PROGRAM GOAL</span><b>'+esc(s.goal)+'</b></div></div>'+
+      return '<section class="ac-strategist '+s.tone+'"><div class="ac-strategist-top"><div><span>VIDEO JOB</span><div class="ac-job-row"><select data-ac-job-select><option value="Unassigned" '+(s.job==='Unassigned'?'selected':'')+'>Unassigned</option><option value="Reach" '+(s.job==='Reach'?'selected':'')+'>Reach</option><option value="Trust" '+(s.job==='Trust'?'selected':'')+'>Trust</option><option value="Convert" '+(s.job==='Convert'?'selected':'')+'>Convert</option></select><small>Changes how the system interprets success, not the imported analytics.</small></div><small>'+esc(s.jobMeaning)+'</small></div><div><span>PROGRAM GOAL</span><b>'+esc(s.goal)+'</b></div></div>'+
         '<div class="ac-strategist-read"><span>SYSTEM INTERPRETATION</span><b>'+esc(s.meaning)+'</b></div>'+
         '<div class="ac-strategist-next"><div><span>COACH NEXT MOVE</span><b>'+esc(s.next)+'</b></div><div><span>MEASURE</span><b>'+esc(s.measure)+'</b></div><div><span>PROTECT</span><b>'+esc(s.protect)+'</b></div></div>'+
       '</section>';
@@ -633,10 +633,23 @@
       .ac-strategist{border:1px solid var(--line,#d9e0e2);border-left:5px solid #55757a;border-radius:12px;padding:13px;display:grid;gap:11px;background:rgba(84,110,116,.025)}.ac-strategist.bad{border-left-color:#b54b4b}.ac-strategist.warn{border-left-color:#b5822e}.ac-strategist.good,.ac-strategist.great{border-left-color:#2f8464}.ac-strategist-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,.8fr);gap:10px}.ac-strategist-top>div,.ac-strategist-read,.ac-strategist-next>div{display:grid;gap:3px}.ac-strategist span{font-size:9px;font-weight:900;letter-spacing:.08em}.ac-strategist-top b{font-size:13px}.ac-strategist-top small{font-size:10px;line-height:1.4;color:var(--muted,#68757d)}.ac-strategist-read{padding:10px;border-radius:9px;background:rgba(84,110,116,.06)}.ac-strategist-read b{font-size:12px;line-height:1.45}.ac-strategist-next{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px}.ac-strategist-next>div{border-top:1px solid var(--line,#d9e0e2);padding-top:8px}.ac-strategist-next b{font-size:11px;line-height:1.4}
       @media(max-width:760px){.ac-strategist-top,.ac-strategist-next{grid-template-columns:1fr}}
 
+      .ac-job-row{display:flex;gap:8px;align-items:center}.ac-job-row select{min-width:110px}.ac-job-row small{font-size:9px!important}
+      @media(max-width:560px){.ac-job-row{display:grid}}
+
 `
     win.document.head.appendChild(style);
 
     win.document.addEventListener('change',ev=>{
+      if(ev.target?.matches?.('[data-ac-job-select]')){
+        const c=current(),v=c&&selectedVideo(c),B=win.AcceleratorDeskBridge;if(!c||!v||!B?.commitAI)return;
+        try{
+          const next=clone(c);next.coachOS=next.coachOS||{};next.coachOS.analytics=next.coachOS.analytics||{};next.coachOS.analytics.videoJobs=next.coachOS.analytics.videoJobs||{};
+          next.coachOS.analytics.videoJobs[v.engineId||v.id]=ev.target.value;
+          const expected=win.AcceleratorAI?.revision?.(c);if(expected===undefined)throw Error('Save revision check is unavailable.');
+          B.commitAI(next,expected,false);rerender();
+        }catch(err){alert(err.message);}
+        return;
+      }
       if(ev.target?.id!=='ac-video')return;
       const c=current();if(!c)return;
       const p=W.prefs(c);p.videoId=ev.target.value;p.baselineId='';rerender();
