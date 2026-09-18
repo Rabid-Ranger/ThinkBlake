@@ -133,7 +133,15 @@
     let next=expansionContext
       ? 'First check where the views came from and whether YouTube showed the video to a broader audience. Lower CTR during wider distribution does not automatically mean the thumbnail is bad. Only test the title or thumbnail if CTR still looks clearly weak after that check.'
       : nextFor(all,winner);
+    if(all.includes('retention')&&m.watchKey!=='retention30'){
+      const watchName=m.watchKey==='apv'?'APV':'AVD';
+      next='WATCH is soft based on '+watchName+', not an exact 0:30 reading. Open the retention curve and pull the exact Intro / first-30-second value if available before deciding the opening is the problem. Treat this as a viewing-experience clue, not proof of cause.';
+    }
     if(sourceContext&&(all.includes('packaging')||all.includes('reach')))next=sourceContext+' '+next;
+    if(all.includes('retention')&&m.watchKey!=='retention30'){
+      bottleneck=bottleneck.replace(/RETENTION/g,'WATCH / VIEWING EXPERIENCE');
+      headline=headline.replace(/RETENTION/g,'WATCH / VIEWING EXPERIENCE');
+    }
     return {tone,kind:'diagnosed',headline,bottleneck,explain,next,sourceContext,hardIssues:hard,softIssues:soft,winner,under,outcomeMultiple,metrics:m,age};
   }
 
@@ -177,19 +185,98 @@
       if(b.engine){
         const rows=(c.analyticsFoundation?.baselines||[]).filter(x=>x.policyId===b.id&&x.kind==='operating');
         const first=rows[0],last=rows.at(-1);if(!last)return null;
-        const get=(row,k)=>n(row?.metrics?.[k]?.median);
-        return {label:b.label,sample:last.memberVideoIds?.length||last.metrics?.engagedViews?.n||last.metrics?.views?.n||0,first,last,
-          values:{views:get(last,'views'),engagedViews:get(last,'engagedViews'),impressions:get(last,'impressions'),ctr:get(last,'ctr'),retention30:get(last,'retention30'),apv:get(last,'apv'),avdSeconds:get(last,'avdSeconds'),browsePct:get(last,'browsePct'),suggestedPct:get(last,'suggestedPct'),searchPct:get(last,'searchPct'),externalPct:get(last,'externalPct')},
-          firstValues:{views:get(first,'views'),engagedViews:get(first,'engagedViews'),impressions:get(first,'impressions'),ctr:get(first,'ctr'),retention30:get(first,'retention30'),apv:get(first,'apv'),avdSeconds:get(first,'avdSeconds'),browsePct:get(first,'browsePct'),suggestedPct:get(first,'suggestedPct'),searchPct:get(first,'searchPct'),externalPct:get(first,'externalPct')}};
+        const get=(row,k)=>n(row?.metrics?.[k]?.median),getN=(row,k)=>n(row?.metrics?.[k]?.n)||0;
+        const metricKeys=['views','engagedViews','impressions','ctr','retention30','apv','avdSeconds','browsePct','suggestedPct','searchPct','externalPct'];
+        return {label:b.label,sample:last.memberVideoIds?.length||0,first,last,
+          values:Object.fromEntries(metricKeys.map(k=>[k,get(last,k)])),
+          samples:Object.fromEntries(metricKeys.map(k=>[k,getN(last,k)])),
+          firstValues:Object.fromEntries(metricKeys.map(k=>[k,get(first,k)])),
+          firstSamples:Object.fromEntries(metricKeys.map(k=>[k,getN(first,k)]))};
       }
-      const values=W.values(b.manual),hist=(c.coachOS?.baseline?.history||[]).filter(x=>x.id===b.id),first=W.values(hist[0]||b.manual);
-      return {label:b.label,sample:n(b.manual?.n)||0,values,firstValues:first,first:hist[0]||b.manual,last:b.manual};
+      const values=W.values(b.manual),hist=(c.coachOS?.baseline?.history||[]).filter(x=>x.id===b.id),first=W.values(hist[0]||b.manual),sample=n(b.manual?.n)||0;
+      return {label:b.label,sample,values,samples:Object.fromEntries(Object.keys(values).map(k=>[k,n(values[k])===null?0:sample])),firstValues:first,firstSamples:Object.fromEntries(Object.keys(first).map(k=>[k,n(first[k])===null?0:sample])),first:hist[0]||b.manual,last:b.manual};
     }
     function baselineMetric(c,b,k){const rec=baselineRecord(c,b);return rec?.values?.[k]??null;}
     function baselineOutcome(rec){
-      const k=n(rec?.values?.engagedViews)!==null?'engagedViews':'views',a=n(rec?.firstValues?.[k]),z=n(rec?.values?.[k]);
+      const k=n(rec?.values?.engagedViews)!==null?'engagedViews':n(rec?.values?.views)!==null?'views':n(rec?.values?.impressions)!==null?'impressions':null;
+      const a=k?n(rec?.firstValues?.[k]):null,z=k?n(rec?.values?.[k]):null;
       const growth=a&&z!==null?z/a:null;
       return {key:k,current:z,first:a,growth};
+    }
+    function coverageStatus(sample,rawCount){
+      if(sample>=10)return {tone:'good',label:'Ready',detail:sample+' comparable values'};
+      if(sample>=5)return {tone:'normal',label:'Usable',detail:sample+' comparable values'};
+      if(sample>0)return {tone:'warn',label:'Partial',detail:sample+' comparable values'};
+      if(rawCount>=5)return {tone:'warn',label:'Collected, comparison blocked',detail:rawCount+' raw rows'};
+      return {tone:'muted',label:'Missing',detail:rawCount?rawCount+' raw rows':'Not returned'};
+    }
+    function dataCoverageHtml(c,b,h){
+      const rec=baselineRecord(c,b),obs=(c.analyticsFoundation?.observations||[]).filter(o=>o.windowHours===h);
+      const rawN=k=>obs.filter(o=>n(o?.metrics?.[k])!==null).length,sample=k=>n(rec?.samples?.[k])||0;
+      const items=[
+        ['Impressions','impressions',sample('impressions'),rawN('impressions'),'Studio returned this for the matched baseline.'],
+        ['CTR','ctr',sample('ctr'),rawN('ctr'),'Read with impression expansion and traffic-source context.'],
+        ['WATCH · 0:30','retention30',sample('retention30'),rawN('retention30'),'Best opening signal when Studio reports the exact Intro value.'],
+        ['WATCH · APV','apv',sample('apv'),rawN('apv'),'Useful fallback for overall viewing quality.'],
+        ['WATCH · AVD','avdSeconds',sample('avdSeconds'),rawN('avdSeconds'),'Useful fallback for viewing quality when 0:30 is unavailable.'],
+        ['Views · new count','views',sample('views'),rawN('views'),'Raw Views can be collected while creator-normal comparison stays blocked across an unclear measurement-definition change.'],
+        ['Engaged views','engagedViews',sample('engagedViews'),rawN('engagedViews'),'Use the retained original view-count metric from Advanced Mode when available.']
+      ];
+      const sourceSample=Math.min(...['browsePct','suggestedPct','searchPct','externalPct'].map(sample));
+      const sourceRaw=Math.min(...['browsePct','suggestedPct','searchPct','externalPct'].map(rawN));
+      const source=coverageStatus(sourceSample,sourceRaw);
+      const missing=[];
+      if(sample('retention30')<5)missing.push('<li><b>Exact 0:30 / Intro:</b> Studio → Content → open the video → Analytics → Engagement (or Overview) → Audience retention → Intro. Enter the exact percentage still watching after 30 seconds. Do not eyeball the curve.</li>');
+      if(sample('engagedViews')<5)missing.push('<li><b>Engaged views:</b> Studio → Analytics → Advanced Mode / SEE MORE → add <i>Engaged views</i>. Use the same lifespan and comparable videos. Never copy public Views into this field.</li>');
+      if(sourceSample<5)missing.push('<li><b>Per-video traffic source:</b> Content → open video → Analytics → Reach/Content → How viewers found this video (or Advanced Mode). Use Browse, Suggested, Search, and External for the same lifespan when Studio lets you isolate it. If it cannot, leave it missing.</li>');
+      if(sample('views')<5&&rawN('views')>=5)missing.push('<li><b>Views normal:</b> the raw counts are saved, but the imported rows did not verify one compatible Views definition across the cohort. Keep using Impressions/CTR/WATCH now. Add a Views baseline only after the comparison set is verified under the same view-count definition.</li>');
+      return '<section class="ac-data-coverage"><div class="ac-subsection-label">DATA READINESS · '+esc(AGES[h]?.label||h+'h')+'</div><div class="ac-coverage-grid">'+items.map(([label,key,s,raw,note])=>{const st=coverageStatus(s,raw);return '<div class="ac-coverage '+st.tone+'"><span>'+esc(label)+'</span><b>'+esc(st.label)+'</b><small>'+esc(st.detail)+' · '+esc(note)+'</small></div>';}).join('')+'<div class="ac-coverage '+source.tone+'"><span>Traffic-source normal</span><b>'+esc(source.label)+'</b><small>'+esc(source.detail)+' · Needed to interpret CTR in distribution context.</small></div></div>'+
+        (missing.length?'<details class="ac-missing"><summary><b>Missing data · what to fill manually and where to find it</b><span>'+missing.length+' gap'+(missing.length===1?'':'s')+' worth knowing about</span></summary><ul>'+missing.join('')+'</ul><p><b>For a new/current video:</b> use Quick Check below to type the available numbers without saving the video first.</p><button class="btn" data-aw="baseline">Build / edit this checkpoint baseline manually</button></details>':'<p class="ac-ready-note">The core matched data for this checkpoint is ready.</p>')+
+      '</section>';
+    }
+    function quickCompare(c,b,h,q){
+      const rec=baselineRecord(c,b),comparisons={};
+      const rateKeys=new Set(['ctr','retention30','apv','browsePct','suggestedPct','searchPct','externalPct']),sourceKeys=new Set(['browsePct','suggestedPct','searchPct','externalPct']);
+      const current={
+        views:n(q.views),engagedViews:n(q.engagedViews),impressions:n(q.impressions),
+        ctr:n(q.ctr)===null?null:n(q.ctr)/100,retention30:n(q.retention30)===null?null:n(q.retention30)/100,apv:n(q.apv)===null?null:n(q.apv)/100,avdSeconds:n(q.avdSeconds),
+        browsePct:n(q.browsePct)===null?null:n(q.browsePct)/100,suggestedPct:n(q.suggestedPct)===null?null:n(q.suggestedPct)/100,searchPct:n(q.searchPct)===null?null:n(q.searchPct)/100,externalPct:n(q.externalPct)===null?null:n(q.externalPct)/100
+      };
+      for(const k of Object.keys(current)){
+        const cur=current[k],base=n(rec?.values?.[k]),sample=n(rec?.samples?.[k])||0,ready=cur!==null&&base!==null&&sample>0;
+        comparisons[k]={current:cur,baseline:base,n:sample,multiple:ready&&base>0&&!sourceKeys.has(k)?cur/base:null,relativeChangePct:ready&&base>0?100*(cur-base)/base:null,deltaPp:ready&&rateKeys.has(k)?(cur-base)*100:null,deltaSeconds:ready&&k==='avdSeconds'?cur-base:null,status:ready?'quick_check':'unavailable'};
+      }
+      return {status:rec?'compared':'needs_evidence',comparisons,source:'Quick check · not saved',baselineName:rec?.label||'No matching baseline',message:rec?'Quick check against the selected creator normal. Nothing here is saved.':'Choose a matching baseline first.'};
+    }
+    function quickInput(field,label,value,step='any'){
+      return '<label><span>'+esc(label)+'</span><input type="number" step="'+esc(step)+'" data-ac-quick-field="'+esc(field)+'" value="'+esc(value??'')+'" placeholder="optional"></label>';
+    }
+    function diagnosisWhyHtml(r,d){
+      const m=d.metrics,c=r?.comparisons||{},watchLabel=m.watchKey==='retention30'?'exact 0:30':m.watchKey==='apv'?'APV':'AVD';
+      const evidence=[
+        'SHOW: '+(m.show.detail||'No fair impression comparison yet.'),
+        'CLICK: '+(m.click.detail||'No fair CTR comparison yet.'),
+        'WATCH ('+watchLabel+'): '+(m.watch.detail||'No fair WATCH comparison yet.')
+      ];
+      const missing=[];
+      if(n(c.retention30?.current)===null||n(c.retention30?.baseline)===null)missing.push('exact 0:30');
+      if(!['browsePct','suggestedPct','searchPct','externalPct'].some(k=>n(c[k]?.current)!==null&&n(c[k]?.baseline)!==null))missing.push('matched traffic-source context');
+      if(n(c.engagedViews?.current)===null||n(c.engagedViews?.baseline)===null)missing.push('Engaged views outcome');
+      let logic='No stage is clearly weak enough to justify inventing a fix.';
+      if(d.hardIssues?.includes('reach'))logic='SHOW is clearly weak versus this creator’s normal. That makes topic / audience opportunity / distribution the first place to investigate. It does not prove why impressions are low.';
+      else if(d.hardIssues?.includes('packaging'))logic='SHOW is not the main break, while CLICK is clearly weak. Packaging becomes a candidate only after traffic-source / audience-expansion context is checked.';
+      else if(d.hardIssues?.includes('retention'))logic=m.watchKey==='retention30'?'WATCH is clearly weak on the exact 0:30 comparison. Inspect the opening and retention curve, but the number still does not prove the cause.':'WATCH is clearly weak based on '+watchLabel+'. Exact 0:30 is missing, so this is a viewing-experience clue, not proof that the first 30 seconds are the problem.';
+      else if(d.softIssues?.length)logic='A metric is soft, but the overall result/context does not justify a strategy change yet. Treat it as a watch item and look for repetition.';
+      const change=d.hardIssues?.includes('reach')?'The call changes if matched source/topic evidence shows normal opportunity while CLICK or WATCH becomes the clearer repeated break.':d.hardIssues?.includes('packaging')?'The call weakens if CTR looks normal inside a comparable traffic source or the drop is explained by wider distribution.':d.hardIssues?.includes('retention')?'The call weakens if the exact retention curve / 0:30 is healthy and the APV/AVD difference is explained by length or audience mix.':'A repeated abnormal stage across comparable videos would raise confidence.';
+      return '<div class="ac-why"><div class="ac-subsection-label">WHY THIS IS THE CALL</div><p><b>Logic:</b> '+esc(logic)+'</p><ul>'+evidence.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul><p><b>This does not prove:</b> one weak metric caused another. In particular, weak WATCH does not prove it caused low impressions.</p><p><b>What would change the call:</b> '+esc(change)+'</p>'+(missing.length?'<p class="ac-why-missing"><b>Confidence is limited by missing evidence:</b> '+esc(missing.join(', '))+'.</p>':'')+'</div>';
+    }
+    function quickCheckHtml(c,b,h){
+      const p=W.prefs(c);if(!p.quickOpen)return '<button class="btn ac-quick-open" data-ac-quick-toggle>Quick check a custom / newest video</button>';
+      p.quick=p.quick||{};const q=p.quick,r=quickCompare(c,b,h,q),d=diagnose(r,h);
+      return '<section class="ac-quick"><div class="ac-quick-head"><div><div class="ac-subsection-label">QUICK CHECK · NOT SAVED</div><h3>Compare any current video with the '+esc(AGES[h]?.label||h+'h')+' normal</h3><p>Use this when the newest video is not in the imported list yet. Type only what you have. Nothing is added to the creator unless you explicitly import/save it elsewhere.</p></div><button class="btn" data-ac-quick-toggle>Close</button></div><div class="ac-quick-fields">'+
+        quickInput('views','Views',q.views)+quickInput('engagedViews','Engaged views',q.engagedViews)+quickInput('impressions','Impressions',q.impressions)+quickInput('ctr','CTR %',q.ctr,'0.01')+quickInput('retention30','0:30 / Intro %',q.retention30,'0.01')+quickInput('apv','APV %',q.apv,'0.01')+quickInput('avdSeconds','AVD seconds',q.avdSeconds,'1')+
+        quickInput('browsePct','Browse %',q.browsePct,'0.01')+quickInput('suggestedPct','Suggested %',q.suggestedPct,'0.01')+quickInput('searchPct','Search %',q.searchPct,'0.01')+quickInput('externalPct','External %',q.externalPct,'0.01')+
+      '</div><div class="actions"><button class="btn dark" data-ac-quick-run>Run quick check</button><button class="btn" data-ac-quick-clear>Clear</button></div>'+metricsHtml(r,d)+diagnosisWhyHtml(r,d)+'</section>';
     }
     function ageOverview(c,v){
       return [24,48,168,672].map(h=>{
@@ -349,8 +436,11 @@
           '<div class="ac-section-head ac-video-head"><div class="ac-section-index">02</div><div><div class="ac-kicker">THIS VIDEO READ · '+age.label+' · '+age.name+'</div><h2>'+esc(d.headline)+'</h2><p>'+esc(d.explain)+'</p></div><div class="ac-top-badge"><span>MAIN ISSUE</span><b>'+esc(d.bottleneck)+'</b><small>'+esc(age.act)+'</small></div></div>'+
           '<div class="ac-section-body">'+
             controls+
+            dataCoverageHtml(c,b,p.hours)+
             '<div class="ac-subsection"><div class="ac-subsection-label">HOW THE NUMBERS LOOK</div>'+metricsHtml(r,d)+'</div>'+
+            diagnosisWhyHtml(r,d)+
             '<div class="ac-next-inline '+d.tone+'"><div><span>WHAT TO DO NEXT</span><b>'+esc(d.bottleneck)+'</b></div><p>'+esc(d.next)+'</p></div>'+
+            quickCheckHtml(c,b,p.hours)+
             actions+
           '</div>'+
         '</section>'+
@@ -365,7 +455,7 @@
       const comparable=d.comparable;
       return '<div class="ac-shell">'+
         '<section class="ac-section ac-channel-section '+(comparable?'normal':'warn')+'">'+
-          '<div class="ac-section-head"><div class="ac-section-index">02</div><div><div class="ac-kicker">90-DAY CHANNEL TREND</div><h2>'+(comparable?'Is the whole channel moving?':'Need two verified 90-day reports')+'</h2><p>Use this to see whether the channel is moving up, down, or staying flat. Do not compare a single video with these 90-day totals.</p></div><div class="ac-top-badge"><span>STATUS</span><b>'+(comparable?'READY':'NOT ENOUGH DATA')+'</b><small>Video issues still come from comparing each video with what this creator usually gets at the same point after publishing.</small></div></div>'+
+          '<div class="ac-section-head"><div class="ac-section-index">02</div><div><div class="ac-kicker">90-DAY CHANNEL TREND</div><h2>'+(comparable?'Is the whole channel moving?':'Need two verified 90-day reports')+'</h2><p>Use this to track whether the whole channel moved after several videos. Come back to individual video analytics to diagnose why.</p><button class="btn ac-channel-back" data-ac-mode="video">← Back to video analytics</button></div><div class="ac-top-badge"><span>STATUS</span><b>'+(comparable?'READY':'NOT ENOUGH DATA')+'</b><small>Video issues still come from comparing each video with what this creator usually gets at the same point after publishing.</small></div></div>'+
           '<div class="ac-section-body"><div class="ac-channel">'+keys.map(([k,l])=>{
             const a=n(d.starting?.[k]),z=n(d.current?.[k]);let change='Not comparable yet';
             if(comparable&&a!==null&&z!==null) change=k==='ctr'?((z-a)>=0?'+':'')+(z-a).toFixed(1)+' pp':a?((z/a-1)*100>=0?'+':'')+((z/a-1)*100).toFixed(1)+'%':'—';
@@ -415,6 +505,9 @@
     style.id='accelerator-analytics-clarity-style';
     style.textContent=`
       .ac-shell{display:grid;gap:24px}.ac-kicker{font-size:10px;font-weight:900;letter-spacing:.11em;text-transform:uppercase;color:var(--muted,#68757d)}
+      .ac-data-coverage{border:1px solid var(--line,#d9e0e2);border-radius:12px;padding:14px;display:grid;gap:10px}.ac-coverage-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}.ac-coverage{border:1px solid var(--line,#d9e0e2);border-radius:9px;padding:9px;display:grid;gap:3px}.ac-coverage span{font-size:9px;font-weight:900;text-transform:uppercase}.ac-coverage b{font-size:12px}.ac-coverage small{font-size:10px;line-height:1.35;opacity:.7}.ac-coverage.good{border-top:3px solid #2f8464}.ac-coverage.warn{border-top:3px solid #b5822e}.ac-coverage.normal{border-top:3px solid #55757a}.ac-coverage.muted{opacity:.65}.ac-missing summary{cursor:pointer;display:flex;justify-content:space-between;gap:10px}.ac-missing summary span{font-size:11px;opacity:.7}.ac-missing li{margin:8px 0;line-height:1.45}.ac-ready-note{font-size:12px;color:var(--muted,#68757d)}
+      .ac-why{border:1px solid var(--line,#d9e0e2);border-radius:12px;padding:14px;background:rgba(84,110,116,.035)}.ac-why p{margin:7px 0;line-height:1.45}.ac-why ul{margin:8px 0;padding-left:20px}.ac-why li{margin:5px 0}.ac-why-missing{color:#8a5d18}
+      .ac-quick-open{justify-self:start}.ac-quick{border:1px dashed #55757a;border-radius:12px;padding:14px;display:grid;gap:12px}.ac-quick-head{display:flex;justify-content:space-between;gap:16px;align-items:start}.ac-quick-head h3{margin:3px 0 5px}.ac-quick-head p{margin:0;line-height:1.45}.ac-quick-fields{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.ac-quick-fields label{display:grid;gap:4px}.ac-quick-fields span{font-size:10px;font-weight:800}.ac-quick-fields input{width:100%;box-sizing:border-box}.ac-channel-back{margin-top:10px}
       .ac-section{border:1px solid var(--line,#d9e0e2);border-left:6px solid #55757a;background:var(--card,#fff);border-radius:18px;overflow:hidden;box-shadow:0 1px 0 rgba(17,33,43,.025)}
       .ac-section.bad{border-left-color:#b54b4b}.ac-section.warn{border-left-color:#b5822e}.ac-section.good,.ac-section.great{border-left-color:#2f8464}
       .ac-section-head{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:14px;align-items:start;padding:20px 22px;border-bottom:1px solid var(--line,#d9e0e2);background:rgba(84,110,116,.035)}
@@ -436,7 +529,7 @@
       .ac-full{padding:0}.ac-full>summary{cursor:pointer;display:grid;grid-template-columns:44px 1fr;gap:14px;align-items:center;padding:16px 22px;list-style:none}.ac-full>summary::-webkit-details-marker{display:none}.ac-full>summary span:last-child{display:grid;gap:2px}.ac-full>summary small{font-weight:400;color:var(--muted,#68757d)}.ac-full-inner{padding:0 22px 20px;border-top:1px solid var(--line,#d9e0e2);margin-top:0}.ac-full-inner>.cg-native-section:first-child{margin-top:18px}
       .ac-diagnosis-evidence{border-left:5px solid #55757a!important}.ac-diagnosis-evidence.bad{border-left-color:#b54b4b!important}.ac-diagnosis-evidence.warn{border-left-color:#b5822e!important}.ac-mini-evidence p{padding:7px 0;border-bottom:1px solid var(--line,#ddd);margin:0}
       @media(max-width:900px){.ac-section-head{grid-template-columns:40px minmax(0,1fr)}.ac-section-head>.ac-top-badge,.ac-section-head>.ac-badge,.ac-section-head>.btn{grid-column:2}.ac-age-grid,.ac-metrics,.ac-baseline-grid,.ac-channel,.ac-normal-source,.ac-source-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ac-next-inline{grid-template-columns:1fr}}
-      @media(max-width:560px){.ac-normal-grid,.ac-normal-source,.ac-source-grid,.ac-view-counts{grid-template-columns:1fr}.ac-shell{gap:16px}.ac-section{border-radius:13px}.ac-section-head{grid-template-columns:32px minmax(0,1fr);padding:15px 14px;gap:10px}.ac-section-index{width:28px;height:28px;border-radius:8px}.ac-section-head h2{font-size:18px}.ac-section-body{padding:14px}.ac-age-grid,.ac-metrics,.ac-baseline-grid,.ac-channel{grid-template-columns:1fr}.ac-row{grid-template-columns:1fr auto}.ac-row .ac-badge{grid-column:1/-1}.ac-full>summary{grid-template-columns:32px 1fr;padding:14px}.ac-full-inner{padding:0 14px 14px}}
+      @media(max-width:560px){.ac-normal-grid,.ac-normal-source,.ac-source-grid,.ac-view-counts,.ac-coverage-grid,.ac-quick-fields{grid-template-columns:1fr}.ac-shell{gap:16px}.ac-section{border-radius:13px}.ac-section-head{grid-template-columns:32px minmax(0,1fr);padding:15px 14px;gap:10px}.ac-section-index{width:28px;height:28px;border-radius:8px}.ac-section-head h2{font-size:18px}.ac-section-body{padding:14px}.ac-age-grid,.ac-metrics,.ac-baseline-grid,.ac-channel{grid-template-columns:1fr}.ac-row{grid-template-columns:1fr auto}.ac-row .ac-badge{grid-column:1/-1}.ac-full>summary{grid-template-columns:32px 1fr;padding:14px}.ac-full-inner{padding:0 14px 14px}}
 `
     win.document.head.appendChild(style);
 
@@ -445,7 +538,18 @@
       const c=current();if(!c)return;
       const p=W.prefs(c);p.videoId=ev.target.value;p.baselineId='';rerender();
     });
+    win.document.addEventListener('input',ev=>{
+      const field=ev.target?.dataset?.acQuickField;if(!field)return;
+      const c=current();if(!c)return;const p=W.prefs(c);p.quick=p.quick||{};p.quick[field]=ev.target.value;
+    });
     win.document.addEventListener('click',ev=>{
+      const quick=ev.target.closest?.('[data-ac-quick-toggle],[data-ac-quick-run],[data-ac-quick-clear]');
+      if(quick){
+        const c=current();if(!c)return;const p=W.prefs(c);
+        if(quick.hasAttribute('data-ac-quick-toggle'))p.quickOpen=!p.quickOpen;
+        if(quick.hasAttribute('data-ac-quick-clear'))p.quick={};
+        rerender();return;
+      }
       const el=ev.target.closest?.('[data-ac-window],[data-ac-mode]');if(!el)return;
       const c=current();if(!c)return;const p=W.prefs(c);
       if(el.dataset.acWindow){p.hours=Number(el.dataset.acWindow);p.baselineId='';}
