@@ -18,7 +18,7 @@
     const steps=[
       ['24h','Launch','Early signal. Notice obvious problems, do not overreact.'],
       ['48h','Check','Check whether an early issue is still showing up.'],
-      ['7d','Diagnosis','Default video read. Decide what actually deserves attention.'],
+      ['7d','Diagnosis','Default video read. Decide what actually needs a closer look.'],
       ['28d','What to make next','Turn the result into a lesson about what to repeat, change, or make next.'],
       ['90d','Channel health','Check channel movement, audience, traffic, library contribution, and results.']
     ];
