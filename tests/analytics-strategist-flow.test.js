@@ -30,8 +30,9 @@ test('normals at a glance shows every historical metric and checkpoint tabs',()=
   const html=D.normalsAtGlance(c,W);
   for(const label of ['Views · new count','Engaged views · original count','Impressions','CTR','First 30 sec','APV','AVD','Browse','Suggested','Search','External']) assert.ok(html.includes(label),label);
   for(const label of ['>24h<','>48h<','>7d<','>28d<']) assert.ok(html.includes(label),label);
-  assert.match(html,/90d progress · channel/);
-  assert.match(html,/Whole-channel progress, not a per-video baseline/);
+  assert.match(html,/CHANNEL TRACKING/);
+  assert.match(html,/90-day progress/);
+  assert.match(html,/does not set the 24h \/ 48h \/ 7d \/ 28d video normal/);
 });
 
 test('baseline detail keeps metric-specific sample sizes',()=>{
@@ -52,4 +53,42 @@ test('strategist UI is wired for Reach Trust Convert and coach instructions',()=
   assert.match(src,/MEASURE/);
   assert.match(src,/PROTECT/);
   assert.match(src,/Assign the video as Reach, Trust, or Convert/i);
+});
+
+test('audience read turns current segment movement into a coach action',()=>{
+  const a=D.audienceRead({coachOS:{analytics:{audienceSnapshots:[
+    {asOf:'2026-08-18',newViewers:100000,casual:50000,regular:10000,returning:60000,avgViewsPerViewer:1.4},
+    {asOf:'2026-09-15',newViewers:130000,casual:35000,regular:7000,returning:42000,avgViewsPerViewer:1.1}
+  ]}}});
+  const read=D.audienceCoachRead(a);
+  assert.match(read.headline,/Acquisition is working better than loyalty/i);
+  assert.match(read.meaning,/Gateway.*Bridge.*Core|Bridge.*Trust/i);
+  assert.match(read.action,/Protect the Reach mechanism/i);
+  assert.match(read.action,/follow-up|bridge/i);
+});
+
+test('channel health synthesizes attention up plus return down into bridge pressure',()=>{
+  const c={coachOS:{analytics:{
+    snapshots:[
+      {period:'90d',date:'2026-06-19',periodStart:'2026-03-22T00:00:00Z',periodEndExclusive:'2026-06-20T00:00:00Z',sourceRef:'Studio',metricDefinitionId:'unknown',impressions:4000000,watchTime:20000},
+      {period:'90d',date:'2026-09-17',periodStart:'2026-06-20T00:00:00Z',periodEndExclusive:'2026-09-18T00:00:00Z',sourceRef:'Studio',metricDefinitionId:'unknown',impressions:6800000,watchTime:55000}
+    ],
+    audienceSnapshots:[
+      {asOf:'2026-08-18',newViewers:370000,casual:145000,regular:6600},
+      {asOf:'2026-09-15',newViewers:230000,casual:53000,regular:2700}
+    ]
+  }}};
+  const a=D.audienceRead(c),stages=D.channelStages(c,a),read=D.channelHealthRead(c,stages,a);
+  assert.match(read.headline,/Attention expanded.*repeat-audience behavior weakened/i);
+  assert.match(read.meaning,/bridge \/ loyalty pressure/i);
+  assert.match(read.action,/Protect the topics and packages creating attention/i);
+  assert.match(read.protect,/Library depth is not fully connected/i);
+});
+
+test('strategist UI protects a winner and carries the soft lesson forward',()=>{
+  const src=C.install.toString();
+  assert.match(src,/d\.winner&&job!=='Unassigned'&&soft\.length/);
+  assert.match(src,/learning \/ efficiency lane, not a reason to rescue a winning video/i);
+  assert.match(src,/Do not panic-change the winning video/i);
+  assert.match(src,/business RESULT still decides/i);
 });
