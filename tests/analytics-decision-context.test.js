@@ -45,9 +45,9 @@ test('focus uses a real saved channel diagnosis before weaker fallback signals',
 
 test('audience imbalance can choose acquisition or loyalty only when enough trend exists',()=>{
   let f=A.deriveFocus({diagnosis:{leading:'Not enough evidence yet'},pattern:{max:0},audience:{acquisitionBand:'weak',loyaltyBand:'strong'},trajectory:[]});
-  assert.equal(f.focus,'Acquisition / gateway');
+  assert.equal(f.focus,'New viewers / Reach');
   f=A.deriveFocus({diagnosis:{leading:'Not enough evidence yet'},pattern:{max:0},audience:{acquisitionBand:'strong',loyaltyBand:'weak'},trajectory:[]});
-  assert.equal(f.focus,'Loyalty / pathway');
+  assert.equal(f.focus,'Repeat viewing / follow-ups');
 });
 
 test('channel prompt explicitly requests audience segments and preserves missing values',()=>{
@@ -120,7 +120,7 @@ test('overlapping rolling audience snapshots are flagged and both-weak audience 
   assert.equal(a.acquisitionBand,'weak');
   assert.equal(a.loyaltyBand,'weak');
   const f=A.deriveFocus({diagnosis:{leading:'Promise / opening / viewing experience',confidence:'Low'},pattern:{max:0},audience:a,trajectory:[]});
-  assert.equal(f.focus,'Audience growth + loyalty pressure');
+  assert.equal(f.focus,'New viewers + repeat viewing');
   assert.equal(f.confidence,'Low');
 });
 

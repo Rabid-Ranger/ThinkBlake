@@ -35,7 +35,7 @@ function startServer() {
       });
       return;
     }
-    const file = /^\/analytics\/[\w-]+\.js$/.test(req.url)?req.url.slice(1):req.url === '/favicon.svg' ? 'favicon.svg' : 'index.html';
+    const file = /^\/(analytics|ai|ui)\/[\w-]+\.js$/.test(req.url)?req.url.slice(1):req.url === '/favicon.svg' ? 'favicon.svg' : 'index.html';
     res.statusCode = 200;
     res.setHeader('Content-Type', file.endsWith('.js')?'application/javascript':file.endsWith('.svg') ? 'image/svg+xml' : 'text/html; charset=utf-8');
     res.end(fs.readFileSync(path.join(ROOT, file)));

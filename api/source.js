@@ -1328,6 +1328,14 @@ const PERSISTENCE_BRIDGE = String.raw`
 
     let resumeDemo = false;
     try { resumeDemo = localStorage.getItem(DEMO_MARKER_KEY) === 'true'; } catch (_) {}
+    // Vercel branch previews are isolated review environments. Open them in
+    // Demo Mode by default so a reviewer never has to enter production
+    // credentials just to inspect the preview. The production hostname keeps
+    // the normal cloud-first sign-in flow.
+    const host = String(window.location.hostname || '').toLowerCase();
+    const isVercelPreview = host.endsWith('.vercel.app') && host.includes('-git-') && host !== 'accelerator-os-rho.vercel.app';
+    const wantsDemoPreview = new URLSearchParams(window.location.search).get('demo') === '1';
+    if (isVercelPreview || wantsDemoPreview) resumeDemo = true;
     readStoredSession();
     if (resumeDemo && !accessToken && !refreshToken) {
       localWorkspaceAvailable = false;

@@ -1067,14 +1067,17 @@
     if(a==='copy-monthly'||a==='copy-quarterly'){const text=window.__cgCopyText||''; if(typeof copyText==='function')copyText(text); else navigator.clipboard?.writeText(text); toastNow('Copied');}
   });
 
+  function creatorRevision(c){
+    return window.AcceleratorAI?.revision?window.AcceleratorAI.revision(c):JSON.stringify(c);
+  }
   function commitAI(next,expected,paint=true){
-    const c=cNow();if(!c||next.id!==c.id||window.AcceleratorAI.revision(c)!==expected)throw Error('Creator context changed. Refresh the draft.');
+    const c=cNow();if(!c||next.id!==c.id||creatorRevision(c)!==expected)throw Error('Creator context changed. Refresh the draft.');
     const prior=JSON.parse(JSON.stringify(c));
     try{Object.keys(c).forEach(k=>delete c[k]);Object.assign(c,next);if(typeof save!=='function')throw Error('Save unavailable');save();}
     catch(e){Object.keys(c).forEach(k=>delete c[k]);Object.assign(c,prior);throw e;}
     if(paint&&typeof render==='function')render();
   }
-  window.AcceleratorDeskBridge={commitAI,native:openNativeView,current:cNow,currentVideo:vNow,view:()=>{try{return state.view}catch(_){return 'home'}},analyticsActive:()=>window.__cgNativeView==='analytics',homeState:()=>{window.__cgNativeView='';try{state.view='home'}catch(_){}},replace:next=>{const c=cNow();if(!c||next.id!==c.id)throw Error('Creator changed. Reopen this decision.');const prior=c.coachOS?.decisionDesk;c.coachOS=c.coachOS||{};c.coachOS.decisionDesk=next.coachOS.decisionDesk;try{if(typeof save!=='function')throw Error('Save is unavailable');save();}catch(e){c.coachOS.decisionDesk=prior;throw e;}},baselineFor:sameAgeBaseline,analytics:analyticsHome,baselines:baselineSummary,monthly,plan:plan90,review,demo:demoFull,drawer:openGuide,close:closeGuide};
+  window.AcceleratorDeskBridge={revision:creatorRevision,commitAI,native:openNativeView,current:cNow,currentVideo:vNow,view:()=>{try{return state.view}catch(_){return 'home'}},analyticsActive:()=>window.__cgNativeView==='analytics',homeState:()=>{window.__cgNativeView='';try{state.view='home'}catch(_){}},replace:next=>{const c=cNow();if(!c||next.id!==c.id)throw Error('Creator changed. Reopen this decision.');const prior=c.coachOS?.decisionDesk;c.coachOS=c.coachOS||{};c.coachOS.decisionDesk=next.coachOS.decisionDesk;try{if(typeof save!=='function')throw Error('Save is unavailable');save();}catch(e){c.coachOS.decisionDesk=prior;throw e;}},baselineFor:sameAgeBaseline,analytics:analyticsHome,baselines:baselineSummary,monthly,plan:plan90,review,demo:demoFull,drawer:openGuide,close:closeGuide};
   injectStyles(); injectButton();
   let injectQueued=false;const mo=new MutationObserver(()=>{if(injectQueued)return;injectQueued=true;queueMicrotask(()=>{injectQueued=false;injectButton();});}); mo.observe(document.documentElement,{childList:true,subtree:true});
   window.__acceleratorCoachGuide={home,analytics:analyticsHome,analyticsPage:renderAnalyticsPage,analyticsSnapshot,baseline,baselineBuilder,baselineHistory:baselineHistoryView,baselineRefreshStatus,baselineHistoryFor,baselineTrendRows,diagnosis,plan90,videoPrep,review,monthly,quarterly,studioHelp,demoFull,installDemoCreator,removeDemoCreator,researchCoverageGuide,situationGuide,buildDemoCreator,analyticsDiagnosis,recentVideoRead,strengthGroups,planProgress,jobScorecard,bestSavedBaseline,sameAgeBaseline,analyticsReportBlock,baselineCoreStatus,upsertAnalyticsPulse,contextualStrip,build:BUILD};

@@ -47,8 +47,8 @@ test('dated audience snapshots can be edited independently of 90-day channel per
 });
 
 test('import completion screen makes missing rows directly editable',()=>{
-  assert.match(live,/Missing Data Checklist/);
-  assert.match(live,/Video checkpoint gaps/);
+  assert.match(live,/Start here:/);
+  assert.match(live,/Video checkpoints/);
   assert.match(live,/Complete Missing Data/);
   assert.match(live,/data-studio="missing-video"/);
   assert.match(live,/data-studio="missing-audience"/);
@@ -56,12 +56,12 @@ test('import completion screen makes missing rows directly editable',()=>{
   assert.match(live,/AcceleratorAnalyticsManual\?\.openCheckpoint/);
   assert.match(live,/AcceleratorAnalyticsManualData\?\.audience/);
   assert.match(live,/AcceleratorAnalyticsManualData\?\.channel/);
-  assert.match(live,/Nothing missing is estimated/);
+  assert.match(live,/Keep unavailable fields blank/);
 });
 
-test('Studio tools keeps a permanent complete-missing-data entry point',()=>{
-  assert.match(live,/Complete missing data \('/);
-  assert.match(live,/missingCount/);
+test('missing data stays in the import workflow without another main-page checklist',()=>{
+  assert.match(live,/if\(completion\?\.total\)\{return missingEditor\(c\);\}/);
+  assert.match(live,/openMissing/);
 });
 
 test('manual page editors are exposed for direct workflow handoff',()=>{
