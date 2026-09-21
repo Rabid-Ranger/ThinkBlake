@@ -5,7 +5,7 @@ const { chromium } = require('playwright');
 const sourceHandler = require('../api/source');
 
 const ROOT = path.resolve(__dirname, '..');
-const OUTPUT_PDF = '/Users/blakerice/Documents/Codex/2026-08-28/th/outputs/Accelerator-OS-V16.3.2-PDF-Design-QA.pdf';
+const OUTPUT_PDF = '/tmp/accelerator-studio-collection-handoff.pdf';
 const report = {
   build: 'V16.3.2-safe-save-dashboard-pdf',
   checkedAt: new Date().toISOString(),
@@ -52,8 +52,9 @@ function startServer() {
       return;
     }
 
-    const file = req.url === '/favicon.svg' ? 'favicon.svg' : 'index.html';
-    const type = file.endsWith('.svg') ? 'image/svg+xml' : 'text/html; charset=utf-8';
+    const requestPath=new URL(req.url,'http://localhost').pathname;
+    const file=requestPath==='/favicon.svg'?'favicon.svg':/^(analytics|ai|ui)\/[\w-]+\.js$/.test(requestPath.slice(1))?requestPath.slice(1):'index.html';
+    const type = file.endsWith('.js') ? 'application/javascript' : file.endsWith('.svg') ? 'image/svg+xml' : 'text/html; charset=utf-8';
     res.statusCode = 200;
     res.setHeader('Content-Type', type);
     res.end(fs.readFileSync(path.join(ROOT, file)));
@@ -172,7 +173,7 @@ function startServer() {
     await page.waitForFunction(() => typeof window.__acceleratorSaveDiagnostics === 'function' && typeof window.__v163BuildPdf === 'function', null, { timeout: 60000 });
     await page.waitForTimeout(500);
 
-    check(await page.title() === 'Accelerator OS V16.3.2 - Safe Saving + Dashboard PDFs', 'The V16.3.2 application source loads without a startup error.');
+    check(/^Accelerator OS/.test(await page.title()), 'The current application source loads without a startup error.');
     check((await page.evaluate(() => window.__acceleratorSaveDiagnostics())).remoteVersion === 7, 'The save bridge reads the current cloud version before allowing writes.');
     check(report.saveCalls.length === 0, 'Loading a software update does not write or replace workspace data.');
     check((await page.evaluate(() => window.__acceleratorSaveDiagnostics())).recoveryAvailable === true, 'A richer pre-update browser copy is preserved separately instead of being overwritten by cloud restore.');

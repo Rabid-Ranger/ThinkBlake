@@ -35,8 +35,8 @@
     return '<div class="ar-card"><span>'+esc(label)+'</span><b>'+esc(format(current))+'</b><strong>'+esc(change(start,current,kind))+'</strong>'+(note?'<small>'+esc(note)+'</small>':'')+'</div>';
   }
   function latestAudience(c){
-    const rows=(c?.coachOS?.analytics?.audienceSnapshots||[]).filter(Boolean).slice().sort((a,b)=>String(a.asOf||a.date||'').localeCompare(String(b.asOf||b.date||'')));
-    return {previous:rows.at(-2)||{},current:rows.at(-1)||{},rows};
+    const ADC=typeof module==='object'&&module.exports?require('./decision-context'):globalThis.AcceleratorDecisionContext;
+    return ADC.audiencePair(c);
   }
   function contextNotes(x){
     const rows=[
@@ -52,7 +52,7 @@
   function channelMissingHtml(c,W){
     const d=W?.channel?W.channel(c):{current:{}},z=d.current||{},aud=latestAudience(c),az=aud.current||{},missing=[];
     if(n(z.engagedViews)===null)missing.push(['Engaged views','Studio → Analytics → Advanced Mode / SEE MORE → Engaged views. Keep it separate from public Views. If Studio cannot expose it, leave it missing.']);
-    if(n(az.avgViewsPerViewer)===null)missing.push(['Average views per viewer','Studio → Analytics → Advanced Mode / SEE MORE → Average views per viewer for the same 28-day audience window. This helps show whether people are watching more than one video.']);
+    if(n(az.avgViewsPerViewer)===null)missing.push(['Average views per viewer','Studio → Analytics → Advanced Mode / SEE MORE → Average views per viewer for the same 28-day audience window. This is average plays per viewer, not proof of viewing multiple distinct videos.']);
     if(n(z.newUploadViews)===null||n(z.libraryViews)===null)missing.push(['New-upload vs older-library views','Advanced Mode: use the exact 90-day date range and isolate views from videos published inside that period versus videos published before it. If Studio cannot isolate the split exactly, leave it missing.']);
     if(n(z.uploadsPublished)===null)missing.push(['Long-form uploads published','Count long-form uploads published inside the exact 90-day period. Do not use an all-content count that mixes Shorts and long-form.']);
     if(['qualifiedLeads','bookings','sales','revenue'].every(k=>n(z[k])===null))missing.push(['Business result','Use the creator’s CRM / booking / sales system. Add qualified leads, bookings, sales, or revenue only when the attribution/definition is understood. These are not YouTube Studio metrics.']);
@@ -62,7 +62,7 @@
 
   function channelDeepDive(c,W){
     const d=W?.channel?W.channel(c):{starting:{},current:{},comparable:false},a=d.starting||{},z=d.current||{},aud=latestAudience(c),ap=aud.previous||{},az=aud.current||{};
-    const splitTotal=(n(z.newUploadViews)||0)+(n(z.libraryViews)||0),newShare=splitTotal>0?(n(z.newUploadViews)||0)/splitTotal*100:null;
+    const splitTotal=n(z.newUploadViews)!==null&&n(z.libraryViews)!==null?z.newUploadViews+z.libraryViews:null,newShare=splitTotal>0?(n(z.newUploadViews)||0)/splitTotal*100:null;
     const hasBusiness=['qualifiedLeads','bookings','sales','revenue'].some(k=>n(z[k])!==null||n(a[k])!==null);
     const channelCard=(key,label,kind,format,note='')=>{
       const ok=typeof d.metricComparable==='function'?d.metricComparable(key):d.comparable;
@@ -89,7 +89,7 @@
         card('Views from older library',a.libraryViews,z.libraryViews,'count',count,'Videos published before the 90-day period')+
         '<div class="ar-card"><span>New-upload share of isolated split</span><b>'+esc(newShare===null?'Not recorded':newShare.toFixed(1)+'%')+'</b><strong>'+(newShare===null?'Needs both exact split fields':'New uploads vs older library')+'</strong><small>This is only calculated when both exact split fields are available.</small></div>'+ 
       '</div></div>'+ 
-      '<div class="ar-sub"><div><h3>New + returning viewers · rolling 28 days</h3><p>New, Casual, Regular, Returning, and average views/viewer are separate numbers. They do not track the same person step by step.</p></div><div class="ar-grid">'+
+      '<div class="ar-sub"><div><h3>New + returning viewers · rolling 28 days</h3><p>'+esc(az.asOf||az.date||'No dated snapshot')+' compared with '+esc(ap.asOf||ap.date||'no distinct comparable period yet')+'.</p><p>New, Casual, Regular, Returning, and average views/viewer are separate numbers. They do not track the same person step by step.</p></div><div class="ar-grid">'+
         card('Monthly audience',ap.monthlyAudience,az.monthlyAudience,'count',count)+
         card('New viewers',ap.newViewers,az.newViewers,'count',count)+
         card('Casual viewers',ap.casual,az.casual,'count',count)+

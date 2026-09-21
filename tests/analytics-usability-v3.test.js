@@ -4,9 +4,9 @@ const U=require('../analytics/usability-v3');
 
 test('checkpoint guide uses the exact decision language requested',()=>{
   assert.equal(U.PHASES[24].label,'24h · Launch');
-  assert.equal(U.PHASES[48].label,'48h · Triage');
+  assert.equal(U.PHASES[48].label,'48h · Check');
   assert.equal(U.PHASES[168].label,'7d · Diagnosis');
-  assert.equal(U.PHASES[672].label,'28d · Programming');
+  assert.equal(U.PHASES[672].label,'28d · What to make next');
   assert.equal(U.PHASES[2160].label,'90d · Channel Health');
   assert.match(U.PHASES[48].question,/SHOW, CLICK, or WATCH/i);
   assert.match(U.PHASES[168].decision,/main video decision point/i);
@@ -17,9 +17,9 @@ test('checkpoint guide uses the exact decision language requested',()=>{
 test('optional checkpoint wording is removed everywhere',()=>{
   const out=U.phaseLabels('<button>24 hours</button><button>48 hours</button><button>7 days</button><button>28 days · optional</button>');
   assert.match(out,/24h · Launch/);
-  assert.match(out,/48h · Triage/);
+  assert.match(out,/48h · Check/);
   assert.match(out,/7d · Diagnosis/);
-  assert.match(out,/28d · Programming/);
+  assert.match(out,/28d · What to make next/);
   assert.doesNotMatch(out,/optional/i);
 });
 
