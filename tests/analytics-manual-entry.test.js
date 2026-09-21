@@ -48,7 +48,7 @@ test('manual audience edits persist as their own dated 28-day snapshot',()=>{
 });
 
 test('current analytics read provides a direct manual channel data action',()=>{
-  assert.match(decision,/Missing verified data\?/);
-  assert.match(decision,/Add \/ edit verified channel data/);
+  assert.match(decision,/Where do I find this\?/);
+  assert.match(decision,/Enter channel data/);
   assert.match(decision,/analytics-snapshot-edit:/);
 });

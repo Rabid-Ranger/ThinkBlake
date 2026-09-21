@@ -44,11 +44,11 @@ test('baseline detail keeps metric-specific sample sizes',()=>{
 });
 
 test('strategist UI is wired for Reach Trust Convert and coach instructions',()=>{
-  const src=C.install.toString();
+  const src=C.install.toString()+C.strategistRead.toString();
   assert.match(src,/data-ac-job-select/);
-  assert.match(src,/This is an acquisition rep for the program/i);
-  assert.match(src,/This is a depth \/ return rep for the program/i);
-  assert.match(src,/This is an action rep for the program/i);
+  assert.match(src,/This video’s job is to bring in more of the right new viewers/i);
+  assert.match(src,/This video’s job is to help the right viewer stay/i);
+  assert.match(src,/This video’s job is to turn the right viewer/i);
   assert.match(src,/COACH NEXT MOVE/);
   assert.match(src,/MEASURE/);
   assert.match(src,/PROTECT/);
@@ -61,9 +61,9 @@ test('audience read turns current segment movement into a coach action',()=>{
     {asOf:'2026-09-15',newViewers:130000,casual:35000,regular:7000,returning:42000,avgViewsPerViewer:1.1}
   ]}}});
   const read=D.audienceCoachRead(a);
-  assert.match(read.headline,/Acquisition is working better than loyalty/i);
-  assert.match(read.meaning,/Gateway.*Bridge.*Core|Bridge.*Trust/i);
-  assert.match(read.action,/Protect the Reach mechanism/i);
+  assert.match(read.headline,/New-viewer growth is stronger than repeat viewing/i);
+  assert.match(read.meaning,/Trust \/ follow-up/i);
+  assert.match(read.action,/Protect the Reach video/i);
   assert.match(read.action,/follow-up|bridge/i);
 });
 
@@ -79,15 +79,15 @@ test('channel health synthesizes attention up plus return down into bridge press
     ]
   }}};
   const a=D.audienceRead(c),stages=D.channelStages(c,a),read=D.channelHealthRead(c,stages,a);
-  assert.match(read.headline,/Attention expanded.*repeat-audience behavior weakened/i);
-  assert.match(read.meaning,/bridge \/ loyalty pressure/i);
-  assert.match(read.action,/Protect the topics and packages creating attention/i);
-  assert.match(read.protect,/Library depth is not fully connected/i);
+  assert.match(read.headline,/Reach\/views grew, but fewer viewers are coming back/i);
+  assert.match(read.meaning,/bridge into the next useful video/i);
+  assert.match(read.action,/Protect the topics and packages creating reach/i);
+  assert.match(read.protect,/New-upload vs older-library contribution is missing/i);
 });
 
 test('strategist UI protects a winner and carries the soft lesson forward',()=>{
-  const src=C.install.toString();
-  assert.match(src,/d\.winner&&job!=='Unassigned'&&soft\.length/);
+  const src=C.install.toString()+C.strategistRead.toString();
+  assert.match(src,/d\.winner&&soft\.length/);
   assert.match(src,/learning \/ efficiency lane, not a reason to rescue a winning video/i);
   assert.match(src,/Do not panic-change the winning video/i);
   assert.match(src,/business RESULT still decides/i);
@@ -95,13 +95,13 @@ test('strategist UI protects a winner and carries the soft lesson forward',()=>{
 
 
 test('checkpoint-specific coaching keeps 24h 48h 7d and 28d decisions distinct',()=>{
-  const src=C.install.toString();
+  const src=C.install.toString()+C.strategistRead.toString();
   assert.match(src,/h===24/);
   assert.match(src,/Do not make a major creator-strategy decision from the first day/i);
   assert.match(src,/h===48/);
   assert.match(src,/decide what deserves investigation, not to rewrite the whole channel strategy/i);
   assert.match(src,/h===672/);
-  assert.match(src,/28-day programming read/i);
+  assert.match(src,/28-day what-to-make-next read/i);
   assert.match(src,/what to make next/i);
 });
 

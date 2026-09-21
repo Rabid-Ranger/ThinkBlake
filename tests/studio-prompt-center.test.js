@@ -7,16 +7,16 @@ const read=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8');
 
 test('Studio analytics uses one prompt center with all prompt choices',()=>{
   const live=read('analytics/live.js');
-  assert.match(live,/data-studio="prompt-center"/);
+  assert.match(live,/button\('prompt-center','Studio prompts'\)/);
   assert.match(live,/\['all','Everything'\]/);
   assert.match(live,/\['24','24h'\]/);
   assert.match(live,/\['48','48h'\]/);
   assert.match(live,/\['168','7d'\]/);
   assert.match(live,/\['672','28d'\]/);
-  assert.match(live,/\['channel','90-day channel \+ audience'\]/);
-  assert.match(live,/data-studio="copy-current"/);
+  assert.match(live,/\['channel','90-day channel \+ 28-day audience'\]/);
+  assert.match(live,/button\('copy-current','Copy prompt'\)/);
   assert.match(live,/navigator\.clipboard\.writeText\(p\.text\)/);
-  assert.match(live,/data-studio="paste"/);
+  assert.match(live,/button\('paste','Paste Studio results'\)/);
 });
 
 test('legacy channel button does not appear when prompt center exists',()=>{
