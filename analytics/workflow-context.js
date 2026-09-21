@@ -4,6 +4,7 @@
   if(root){root.AcceleratorWorkflowAnalytics=api;if(root.document)api.install(root);}
 })(typeof globalThis==='undefined'?this:globalThis,function(){
   'use strict';
+  const C=typeof module==='object'&&module.exports?require('./clarity'):globalThis.AcceleratorAnalyticsClarity;
   const n=v=>v===''||v==null||!Number.isFinite(Number(v))?null:Number(v);
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const median=xs=>{const a=xs.map(n).filter(v=>v!==null).sort((a,b)=>a-b);if(!a.length)return null;const m=Math.floor(a.length/2);return a.length%2?a[m]:(a[m-1]+a[m])/2;};
@@ -111,7 +112,7 @@
       meaning:'The raw '+label+' number by itself is not enough to call this a problem.',
       next:'Add or verify the 7-day '+missingMetric+' normal and a few similar recent videos.'
     };
-    const weak=(ratioV!==null&&ratioV<thresholdRatio)||(ratioV===null&&delta!==null&&delta<(label==='CTR'?-0.5:-3));
+    const weak=C.rateSignal({multiple:ratioV,deltaPp:delta},label==='CTR'?.5:3).tone==='bad';
     const soft=!weak&&((ratioV!==null&&ratioV<.85)||(delta!==null&&delta<(label==='CTR'?-0.5:-3)));
     const strong=(ratioV!==null&&ratioV>=1.15)||(ratioV===null&&delta!==null&&delta>(label==='CTR'?0.5:3));
     const line=(current!==null&&baseline!==null?label+' '+currentTxt+' vs '+baselineTxt+' normal':label+' comparison available')+
@@ -158,11 +159,27 @@
     const click=rateAnswer(r.click,'CTR',.7,'CTR');
     const watch=r.watchMetric==='AVD'?durationAnswer(r.watch,'AVD'):rateAnswer(r.watch,r.watchMetric,.7,r.watchMetric==='0:30'?'first-30-second retention':'APV');
 
+    // Legacy aggregate ratios lack the matched per-video evidence needed for a small rate-based verdict.
+    for(const [signal,rate,source] of [[click,r.click,r.sources.click],[watch,r.watch,r.sources.watch]]){
+      if(source==='saved channel diagnosis data'&&signal.tone==='bad'&&n(rate?.multiple)!==null&&rate.multiple>=.7){
+        signal.tone='warn';signal.label='A little below normal; verify the matched video reports.';
+        signal.next='Verify the same-age per-video comparison before turning this aggregate clue into a channel diagnosis.';
+      }
+    }
     if(n(r.show)!==null&&r.show>=1.7&&(click.tone==='bad')){
+      click.tone='warn';click.label='Check audience expansion before calling this a packaging problem.';
       click.meaning='CTR is weak, but impressions are strongly expanded. Wider/colder distribution can lower CTR without proving the package is broken.';
       click.next='Check traffic source and how broad the audience was first. Only call packaging the main problem if CTR remains weak when you compare similar traffic sources.';
     }
 
+    if(n(r.outcome)!==null&&r.outcome>=1.7){
+      for(const signal of [click,watch]){
+        if(signal.tone!=='bad')continue;
+        signal.tone='warn';signal.label='A learning question within a strong result.';
+        signal.meaning='The available outcome is strongly above normal. This softer rate does not turn that result into a failed video.';
+        signal.next='Protect what worked, check source mix, and use one supported lesson on the next comparable video.';
+      }
+    }
     const a=r.audience||{},trend=(key,label)=>{
       const cur=n(a.current?.[key]),prev=n(a.previous?.[key]),rr=cur!==null&&prev!==null&&prev!==0?cur/prev:null;
       return rr===null?null:{label,ratio:rr,text:label+' '+signedPct(rr)};
@@ -302,7 +319,7 @@
         audienceMetric(a,'returning','Returning','People coming back again'),
         audienceMetric(a,'avgViewsPerViewer','Avg views / viewer','Channel-depth clue; repeat views can count')
       ];
-      if(!a.hasComparison)return {...base,verdict:'Not enough audience trend data yet.',line:'Add a second comparable 90-day audience report so we can see whether repeat viewing is strengthening or weakening.',metrics,note:'New / Casual / Regular do not track the same person step by step.'};
+      if(!a.hasComparison)return {...base,verdict:'Not enough audience trend data yet.',line:'Add a second comparable 28-day audience snapshot so we can see whether repeat viewing is strengthening or weakening.',metrics,note:'New / Casual / Regular do not track the same person step by step.'};
       const loyalty=n(a.loyalty),newTrend=n(a.acquisition),depth=n(a.depth);
       let tone='normal',verdict='Analytics do not show a clear Trust problem.',meaning='Repeat-audience signals are roughly steady.';
       if(loyalty!==null&&loyalty<.85){tone='bad';verdict='Analytics lean NO: repeat viewing is weakening.';meaning='Casual / Regular / Returning trends say fewer people are building a repeat relationship with the channel.';}
@@ -366,17 +383,22 @@
     if(r.outcome===null){
       because='We still cannot answer OUTCOME because we do not have a fair 7-day comparison yet.';
       next='Verify the 7-day result before deciding what the main issue is.';
+    }else if(r.outcome>=1.7){
+      leading='Growth pattern worth protecting';
+      because='Recent comparable outcomes are strongly above normal. Softer rates are learning questions, not an automatic repair order.';
+      next='Keep the working direction. Check source mix and the intended video job, then carry one supported lesson into the next video.';
+      alternative='Wider distribution can lower rates; platform reach does not by itself prove Trust or business success.';
     }else if(r.show!==null&&r.show<.7){
       leading='Topic / Reach';
       because='The videos are under normal, and the first place the drop shows up is SHOW: YouTube is showing them at '+mult(r.show)+' of the usual level.';
       next='Check the topic, who the video reached, and where the views came from before changing the title or thumbnail.';
       alternative='A narrower intentional audience, source shift or mixed comparison set could lower impressions without making the idea bad.';
-    }else if((n(r.click?.multiple)!==null&&r.click.multiple<.7)||(n(r.click?.multiple)===null&&n(r.click?.deltaPp)!==null&&r.click.deltaPp<-.5)){
+    }else if(q.click.tone==='bad'){
       leading='Packaging / click';
       because='SHOW is not the first clear failure, but CLICK is. '+q.click.line;
       next=q.click.next;
       alternative='A colder or broader audience mix can cool CTR without proving the package is bad.';
-    }else if((n(r.watch?.multiple)!==null&&r.watch.multiple<.7)||(n(r.watch?.multiple)===null&&n(r.watch?.deltaPp)!==null&&r.watch.deltaPp<-3)){
+    }else if(q.watch.tone==='bad'){
       leading='Promise / opening / viewing experience';
       because='SHOW and CLICK hold better, while WATCH is the first clear weak stage. '+q.watch.line;
       next=q.watch.next;

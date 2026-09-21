@@ -22,7 +22,7 @@
   function phaseLabels(html){
     let out=String(html||'');
     const swaps=[
-      ['>24 hours<','>24h · Launch<'],['>48h · Check<','>48h · Check<'],['>7 days<','>7d · Diagnosis<'],['>28d · What to make next<','>28d · What to make next<'],['>28d · What to make next<','>28d · What to make next<'],
+      ['>24 hours<','>24h · Launch<'],['>48 hours<','>48h · Check<'],['>7 days<','>7d · Diagnosis<'],['>28 days · optional<','>28d · What to make next<'],['>28 days<','>28d · What to make next<'],
       ['Build a 24 hours baseline','Build a 24h Launch baseline'],['Build a 48h Check baseline','Build a 48h Check baseline'],['Build a 7 days baseline','Build a 7d Diagnosis baseline'],['Build a 28d What-to-make-next baseline','Build a 28d What-to-make-next baseline']
     ];
     for(const [a,b] of swaps)out=out.split(a).join(b);

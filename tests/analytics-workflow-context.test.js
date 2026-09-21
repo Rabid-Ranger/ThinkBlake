@@ -42,7 +42,7 @@ test('each diagnosis question answers with the metric that question asks for',()
     assert.match(q.click.line,/CTR/);
     assert.match(q.click.line,/usual|normal/);
     assert.match(q.watch.line,/0:30/);
-    assert.match(q.outcome.next,/SHOW|channel trend/i);
+    assert.match(q.outcome.next,/channel problem/i);
     assert.match(q.show.next,/CLICK/i);
   } finally {restore();}
 });
@@ -167,7 +167,7 @@ test('missing metric tells the coach exactly what is missing instead of generic 
     assert.match(q.click.label,/Not enough data/i);
     assert.match(q.click.line,/CTR/i);
     assert.match(q.click.next,/7-day CTR normal/i);
-    assert.match(q.watch.line,/retention|APV/i);
+    assert.match(q.watch.line,/retention|APV|Average View Duration/i);
   } finally {restore();}
 });
 

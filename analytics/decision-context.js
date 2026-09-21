@@ -25,8 +25,27 @@
     const legacy=snapshots(c).filter(x=>['newViewers','casual','regular','returning','avgViewsPerViewer'].some(k=>n(x[k])!==null));
     return legacy.map(x=>({...x,sourceWindow:'legacy saved audience data · refresh with 28-day snapshot',legacyWindow:true}));
   }
+  // Reimports are revisions, not independent periods. Never mutate saved history.
+  function distinctAudienceRows(c){
+    const byPeriod=new Map();
+    for(const row of audienceSnapshots(c)){
+      const date=String(row.asOf||row.date||'').slice(0,10);
+      if(!Number.isFinite(Date.parse(date)))continue;
+      const key=[date,row.windowDays||28,row.scope||row.traffic||'all',row.format||'all',row.metricDefinitionId||'unspecified',Boolean(row.legacyWindow)].join('|');
+      const old=byPeriod.get(key),rank=x=>String(x.updatedAt||x.savedAt||x.importedAt||'');
+      if(!old||rank(row)>=rank(old))byPeriod.set(key,row);
+    }
+    return [...byPeriod.values()].sort((a,b)=>String(a.asOf||a.date).localeCompare(String(b.asOf||b.date)));
+  }
+  function audiencePair(c){
+    const rows=distinctAudienceRows(c),current=rows.at(-1)||{};
+    const scope=x=>JSON.stringify([x.windowDays||28,x.scope||x.traffic||'all',x.format||'all',x.metricDefinitionId||'unspecified',Boolean(x.legacyWindow)]);
+    const date=x=>String(x.asOf||x.date||'').slice(0,10);
+    const previous=rows.slice(0,-1).reverse().find(x=>date(x)<date(current)&&scope(x)===scope(current))||{};
+    return {rows,current,previous,hasComparison:Boolean(previous.asOf||previous.date)};
+  }
   function audienceRead(c){
-    const rows=audienceSnapshots(c),cur=rows.at(-1)||{},prev=rows.at(-2)||{};
+    const {rows,current:cur,previous:prev,hasComparison}=audiencePair(c);
     const change=k=>ratio(cur[k],prev[k]);
     const changes={
       newViewers:change('newViewers'),
@@ -41,7 +60,7 @@
     const acquisition=changes.newViewers,depth=changes.avgViewsPerViewer;
     const band=r=>r===null?'unknown':r<.85?'weak':r>1.05?'strong':'steady';
     let read='Not enough audience data yet.',focus='Need another comparable 28-day audience snapshot.';
-    if(rows.length>=2){
+    if(hasComparison){
       if(band(acquisition)==='weak'&&['steady','strong'].includes(band(loyalty))){
         read='Repeat viewing looks healthier than new-viewer growth.';
         focus='Reach is the audience-side pressure: bring in more of the right new viewers while protecting what is already bringing people back.';
@@ -61,7 +80,7 @@
     const curDate=Date.parse(cur.asOf||cur.date||''),prevDate=Date.parse(prev.asOf||prev.date||''),gapDays=Number.isFinite(curDate)&&Number.isFinite(prevDate)?Math.round((curDate-prevDate)/86400000):null;
     const overlapDays=gapDays!==null&&gapDays<28?28-gapDays:0;
     return {
-      current:cur,previous:prev,hasCurrent:Boolean(rows.length),hasComparison:rows.length>=2,sourceWindow:cur.sourceWindow||'28-day monthly audience',legacyWindow:Boolean(cur.legacyWindow),
+      current:cur,previous:prev,hasCurrent:Boolean(rows.length),hasComparison,sourceWindow:cur.sourceWindow||'28-day monthly audience',legacyWindow:Boolean(cur.legacyWindow),
       changes,
       acquisition,acquisitionBand:band(acquisition),
       loyaltyKey:repeatEntries.length>1?'repeat audience':repeatEntries[0]?.[0]||null,
@@ -155,8 +174,8 @@
     const phrase=(r,label)=>r===null?'No comparable trend yet':label+' '+signed(r-1)+' vs prior';
     return [
       {key:'attention',label:'REACH / VIEWS',band:stageBand(attention),value:phrase(attention,attentionLabel),sub:(defsKnown?'':'Views definition is not verified across these reports, so this read uses Impressions instead. ')+(watchTime===null?'':'Watch time '+signed(watchTime-1)+' vs prior.'),action:attention!==null&&attention<.85?'Check whether the decline is new-upload opportunity, traffic mix, market demand, or library contribution before changing packaging.':'Keep checking whether more reach/views are also leading to more people coming back.'},
-      {key:'return',label:'COME BACK',band:stageBand(returnRatio),value:returnRatio===null?'No comparable repeat-audience trend yet':'Repeat-audience trend '+signed(returnRatio-1),sub:'Casual + Regular + Returning viewers, read together.',action:returnRatio===null?'Add/verify comparable 28-day audience snapshots.':returnRatio<.85?'Test stronger follow-ups, series, consistent promises, and obvious next-video paths.':'Repeat viewing is not the obvious break; protect what is bringing people back.'},
-      {key:'depth',label:'WATCH MORE',band:stageBand(depth),value:depth===null?'Average views/viewer not connected yet':'Avg views/viewer '+signed(depth-1)+' vs prior',sub:'Are people watching more than one video across the channel?',action:depth===null?'Manually pull Average views per viewer in Studio Advanced Mode / SEE MORE. Also add exact new-upload vs older-library views if Studio can isolate them.':depth<.85?'Inspect own-Suggested, end screens, follow-up paths, and whether viewers have an obvious second video.':'Average views per viewer is holding; keep checking the follow-up videos driving it.'},
+      {key:'return',label:'COME BACK',band:stageBand(returnRatio),value:returnRatio===null?'No comparable repeat-audience trend yet':'Repeat-audience trend '+signed(returnRatio-1),sub:'Dashboard summary of segment changes, not a YouTube metric or a conversion funnel.',action:returnRatio===null?'Add/verify comparable 28-day audience snapshots.':returnRatio<.85?'Test stronger follow-ups, series, consistent promises, and obvious next-video paths.':'Repeat viewing is not the obvious break; protect what is bringing people back.'},
+      {key:'depth',label:'WATCH MORE',band:stageBand(depth),value:depth===null?'Average views/viewer not connected yet':'Avg views/viewer '+signed(depth-1)+' vs prior',sub:'Average views per viewer can include repeat plays; it does not prove viewing multiple different videos.',action:depth===null?'Manually pull Average views per viewer in Studio Advanced Mode / SEE MORE. Also add exact new-upload vs older-library views if Studio can isolate them.':depth<.85?'Inspect own-Suggested, end screens, follow-up paths, and whether viewers have an obvious second video.':'Average views per viewer is holding; keep checking the follow-up videos driving it.'},
       {key:'result',label:'BUSINESS RESULT',band:stageBand(resultRatio),value:resultRatio===null?'Business result not connected yet':(resultKey==='qualifiedLeads'?'Qualified leads':resultKey==='bookings'?'Bookings':'Sales')+' '+signed(resultRatio-1),sub:'Are the views turning into the business result we care about?',action:resultRatio===null?'If this creator has a business goal, enter qualified leads / bookings / sales from the CRM or business system. Do not invent these from YouTube.':resultRatio<.85?'Check CTA/offer alignment and attribution before changing Reach or Trust content.':'Business result is keeping pace; protect the path that is working.'}
     ];
   }
@@ -227,28 +246,39 @@
   }
 
   function patternFocus(pattern){
-    if(!pattern?.max||!pattern?.stages?.length)return null;
-    if(pattern.stages.length===1)return STAGE_TO_FOCUS[pattern.stages[0]]||null;
-    return pattern.stages.map(x=>STAGE_TO_FOCUS[x]||x).join(' + ');
+    const stage=['reach','packaging','retention'].find(x=>pattern?.stages?.includes(x));
+    return stage?STAGE_TO_FOCUS[stage]:null;
+  }
+  function stageId(label){
+    const x=String(label||'').toLowerCase();
+    if(/repeat|loyalty|follow-up/.test(x))return 'return';
+    if(/topic|reach|discovery|acquisition|gateway/.test(x))return 'reach';
+    if(/packag|title|thumbnail|click/.test(x))return 'packaging';
+    if(/opening|watch|viewing|retention/.test(x))return 'retention';
+    return null;
   }
   function deriveFocus(input){
     const d=input.diagnosis||{},p=input.pattern||{},a=input.audience||{},t=input.trajectory||[];
     if(d.leading&&!['Not enough data yet','Not enough evidence yet'].includes(d.leading)&&d.confidence!=='Low')return {focus:d.leading,confidence:d.confidence||'Low',source:'channel diagnosis'};
-    if(p.max&&p.source==='hard')return {focus:patternFocus(p)||'Repeated video problem',confidence:p.max>=3?'Medium':'Low',source:'repeated 7-day videos'};
+    if(p.max>=2&&p.source==='hard')return {stageId:stageId(patternFocus(p)),focus:patternFocus(p)||'Repeated video problem',confidence:p.max>=3?'Medium':'Low',source:'repeated 7-day videos'};
     if(a.acquisitionBand==='weak'&&['steady','strong'].includes(a.loyaltyBand))return {focus:'New viewers / Reach',confidence:'Medium',source:'audience trend'};
     if(['steady','strong'].includes(a.acquisitionBand)&&a.loyaltyBand==='weak')return {focus:'Repeat viewing / follow-ups',confidence:'Medium',source:'audience trend'};
     if(a.acquisitionBand==='weak'&&a.loyaltyBand==='weak')return {focus:'New viewers + repeat viewing',confidence:a.overlapDays?'Low':'Medium',source:'audience trend'};
     const seven=t.find(x=>x.hours===168);
-    if(seven?.growth!==null&&seven.growth>=1.1&&!p.max)return {focus:'Growth pattern worth protecting',confidence:'Medium',source:'rising 7-day normal'};
-    if(p.max)return {focus:patternFocus(p)||'A small pattern worth checking',confidence:'Low',source:'small 7-day pattern'};
+    if(seven&&seven.growth!==null&&seven.growth>=1.1&&!p.max)return {focus:'Growth pattern worth protecting',confidence:'Medium',source:'rising 7-day normal'};
+    if(p.max)return {stageId:stageId(patternFocus(p)),clueOnly:true,focus:patternFocus(p)||'A small pattern worth checking',confidence:'Low',source:p.max===1?'one video clue':'soft 7-day pattern'};
     if(d.leading&&!['Not enough data yet','Not enough evidence yet'].includes(d.leading))return {focus:d.leading,confidence:'Low',source:'low-confidence channel diagnosis'};
     return {focus:'No clear channel problem yet',confidence:'Low',source:'not enough repeated data yet'};
   }
   function focusAction(focus){
-    const x=String(focus||'').toLowerCase();
-    if(x.includes('packag'))return {job:'Keep the video’s intended job',metric:'CTR + engaged views',video:'Plan the title + thumbnail promise before production, then change one meaningful packaging variable without changing the whole idea.'};
+    const read=typeof focus==='object'?focus:{focus},id=read.stageId||stageId(read.focus);
+    const x=String(read.focus||'').toLowerCase();
+    if(read.clueOnly)return {job:'Keep the intended video job',metric:'Next comparable 7-day result',video:'Keep the current plan. Review this clue in the relevant video and check whether it repeats before changing the creator’s direction.'};
+    if(id==='retention')return {job:'Keep the intended video job',metric:'Exact 0:30 when available; APV / AVD',video:'Inspect the retention curve to find where viewers leave more than usual. APV and AVD cannot locate an opening problem. Choose one improvement only after checking that evidence.'};
+    if(id==='return')return {job:'Trust',metric:'New / Casual / Regular / Returning',video:'Keep the working Reach ideas and make one relevant follow-up easier to find. Check the next distinct audience period before changing the whole plan.'};
+    if(id==='packaging')return {job:'Keep the video’s intended job',metric:'CTR + engaged views',video:'Plan the title + thumbnail promise before production, then change one meaningful packaging variable without changing the whole idea.'};
     if(x.includes('opening')||x.includes('viewing')||x.includes('retention'))return {job:'Trust or the video’s intended job',metric:'0:30 + APV/AVD',video:'Focus the next test on the first 30–60 seconds and delivering the promise faster. Do not make the idea smaller just to improve retention.'};
-    if(x.includes('discovery')||x.includes('acquisition')||x.includes('gateway')||x.includes('new viewers / reach'))return {job:'Reach',metric:'Engaged views + impressions + new viewers',video:'Make a broader Reach video around a proven audience problem. Try to get in front of more of the right people without hurting CTR or watch quality.'};
+    if(id==='reach')return {job:'Reach',metric:'Engaged views + impressions + new viewers',video:'Make a broader Reach video around a proven audience problem. Try to get in front of more of the right people without hurting CTR or watch quality.'};
     if(x.includes('audience growth + loyalty')||x.includes('new viewers + repeat viewing'))return {job:'Reach + Trust',metric:'New viewers + Casual / Regular / Returning',video:'Do not blame one video. Check whether the prior audience period was spike-driven, then pair stronger Reach ideas with obvious follow-ups so new viewers have somewhere useful to go next.'};
     if(x.includes('loyalty')||x.includes('pathway')||x.includes('repeat viewing')||x.includes('follow-up'))return {job:'Trust',metric:'Returning / casual / regular viewers',video:'Make the next video feel like the obvious thing to watch next: a follow-up, series, or deeper answer for the same viewer.'};
     if(x.includes('business')||x.includes('convert'))return {job:'Convert',metric:'Qualified leads / bookings',video:'Make the audience-to-offer path explicit without turning the video into an ad. Judge the video by its job, not only views.'};
@@ -261,16 +291,16 @@
     const audience=audienceRead(c),trajectory=baselineTrajectory(c);
     let diagnosis={};
     try{diagnosis=guide?.analyticsDiagnosis?guide.analyticsDiagnosis(c):{}}catch(_){}
-    const focus=deriveFocus({diagnosis,pattern,audience,trajectory}),action=focusAction(focus.focus);
+    const focus=deriveFocus({diagnosis,pattern,audience,trajectory}),action=focusAction(focus);
     const seven=trajectory.find(x=>x.hours===168),why=[];
     if(pattern?.n){
-      if(pattern.max)why.push((pattern.source==='hard'?'Repeated issue: ':'Repeated soft spot: ')+(pattern.label||patternFocus(pattern))+' in '+pattern.max+' of '+pattern.n+' recent 7-day videos.');
+      if(pattern.max)why.push((pattern.max===1?'One video clue: ':pattern.source==='hard'?'Repeated issue: ':'Repeated soft spot: ')+(pattern.label||patternFocus(pattern))+' in '+pattern.max+' of '+pattern.n+' recent 7-day videos.');
       else why.push('No SHOW → CLICK → WATCH issue repeats across '+pattern.n+' recent 7-day videos.');
     }
     if(seven?.current){
       const current=n(seven.current[seven.outcomeKey]);
       if(seven.growth!==null)why.push('7-day normal is '+signed(seven.growth-1)+' vs its first saved version.');
-      else if(current!==null)why.push('Current 7-day normal: '+fmt(current)+' '+(seven.outcomeKey==='engagedViews'?'engaged views':'views')+'.');
+      else if(current!==null)why.push('Current 7-day normal: '+fmt(current)+' '+({engagedViews:'engaged views',views:'views',impressions:'impressions'}[seven.outcomeKey]||seven.outcomeKey)+'.');
     }
     if(audience.hasComparison){
       if(audience.acquisition!==null)why.push('New viewers are '+signed(audience.acquisition-1)+' vs the prior 28-day audience snapshot.');
@@ -340,8 +370,8 @@
     const p=W.prefs(c),h=AGE_ORDER.includes(Number(p.hours))?Number(p.hours):168,d=baselineDetail(c,W,h),conf=normalConfidence(d.sample);
     const tabs=AGE_ORDER.map(x=>'<button class="adc-normal-tab '+(x===h?'active':'')+'" data-adc-baseline-window="'+x+'">'+AGE_NAME[x]+'</button>').join('');
     return '<div class="adc-normal-panel">'+
-      '<div class="adc-normal-head"><div><div class="adc-subhead"><b>Normals at a glance</b><span>Click a checkpoint. The selected video below switches to the same age.</span></div><h3>'+esc(AGE_NAME[h]+' creator normal')+'</h3><p>'+esc(d.label)+' · '+esc(d.source)+'</p></div><div class="adc-normal-confidence '+conf.tone+'"><span>BASELINE CONFIDENCE</span><b>'+esc(conf.label)+'</b><small>Each metric keeps its own compatible n.</small></div></div>'+
-      '<div class="adc-normal-tabs">'+tabs+'</div>'+
+      '<div class="adc-normal-head"><div><div class="adc-subhead"><b>Normals at a glance</b><span>Click a checkpoint. The selected video below switches to the same age.</span></div><h3>'+esc(AGE_NAME[h]+' current creator normal')+'</h3><p>'+esc(d.label)+' · '+esc(d.source)+'</p></div><div class="adc-normal-confidence '+conf.tone+'"><span>BASELINE CONFIDENCE</span><b>'+esc(conf.label)+'</b><small>Each metric keeps its own compatible n.</small></div></div>'+
+      '<p class="adc-normal-note">This is the current creator normal. The comparison for a selected video can differ because it excludes that video and uses its matching group. Saved starting normals remain available in baseline history.</p><div class="adc-normal-tabs">'+tabs+'</div>'+
       '<div class="adc-normal-channel-link"><div><span>CHANNEL TRACKING</span><b>90-day progress</b><small>Whole-channel movement after several videos. It does not set the 24h / 48h / 7d / 28d video normal.</small></div><button class="btn" data-ac-mode="channel">Open 90-day progress</button></div>'+
       '<div class="adc-normal-groups">'+
         '<div><div class="adc-normal-group-label">OUTCOME + SHOW</div><div class="adc-normal-metrics">'+
@@ -417,10 +447,10 @@
       if(o.coverage!=='exact')context.push(o.coverage==='partial'?'Checkpoint is partial, not the full '+AGE_NAME[o.windowHours]+' lifespan':'Exact checkpoint coverage is not verified');
       if(!o.definitionId||/unknown|unverified/i.test(String(o.definitionId)))context.push('Measurement definition is unverified');
       if(!o.paid||o.paid==='unknown')context.push('Organic / paid status is unverified');
-      return {videoId:o.videoId,title:o.title||o.videoId,hours:Number(o.windowHours),missing,context};
-    }).filter(x=>x.missing.length||x.context.length);
+      return {videoId:o.videoId,title:o.title||o.videoId,publishedAt:o.publishedAt,hours:Number(o.windowHours),missing,context};
+    }).filter(x=>x.missing.length||x.context.length).sort((a,b)=>Number(b.hours===168)-Number(a.hours===168)||String(b.publishedAt||'').localeCompare(String(a.publishedAt||'')));
     const audMap=new Map();
-    for(const a of audienceSnapshots(c)){
+    for(const a of distinctAudienceRows(c)){
       const asOf=a.asOf||a.date||'',missing=AUDIENCE_COMPLETION_FIELDS.filter(([k])=>n(a[k])===null),prev=audMap.get(asOf);
       if(!prev||missing.length<prev.missing.length)audMap.set(asOf,{asOf,missing});
     }
@@ -466,7 +496,7 @@
         '<div class="adc-compact-block"><div class="adc-subhead"><b>Channel health</b><span>What does the combination mean?</span></div><div class="adc-stages">'+health+'</div>'+
           '<div class="adc-current-read '+r.channelHealth.tone+'"><span>CURRENT CHANNEL-HEALTH READ</span><b>'+esc(r.channelHealth.headline)+'</b><p>'+esc(r.channelHealth.meaning)+'</p><div><strong>Coach action</strong><p>'+esc(r.channelHealth.action)+'</p></div><small><b>Protect / limits:</b> '+esc(r.channelHealth.protect)+'</small></div>'+
           '<details class="adc-help"><summary>How do I read Reach / Views, Come Back, Watch More, and Business Result?</summary>'+healthHelp+'</details></div>'+
-        '<div class="adc-compact-block"><div class="adc-subhead"><b>Audience · rolling 28 days</b><span>'+esc(a.read)+'</span></div><div class="adc-audience-mini-grid">'+
+        '<div class="adc-compact-block"><div class="adc-subhead"><b>Audience · rolling 28 days</b><span>'+esc((a.current.asOf||a.current.date||'No dated snapshot')+' vs '+(a.previous.asOf||a.previous.date||'no prior comparable period')+' · '+a.read)+'</span></div><div class="adc-audience-mini-grid">'+
           mini('New',a.newViewers,a.changes?.newViewers??null)+mini('Casual',a.casual,a.changes?.casual??null)+mini('Regular',a.regular,a.changes?.regular??null)+mini('Returning',a.returning,a.changes?.returning??null)+
         '</div><div class="adc-current-read '+r.audienceCoach.tone+'"><span>WHAT THIS AUDIENCE DATA MEANS NOW</span><b>'+esc(r.audienceCoach.headline)+'</b><p>'+esc(r.audienceCoach.meaning)+'</p><div><strong>Coach action</strong><p>'+esc(r.audienceCoach.action)+'</p></div><small><b>Protect / limits:</b> '+esc(r.audienceCoach.protect)+'</small></div><details class="adc-help"><summary>What do these audience groups mean?</summary>'+
           '<p><b>Important:</b> New → Casual → Regular is a simple way to read the audience, not a tracked person-by-person path. Read the direction of the groups together over time.</p>'+
@@ -487,7 +517,7 @@
     if(r.focus!=='No clear channel problem yet')verdict='The data is pointing you toward '+r.focus+'.';
     const support=[];
     if(p?.max)support.push((p.source==='hard'?'Hard':'Soft')+' video pattern: '+(p.label||patternFocus(p))+' · '+p.max+' of '+p.n+' recent 7-day videos.');
-    if(a.acquisition!==null)support.push('New viewers '+signed(a.acquisition-1)+' vs prior 90-day report.');
+    if(a.acquisition!==null)support.push('New viewers '+signed(a.acquisition-1)+' vs prior 28-day audience snapshot.');
     if(a.loyalty!==null)support.push((a.loyaltyKey==='repeat audience'?'Casual / Regular / Returning viewers':(a.loyaltyKey||'Repeat audience'))+' '+signed(a.loyalty-1)+' vs prior.');
     const decision='If the rest of the diagnosis agrees, use '+r.focus+' as the main focus. If the creator goal, audience fit, offer, capacity, or business situation points somewhere else, check that before locking the plan.';
     return '<section class="studio-data adc-diagnosis '+tone+'" id="studio-diagnosis-data"><div class="kicker">WHAT THE DATA IS SAYING</div><h3>'+esc(verdict)+'</h3><p><b>Why:</b> '+esc((support.length?support:r.why).slice(0,3).join(' '))+'</p><div class="adc-decision-grid"><div><span>What the data suggests</span><b>'+esc(r.focus)+'</b><small>'+esc(r.confidence)+' confidence</small></div><div><span>If you accept it</span><b>'+esc(r.action.video)+'</b><small>Main number to watch: '+esc(r.action.metric)+'</small></div></div><p><b>How to use this in the diagnosis:</b> '+esc(decision)+'</p><p><b>Do not force it:</b> Repeated numbers can show you where to look. They still do not tell you exactly why it happened.</p><button class="btn" data-studio="analytics">Open Analytics</button></section>';
@@ -503,7 +533,7 @@
     let hypothesis='If we improve the current focus, the result should improve without hurting CTR or watch quality.';
     let success='Across several similar videos, the main number improves toward what this creator usually gets while the other important numbers stay healthy.';
     let guard='Do not improve one number by attracting the wrong audience or hurting another important part of the video.';
-    if(x.includes('packag')){
+    if(stageId(focus)==='packaging'){
       primaryMetricKey='ctr';
       hypothesis='If the title/thumbnail is the real problem, stronger packaging should move CTR closer to what this creator usually gets while retention stays healthy.';
       success='CTR improves across several similar videos without a meaningful drop in 0:30 / APV.';
@@ -969,5 +999,5 @@ ${JSON.stringify(schema,null,2)}`;
     paint();
   }
 
-  return {snapshots,audienceSnapshots,audienceRead,audienceCoachRead,baselineTrajectory,baselineDetail,normalsAtGlance,missingDataReport,missingDataHtml,channelStages,channelHealthRead,deriveFocus,focusAction,overallRead,planSuggestion,channelPrompt,masterPrompt,parseJsonBlock,install};
+  return {snapshots,distinctAudienceRows,audiencePair,audienceSnapshots,audienceRead,audienceCoachRead,baselineTrajectory,baselineDetail,normalsAtGlance,missingDataReport,missingDataHtml,channelStages,channelHealthRead,deriveFocus,focusAction,overallRead,planSuggestion,channelPrompt,masterPrompt,parseJsonBlock,install};
 });

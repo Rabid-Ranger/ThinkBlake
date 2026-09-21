@@ -5,9 +5,9 @@ const R=require('../analytics/richness');
 test('keeps the full checkpoint flow visible without calling 28d optional',()=>{
   const html=R.flowStrip();
   assert.match(html,/24h[\s\S]*Launch/);
-  assert.match(html,/48h[\s\S]*Triage/);
+  assert.match(html,/48h[\s\S]*Check/);
   assert.match(html,/7d[\s\S]*Diagnosis/);
-  assert.match(html,/28d[\s\S]*Programming/);
+  assert.match(html,/28d[\s\S]*What to make next/);
   assert.match(html,/90d[\s\S]*Channel health/);
   assert.doesNotMatch(html,/optional/i);
 });
@@ -19,10 +19,10 @@ test('channel deep dive surfaces library, audience, traffic, and business result
   ]}}};
   const W={channel:()=>({comparable:true,starting:{views:10000,engagedViews:9000,impressions:100000,ctr:5,watchTime:500,browsePct:40,suggestedPct:20,searchPct:15,externalPct:5,uploadsPublished:8,newUploadViews:7000,libraryViews:3000,qualifiedLeads:20,bookings:5,sales:2,revenue:1000},current:{views:14000,engagedViews:12000,impressions:130000,ctr:5.5,watchTime:700,browsePct:50,suggestedPct:18,searchPct:12,externalPct:4,uploadsPublished:9,newUploadViews:8000,libraryViews:6000,qualifiedLeads:30,bookings:8,sales:3,revenue:1600,libraryNote:'Advanced Mode split',sourceNote:'Browse led'}})};
   const html=R.channelDeepDive(creator,W);
-  assert.match(html,/Programming \+ library contribution/);
+  assert.match(html,/New uploads \+ older videos/);
   assert.match(html,/Views from new uploads/);
   assert.match(html,/Views from older library/);
-  assert.match(html,/Audience growth \+ loyalty/);
+  assert.match(html,/New \+ returning viewers/);
   assert.match(html,/Where the views came from/);
   assert.match(html,/RESULT · business outcome/);
   assert.match(html,/Qualified leads/);
