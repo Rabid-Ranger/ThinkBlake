@@ -24,8 +24,8 @@ function observation(i,{hours=168,title='Video '+i,apv=50,avd=300,views=1000,bro
 
 test('Studio prompts request both view counts, exact retention when available, and per-video source mix',()=>{
   const p=Import.prompt(creator,168);
-  assert.match(p,/Advanced Mode for Engaged views/i);
-  assert.match(p,/Do NOT claim Engaged views is Shorts-only/i);
+  assert.match(p,/engagedViews and retention30 are OPTIONAL bonus fields/i);
+  assert.match(p,/If Ask Studio cannot retrieve Engaged views, return null and move on/i);
   assert.match(p,/Key moments \/ Intro \/ first-30-second/i);
   for(const term of ['Browse %','Suggested %','Search %','External %'])assert.match(p,new RegExp(term));
   assert.match(p,/definitionId.*measurement method/i);
@@ -153,4 +153,11 @@ test('AVD becomes the WATCH fallback when exact 0:30 and APV are unavailable',()
   assert.match(q.watch.line,/AVD 100 sec vs 200 sec normal/i);
   assert.match(q.watch.line,/0\.50× normal/);
   assert.match(q.watch.line,/-100 sec/);
+});
+
+
+test('channel health prompt uses the latest fully processed 90-day range',()=>{
+  const p=Decision.channelPrompt(creator);
+  assert.match(p,/latest fully PROCESSED 90-day period/i);
+  assert.match(p,/Do not assume yesterday is complete/i);
 });
