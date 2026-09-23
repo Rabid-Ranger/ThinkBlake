@@ -421,8 +421,7 @@
   ];
   const CHANNEL_COMPLETION_FIELDS=[
     ['views','Views'],['impressions','Impressions'],['ctr','CTR'],['watchTime','Watch time'],
-    ['browsePct','Browse %'],['suggestedPct','Suggested %'],['searchPct','Search %'],['externalPct','External %'],
-    ['uploadsPublished','Long-form uploads published'],['newUploadViews','New-upload views'],['libraryViews','Older-library views']
+    ['browsePct','Browse %'],['suggestedPct','Suggested %'],['searchPct','Search %'],['externalPct','External %']
   ];
   function latestCheckpointRows(c){
     const rows=(c?.analyticsFoundation?.observations||[]).filter(o=>o&&AGE_ORDER.includes(Number(o.windowHours))),map=new Map();
@@ -443,7 +442,6 @@
       const missing=VIDEO_COMPLETION_FIELDS.filter(([k])=>n(o?.metrics?.[k])===null);
       const context=[];
       if(o.coverage!=='exact')context.push(o.coverage==='partial'?'Checkpoint is partial, not the full '+AGE_NAME[o.windowHours]+' lifespan':'Exact checkpoint coverage is not verified');
-      if(!o.definitionId||/unknown|unverified/i.test(String(o.definitionId)))context.push('Measurement definition is unverified');
       return {videoId:o.videoId,title:o.title||o.videoId,publishedAt:o.publishedAt,hours:Number(o.windowHours),missing,context};
     }).filter(x=>x.missing.length||x.context.length).sort((a,b)=>Number(b.hours===168)-Number(a.hours===168)||String(b.publishedAt||'').localeCompare(String(a.publishedAt||'')));
     const audMap=new Map();
@@ -455,8 +453,6 @@
     const chMap=new Map();
     for(const s of snapshots(c)){
       const missing=CHANNEL_COMPLETION_FIELDS.filter(([k])=>n(s[k])===null),context=[];
-      if(!s.metricDefinitionId||/unknown|unverified/i.test(String(s.metricDefinitionId)))context.push('Measurement definition is unverified');
-      if(!s.paidNote||/unable to verify|unknown/i.test(String(s.paidNote)))context.push('Organic / paid context is unverified');
       if(businessResultIsExpected(c)&&['qualifiedLeads','bookings','sales','revenue'].every(k=>n(s[k])===null))context.push('Business result is not connected. Pull it from the CRM / sales system, not YouTube Studio.');
       const date=s.date||String(s.periodEndExclusive||'').slice(0,10),key=String(s.periodStart||'')+'|'+String(s.periodEndExclusive||'')+'|'+date,prev=chMap.get(key),row={id:s.id,date,missing,context};
       if(!prev||(missing.length+context.length)<(prev.missing.length+prev.context.length))chMap.set(key,row);
@@ -473,7 +469,7 @@
     const videos=r.videoRows.map(x=>'<div class="adc-gap-row"><div><b>'+esc(x.title)+' · '+AGE_NAME[x.hours]+'</b>'+(x.missing.length?'<span><strong>Missing:</strong> '+esc(fieldList(x.missing))+'</span>':'')+(x.context.length?'<span><strong>Verify:</strong> '+esc(x.context.join(' · '))+'</span>':'')+'<details><summary>Where do I find this?</summary><ul>'+videoPaths(x.missing)+(x.context.some(y=>/definition/i.test(y))?'<li><b>Measurement definition:</b> Verify the Views / Engaged views definition in the report or Advanced Mode and enter the exact definition label. If it cannot be verified, leave it unknown.</li>':'')+(x.context.some(y=>/paid/i.test(y))?'<li><b>Organic / paid:</b> Confirm whether the video was organically distributed, promoted, or mixed. Use the report/filter or campaign history.</li>':'')+(x.context.some(y=>/partial/i.test(y))?'<li><b>Partial checkpoint:</b> Return after the full '+AGE_NAME[x.hours]+' has processed and replace the partial values with the exact lifespan.</li>':'')+'</ul></details></div><button class="btn" data-adc-fill-checkpoint data-video-id="'+esc(x.videoId)+'" data-hours="'+x.hours+'">Enter verified values</button></div>').join('');
     const audience=r.audRows.map(x=>'<div class="adc-gap-row"><div><b>Audience · '+esc(x.asOf||'undated')+' · rolling 28d</b><span><strong>Missing:</strong> '+esc(fieldList(x.missing))+'</span><details><summary>Where do I find this?</summary><ul><li><b>Monthly / New / Casual / Regular / Returning:</b> Studio → Analytics → Audience, using the same fully processed rolling 28-day window.</li><li><b>Average views / viewer:</b> Studio → Analytics → Advanced Mode / SEE MORE for that same 28-day window.</li></ul></details></div><button class="btn" data-cg="analytics-audience-edit:'+esc(x.asOf)+'">Enter audience data</button></div>').join('');
     const channel=r.chRows.map(x=>'<div class="adc-gap-row"><div><b>Channel · 90d ending '+esc(x.date||'unknown')+'</b>'+(x.missing.length?'<span><strong>Missing:</strong> '+esc(fieldList(x.missing))+'</span>':'')+(x.context.length?'<span><strong>Verify / external:</strong> '+esc(x.context.join(' · '))+'</span>':'')+'<details><summary>Where do I find this?</summary><ul><li><b>Core / traffic:</b> Studio → Analytics → Advanced Mode using the exact 90-day period and Traffic source breakdown.</li><li><b>New upload vs library:</b> Advanced Mode → exact 90-day range → separate videos published inside the period from videos published before the period.</li><li><b>Business results:</b> CRM / booking / sales system. Do not infer them from YouTube.</li></ul></details></div><button class="btn" data-cg="'+esc(x.id?'analytics-snapshot-edit:'+x.id:'analytics-snapshot-new')+'">Enter channel data</button></div>').join('');
-    return '<div class="adc-missing-data" id="adc-missing-data"><div class="adc-subhead"><b>Missing Data Checklist</b><span>Only fields that can change the automatic baseline are required.</span></div><p class="adc-gap-intro">Engaged views and exact 0:30 retention are optional here. A blank optional metric does not make the checkpoint incomplete. Required fields are never estimated.</p><div class="adc-gap-depth-grid">'+depth+'</div>'+
+    return '<div class="adc-missing-data" id="adc-missing-data"><div class="adc-subhead"><b>Missing Data Checklist</b><span>Only actionable fields used by the automatic reads are listed.</span></div><p class="adc-gap-intro">Engaged views, exact 0:30 retention, paid/organic verification, and optional library-split context do not make the checkpoint incomplete. Required fields are never estimated.</p><div class="adc-gap-depth-grid">'+depth+'</div>'+
       (videos?'<details open class="adc-gap-group"><summary>Video checkpoint gaps · '+r.videoRows.length+'</summary>'+videos+'</details>':'<div class="adc-gap-complete">Video checkpoint fields are complete for the saved rows.</div>')+
       (audience?'<details class="adc-gap-group"><summary>Audience snapshot gaps · '+r.audRows.length+'</summary>'+audience+'</details>':'')+
       (channel?'<details class="adc-gap-group"><summary>Channel / business gaps · '+r.chRows.length+'</summary>'+channel+'</details>':'')+
@@ -610,9 +606,9 @@
 
 PERIODS
 Return TWO completed, non-overlapping 90-day periods when available:
-1. the latest fully completed 90-day period that does not include today;
+1. the latest fully PROCESSED 90-day period;
 2. the immediately preceding 90-day period.
-The JSON start/end dates are inclusive, so each end date must be exactly 89 days after its start date. Keep filters and metric definitions as consistent as possible across both periods.
+Do not assume yesterday is complete. If recent channel data is still processing, move the first period back to the latest fully processed end date and note the processing delay in context.notes. The JSON start/end dates are inclusive, so each end date must be exactly 89 days after its start date. Keep filters and metric definitions as consistent as possible across both periods.
 
 CORE CHANNEL METRICS
 For each exact 90-day period request:
