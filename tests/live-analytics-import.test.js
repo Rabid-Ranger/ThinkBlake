@@ -36,7 +36,7 @@ test('video checkpoint prompt requests every WATCH metric and keeps channel peri
   for(const term of ['views','engagedViews','impressions','ctr','retention30','apv','avdSeconds'])assert.match(p,new RegExp(term));
   assert.match(p,/first-30-second/i);
   assert.match(p,/Do not derive APV/i);
-  assert.match(p,/Do not include channelPeriods/i);
+  assert.match(p,/leave channelPeriods and audienceSnapshots empty/i);
   assert.match(p,/exact first 7 days/i);
 });
 
@@ -96,6 +96,14 @@ test('mixed-format upload counts are discarded instead of treated as long-form o
 
 test('single-checkpoint Studio prompt explicitly requests newest eligible target row',()=>{
   const p=I.prompt(c,24);
-  assert.match(p,/include the NEWEST eligible current-era long-form upload/i);
+  assert.match(p,/15 most recent eligible comparable long-form videos/i);
   assert.match(p,/excludes each target video from its own same-age baseline/i);
+});
+
+
+test('checkpoint prompt carries the real-world data sanity guard learned from Studio',()=>{
+  const p=I.prompt(c,168);
+  assert.match(p,/sanity-check cumulative counts/i);
+  assert.match(p,/later checkpoint cannot have fewer Views or Impressions/i);
+  assert.match(p,/Do not derive APV from AVD or video length/i);
 });
