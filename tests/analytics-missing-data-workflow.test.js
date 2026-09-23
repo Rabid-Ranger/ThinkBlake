@@ -79,3 +79,9 @@ test('manual saves return to the active import completion flow',()=>{
   assert.match(page,/function finishAnalyticsManualFlow\(\)/);
   assert.match(page,/AcceleratorLiveAnalytics\?\.openMissing\?\.\(\)/);
 });
+
+
+test('baseline coverage target matches the 15-video prompt cohort',()=>{
+  assert.match(decision,/Math\.max\(0,15-sample\)/);
+  assert.match(decision,/Aim for 15/);
+});

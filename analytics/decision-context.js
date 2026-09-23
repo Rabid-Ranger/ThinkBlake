@@ -462,14 +462,14 @@
       if(!prev||(missing.length+context.length)<(prev.missing.length+prev.context.length))chMap.set(key,row);
     }
     const chRows=[...chMap.values()].filter(x=>x.missing.length||x.context.length);
-    const baselineDepth=AGE_ORDER.map(h=>{const d=baselineDetail(c,W,h),sample=n(d.sample)||0;return {hours:h,sample,need:Math.max(0,10-sample)};});
+    const baselineDepth=AGE_ORDER.map(h=>{const d=baselineDetail(c,W,h),sample=n(d.sample)||0;return {hours:h,sample,need:Math.max(0,15-sample)};});
     return {videoRows,audRows,chRows,baselineDepth,total:videoRows.length+audRows.length+chRows.length};
   }
   function missingDataHtml(c,W){
     const r=missingDataReport(c,W);
     const fieldList=items=>items.map(x=>x[1]).join(', ');
     const videoPaths=items=>[...new Map(items.map(x=>[x[2],x])).values()].map(x=>'<li><b>'+esc(x[1])+':</b> '+esc(x[2])+'</li>').join('');
-    const depth=r.baselineDepth.map(x=>'<div class="adc-gap-depth '+(x.need?'warn':'good')+'"><span>'+AGE_NAME[x.hours]+' BASELINE</span><b>n='+x.sample+'</b><small>'+(x.need?'Aim for 10+ · need about '+x.need+' more comparable row'+(x.need===1?'':'s'):'Good working sample')+'</small>'+(x.need?'<button class="btn" data-studio="prompt-view-'+x.hours+'">Get more '+AGE_NAME[x.hours]+' rows</button>':'')+'</div>').join('');
+    const depth=r.baselineDepth.map(x=>'<div class="adc-gap-depth '+(x.need?'warn':'good')+'"><span>'+AGE_NAME[x.hours]+' BASELINE</span><b>n='+x.sample+'</b><small>'+(x.need?'Aim for 15 · need about '+x.need+' more comparable row'+(x.need===1?'':'s'):'Good working sample')+'</small>'+(x.need?'<button class="btn" data-studio="prompt-view-'+x.hours+'">Get more '+AGE_NAME[x.hours]+' rows</button>':'')+'</div>').join('');
     const videos=r.videoRows.map(x=>'<div class="adc-gap-row"><div><b>'+esc(x.title)+' · '+AGE_NAME[x.hours]+'</b>'+(x.missing.length?'<span><strong>Missing:</strong> '+esc(fieldList(x.missing))+'</span>':'')+(x.context.length?'<span><strong>Verify:</strong> '+esc(x.context.join(' · '))+'</span>':'')+'<details><summary>Where do I find this?</summary><ul>'+videoPaths(x.missing)+(x.context.some(y=>/definition/i.test(y))?'<li><b>Measurement definition:</b> Verify the Views / Engaged views definition in the report or Advanced Mode and enter the exact definition label. If it cannot be verified, leave it unknown.</li>':'')+(x.context.some(y=>/paid/i.test(y))?'<li><b>Organic / paid:</b> Confirm whether the video was organically distributed, promoted, or mixed. Use the report/filter or campaign history.</li>':'')+(x.context.some(y=>/partial/i.test(y))?'<li><b>Partial checkpoint:</b> Return after the full '+AGE_NAME[x.hours]+' has processed and replace the partial values with the exact lifespan.</li>':'')+'</ul></details></div><button class="btn" data-adc-fill-checkpoint data-video-id="'+esc(x.videoId)+'" data-hours="'+x.hours+'">Enter verified values</button></div>').join('');
     const audience=r.audRows.map(x=>'<div class="adc-gap-row"><div><b>Audience · '+esc(x.asOf||'undated')+' · rolling 28d</b><span><strong>Missing:</strong> '+esc(fieldList(x.missing))+'</span><details><summary>Where do I find this?</summary><ul><li><b>Monthly / New / Casual / Regular / Returning:</b> Studio → Analytics → Audience, using the same fully processed rolling 28-day window.</li><li><b>Average views / viewer:</b> Studio → Analytics → Advanced Mode / SEE MORE for that same 28-day window.</li></ul></details></div><button class="btn" data-cg="analytics-audience-edit:'+esc(x.asOf)+'">Enter audience data</button></div>').join('');
     const channel=r.chRows.map(x=>'<div class="adc-gap-row"><div><b>Channel · 90d ending '+esc(x.date||'unknown')+'</b>'+(x.missing.length?'<span><strong>Missing:</strong> '+esc(fieldList(x.missing))+'</span>':'')+(x.context.length?'<span><strong>Verify / external:</strong> '+esc(x.context.join(' · '))+'</span>':'')+'<details><summary>Where do I find this?</summary><ul><li><b>Core / traffic:</b> Studio → Analytics → Advanced Mode using the exact 90-day period and Traffic source breakdown.</li><li><b>New upload vs library:</b> Advanced Mode → exact 90-day range → separate videos published inside the period from videos published before the period.</li><li><b>Business results:</b> CRM / booking / sales system. Do not infer them from YouTube.</li></ul></details></div><button class="btn" data-cg="'+esc(x.id?'analytics-snapshot-edit:'+x.id:'analytics-snapshot-new')+'">Enter channel data</button></div>').join('');
@@ -617,10 +617,10 @@ The JSON start/end dates are inclusive, so each end date must be exactly 89 days
 CORE CHANNEL METRICS
 For each exact 90-day period request:
 - views
-- engagedViews
 - registered impressions
 - impressions CTR
 - watchTime in hours
+- engagedViews only when Ask Studio can retrieve it exactly; otherwise null. It is optional and must not block the report.
 
 NEW + RETURNING VIEWERS · SEPARATE 28-DAY SNAPSHOTS
 Do NOT put New / Casual / Regular into the 90-day channelPeriods. Monthly audience is a rolling 28-day audience view.
@@ -630,19 +630,19 @@ Return TWO comparable audienceSnapshots when available:
 2. a previous non-overlapping 28-day snapshot, ideally 28 days earlier.
 
 For each audienceSnapshot request:
-- monthlyAudience
 - newViewers
 - casual
 - regular
 - returning for the same 28-day window when available
-- avgViewsPerViewer for the same 28-day window when available
+- monthlyAudience when Studio reports an exact value
+- avgViewsPerViewer only when Studio directly reports it; otherwise null
 
 Audience rules:
 - asOf is the latest fully processed audience date and windowDays must be 28.
 - New, Casual, Regular, and Returning are separate Studio measures. Do not substitute one for another.
 - Do not derive Casual or Regular from Returning, New, subscribers, or percentages.
 - Do not convert a percentage into a viewer count.
-- avgViewsPerViewer must be the raw reported metric. Do not calculate it yourself.
+- monthlyAudience and avgViewsPerViewer are optional context fields. Do not calculate or infer either one.
 - If audience data has processing delay, use the latest fully processed asOf date and explain the delay in notes.
 - If an exact audience value is unavailable, use null.
 
@@ -669,7 +669,7 @@ qualifiedLeads, bookings, sales, revenue, and context.attributionNote must be nu
 Planned uploads/capacity are also not YouTube analytics and should not be inferred here.
 
 MEASUREMENT RULES
-- Keep engagedViews separate from public Views. Since August 24, 2026, Views is the new exposure count that starts when playback begins. Engaged views is the older/original view-count methodology retained in YouTube Analytics Advanced Mode, including long-form. Ask Studio should explicitly check Advanced Mode for Engaged views. If Ask Studio cannot access that metric, use null and state that Ask Studio could not retrieve it. Do NOT claim Engaged views is Shorts-only and do not copy Views into engagedViews.
+- Keep engagedViews separate from public Views. Ask Studio may return engagedViews when it can access the exact metric, but engagedViews is optional for this workflow. If unavailable, return null. Never copy Views into engagedViews or let this optional field block the 90-day report.
 - CTR and traffic-source fields are percentages where 6.2 means 6.2%.
 - Do not put video-level 0:30 retention, APV, or AVD into these channel periods. Those belong in the separate video-checkpoint prompt.
 - If Ask Studio cannot retrieve an exact field, return null and explain why in limitations.
