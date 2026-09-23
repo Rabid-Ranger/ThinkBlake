@@ -85,3 +85,10 @@ test('baseline coverage target matches the 15-video prompt cohort',()=>{
   assert.match(decision,/Math\.max\(0,15-sample\)/);
   assert.match(decision,/Aim for 15/);
 });
+
+
+test('missing-data checklist does not treat optional metadata as an actionable gap',()=>{
+  assert.doesNotMatch(decision,/Measurement definition is unverified/);
+  assert.doesNotMatch(decision,/Organic \/ paid context is unverified/);
+  assert.match(decision,/optional library-split context do not make the checkpoint incomplete/);
+});
