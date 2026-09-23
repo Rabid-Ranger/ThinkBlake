@@ -407,22 +407,20 @@
   }
   const VIDEO_COMPLETION_FIELDS=[
     ['views','Views','Studio → Content → open the video → Analytics → Advanced Mode / SEE MORE. Set the exact video-age lifespan and use Views.'],
-    ['engagedViews','Engaged views','Studio → Analytics → Advanced Mode / SEE MORE → Engaged views. Keep the exact same video-age lifespan. Do not substitute public Views.'],
     ['impressions','Impressions','Studio → Content → open the video → Analytics → Reach / Advanced Mode. Use the exact same video-age lifespan.'],
     ['ctr','CTR','Studio → Content → open the video → Analytics → Reach / Advanced Mode → Impressions click-through rate. Use the exact same lifespan.'],
-    ['retention30','First 30 sec / Intro','Studio → Content → open the video → Analytics → Engagement → Audience retention / Key moments → Intro. Enter the exact reported 0:30 value only; never estimate the curve.'],
     ['apv','APV','Studio → Content → open the video → Analytics → Engagement / Advanced Mode → Average percentage viewed. Use the exact same lifespan.'],
     ['avdSeconds','AVD','Studio → Content → open the video → Analytics → Engagement / Advanced Mode → Average view duration. Use the exact same lifespan.'],
-    ['browsePct','Browse %','Studio → Content → open the video → Analytics → Reach / Content → How viewers found this video. Match the checkpoint lifespan when Studio can isolate it.'],
-    ['suggestedPct','Suggested %','Studio → Content → open the video → Analytics → Reach / Content → How viewers found this video. Match the checkpoint lifespan when Studio can isolate it.'],
-    ['searchPct','Search %','Studio → Content → open the video → Analytics → Reach / Content → How viewers found this video. Match the checkpoint lifespan when Studio can isolate it.'],
-    ['externalPct','External %','Studio → Content → open the video → Analytics → Reach / Content → How viewers found this video. Match the checkpoint lifespan when Studio can isolate it.']
+    ['browsePct','Browse %','Studio → Content → open the video → Analytics → Reach / Content → How viewers found this video. Match the exact checkpoint lifespan.'],
+    ['suggestedPct','Suggested %','Studio → Content → open the video → Analytics → Reach / Content → How viewers found this video. Match the exact checkpoint lifespan.'],
+    ['searchPct','Search %','Studio → Content → open the video → Analytics → Reach / Content → How viewers found this video. Match the exact checkpoint lifespan.'],
+    ['externalPct','External %','Studio → Content → open the video → Analytics → Reach / Content → How viewers found this video. Match the exact checkpoint lifespan.']
   ];
   const AUDIENCE_COMPLETION_FIELDS=[
-    ['monthlyAudience','Monthly audience'],['newViewers','New viewers'],['casual','Casual viewers'],['regular','Regular viewers'],['returning','Returning viewers'],['avgViewsPerViewer','Average views / viewer']
+    ['newViewers','New viewers'],['casual','Casual viewers'],['regular','Regular viewers'],['returning','Returning viewers']
   ];
   const CHANNEL_COMPLETION_FIELDS=[
-    ['views','Views'],['engagedViews','Engaged views'],['impressions','Impressions'],['ctr','CTR'],['watchTime','Watch time'],
+    ['views','Views'],['impressions','Impressions'],['ctr','CTR'],['watchTime','Watch time'],
     ['browsePct','Browse %'],['suggestedPct','Suggested %'],['searchPct','Search %'],['externalPct','External %'],
     ['uploadsPublished','Long-form uploads published'],['newUploadViews','New-upload views'],['libraryViews','Older-library views']
   ];
@@ -446,7 +444,6 @@
       const context=[];
       if(o.coverage!=='exact')context.push(o.coverage==='partial'?'Checkpoint is partial, not the full '+AGE_NAME[o.windowHours]+' lifespan':'Exact checkpoint coverage is not verified');
       if(!o.definitionId||/unknown|unverified/i.test(String(o.definitionId)))context.push('Measurement definition is unverified');
-      if(!o.paid||o.paid==='unknown')context.push('Organic / paid status is unverified');
       return {videoId:o.videoId,title:o.title||o.videoId,publishedAt:o.publishedAt,hours:Number(o.windowHours),missing,context};
     }).filter(x=>x.missing.length||x.context.length).sort((a,b)=>Number(b.hours===168)-Number(a.hours===168)||String(b.publishedAt||'').localeCompare(String(a.publishedAt||'')));
     const audMap=new Map();
@@ -476,7 +473,7 @@
     const videos=r.videoRows.map(x=>'<div class="adc-gap-row"><div><b>'+esc(x.title)+' · '+AGE_NAME[x.hours]+'</b>'+(x.missing.length?'<span><strong>Missing:</strong> '+esc(fieldList(x.missing))+'</span>':'')+(x.context.length?'<span><strong>Verify:</strong> '+esc(x.context.join(' · '))+'</span>':'')+'<details><summary>Where do I find this?</summary><ul>'+videoPaths(x.missing)+(x.context.some(y=>/definition/i.test(y))?'<li><b>Measurement definition:</b> Verify the Views / Engaged views definition in the report or Advanced Mode and enter the exact definition label. If it cannot be verified, leave it unknown.</li>':'')+(x.context.some(y=>/paid/i.test(y))?'<li><b>Organic / paid:</b> Confirm whether the video was organically distributed, promoted, or mixed. Use the report/filter or campaign history.</li>':'')+(x.context.some(y=>/partial/i.test(y))?'<li><b>Partial checkpoint:</b> Return after the full '+AGE_NAME[x.hours]+' has processed and replace the partial values with the exact lifespan.</li>':'')+'</ul></details></div><button class="btn" data-adc-fill-checkpoint data-video-id="'+esc(x.videoId)+'" data-hours="'+x.hours+'">Enter verified values</button></div>').join('');
     const audience=r.audRows.map(x=>'<div class="adc-gap-row"><div><b>Audience · '+esc(x.asOf||'undated')+' · rolling 28d</b><span><strong>Missing:</strong> '+esc(fieldList(x.missing))+'</span><details><summary>Where do I find this?</summary><ul><li><b>Monthly / New / Casual / Regular / Returning:</b> Studio → Analytics → Audience, using the same fully processed rolling 28-day window.</li><li><b>Average views / viewer:</b> Studio → Analytics → Advanced Mode / SEE MORE for that same 28-day window.</li></ul></details></div><button class="btn" data-cg="analytics-audience-edit:'+esc(x.asOf)+'">Enter audience data</button></div>').join('');
     const channel=r.chRows.map(x=>'<div class="adc-gap-row"><div><b>Channel · 90d ending '+esc(x.date||'unknown')+'</b>'+(x.missing.length?'<span><strong>Missing:</strong> '+esc(fieldList(x.missing))+'</span>':'')+(x.context.length?'<span><strong>Verify / external:</strong> '+esc(x.context.join(' · '))+'</span>':'')+'<details><summary>Where do I find this?</summary><ul><li><b>Core / traffic:</b> Studio → Analytics → Advanced Mode using the exact 90-day period and Traffic source breakdown.</li><li><b>New upload vs library:</b> Advanced Mode → exact 90-day range → separate videos published inside the period from videos published before the period.</li><li><b>Business results:</b> CRM / booking / sales system. Do not infer them from YouTube.</li></ul></details></div><button class="btn" data-cg="'+esc(x.id?'analytics-snapshot-edit:'+x.id:'analytics-snapshot-new')+'">Enter channel data</button></div>').join('');
-    return '<div class="adc-missing-data" id="adc-missing-data"><div class="adc-subhead"><b>Missing Data Checklist</b><span>Studio AI fills what it can. You complete the verified gaps.</span></div><p class="adc-gap-intro">A blank metric stays unavailable. It is never estimated. Use the list below to finish the dataset, then the dashboard will automatically use the completed evidence.</p><div class="adc-gap-depth-grid">'+depth+'</div>'+
+    return '<div class="adc-missing-data" id="adc-missing-data"><div class="adc-subhead"><b>Missing Data Checklist</b><span>Only fields that can change the automatic baseline are required.</span></div><p class="adc-gap-intro">Engaged views and exact 0:30 retention are optional here. A blank optional metric does not make the checkpoint incomplete. Required fields are never estimated.</p><div class="adc-gap-depth-grid">'+depth+'</div>'+
       (videos?'<details open class="adc-gap-group"><summary>Video checkpoint gaps · '+r.videoRows.length+'</summary>'+videos+'</details>':'<div class="adc-gap-complete">Video checkpoint fields are complete for the saved rows.</div>')+
       (audience?'<details class="adc-gap-group"><summary>Audience snapshot gaps · '+r.audRows.length+'</summary>'+audience+'</details>':'')+
       (channel?'<details class="adc-gap-group"><summary>Channel / business gaps · '+r.chRows.length+'</summary>'+channel+'</details>':'')+
