@@ -100,3 +100,29 @@ test('15 exact rows create a 15-video rolling policy',()=>{
  assert.equal(out.next.policies[0].cohortLimit,15);
  assert.equal(out.next.baselines.at(-1).memberVideoIds.length,15);
 });
+
+
+test('legacy prompt APIs delegate to the same one-window workflow',()=>{
+ for(const h of [24,48,168,672]){
+  assert.equal(I.prompt(c,h,now),I.collectionPrompt(c,h,'setup',now));
+  assert.equal(I.routinePrompt(c,h,now),I.collectionPrompt(c,h,'update',now));
+ }
+});
+
+test('partial saved checkpoint is included in the missing-data requery reference',()=>{
+ const partial={...row,coverage:'partial',metrics:{...fullMetrics}};
+ const store=I.parse(packet([partial]),c,A.emptyStore(),now).next;
+ const p=I.collectionPrompt({...c,analyticsFoundation:store},168,'missing',now);
+ assert.match(p,/test-video/);
+ assert.match(p,/"coverage":"partial"/);
+});
+
+test('mixed Views definitions do not split stable-metric baseline cohorts',()=>{
+ const defs=['views-old','views-new'];
+ const rows=Array.from({length:15},(_,i)=>({...row,videoId:'mix-'+String(i).padStart(7,'0'),publishedAt:new Date(Date.parse('2026-08-01T12:00:00Z')+i*86400000).toISOString(),capturedAt:'2026-09-21T11:00:00Z',definitionId:defs[i%2],metrics:{...fullMetrics,views:1000+i,impressions:10000+i}}));
+ const out=I.parse(packet(rows),c,A.emptyStore(),now);
+ assert.equal(out.next.policies.length,1);
+ const policy=out.next.policies[0];
+ assert.equal(policy.primaryMetric,'impressions');
+ assert.equal(out.next.baselines.at(-1).metrics.impressions.n,15);
+});
