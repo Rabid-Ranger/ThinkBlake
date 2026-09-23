@@ -37,3 +37,11 @@ test('main Analytics card matches the 15-video checkpoint workflow',()=>{
   assert.match(live,/15 most recent fully matured eligible long-form videos/);
   assert.doesNotMatch(live,/collect up to 5 videos per request/);
 });
+
+
+test('prompt center does not fake a recommendation from the currently selected window',()=>{
+  const live=read('analytics/live.js');
+  assert.doesNotMatch(live,/studio-rec|Recommended right now/);
+  assert.match(live,/First-time setup:/);
+  assert.match(live,/Choose another checkpoint/);
+});
