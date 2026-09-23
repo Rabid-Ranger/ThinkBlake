@@ -126,3 +126,13 @@ test('mixed Views definitions do not split stable-metric baseline cohorts',()=>{
  assert.equal(policy.primaryMetric,'impressions');
  assert.equal(out.next.baselines.at(-1).metrics.impressions.n,15);
 });
+
+
+test('underfilled saved cohort switches to backfill instead of routine-only updates',()=>{
+ const rows=Array.from({length:11},(_,i)=>({...row,videoId:'backfill-'+String(i).padStart(4,'0'),publishedAt:new Date(Date.parse('2026-07-01T12:00:00Z')+i*86400000).toISOString(),capturedAt:'2026-09-20T12:00:00Z'}));
+ const store=I.parse(packet(rows),c,A.emptyStore(),now).next;
+ const p=I.collectionPrompt({...c,analyticsFoundation:store},168,'update',now);
+ assert.match(p,/BASELINE BACKFILL/);
+ assert.match(p,/currently contains 11 exact current-era long-form rows/);
+ assert.match(p,/until the saved cohort can reach 15/);
+});
