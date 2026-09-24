@@ -52,6 +52,26 @@ function promptCenterBody(c,key){
    '<details><summary>How the checkpoints work</summary><p><b>24h:</b> launch read. <b>48h:</b> triage. <b>7d:</b> main video diagnosis. <b>28d:</b> mature video / programming read. <b>90d Channel Health:</b> whole-channel movement plus rolling 28-day audience context.</p><p>Each per-video checkpoint uses its own 15 most recent fully matured eligible long-form videos. A video can belong to 24h, 48h and 7d before it is old enough for 28d. When a newer video is too young, Studio skips it and continues farther back to replace it.</p><p>A row only counts toward 15 when the required automatic checkpoint fields are actually usable. Engaged views and exact 0:30 retention remain optional bonus fields. First 48 hours is not the rolling last-48-hour realtime report. Never estimate missing retention from a graph.</p></details><textarea readonly class="studio-prompt-box" id="studio-prompt">'+e(p.text)+'</textarea>'+
    '<div class="studio-copy-row"><p id="studio-copy-state" class="cg-note">Copy this prompt into Ask Studio, then paste the response back into the dashboard.</p></div>';
 }
+
+function setupWizardBody(c,message=''){
+ const progress=setupProgress(c),idx=progress.findIndex(x=>!x.done),done=idx<0;
+ const steps='<div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin:12px 0 18px">'+progress.map((x,n)=>'<div style="padding:9px;border:1px solid '+(x.done?'#8ab89b':n===idx?'#5b91b5':'#c7d0d4')+';border-radius:9px;background:'+(x.done?'color-mix(in srgb,#6bb783 12%,transparent)':n===idx?'color-mix(in srgb,#5791ba 10%,transparent)':'transparent')+'"><small style="display:block;opacity:.65">Step '+(n+1)+'</small><b>'+e(x.short)+'</b><small style="display:block;margin-top:3px">'+e(x.detail)+'</small></div>').join('')+'</div>';
+ if(done){
+   const d=draftState(c),periods=(d?.periods||[]).length,audience=(d?.audienceSnapshots||[]).length;
+   return {title:'Baseline setup · Step 6 of 6',body:(message?'<p class="cg-note">'+e(message)+'</p>':'')+steps+'<h3>Review and complete</h3><p><b>Everything required for the baseline is staged.</b> The live Analytics dashboard has not been changed yet.</p><div class="cg-note"><b>Ready to commit:</b><br>'+progress.slice(0,4).map(x=>x.short+' '+x.count+'/15').join(' · ')+'<br>'+periods+' completed 90-day channel periods · '+audience+' audience snapshot'+(audience===1?'':'s')+'</div><p>When you choose <b>Complete baseline</b>, Accelerator will rebuild the four baselines from this staged data and update the Analytics dashboard once. This is the only commit point in setup.</p>',actions:button('setup-complete','Complete baseline')};
+ }
+ const step=progress[idx],p=promptChoice(c,step.key);
+ lastPrompt={kind:p.kind,hours:p.hours,key:p.key};
+ const specific=step.hours?'This prompt asks only for the exact '+step.label+' checkpoint cohort. It does not ask for 48h, 7d, 28d, or channel data in the same response.':'This prompt asks only for the two 90-day channel periods and the separate rolling 28-day audience snapshots. It does not ask for per-video checkpoint rows.';
+ const body=(message?'<p class="cg-note">'+e(message)+'</p>':'')+steps+'<div class="cg-kicker">Step '+(idx+1)+' of 6</div><h3>Collect '+e(step.label)+'</h3><p>'+e(specific)+'</p><p class="cg-note"><b>Current status:</b> '+e(step.detail)+'. This step must be saved before the next one opens.</p><label for="studio-prompt"><b>1. Copy this Ask Studio prompt</b></label><textarea readonly class="studio-prompt-box" id="studio-prompt">'+e(p.text)+'</textarea><p id="studio-copy-state" class="cg-note">Copy the prompt into Ask Studio and wait for its JSON response.</p><label for="studio-setup-response"><b>2. Paste the full response here</b></label><textarea id="studio-setup-response" placeholder="Paste the complete Ask Studio JSON response here…"></textarea><p class="cg-note"><b>3. Save & continue.</b> Accelerator validates this step, stages it, and then opens the next required step. Nothing updates the live dashboard yet.</p>';
+ const saveBtn='<button class="btn dark" data-studio="setup-save-step" data-step="'+e(step.key)+'">Save &amp; continue</button>';
+ return {title:'Baseline setup · Step '+(idx+1)+' of 6',body,actions:button('copy-current','Copy prompt')+saveBtn};
+}
+function openSetupWizard(c,message=''){
+ ensureSetupDraft(c);
+ const ui=setupWizardBody(c,message);
+ return open(ui.title,ui.body,ui.actions+button('setup-discard','Start over'));
+}
 function openPrompt(c,key){const setup=draftActive(c),actions=button('copy-current','Copy prompt')+button('paste',setup?'Paste + stage results':'Paste Studio results')+(setup&&draftReady(c)?button('setup-complete','Complete setup'):'')+(setup?button('setup-discard','Discard setup draft'):'');return open(setup?'Studio prompts · setup draft':'Studio prompts',promptCenterBody(c,key)+(setup?'<p class="cg-note"><b>Setup draft:</b> these imports are staged only. The live dashboard will not change until you choose Complete setup.</p>':''),actions);}
 async function copyVisibleStudioPrompt(){
  const ta=document.getElementById('studio-prompt'),state=document.getElementById('studio-copy-state');
