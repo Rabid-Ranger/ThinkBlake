@@ -675,6 +675,7 @@ const PERSISTENCE_BRIDGE = String.raw`
       lastObservedSerialized = JSON.stringify(current);
       persistLocalSnapshot(lastObservedSerialized, sourceName);
       rerender();
+      try { window.dispatchEvent(new CustomEvent('accelerator:state-replaced', { detail: { source: sourceName } })); } catch (_) {}
       return true;
     } finally {
       setTimeout(() => { applying = false; }, 0);
@@ -1116,6 +1117,7 @@ const PERSISTENCE_BRIDGE = String.raw`
         persistLocalSnapshot(pendingSerialized, 'queued-after-cloud-confirmation');
       }
       setSaveLabel('Saved just now');
+      try { window.dispatchEvent(new CustomEvent('accelerator:cloud-saved', { detail: { version: remoteVersion } })); } catch (_) {}
       if (pendingSerialized) queueMicrotask(() => { void drainSaveQueue(); });
       return;
     }
