@@ -71,3 +71,25 @@ test('APV fallback does not pretend the first 30 seconds caused the problem',()=
   assert.match(d.next,/Exact 0:30 is missing/i);
   assert.match(d.next,/not proof/i);
 });
+
+
+test('checkpoint tiles do not say no comparison when verified stage metrics are comparable',()=>{
+  const r={status:'compared',comparisons:{
+    engagedViews:{multiple:null,current:2325,baseline:3000},
+    views:{multiple:null,current:5143,baseline:6000},
+    impressions:{multiple:.92,current:25625,baseline:27800},
+    ctr:{deltaPp:-.2,current:.0591,baseline:.0611},
+    retention30:{deltaPp:null,current:null,baseline:null},
+    apv:{deltaPp:4,current:.5307,baseline:.4907},
+    avdSeconds:{deltaSeconds:-4,current:566,baseline:570}
+  }};
+  const card=A.ageCardRead(r,48,true);
+  assert.equal(card.score,'SHOW 0.92×');
+  assert.equal(card.status,'Comparison ready');
+});
+
+test('checkpoint tiles distinguish a missing saved checkpoint from a missing comparison',()=>{
+  const card=A.ageCardRead({status:'missing_observation',comparisons:{}},48,false);
+  assert.equal(card.score,'No 48h result');
+  assert.equal(card.status,'No 48h checkpoint saved');
+});
