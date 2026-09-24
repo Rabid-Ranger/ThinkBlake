@@ -16,19 +16,22 @@ test('complete checkpoint tabs default to verification while new-only is separat
  assert.match(live,/re-verifies all 15 rows/);
 });
 
-test('baseline onboarding is staged and cannot update live diagnosis until completion',()=>{
+test('baseline onboarding is a sequential staged wizard with one final commit',()=>{
  const live=read('analytics/live.js');
  assert.match(live,/analyticsSetupDraft/);
- assert.match(live,/The live dashboard will not change until you choose Complete setup/);
- assert.match(live,/draftReady=c=>draftActive\(c\)&&draftCoverage\(c\)\.every/);
- assert.match(live,/Complete 15 usable rows at 24h, 48h, 7d and 28d before finishing the setup/);
+ assert.match(live,/setupDefs=\[\{key:'24'/);
+ assert.match(live,/Step 6 of 6/);
+ assert.match(live,/Save &amp; continue/);
+ assert.match(live,/Complete baseline/);
+ assert.match(live,/draftReady=c=>draftActive\(c\)&&setupProgress\(c\)\.every/);
  assert.match(live,/I\.compactStore\(draft\.foundation\)/);
 });
 
-test('first baseline workflow auto-starts a staged setup draft',()=>{
+test('first baseline workflow starts at the guided setup wizard',()=>{
  const live=read('analytics/live.js');
- assert.match(live,/!draftActive\(c\)&&!\(c\.analyticsFoundation\?\.policies\|\|\[\]\)\.length/);
+ assert.match(live,/ensureSetupDraft=c=>/);
  assert.match(live,/foundation:seedSetupFoundation\(c\)/);
+ assert.match(live,/return openSetupWizard\(c\)/);
 });
 
 test('staged setup is seeded from already trusted checkpoint observations',()=>{
@@ -52,11 +55,11 @@ test('native top navigation exits Analytics before native navigation renders',()
  assert.match(live,/,true\);/);
 });
 
-test('preserved trusted rows are explained instead of making Analytics look empty',()=>{
+test('active setup explains why the live dashboard has not changed yet',()=>{
  const live=read('analytics/live.js');
- assert.match(live,/Your trusted analytics are still here\./);
- assert.match(live,/You do not need to delete or recreate this creator\./);
- assert.match(live,/Finish clean baseline setup/);
+ assert.match(live,/The live Analytics dashboard has not been changed yet/);
+ assert.match(live,/The live dashboard has not been updated yet/);
+ assert.match(live,/Review & complete baseline/);
 });
 
 
@@ -73,4 +76,19 @@ test('Analytics clears stale active state from topbar icon navigation',()=>{
  const page=read('analytics/page.js');
  assert.match(page,/\.topbar button\[data-view\],\.topbar nav button/);
  assert.match(page,/x\.classList\.remove\('active'\)/);
+});
+
+
+test('wizard enforces one checkpoint type per setup step',()=>{
+ const live=read('analytics/live.js');
+ assert.match(live,/This is the '\+def\.short\+' step/);
+ assert.match(live,/Channel and audience data belong in Step 5/);
+ assert.match(live,/Step 5 is only for 90-day channel and audience data/);
+});
+
+test('wizard advances only after the current step is usable',()=>{
+ const live=read('analytics/live.js');
+ assert.match(live,/setupProgress\(c\)\.find\(x=>x\.key===stepKey\)/);
+ assert.match(live,/saved successfully\. Moving to the next step/);
+ assert.match(live,/this step is not complete yet/);
 });
