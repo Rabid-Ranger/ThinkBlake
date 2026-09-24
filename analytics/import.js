@@ -209,6 +209,24 @@ function monotonicConflict(store,o){
  }
  return null;
 }
+function compactStore(store,now=new Date().toISOString()){
+ const source=JSON.parse(JSON.stringify(store||A.emptyStore())),latest=new Map();
+ for(const o of source.observations||[]){
+  const key=o.logicalKey||JSON.stringify([o.creatorId||'',A.canonicalVideoId(o.videoId),Number(o.windowHours),o.traffic||'all',o.paid||'unknown']),old=latest.get(key);
+  if(!old||(Number(o.revision)||0)>(Number(old.revision)||0)||((Number(o.revision)||0)===(Number(old.revision)||0)&&String(o.capturedAt||'')>String(old.capturedAt||'')))latest.set(key,o);
+ }
+ let clean=A.emptyStore();
+ const observations=[...latest.values()].sort((a,b)=>String(a.publishedAt||'').localeCompare(String(b.publishedAt||''))||Number(a.windowHours)-Number(b.windowHours));
+ clean=A.acceptObservations?A.acceptObservations(clean,observations,now):observations.reduce((s,o)=>A.acceptObservation(s,o,now),clean);
+ for(const p of source.policies||[]){
+  const input={id:p.id,creatorId:p.creatorId,label:p.label,windowHours:p.windowHours,format:p.format,eraId:p.eraId,definitionId:p.definitionId,metricDefinitions:p.metricDefinitions||{},paid:p.paid,traffic:p.traffic,primaryMetric:p.primaryMetric,cohortLimit:p.cohortLimit||15,refreshAfter:p.refreshAfter||4,refreshDays:p.refreshDays||30,job:p.job||null,allowBroaderJobFallback:p.allowBroaderJobFallback};
+  try{
+   const candidate=A.createPolicy(clean,input,now),last=candidate.baselines.at(-1);
+   if(last?.metrics?.[input.primaryMetric]?.n>=5)clean=candidate;
+  }catch{}
+ }
+ return clean;
+}
 function parse(text,c,prior,now=new Date().toISOString()){
  if(typeof text!=='string'||text.length>1500000)throw Error('Paste a response under 1.5 MB.');
  const parsedJson=studioJson(text,c.id),data=parsedJson.data,formatRepairs=parsedJson.repairs;
@@ -274,5 +292,5 @@ function parse(text,c,prior,now=new Date().toISOString()){
    :String(x);
  return {next,added,duplicates,skipped,reviewRows,channelName:String(data.channelName),periods,audienceSnapshots,formatRepairs,limitations:[...(data.limitations||[]).map(normalizeLimitation),...periodWarnings,...audienceWarnings,...importWarnings],signature:JSON.stringify(prior||A.emptyStore())};
 }
-return {prompt,routinePrompt,collectionPrompt,formatPrompt,parse,studioJson,jsonObjectCandidates,repairJsonCandidate,studioPayloadScore,metricDefs,hash,metrics,channelMetrics,channelContext,audienceMetrics,windows,checkpointInventory,studioRowIssues};
+return {prompt,routinePrompt,collectionPrompt,formatPrompt,parse,compactStore,studioJson,jsonObjectCandidates,repairJsonCandidate,studioPayloadScore,metricDefs,hash,metrics,channelMetrics,channelContext,audienceMetrics,windows,checkpointInventory,studioRowIssues};
 });
