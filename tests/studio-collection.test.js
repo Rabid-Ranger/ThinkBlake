@@ -136,3 +136,14 @@ test('underfilled saved cohort switches to backfill instead of routine-only upda
  assert.match(p,/currently contains 11 exact current-era long-form rows/);
  assert.match(p,/until the saved cohort can reach 15/);
 });
+
+
+test('verify mode explicitly re-queries all 15 and does not send saved inventory as an exclusion list',()=>{
+ const c={id:'c1',name:'Creator',analyticsFoundation:{observations:[],policies:[],baselines:[],reviews:[],events:[]}};
+ const p=I.collectionPrompt(c,168,'verify','2026-09-24T15:00:00Z');
+ assert.match(p,/BASELINE VERIFY \/ REFRESH/);
+ assert.match(p,/COMPLETE current 15-video cohort/);
+ assert.match(p,/Re-collect the exact checkpoint measurements for all 15 rows/);
+ assert.match(p,/Do not return observations:\[\] merely because rows are already saved/);
+ assert.doesNotMatch(p,/SAVED INVENTORY/);
+});

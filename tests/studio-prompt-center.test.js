@@ -68,3 +68,13 @@ test('prompt center shows complete saved rows per checkpoint',()=>{
   assert.match(live,/I\.checkpointInventory\?I\.checkpointInventory\(c,h\)/);
   assert.match(live,/repair incomplete rows/);
 });
+
+
+test('complete checkpoint tabs default to full verification, not silent new-only update',()=>{
+ const live=read('analytics/live.js');
+ assert.match(live,/inventory\.complete>=15\?'verify':'update'/);
+ assert.match(live,/Verify '\+winShort\(h\)\+' baseline/);
+ assert.match(live,/Check only for new uploads/);
+ assert.match(live,/re-verifies all 15 rows/);
+ assert.match(live,/prompt-view-update-/);
+});
