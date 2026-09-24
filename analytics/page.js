@@ -922,7 +922,10 @@
   function syncAnalyticsNavActive(){
     const a=document.getElementById('accelerator-analytics-nav');if(!a)return;
     const active=window.__cgNativeView==='analytics';a.classList.toggle('active',active);
-    if(active){a.setAttribute('aria-current','page');a.parentElement?.querySelectorAll('button').forEach(x=>{if(x!==a){x.classList.remove('active');x.removeAttribute('aria-current')}});}else a.removeAttribute('aria-current');
+    if(active){
+      a.setAttribute('aria-current','page');
+      document.querySelectorAll('.topbar button[data-view],.topbar nav button').forEach(x=>{if(x!==a){x.classList.remove('active');x.removeAttribute('aria-current')}});
+    }else a.removeAttribute('aria-current');
   }
   function renderAnalyticsPage(){
     if(window.__cgNativeView!=='analytics')return;
