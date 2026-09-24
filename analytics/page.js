@@ -309,18 +309,16 @@
       return true;
     }catch(_){return false}
   }
-  function openNativeView(view){
+  function routeNativeView(view){
     window.__cgNativeView='';
-    const b=nativeNavButton(view);
-    if(b){
-      setNativeViewState(view);
-      b.click();
-      queueMicrotask(()=>nativeRender());
-      return true;
-    }
-    if(setNativeViewState(view)){nativeRender();return true}
-    return false;
+    if(!setNativeViewState(view))return false;
+    try{if(typeof save==='function')save();}catch(_){}
+    nativeRender();
+    syncAnalyticsNavActive();
+    try{window.scrollTo({top:0,behavior:'auto'});}catch(_){}
+    return true;
   }
+  function openNativeView(view){return routeNativeView(view);}
   function isDemoCreator(c){return !!c&&(c.id===DEMO_ID||c.demoScenario===true) }
   function currentDemoLoaded(){return isDemoCreator(cNow())}
 
@@ -1063,13 +1061,11 @@
     if(!n||n.id==='accelerator-analytics-nav')return;
     const view=String(n.dataset.view||'').toLowerCase();
     if(!view)return;
-    window.__cgNativeView='';
-    const changed=setNativeViewState(view);
-    syncAnalyticsNavActive();
-    if(changed){
-      queueMicrotask(()=>nativeRender());
-      requestAnimationFrame(()=>{if(window.__cgNativeView!=='analytics')nativeRender();});
-    }
+    if(window.__cgNativeView!=='analytics'){syncAnalyticsNavActive();return;}
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    routeNativeView(view);
   },true);
   document.addEventListener('click',e=>{
     const proxy=e.target.closest('[data-cg-nav-view]');
