@@ -198,6 +198,7 @@
     if (maturesAt > asOf || maturesAt > observation.capturedAt) return 'window_not_mature';
     if (!knownDefinition(definition(observation, policy.primaryMetric)) || definition(observation, policy.primaryMetric) !== definition(policy, policy.primaryMetric)) return 'different_primary_definition';
     if (!Number.isFinite(observation.metrics[policy.primaryMetric])) return 'primary_metric_missing';
+    if (Number.isFinite(observation.metrics.views) && observation.metrics.views === 0 && Number.isFinite(observation.metrics.impressions) && observation.metrics.impressions >= 100 && Number.isFinite(observation.metrics.ctr) && observation.metrics.ctr > 0) return 'internally_inconsistent_metrics';
     return null;
   }
   function cohort(store, policy, asOf, options) {
@@ -222,11 +223,15 @@
   function summary(members, policy) {
     const result = {};
     for (const metric of Object.keys(metricDictionary)) {
-      const expected = definition(policy, metric);
-      const rows = members.filter(item => Number.isFinite(item.metrics[metric]) && knownDefinition(definition(item, metric)) && definition(item, metric) === expected);
+      const expected = definition(policy, metric), expectedKnown = knownDefinition(expected);
+      const rows = members.filter(item => {
+        if (!Number.isFinite(item.metrics[metric])) return false;
+        const actual = definition(item, metric);
+        return expectedKnown ? knownDefinition(actual) && actual === expected : !knownDefinition(actual);
+      });
       const values = rows.map(item => item.metrics[metric]);
       result[metric] = { median: median(values), n: values.length, p25: values.length >= 10 ? percentile(values, .25) : null,
-        p75: values.length >= 10 ? percentile(values, .75) : null, definitionId: expected,
+        p75: values.length >= 10 ? percentile(values, .75) : null, definitionId: expected, definitionVerified: expectedKnown,
         observationRevisionIds: rows.map(item => item.revisionId), sampleLevel: sampleLevel(values.length) };
     }
     return result;
