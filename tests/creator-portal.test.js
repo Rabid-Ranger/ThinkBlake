@@ -3,6 +3,41 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 const read=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8');
-test('creator workspace is a no-login capability-link page',()=>{const html=read('creator.html'),portal=read('ui/creator-portal.js');assert.match(html,/noindex,nofollow/);assert.match(html,/no-referrer/);assert.match(portal,/location\.hash/);assert.match(portal,/portal-get/);assert.match(portal,/portal-save/);assert.doesNotMatch(portal,/AUTH_KEY|Authorization.*Bearer/)});
-test('coach share UI publishes only an explicit creator-safe snapshot',()=>{const share=read('ui/creator-sharing.js');assert.match(share,/Creator workspace/);assert.match(share,/titleDraft/);assert.match(share,/thumbnailTextDraft/);assert.match(share,/hookDraft/);assert.match(share,/promiseResultDraft/);assert.match(share,/Applied .*creator edit/);assert.doesNotMatch(share,/analyticsFoundation|diagnosis|businessScorecard|decisionHistory/)});
-test('creator link can be copied, rotated and revoked without creator accounts',()=>{const share=read('ui/creator-sharing.js');assert.match(share,/Private link copied/);assert.match(share,/Rotate private link/);assert.match(share,/Revoke link/);assert.match(share,/creator\.html#/)});
+
+test('video sharing is attached to planned videos and the video planner',()=>{
+ const share=read('ui/creator-sharing.js');
+ assert.match(share,/\.slot-row/);
+ assert.match(share,/video-heading/);
+ assert.match(share,/Share with creator/);
+ assert.match(share,/data-creator-share-video/);
+ assert.doesNotMatch(share,/creator-share-launch/);
+});
+
+test('each share request is scoped to one specific video',()=>{
+ const share=read('ui/creator-sharing.js');
+ const edge=read('supabase/functions/creator-portal/index.ts');
+ assert.match(share,/videoId:String\(v\.id\)/);
+ assert.match(share,/videos:\[\{id:String\(v\.id\)/);
+ assert.match(edge,/requestedVideoId/);
+ assert.match(edge,/scope", requestedVideoId \? "video" : "creator"/);
+ assert.match(edge,/VIDEO_SCOPE_MISMATCH/);
+});
+
+test('creator video page remains no-login and token is kept in the URL fragment',()=>{
+ const portal=read('ui/creator-portal.js');
+ const html=read('creator.html');
+ assert.match(html,/noindex,nofollow/);
+ assert.match(html,/no-referrer/);
+ assert.match(portal,/location\.hash/);
+ assert.match(portal,/Shared Video/);
+ assert.doesNotMatch(portal,/Authorization/);
+});
+
+test('creator edits cannot overwrite coach-only fields in the browser payload',()=>{
+ const share=read('ui/creator-sharing.js');
+ assert.match(share,/titleDraft/);
+ assert.match(share,/thumbnailTextDraft/);
+ assert.match(share,/hookDraft/);
+ assert.match(share,/promiseResultDraft/);
+ assert.doesNotMatch(share,/analyticsFoundation|businessScorecard|decisionHistory/);
+});

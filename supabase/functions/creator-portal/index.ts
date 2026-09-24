@@ -266,17 +266,19 @@ Deno.serve(async (req: Request) => {
     const creatorId = validId(body?.creatorId, 160);
 
     if (actionName === "owner-get") {
+      const requestedVideoId = body?.videoId ? validId(body.videoId, 160) : null;
       let query = admin.from("creator_portal_links")
         .select("id,creator_id,creator_name,scope,video_id,token_secret,expires_at,revoked_at,created_at,updated_at")
         .eq("workspace_id", workspaceId).eq("creator_id", creatorId).is("revoked_at", null)
-        .order("created_at", { ascending: false }).limit(1);
-      const { data: links, error } = await query;
+        .eq("scope", requestedVideoId ? "video" : "creator");
+      query = requestedVideoId ? query.eq("video_id", requestedVideoId) : query.is("video_id", null);
+      const { data: links, error } = await query.order("created_at", { ascending: false }).limit(1);
       if (error) throw error;
       const link = links?.[0] || null;
       if (!link) return json(req, { link: null, document: null });
       const doc = await readDocument(link.id);
       return json(req, {
-        link: { id: link.id, creatorName: link.creator_name, scope: link.scope, token: link.token_secret, expiresAt: link.expires_at, createdAt: link.created_at, updatedAt: link.updated_at },
+        link: { id: link.id, creatorName: link.creator_name, scope: link.scope, videoId: link.video_id, token: link.token_secret, expiresAt: link.expires_at, createdAt: link.created_at, updatedAt: link.updated_at },
         document: doc ? {
           payload: doc.payload,
           version: Number(doc.version),
@@ -292,11 +294,14 @@ Deno.serve(async (req: Request) => {
 
     if (actionName === "publish") {
       const rawPayload = body?.payload || {};
-      let { data: links, error: findError } = await admin.from("creator_portal_links")
-        .select("id,token_secret,creator_name")
+      const requestedVideoId = body?.videoId ? validId(body.videoId, 160) : null;
+      const linkScope = requestedVideoId ? "video" : "creator";
+      let query = admin.from("creator_portal_links")
+        .select("id,token_secret,creator_name,scope,video_id")
         .eq("workspace_id", workspaceId).eq("creator_id", creatorId)
-        .eq("scope","creator").is("video_id", null).is("revoked_at", null)
-        .order("created_at",{ascending:false}).limit(1);
+        .eq("scope", linkScope).is("revoked_at", null);
+      query = requestedVideoId ? query.eq("video_id", requestedVideoId) : query.is("video_id", null);
+      const { data: links, error: findError } = await query.order("created_at",{ascending:false}).limit(1);
       if (findError) throw findError;
       let link = links?.[0] || null;
       let created = false;
@@ -307,12 +312,12 @@ Deno.serve(async (req: Request) => {
           workspace_id: workspaceId,
           creator_id: creatorId,
           creator_name: text(rawPayload?.creator?.name, 500),
-          scope: "creator",
-          video_id: null,
+          scope: linkScope,
+          video_id: requestedVideoId,
           token_hash: hash,
           token_secret: token,
           created_by: user.id,
-        }).select("id,token_secret,creator_name").single();
+        }).select("id,token_secret,creator_name,scope,video_id").single();
         if (error) throw error;
         link = inserted; created = true;
       } else {
@@ -326,6 +331,9 @@ Deno.serve(async (req: Request) => {
       const prior = await readDocument(link.id);
       const sanitized = sanitizeCoachPayload(rawPayload, prior?.payload || null);
       if (sanitized.creator.id !== creatorId) return json(req, { error: "CREATOR_ID_MISMATCH" }, 400);
+      if (requestedVideoId && (sanitized.videos.length !== 1 || sanitized.videos[0]?.id !== requestedVideoId)) {
+        return json(req, { error: "VIDEO_SCOPE_MISMATCH" }, 400);
+      }
       const now = new Date().toISOString();
       if (!prior) {
         const { error } = await admin.from("creator_portal_documents").insert({
@@ -349,11 +357,11 @@ Deno.serve(async (req: Request) => {
         }).eq("link_id", link.id);
         if (error) throw error;
       }
-      await activity(link.id, "coach", created ? "created_share_link" : "published_workspace", { videoCount: sanitized.videos.length });
+      await activity(link.id, "coach", created ? "created_share_link" : "published_workspace", { scope: linkScope, videoId: requestedVideoId, videoCount: sanitized.videos.length });
       const doc = await readDocument(link.id);
       return json(req, {
         ok: true,
-        link: { id: link.id, token: link.token_secret, creatorName: sanitized.creator.name },
+        link: { id: link.id, token: link.token_secret, creatorName: sanitized.creator.name, scope: linkScope, videoId: requestedVideoId },
         document: doc ? {
           payload: doc.payload,
           version: Number(doc.version),
@@ -383,30 +391,37 @@ Deno.serve(async (req: Request) => {
     }
 
     if (actionName === "rotate") {
-      const { data: oldLinks, error } = await admin.from("creator_portal_links")
+      const requestedVideoId = body?.videoId ? validId(body.videoId, 160) : null;
+      const linkScope = requestedVideoId ? "video" : "creator";
+      let oldQuery = admin.from("creator_portal_links")
         .select("id").eq("workspace_id",workspaceId).eq("creator_id",creatorId)
-        .eq("scope","creator").is("video_id",null).is("revoked_at",null).limit(1);
+        .eq("scope",linkScope).is("revoked_at",null);
+      oldQuery = requestedVideoId ? oldQuery.eq("video_id",requestedVideoId) : oldQuery.is("video_id",null);
+      const { data: oldLinks, error } = await oldQuery.limit(1);
       if (error) throw error;
       const old = oldLinks?.[0];
       let priorPayload: any = null;
       if (old) {
         priorPayload = (await readDocument(old.id))?.payload || null;
         await admin.from("creator_portal_links").update({ revoked_at:new Date().toISOString(), updated_at:new Date().toISOString() }).eq("id",old.id);
-        await activity(old.id,"coach","rotated_link",{});
+        await activity(old.id,"coach","rotated_link",{ scope:linkScope, videoId:requestedVideoId });
       }
       const token = tokenValue(), hash = await hashToken(token);
       const payload = sanitizeCoachPayload(body?.payload || priorPayload || {creator:{id:creatorId,name:""},videos:[]}, priorPayload);
+      if (requestedVideoId && (payload.videos.length !== 1 || payload.videos[0]?.id !== requestedVideoId)) {
+        return json(req, { error:"VIDEO_SCOPE_MISMATCH" }, 400);
+      }
       const { data: newLink, error: insertError } = await admin.from("creator_portal_links").insert({
         workspace_id:workspaceId, creator_id:creatorId, creator_name:payload.creator.name,
-        scope:"creator", video_id:null, token_hash:hash, token_secret:token, created_by:user.id
-      }).select("id,token_secret").single();
+        scope:linkScope, video_id:requestedVideoId, token_hash:hash, token_secret:token, created_by:user.id
+      }).select("id,token_secret,scope,video_id").single();
       if (insertError) throw insertError;
       await admin.from("creator_portal_documents").insert({
         link_id:newLink.id,payload,version:1,last_actor:"coach",creator_revision:0,coach_seen_creator_revision:0,
         coach_updated_at:new Date().toISOString(),updated_at:new Date().toISOString()
       });
-      await activity(newLink.id,"coach","created_rotated_link",{});
-      return json(req,{ok:true,link:{id:newLink.id,token:newLink.token_secret,creatorName:payload.creator.name}});
+      await activity(newLink.id,"coach","created_rotated_link",{ scope:linkScope, videoId:requestedVideoId });
+      return json(req,{ok:true,link:{id:newLink.id,token:newLink.token_secret,creatorName:payload.creator.name,scope:linkScope,videoId:requestedVideoId}});
     }
 
     if (actionName === "revoke") {
