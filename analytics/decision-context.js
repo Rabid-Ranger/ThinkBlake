@@ -680,13 +680,16 @@ Audience rules:
 - If audience data has processing delay, use the latest fully processed asOf date and explain the delay in notes.
 - If an exact audience value is unavailable, use null.
 
-TRAFFIC-SOURCE CONTEXT
-For those same 90-day dates, request the percentage of views from these sources when Studio can report them:
+TRAFFIC-SOURCE CONTEXT — REQUIRED RETRIEVAL ATTEMPT
+For EACH of those exact 90-day periods, do a SECOND, EXPLICIT traffic-source retrieval after the core channel metrics. Open/query the Traffic source / How viewers found your content breakdown using the SAME exact start date, end date, content filter and paid-traffic scope. Do not assume the general channel analytics response contains this breakdown.
+Request:
 - browsePct
 - suggestedPct
 - searchPct
 - externalPct
 Use the raw percentages. Do not renormalize them to 100%.
+Do not substitute lifetime, current, rolling, or differently filtered traffic-source percentages.
+If the exact-period traffic-source breakdown is genuinely inaccessible after explicitly trying that report/query, leave the four fields null and add a limitation that names the traffic-source report/query attempted and why it could not return the exact period.
 In context.sourceNote, include concise raw source evidence when available, such as the leading Suggested source videos or leading Search queries. Do not interpret them.
 
 NEW UPLOADS / OLDER VIDEOS
@@ -786,18 +789,20 @@ For EACH checkpoint independently:
 - Do not substitute lifetime totals, realtime totals, last calendar days, or a different age window.
 - Do not remove flops or outliers unless the video is structurally incomparable, paid/promoted when judging organic, a different format, or from a genuinely different strategy era.
 
-For every video/checkpoint row request these metrics when Studio can report them:
-1. views
-2. engagedViews
-3. registered impressions
-4. impressions CTR
-5. first-30-second / Intro retention
-6. average percentage viewed / APV
-7. average view duration / AVD in seconds
-8. Browse %
+For every video/checkpoint row:
+1. collect views
+2. collect engagedViews when retrievable
+3. collect registered impressions
+4. collect impressions CTR
+5. collect first-30-second / Intro retention when retrievable
+6. collect average percentage viewed / APV
+7. collect average view duration / AVD in seconds
+8. THEN make a separate exact-window Traffic source / How viewers found this video retrieval attempt and return Browse %
 9. Suggested %
 10. Search %
 11. External %
+
+Do not stop after the general video analytics report merely because traffic-source fields are absent there. The traffic-source pass must use the exact same video-age checkpoint. If that exact breakdown is genuinely inaccessible after an explicit attempt, leave the four traffic percentages null and state the attempted report/query in limitations.
 
 VIDEO-METRIC RULES
 - Keep Views and Engaged Views separate. Since August 24, 2026, Views counts playback starts across formats. Engaged views is the older/original view-count methodology retained in YouTube Analytics Advanced Mode, including long-form. Explicitly check Advanced Mode for Engaged views. If Ask Studio itself cannot access it, use null and say that Ask Studio could not retrieve the Advanced Mode Engaged views metric. Do NOT say Engaged views is Shorts-only and never substitute Views.
