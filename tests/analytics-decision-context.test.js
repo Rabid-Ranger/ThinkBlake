@@ -140,3 +140,12 @@ test('all-in-one Studio prompt asks for newest eligible target without putting i
   assert.match(p,/FIRST include the NEWEST eligible/i);
   assert.match(p,/excludes each target video from its own same-age baseline/i);
 });
+
+
+test('Normals at a glance can show descriptive Views from saved baseline members when definition is unknown',()=>{
+ const source=read('analytics/decision-context.js');
+ assert.match(source,/function metricDetail|const metricDetail=/);
+ assert.match(source,/definition unverified/);
+ assert.match(source,/Shown descriptively only/);
+ assert.match(source,/observationRevisionIds/);
+});

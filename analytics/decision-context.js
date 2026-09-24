@@ -346,15 +346,32 @@
     if(!b)return {h,label:'No matching baseline',sample:0,values:Object.fromEntries(metricKeys.map(k=>[k,null])),samples:Object.fromEntries(metricKeys.map(k=>[k,0])),source:'No baseline saved yet'};
     if(b.engine){
       const rows=(c.analyticsFoundation?.baselines||[]).filter(x=>x.policyId===b.id&&x.kind==='operating'),last=rows.at(-1);
-      if(!last)return {h,label:b.label,sample:0,values:Object.fromEntries(metricKeys.map(k=>[k,null])),samples:Object.fromEntries(metricKeys.map(k=>[k,0])),source:'No current normal built yet'};
-      const values=Object.fromEntries(metricKeys.map(k=>[k,n(last?.metrics?.[k]?.median)]));
-      const samples=Object.fromEntries(metricKeys.map(k=>[k,n(last?.metrics?.[k]?.n)||0]));
+      if(!last)return {h,label:b.label,sample:0,values:Object.fromEntries(metricKeys.map(k=>[k,null])),samples:Object.fromEntries(metricKeys.map(k=>[k,0])),verified:Object.fromEntries(metricKeys.map(k=>[k,true])),source:'No current normal built yet'};
+      const knownDef=x=>Boolean(x&&!/^(unknown|legacy|unverified|unspecified)$/i.test(String(x)));
+      const median=xs=>{const a=xs.filter(Number.isFinite).slice().sort((x,y)=>x-y);if(!a.length)return null;const m=Math.floor(a.length/2);return a.length%2?a[m]:(a[m-1]+a[m])/2;};
+      const metricDetail=k=>{
+        const saved=last?.metrics?.[k],savedValue=n(saved?.median),savedN=n(saved?.n)||0;
+        if(savedValue!==null&&savedN>0)return {value:savedValue,sample:savedN,verified:saved?.definitionVerified!==false&&knownDef(saved?.definitionId||b.engine.metricDefinitions?.[k]||(k===b.engine.primaryMetric?b.engine.definitionId:null))};
+        const expected=b.engine.metricDefinitions?.[k]||(k===b.engine.primaryMetric?b.engine.definitionId:'unknown');
+        if(knownDef(expected))return {value:savedValue,sample:savedN,verified:true};
+        const revs=new Set(last.observationRevisionIds||[]),vals=[];
+        for(const o of c.analyticsFoundation?.observations||[]){
+          if(!revs.has(o.revisionId)||!Number.isFinite(o.metrics?.[k]))continue;
+          const actual=o.metricDefinitions?.[k]||o.definitionId||'unknown';
+          if(!knownDef(actual))vals.push(o.metrics[k]);
+        }
+        return {value:median(vals),sample:vals.length,verified:false};
+      };
+      const details=Object.fromEntries(metricKeys.map(k=>[k,metricDetail(k)]));
+      const values=Object.fromEntries(metricKeys.map(k=>[k,details[k].value]));
+      const samples=Object.fromEntries(metricKeys.map(k=>[k,details[k].sample]));
+      const verified=Object.fromEntries(metricKeys.map(k=>[k,details[k].verified]));
       const sample=Math.max(0,...Object.values(samples));
-      return {h,label:b.label,sample,values,samples,source:'Automatic · matched current-strategy videos'};
+      return {h,label:b.label,sample,values,samples,verified,source:'Automatic · matched current-strategy videos'};
     }
     const values=W.values(b.manual),sample=n(b.manual?.n)||0;
     const samples=Object.fromEntries(metricKeys.map(k=>[k,n(values?.[k])===null?0:sample]));
-    return {h,label:b.label,sample,values,samples,source:'Coach-selected baseline'};
+    return {h,label:b.label,sample,values,samples,verified:Object.fromEntries(metricKeys.map(k=>[k,true])),source:'Coach-selected baseline'};
   }
   function normalValue(key,value){
     if(n(value)===null)return '—';
@@ -363,8 +380,10 @@
     return Math.round(n(value)).toLocaleString();
   }
   function normalMetricCell(label,key,detail,note=''){
-    const value=detail.values?.[key],sample=n(detail.samples?.[key])||0,conf=normalConfidence(sample);
-    return '<div class="adc-normal-metric '+conf.tone+'"><span>'+esc(label)+'</span><b>'+esc(normalValue(key,value))+'</b><small>'+esc(sample?('n='+sample+' · '+conf.label):'Not available')+'</small>'+(note?'<em>'+esc(note)+'</em>':'')+'</div>';
+    const value=detail.values?.[key],sample=n(detail.samples?.[key])||0,verified=detail.verified?.[key]!==false,conf=normalConfidence(sample);
+    const sampleText=sample?('n='+sample+' · '+(verified?conf.label:'definition unverified')):'Not available';
+    const noteText=[note,!verified?'Shown descriptively only; do not use it for a verified cross-definition comparison.':''].filter(Boolean).join(' · ');
+    return '<div class="adc-normal-metric '+conf.tone+'"><span>'+esc(label)+'</span><b>'+esc(normalValue(key,value))+'</b><small>'+esc(sampleText)+'</small>'+(noteText?'<em>'+esc(noteText)+'</em>':'')+'</div>';
   }
   function normalsAtGlance(c,W){
     const p=W.prefs(c),h=AGE_ORDER.includes(Number(p.hours))?Number(p.hours):168,d=baselineDetail(c,W,h),conf=normalConfidence(d.sample);

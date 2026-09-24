@@ -26,10 +26,11 @@ function promptChoice(c,key='168'){
 function promptCenterBody(c,key){
  const W=window.AcceleratorAnalyticsWorkspace,selected=key||String(W?.prefs(c).hours||168),p=promptChoice(c,selected);
  const ADC=window.AcceleratorDecisionContext,missing=ADC?.missingDataReport?.(c,W);
- const tabs=[['24','24h'],['48','48h'],['168','7d'],['672','28d'],['channel','90d Channel Health']],coverage=[24,48,168,672].map(h=>[h,I.checkpointInventory?I.checkpointInventory(c,h):{complete:0,target:15}]);
+ const tabs=[['24','24h'],['48','48h'],['168','7d'],['672','28d'],['channel','90d Channel Health']],coverage=[24,48,168,672].map(h=>[h,I.checkpointInventory?I.checkpointInventory(c,h):{complete:0,target:15}]),selectedCoverage=p.hours&&I.checkpointInventory?I.checkpointInventory(c,p.hours):null;
  lastPrompt={kind:p.kind,hours:p.hours,key:p.key};
  return '<div class="studio-prompt-tabs">'+tabs.map(([k,label])=>'<button class="btn '+(p.key===k?'active':'')+'" type="button" data-studio="prompt-view-'+k+'">'+e(label)+'</button>').join('')+'</div>'+
    '<p class="cg-note"><b>Saved complete checkpoint rows:</b> '+coverage.map(([h,s])=>winShort(h)+' '+Math.min(s.complete,s.target)+'/15').join(' · ')+'</p>'+
+   (selectedCoverage?.complete>=15?'<p class="cg-note"><b>This checkpoint is already 15/15.</b> The prompt is update-only. If no newer video has fully matured to this age, Ask Studio should return a short response with <code>observations: []</code>. That does not replace or erase the saved 15-video baseline.</p>':'')+
    '<p class="cg-note"><b>First setup:</b> run 24h, 48h, 7d and 28d separately once. Start with 7d if you want the main diagnosis first. Each checkpoint builds its own 15-video same-age cohort. After setup, the same buttons repair incomplete rows, then ask only for new eligible rows or backfill still needed.</p>'+
    (missing?.videoRows?.length?'<div class="studio-copy-row"><p class="cg-note">Some saved video checkpoints still have required automatable gaps.</p>'+button('missing','Fill video data gaps')+'</div>':'')+
    '<div class="studio-prompt-head"><div><h3>'+e(p.title)+'</h3><p>'+e(p.help)+'</p></div></div>'+
