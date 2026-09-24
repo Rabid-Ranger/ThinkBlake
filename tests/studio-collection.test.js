@@ -19,22 +19,29 @@ test('setup uses one exact checkpoint and requests the 15 most recent matured el
   assert.match(p,/Do not treat age, low performance, or ordinary topic\/title variation/);
   assert.match(p,/rolling last-48-hour realtime/);
   assert.match(p,/ordinary flops and outliers/);
+  assert.match(p,/IMPORTANT SECOND PASS/);
+  assert.match(p,/Traffic source \/ How viewers found this video/);
+  assert.match(p,/Do not stop after the general video analytics report/);
   assert.doesNotMatch(p,/at most 5 eligible|10–20 previous/);
  }
 });
 
-test('optional engaged views and 0:30 retention do not create a missing-field request',()=>{
- const first=I.parse(packet([row]),c,A.emptyStore(),now);
+test('optional engagement, retention, and traffic context do not make an otherwise complete checkpoint incomplete',()=>{
+ const optional={...row,metrics:{...fullMetrics,engagedViews:null,retention30:null,browsePct:null,suggestedPct:null,searchPct:null,externalPct:null}};
+ const first=I.parse(packet([optional]),c,A.emptyStore(),now);
+ const inv=I.checkpointInventory({...c,analyticsFoundation:first.next},168);
+ const traffic=I.checkpointTrafficCoverage({...c,analyticsFoundation:first.next},168);
+ assert.equal(inv.complete,1);
+ assert.equal(traffic.complete,0);
  const p=I.collectionPrompt({...c,analyticsFoundation:first.next},168,'missing',now);
  assert.doesNotMatch(p,/"test-video"/);
- assert.match(p,/engagedViews or retention30: they are optional bonus fields/);
 });
 
-test('missing-field request uses saved values with public percentage units and correct checkpoint',()=>{
- const incomplete={...row,metrics:{...fullMetrics,searchPct:null}};
+test('missing-field request uses saved values and correct checkpoint for required metrics',()=>{
+ const incomplete={...row,metrics:{...fullMetrics,apv:null}};
  const store=I.parse(packet([incomplete]),c,A.emptyStore(),now).next;
  const p=I.collectionPrompt({...c,analyticsFoundation:store},168,'missing',now);
- assert.match(p,/up to 5 saved checkpoints/);assert.match(p,/"ctr":5/);assert.match(p,/"searchPct":null/);
+ assert.match(p,/up to 5 saved checkpoints/);assert.match(p,/"ctr":5/);assert.match(p,/"apv":null/);
  assert.match(p,/Do not return a partial patch/);
  const other=I.collectionPrompt({...c,analyticsFoundation:store},24,'missing',now);
  assert.doesNotMatch(other,/test-video/);
@@ -48,6 +55,10 @@ test('channel and audience collection remain separate, with complete adjacent ra
   for(const p of [a,b])assert.equal((Date.parse(p.end)-Date.parse(p.start))/86400000,89);
   assert.equal(Date.parse(b.start)-Date.parse(a.end),86400000);
   assert.ok(b.end<date.slice(0,10));assert.ok(!('newViewers' in b.metrics));
+  const prompt=I.collectionPrompt(c,168,'channel',date);
+  assert.match(prompt,/separate required retrieval attempt/);
+  assert.match(prompt,/Traffic source \/ How viewers found your content/);
+  assert.match(prompt,/Do not stop after a general channel analytics report/);
  }
  const p=I.collectionPrompt({...c,coachOS:{analytics:{audienceSnapshots:[{asOf:'2026-08-20'}]}}},168,'audience',now);
  const schema=I.studioJson(p,c.id).data;
