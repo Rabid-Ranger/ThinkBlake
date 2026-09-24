@@ -11,3 +11,11 @@ test('one-click creation tries to copy the new private link',()=>{const share=re
 test('creator autosave queues edits made while a save is already running',()=>{const portal=read('ui/creator-portal.js');assert.match(portal,/changeSeq/);assert.match(portal,/savedSeq/);assert.match(portal,/saveQueued/);assert.match(portal,/changeSeq>savedSeq/);});
 test('each link is still scoped to one video and creator page stays no-login',()=>{const share=read('ui/creator-sharing.js'),edge=read('supabase/functions/creator-portal/index.ts'),portal=read('ui/creator-portal.js');assert.match(share,/videoId:String\(v\.id\)/);assert.match(edge,/VIDEO_SCOPE_MISMATCH/);assert.match(portal,/location\.hash/);assert.doesNotMatch(portal,/Authorization/);});
 test('shared modal is intentionally small: direction plus next steps, not duplicate instruction layers',()=>{const share=read('ui/creator-sharing.js');assert.match(share,/What should they work on/);assert.match(share,/Next steps, one per line/);assert.doesNotMatch(share,/cshare-instructions/);});
+
+
+test('queued autosave is not reported as a failure and failed saves do not retry forever',()=>{
+ const portal=read('ui/creator-portal.js');
+ assert.match(portal,/if\(saving\)\{saveQueued=true;.*return true/);
+ assert.match(portal,/if\(ok&&\(queued\|\|changeSeq>savedSeq\)\)/);
+ assert.doesNotMatch(portal,/finally\{saving=false;if\(saveQueued\|\|changeSeq>savedSeq\)/);
+});
