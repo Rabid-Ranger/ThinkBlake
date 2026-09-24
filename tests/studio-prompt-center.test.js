@@ -44,3 +44,19 @@ test('legacy Everything action cannot reopen an all-in-one prompt',()=>{
   assert.doesNotMatch(live,/action==='prompt-all'\?'all'/);
   assert.doesNotMatch(live,/lastPrompt\.kind==='all'\?'all'/);
 });
+
+
+test('Copy prompt copies the exact visible prompt instead of regenerating it',()=>{
+  const live=read('analytics/live.js');
+  assert.match(live,/const text=ta\?\.value\|\|ta\?\.textContent\|\|''/);
+  assert.match(live,/if\(action==='copy-current'\)\{await copyVisibleStudioPrompt\(\);return;\}/);
+  assert.doesNotMatch(live,/if\(action==='copy-current'\).*promptChoice\(c,key\)/);
+});
+
+test('Copy prompt has a real clipboard fallback and honest status text',()=>{
+  const live=read('analytics/live.js');
+  assert.match(live,/navigator\.clipboard\?\.writeText/);
+  assert.match(live,/document\.execCommand\?\.\('copy'\)/);
+  assert.match(live,/Copied\. Paste it into Ask Studio\./);
+  assert.match(live,/Press Ctrl\+C \(Windows\) or Cmd\+C \(Mac\) to copy it\./);
+});
