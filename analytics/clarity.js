@@ -151,6 +151,23 @@
     return {tone,kind:'diagnosed',headline,bottleneck,explain,next,sourceContext,hardIssues:hard,softIssues:soft,winner,under,outcomeMultiple,metrics:m,age};
   }
 
+  function ageCardRead(r,hours=168,hasCheckpoint=true){
+    const age=AGES[hours]||AGES[168];
+    if(!hasCheckpoint||r?.status==='missing_observation') return {tone:'muted',score:'No '+age.label+' result',status:'No '+age.label+' checkpoint saved'};
+    const d=diagnose(r,hours),c=r?.comparisons||{};
+    if(d.outcomeMultiple!==null&&d.outcomeMultiple!==undefined) return {tone:d.tone||'muted',score:fmtMultiple(d.outcomeMultiple),status:d.kind==='diagnosed'?(d.hardIssues?.length?d.bottleneck:d.winner?'Winner':d.softIssues?.length?'Check context':'In range'):age.purpose};
+    const imp=n(c.impressions?.multiple),ctr=n(c.ctr?.deltaPp),ret=n(c.retention30?.deltaPp),apv=n(c.apv?.deltaPp),avd=n(c.avdSeconds?.deltaSeconds);
+    const fair=[imp,ctr,ret,apv,avd].some(x=>x!==null);
+    if(fair){
+      const score=imp!==null?'SHOW '+fmtMultiple(imp):ctr!==null?'CLICK '+(ctr>=0?'+':'')+ctr.toFixed(1)+' pp':'WATCH ready';
+      const status=d.kind==='diagnosed'?(d.hardIssues?.length?d.bottleneck:d.softIssues?.length?'Check context':'Comparison ready'):'Comparison ready';
+      return {tone:d.tone||'normal',score,status};
+    }
+    const hasResult=Object.values(c).some(x=>n(x?.current)!==null);
+    if(hasResult) return {tone:'muted',score:'Result saved',status:r?.status==='no_baseline'?'No earlier comparison group yet':'No fair comparison yet'};
+    return {tone:'muted',score:'No fair comparison',status:age.purpose};
+  }
+
   function patternFromDiagnoses(diags){
     const usable=(diags||[]).filter(Boolean);
     const hard={reach:0,packaging:0,retention:0},soft={reach:0,packaging:0,retention:0};
@@ -437,13 +454,19 @@
         (r.status==='compared'?'<div class="ac-subsection"><div class="ac-subsection-label">QUICK READ</div>'+metricsHtml(r,d)+'</div><div class="ac-next-inline '+d.tone+'"><div><span>WHAT TO DO NEXT</span><b>'+esc(d.bottleneck)+'</b></div><p>'+esc(d.next)+'</p></div>'+diagnosisWhyHtml(r,d):'<p class="ac-ready-note">'+esc(r.message||'Enter at least one comparable metric.')+'</p>')+
       '</section>';
     }
+    function nativeCheckpoint(v,h){
+      const key={24:'_24h',48:'_48h',168:'_7d',672:'_28d'}[h];
+      return key&&v?.native?.analytics?.[key]||null;
+    }
+    function checkpointSaved(c,v,h){return Boolean(latestObservation(c,v,h)||nativeCheckpoint(v,h));}
+    function savedCheckpointText(c,v){
+      const labels=[24,48,168,672].filter(h=>checkpointSaved(c,v,h)).map(h=>AGES[h].label);
+      return labels.length?labels.join(' · '):'none yet';
+    }
     function ageOverview(c,v){
       return [24,48,168,672].map(h=>{
-        const read=readFor(c,v,h),d=read?.d;
-        const score=d?.outcomeMultiple!=null?fmtMultiple(d.outcomeMultiple):'No comparison yet';
-        const status=d?.kind==='diagnosed'?(d.hardIssues?.length?d.bottleneck:d.winner?'Winner':d.softIssues?.length?'Check context':'In range'):AGES[h].purpose;
-        const tone=d?.tone||'muted';
-        return '<button class="ac-age '+tone+' '+(W.prefs(c).hours===h?'on':'')+'" data-ac-window="'+h+'"><span>'+AGES[h].label+' · '+AGES[h].name+'</span><b>'+esc(score)+'</b><small>'+esc(status)+'</small></button>';
+        const read=readFor(c,v,h),card=ageCardRead(read?.r,h,checkpointSaved(c,v,h));
+        return '<button class="ac-age '+card.tone+' '+(W.prefs(c).hours===h?'on':'')+'" data-ac-window="'+h+'"><span>'+AGES[h].label+' · '+AGES[h].name+'</span><b>'+esc(card.score)+'</b><small>'+esc(card.status)+'</small></button>';
       }).join('');
     }
     function metricCard(stage,label,x,signal,format){
@@ -592,12 +615,14 @@
       const quickPanel=p.quickOpen?quickCheckHtml(c,b,p.hours):'';
       const memberNames=(r.baseline?.memberVideoIds||[]).map(id=>W.videos(c).find(x=>(x.engineId||x.id)===id)?.title||id);
       const comparisonDetail='<details><summary>Which normal is this video using?</summary><p>'+(r.manual?'Coach-selected summary. Confirm the source, format and age match this video.':'Earlier compatible uploads only; this video and later uploads are excluded. Each metric uses its own available sample.')+'</p><p>'+esc(r.source||r.target?.source?.report||'Source details are in the saved observations.')+'</p>'+(r.baseline?'<p>Comparison as of '+esc(r.asOf||r.baseline.evidenceAsOf||'current review')+' · '+esc(r.baselineVersionId||'calculated for this video')+'</p><ul>'+memberNames.map(name=>'<li>'+esc(name)+'</li>').join('')+'</ul>':'')+'</details>';
-      const controls='<div class="ac-video-controls"><div class="ac-video-select-row"><label>Video<select id="ac-video">'+W.videos(c).map(x=>'<option value="'+esc(x.id)+'" '+(x.id===v.id?'selected':'')+'>'+esc(x.title)+'</option>').join('')+'</select></label>'+quickToggle+'</div><div class="ac-age-grid">'+ageOverview(c,v)+'</div><p>Normal used for this video: <b>'+esc(baselineName)+'</b> at the same point after publishing. Automatic comparisons exclude this video; see the comparison group below.</p>'+comparisonDetail+quickPanel+'</div>';
+      const savedText=savedCheckpointText(c,v),hasCheckpoint=checkpointSaved(c,v,p.hours);
+      const controls='<div class="ac-video-controls"><div class="ac-video-select-row"><label>Video<select id="ac-video">'+W.videos(c).map(x=>'<option value="'+esc(x.id)+'" '+(x.id===v.id?'selected':'')+'>'+esc(x.title)+'</option>').join('')+'</select></label>'+quickToggle+'</div><div class="ac-age-grid">'+ageOverview(c,v)+'</div><p class="ac-ready-note"><b>Saved checkpoints for this video:</b> '+esc(savedText)+'.</p><p>Normal used for this video: <b>'+esc(baselineName)+'</b> at the same point after publishing. Automatic comparisons exclude this video; see the comparison group below.</p>'+comparisonDetail+quickPanel+'</div>';
+      const numbersHtml=hasCheckpoint?metricsHtml(r,d):'<div class="ac-why ac-why-missing"><p><b>No '+esc(age.label)+' result is saved for this specific video.</b></p><p>Saved checkpoints for this video: '+esc(savedText)+'. The creator can still have a '+esc(age.label)+' normal built from 15 other eligible videos; that does not mean every video in this dropdown has a '+esc(age.label)+' measurement.</p><p>Nothing is being hidden here. Import the missing '+esc(age.label)+' checkpoint if Studio can still return it, or switch to one of the saved checkpoints above.</p></div>';
       const actions='<div class="actions ac-video-actions">'+(v.native&&!v.engineId?action('result','Update this video’s results'):action('import',v.engineId?'Update imported results':'Import results'))+action('baseline','Build / update baseline')+action('diagnosis','Use this in Diagnosis')+'</div>';
       return '<div class="ac-shell">'+
         '<section class="ac-section ac-video-section '+d.tone+'"><div class="ac-section-head ac-video-head"><div class="ac-section-index">02</div><div><div class="ac-kicker">THIS VIDEO READ · '+age.label+' · '+age.name+'</div><h2>'+esc(d.headline)+'</h2><p>'+esc(d.explain)+'</p></div><div class="ac-top-badge"><span>CURRENT CALL</span><b>'+esc(d.bottleneck)+'</b><small>'+esc(age.act)+'</small></div></div>'+
         '<div class="ac-section-body">'+controls+
-          '<div class="ac-subsection"><div class="ac-subsection-label">HOW THE NUMBERS LOOK</div>'+metricsHtml(r,d)+'</div>'+
+          '<div class="ac-subsection"><div class="ac-subsection-label">HOW THE NUMBERS LOOK</div>'+numbersHtml+'</div>'+
           strategistReadHtml(c,v,r,d,p.hours)+
           '<div class="ac-support-row">'+diagnosisWhyHtml(r,d)+dataCoverageHtml(c,b,p.hours)+'</div>'+
           actions+
@@ -742,5 +767,5 @@
     if(win.AcceleratorDeskBridge?.analyticsActive?.()) rerender();
   }
 
-  return {strategistRead,countSignal,rateSignal,durationSignal,metricRead,diagnose,patternFromDiagnoses,install};
+  return {strategistRead,countSignal,rateSignal,durationSignal,metricRead,diagnose,ageCardRead,patternFromDiagnoses,install};
 });
