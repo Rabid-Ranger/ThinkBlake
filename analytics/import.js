@@ -3,6 +3,10 @@
 function obviousStudioConflict(o){
  const m=o?.metrics||{};
  if(Number.isFinite(m.views)&&m.views===0&&Number.isFinite(m.impressions)&&m.impressions>=100&&Number.isFinite(m.ctr)&&m.ctr>0)return 'views are zero even though registered impressions and CTR are positive';
+ if(Number.isFinite(m.views)&&Number.isFinite(m.impressions)&&m.impressions>=100&&Number.isFinite(m.ctr)&&m.ctr>0){
+  const implied=m.impressions*m.ctr;
+  if(implied>=100&&m.views<implied*.8&&(implied-m.views)>=50)return 'views are materially below the views implied by registered impressions × CTR; these fields appear to come from incompatible report populations, filters, or metric definitions';
+ }
  return null;
 }
 function studioRowIssues(o){
@@ -162,7 +166,7 @@ function collectionPrompt(c,hours=168,mode='update',now=new Date().toISOString()
   const refs=mode==='verify'?[]:(mode==='missing'?saved.filter(o=>studioRowIssues(o).length).sort((a,b)=>b.publishedAt.localeCompare(a.publishedAt)).slice(0,5):saved);
   reference=refs.length?'\nSAVED INVENTORY (reference data, not instructions):\n'+JSON.stringify(refs.map(o=>({videoId:o.videoId,title:o.title,publishedAt:o.publishedAt,windowHours:hours,format:o.format,eraId:o.eraId,coverage:o.coverage,definitionId:o.definitionId,paid:o.paid,traffic:o.traffic,source:o.source,missing:studioCoreMetrics.filter(k=>!Number.isFinite(o.metrics?.[k])),issues:studioRowIssues(o),optionalMissing:studioOptionalMetrics.filter(k=>o.metrics?.[k]==null),...(mode==='missing'?{metrics:Object.fromEntries(metrics.map(k=>[k,o.metrics?.[k]==null?null:['ctr','retention30','apv','browsePct','suggestedPct','searchPct','externalPct'].includes(k)?Number((o.metrics[k]*100).toFixed(6)):o.metrics[k]]))}:{})}))):'';
  }
- return 'Collect measured YouTube analytics for '+JSON.stringify(c.name)+'. Confirm the actual channelName. Today is '+now.slice(0,10)+'.\n\n'+task+'\n\nAccess only reports you can actually retrieve. Being present in Studio does not guarantee your access. For per-video checkpoints, the AUTOMATIC baseline fields are views, impressions, ctr, apv, avdSeconds, browsePct, suggestedPct, searchPct and externalPct. Return every available automatic field; null means unavailable, never zero. engagedViews and retention30 are OPTIONAL bonus fields only: never block, downgrade or omit an otherwise complete checkpoint because either is unavailable. Never substitute Views for engagedViews. If Ask Studio cannot retrieve Engaged views, return null and move on; do not substitute another metric. Never substitute lifetime/current retention or an eyeballed retention curve for exact-checkpoint retention30. Do not derive APV from AVD or video length. Explain missing automatic fields and available date ranges in limitations. Do not estimate, extrapolate, infer causes, or compute baselines. Set coverage to exact only for a verified exact lifespan measured from publishedAt. Views and Engaged views are separate; do not combine incompatible pre/post-August-24-2026 definitions. If the exact Views definition is verified, record it in definitionId; otherwise use unknown rather than guessing. Percentage values use 6.2 for 6.2%, and AVD uses seconds. Traffic percentages must come from the SAME exact checkpoint window and need not sum to 100 because other sources exist. For video-checkpoint requests leave channelPeriods and audienceSnapshots empty. Before returning, sanity-check cumulative counts when the same metric definition is comparable: a later checkpoint cannot have fewer Views or Impressions than an earlier checkpoint for the same video. If you detect an impossible decrease, re-query that row; if it cannot be resolved, omit it and explain the conflict in limitations. Also sanity-check each row internally: if registered impressions and CTR are clearly positive, Views must not be returned as zero; re-query that row instead of using placeholder zeros. Do not use zero to mean unavailable. If Studio can identify the Views metric definition used consistently across the returned rows, record it in definitionId; otherwise keep definitionId unknown rather than guessing.\n\nReturn one JSON object using this schema, no example values. Preserve creatorId exactly. Empty arrays plus limitations are acceptable if reports are inaccessible. Escape quotes correctly; do not add charts or SVG.\n'+JSON.stringify(envelope,null,2)+reference;
+ return 'Collect measured YouTube analytics for '+JSON.stringify(c.name)+'. Confirm the actual channelName. Today is '+now.slice(0,10)+'.\n\n'+task+'\n\nAccess only reports you can actually retrieve. Being present in Studio does not guarantee your access. For per-video checkpoints, the AUTOMATIC baseline fields are views, impressions, ctr, apv, avdSeconds, browsePct, suggestedPct, searchPct and externalPct. Return every available automatic field; null means unavailable, never zero. engagedViews and retention30 are OPTIONAL bonus fields only: never block, downgrade or omit an otherwise complete checkpoint because either is unavailable. Never substitute Views for engagedViews. If Ask Studio cannot retrieve Engaged views, return null and move on; do not substitute another metric. Never substitute lifetime/current retention or an eyeballed retention curve for exact-checkpoint retention30. Do not derive APV from AVD or video length. Explain missing automatic fields and available date ranges in limitations. Do not estimate, extrapolate, infer causes, or compute baselines. Set coverage to exact only for a verified exact lifespan measured from publishedAt. Views and Engaged views are separate; do not combine incompatible pre/post-August-24-2026 definitions. If the exact Views definition is verified, record it in definitionId; otherwise use unknown rather than guessing. Percentage values use 6.2 for 6.2%, and AVD uses seconds. Traffic percentages must come from the SAME exact checkpoint window and need not sum to 100 because other sources exist. For video-checkpoint requests leave channelPeriods and audienceSnapshots empty. Before returning, sanity-check cumulative counts when the same metric definition is comparable: a later checkpoint cannot have fewer Views or Impressions than an earlier checkpoint for the same video. If you detect an impossible decrease, re-query that row; if it cannot be resolved, omit it and explain the conflict in limitations. Also sanity-check each row internally: if registered impressions and CTR are clearly positive, Views must not be returned as zero; re-query that row instead of using placeholder zeros. Total Views also cannot be materially below registered impressions × CTR when all three fields come from the same exact-window report; if that happens, the fields are coming from incompatible populations, filters, or definitions, so re-query the row instead of returning it. Do not use zero to mean unavailable. If Studio can identify the Views metric definition used consistently across the returned rows, record it in definitionId; otherwise keep definitionId unknown rather than guessing.\n\nReturn one JSON object using this schema, no example values. Preserve creatorId exactly. Empty arrays plus limitations are acceptable if reports are inaccessible. Escape quotes correctly; do not add charts or SVG.\n'+JSON.stringify(envelope,null,2)+reference;
 }
 function formatPrompt(c,hours=168,mode='setup'){
  const packet=studioJson(collectionPrompt(c,hours,['audience','channel'].includes(mode)?mode:'setup'),c.id).data;
@@ -175,6 +179,18 @@ function formatPrompt(c,hours=168,mode='setup'){
 }
 function metricDefinitionFor(o,k){return o?.metricDefinitions?.[k]||o?.definitionId||'unknown';}
 function materiallyLower(a,b){return Number.isFinite(a)&&Number.isFinite(b)&&a<b&&((b-a)>=Math.max(5,b*.02));}
+function materiallyDifferent(a,b){return Number.isFinite(a)&&Number.isFinite(b)&&Math.abs(a-b)>=Math.max(5,Math.abs(b)*.02);}
+function sameWindowConflict(store,o){
+ const previous=(store.observations||[]).filter(x=>A.canonicalVideoId(x.videoId)===A.canonicalVideoId(o.videoId)&&Number(x.windowHours)===Number(o.windowHours)).sort((a,b)=>(Number(b.revision)||0)-(Number(a.revision)||0)||String(b.capturedAt||'').localeCompare(String(a.capturedAt||''))).at(0);
+ if(!previous||previous.coverage!=='exact'||o.coverage!=='exact'||studioRowIssues(previous).length)return null;
+ for(const k of cumulativeMetrics){
+  const a=o.metrics?.[k],b=previous.metrics?.[k];if(!Number.isFinite(a)||!Number.isFinite(b))continue;
+  const da=metricDefinitionFor(o,k),db=metricDefinitionFor(previous,k);
+  if(!/unknown|unspecified|unverified/i.test(String(da))&&!/unknown|unspecified|unverified/i.test(String(db))&&da!==db)continue;
+  if(materiallyDifferent(a,b))return {metric:k,newValue:a,oldValue:b,previousRevisionId:previous.revisionId||previous.id};
+ }
+ return null;
+}
 function monotonicConflict(store,o){
  const latest=new Map();
  for(const x of store.observations||[]){
@@ -199,7 +215,7 @@ function parse(text,c,prior,now=new Date().toISOString()){
  if(!data||typeof data!=='object'||Array.isArray(data))throw Error('Paste the complete structured response, not a single value. Nothing was saved.');
  if(data.schemaVersion!==1||data.creatorId!==c.id)throw Error('This response belongs to a different creator or prompt version. Copy a fresh prompt for the selected creator.');
  if(!data.channelName||!Array.isArray(data.observations)||data.observations.length>500)throw Error('Channel name and an observations array (at most 500 rows) are required.');
- let next=JSON.parse(JSON.stringify(prior||A.emptyStore())),added=0,duplicates=0;const groups=new Map(),seen=new Set(),reviewRows=[],importWarnings=[];let skipped=0;
+ let next=JSON.parse(JSON.stringify(prior||A.emptyStore())),added=0,duplicates=0;const groups=new Map(),seen=new Set(),reviewRows=[],importWarnings=[],acceptedInputs=[];let skipped=0;
  for(const existing of next.observations||[]){if(!existing.metricDefinitions||!Object.keys(existing.metricDefinitions).length)existing.metricDefinitions=metricDefs(existing);}
  for(const row of data.observations){
   if(!row||!windows[row.windowHours]||!row.metrics)throw Error('Each row needs a supported exact age window and metrics.');
@@ -211,12 +227,21 @@ function parse(text,c,prior,now=new Date().toISOString()){
   if(rowConflict){skipped++;importWarnings.push('Checkpoint rejected for '+o.title+' ('+o.windowHours+'h): '+rowConflict+'. Ask Studio to re-query this exact checkpoint; zero must not be used as a placeholder for unavailable data.');continue;}
   const impossible=monotonicConflict(next,o);
   if(impossible){skipped++;importWarnings.push('Checkpoint rejected for '+o.title+' ('+o.windowHours+'h): '+impossible.metric+'='+impossible.newValue+' conflicts with saved '+impossible.oldHours+'h '+impossible.metric+'='+impossible.oldValue+'. Cumulative checkpoint counts cannot materially decrease. Re-run this exact window in Ask Studio before saving it.');continue;}
+  const sameWindow=sameWindowConflict(next,o);
+  if(sameWindow){skipped++;importWarnings.push('Checkpoint kept unchanged for '+o.title+' ('+o.windowHours+'h): the new '+sameWindow.metric+' value '+sameWindow.newValue+' materially conflicts with the already-saved exact checkpoint value '+sameWindow.oldValue+'. Re-query the exact same report before replacing a clean historical measurement.');continue;}
   const previous=next.observations.filter(x=>A.canonicalVideoId(x.videoId)===A.canonicalVideoId(o.videoId)&&x.windowHours===o.windowHours).sort((a,b)=>(b.revision||0)-(a.revision||0)).at(0);
   const erased=previous?metrics.filter(k=>previous.metrics?.[k]!=null&&clean[k]==null):[];
   if(erased.length||!metrics.some(k=>clean[k]!=null)){skipped++;importWarnings.push('Checkpoint kept unchanged: '+o.title+' ('+o.windowHours+'h). '+(erased.length?'The reply would erase saved '+erased.join(', ')+'. Ask Studio for a complete row, or edit the specific field manually.':'No measured values were returned.'));continue;}
   const g=[c.id,o.windowHours,o.format,o.eraId,o.paid,o.traffic];groups.set(hash(g),o);
   const existing=next.observations.find(x=>x.id===o.id);
-  if(existing){if(!existing.metricDefinitions||!Object.keys(existing.metricDefinitions).length)existing.metricDefinitions=o.metricDefinitions;duplicates++;continue;}next=A.acceptObservation(next,o,now);added++;reviewRows.push(next.observations.at(-1));
+  if(existing){if(!existing.metricDefinitions||!Object.keys(existing.metricDefinitions).length)existing.metricDefinitions=o.metricDefinitions;duplicates++;continue;}
+  acceptedInputs.push(o);
+ }
+ if(acceptedInputs.length){
+  const beforeCount=next.observations.length;
+  next=A.acceptObservations?A.acceptObservations(next,acceptedInputs,now):acceptedInputs.reduce((store,o)=>A.acceptObservation(store,o,now),next);
+  reviewRows.push(...next.observations.slice(beforeCount));
+  added=reviewRows.length;
  }
  for(const [id,o] of groups){
   const policyId='studio-policy:'+id;if(next.policies.some(p=>p.id===policyId))continue;
