@@ -60,3 +60,11 @@ test('Copy prompt has a real clipboard fallback and honest status text',()=>{
   assert.match(live,/Copied\. Paste it into Ask Studio\./);
   assert.match(live,/Press Ctrl\+C \(Windows\) or Cmd\+C \(Mac\) to copy it\./);
 });
+
+
+test('prompt center shows complete saved rows per checkpoint',()=>{
+  const live=read('analytics/live.js');
+  assert.match(live,/Saved complete checkpoint rows:/);
+  assert.match(live,/I\.checkpointInventory\?I\.checkpointInventory\(c,h\)/);
+  assert.match(live,/repair incomplete rows/);
+});
