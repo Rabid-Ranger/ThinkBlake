@@ -26,7 +26,8 @@ test('Open creator view is a native secure link, not a popup-dependent window.op
   assert.match(share,/class="cshare-open-link"/);
   assert.match(share,/target="_blank"/);
   assert.match(share,/rel="noopener noreferrer"/);
-  assert.match(share,/Open creator view ↗/);
+  assert.match(share,/title="Open the creator view in a new tab"/);
+  assert.match(share,/>Preview<\/a>/);
   assert.doesNotMatch(share,/window\.open\(linkUrl/);
   assert.doesNotMatch(share,/data-cshare="open"/);
 });
