@@ -19,3 +19,14 @@ test('queued autosave is not reported as a failure and failed saves do not retry
  assert.match(portal,/if\(ok&&\(queued\|\|changeSeq>savedSeq\)\)/);
  assert.doesNotMatch(portal,/finally\{saving=false;if\(saveQueued\|\|changeSeq>savedSeq\)/);
 });
+
+
+test('Open creator view is a native secure link, not a popup-dependent window.open button',()=>{
+  const share=read('ui/creator-sharing.js');
+  assert.match(share,/class="cshare-open-link"/);
+  assert.match(share,/target="_blank"/);
+  assert.match(share,/rel="noopener noreferrer"/);
+  assert.match(share,/Open creator view ↗/);
+  assert.doesNotMatch(share,/window\.open\(linkUrl/);
+  assert.doesNotMatch(share,/data-cshare="open"/);
+});
