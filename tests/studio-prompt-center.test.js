@@ -29,7 +29,7 @@ test('baseline onboarding is a sequential staged wizard with one final commit',(
 
 test('first baseline workflow starts at the guided setup wizard',()=>{
  const live=read('analytics/live.js');
- assert.match(live,/ensureSetupDraft=c=>/);
+ assert.match(live,/ensureSetupDraft=\(c,fresh=false\)=>/);
  assert.match(live,/foundation:seedSetupFoundation\(c\)/);
  assert.match(live,/return openSetupWizard\(c\)/);
 });
@@ -91,4 +91,11 @@ test('wizard advances only after the current step is usable',()=>{
  assert.match(live,/setupProgress\(c\)\.find\(x=>x\.key===stepKey\)/);
  assert.match(live,/saved successfully\. Moving to the next step/);
  assert.match(live,/this step is not complete yet/);
+});
+
+
+test('intentional baseline rebuild starts with an empty staged foundation',()=>{
+ const live=read('analytics/live.js');
+ assert.match(live,/ensureSetupDraft\(c,true\)/);
+ assert.match(live,/foundation:fresh\?A\.emptyStore\(\):seedSetupFoundation\(c\)/);
 });
