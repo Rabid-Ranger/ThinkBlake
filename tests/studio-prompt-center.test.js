@@ -43,3 +43,18 @@ test('Copy prompt copies the visible prompt and has a clipboard fallback',()=>{
  assert.match(live,/navigator\.clipboard\?\.writeText/);
  assert.match(live,/document\.execCommand\?\.\('copy'\)/);
 });
+
+
+test('native top navigation exits Analytics before native navigation renders',()=>{
+ const live=read('analytics/live.js');
+ assert.match(live,/\.v11-primary-nav button\[data-view\],\.nav button\[data-view\]/);
+ assert.match(live,/if\(window\.__cgNativeView==='analytics'\)window\.__cgNativeView=''/);
+ assert.match(live,/,true\);/);
+});
+
+test('preserved trusted rows are explained instead of making Analytics look empty',()=>{
+ const live=read('analytics/live.js');
+ assert.match(live,/Your trusted analytics are still here\./);
+ assert.match(live,/You do not need to delete or recreate this creator\./);
+ assert.match(live,/Finish clean baseline setup/);
+});
