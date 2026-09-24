@@ -728,7 +728,7 @@ ${JSON.stringify(schema,null,2)}`;
       ],
       limitations:[]
     };
-    return `In Ask Studio, collect ALL analytics needed by Accelerator for ${JSON.stringify(c?.name||'this channel')} in ONE response. Return raw measurements only. Do not coach, diagnose, estimate, infer, average, or calculate missing metrics.
+    return `DEPRECATED COMPATIBILITY PROMPT. Use the visible one-checkpoint-at-a-time workflow instead: 24h, 48h, 7d, 28d, plus separate 90d Channel Health.\n\nIn Ask Studio, collect ALL analytics needed by Accelerator for ${JSON.stringify(c?.name||'this channel')} in ONE response. Return raw measurements only. Do not coach, diagnose, estimate, infer, average, or calculate missing metrics.
 
 PART 1 — VIDEO CHECKPOINTS
 Build comparable video rows for ALL FOUR checkpoints:

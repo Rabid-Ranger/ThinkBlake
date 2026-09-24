@@ -18,6 +18,14 @@ test('Studio prompt center exposes only the working checkpoint choices',()=>{
   assert.doesNotMatch(live,/\['all','Everything'\]/);
 });
 
+test('first setup and ongoing update workflow are explained accurately',()=>{
+  const live=read('analytics/live.js');
+  assert.match(live,/run 24h, 48h, 7d and 28d separately once/);
+  assert.match(live,/Start with 7d if you want the main diagnosis first/);
+  assert.match(live,/new eligible rows or backfill still needed/);
+  assert.match(live,/15-video same-age cohort/);
+});
+
 test('checkpoint buttons intelligently switch setup vs update',()=>{
   const live=read('analytics/live.js');
   assert.match(live,/const mode=hasBaseline\?'update':'setup'/);
@@ -25,23 +33,14 @@ test('checkpoint buttons intelligently switch setup vs update',()=>{
   assert.match(live,/Each checkpoint keeps its own eligible cohort/);
 });
 
-test('missing data is secondary and conditional, not a primary tab',()=>{
+test('missing video data is secondary and conditional, not a primary tab',()=>{
   const live=read('analytics/live.js');
-  assert.match(live,/missing\?\.total\?/);
-  assert.match(live,/button\('missing','Fill missing data'\)/);
+  assert.match(live,/missing\?\.videoRows\?\.length\?/);
+  assert.match(live,/button\('missing','Fill video data gaps'\)/);
 });
 
-test('main Analytics card matches the 15-video checkpoint workflow',()=>{
+test('legacy Everything action cannot reopen an all-in-one prompt',()=>{
   const live=read('analytics/live.js');
-  assert.match(live,/24h, 48h, 7d, 28d, or 90d Channel Health/);
-  assert.match(live,/15 most recent fully matured eligible long-form videos/);
-  assert.doesNotMatch(live,/collect up to 5 videos per request/);
-});
-
-
-test('prompt center does not fake a recommendation from the currently selected window',()=>{
-  const live=read('analytics/live.js');
-  assert.doesNotMatch(live,/studio-rec|Recommended right now/);
-  assert.match(live,/First-time setup:/);
-  assert.match(live,/Choose another checkpoint/);
+  assert.doesNotMatch(live,/action==='prompt-all'\?'all'/);
+  assert.doesNotMatch(live,/lastPrompt\.kind==='all'\?'all'/);
 });

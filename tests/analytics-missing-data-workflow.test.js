@@ -92,3 +92,10 @@ test('missing-data checklist does not treat optional metadata as an actionable g
   assert.doesNotMatch(decision,/Organic \/ paid context is unverified/);
   assert.match(decision,/optional library-split context do not make the checkpoint incomplete/);
 });
+
+
+test('90-day optional library splits do not create required channel gaps',()=>{
+  const block=decision.slice(decision.indexOf('const CHANNEL_COMPLETION_FIELDS'),decision.indexOf('function latestCheckpointRows'));
+  assert.doesNotMatch(block,/uploadsPublished|newUploadViews|libraryViews/);
+  assert.doesNotMatch(decision,/Organic \/ paid context is unverified/);
+});
