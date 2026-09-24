@@ -333,15 +333,36 @@
     const p=W.prefs(c),vs=W.videos(c);
     return vs.find(v=>v.id===p.videoId)||vs[0]||null;
   }
+  function baselineCandidatesFor(c,W,h){
+    let bs=[];try{bs=W?.baselines?.(c,h)||[];}catch(_){}
+    const ids=new Set(bs.map(x=>x?.id).filter(Boolean));
+    for(const p of c?.analyticsFoundation?.policies||[]){
+      if(Number(p?.windowHours)!==Number(h)||ids.has(p.id))continue;
+      bs.push({id:p.id,label:(AGE_NAME[h]||h+'h')+' · '+(p.format||'video')+' · '+(p.eraId||'current')+' · '+(p.definitionId||'unknown'),engine:p});
+      ids.add(p.id);
+    }
+    return bs;
+  }
   function matchingBaselineFor(c,W,v,h){
-    const bs=W.baselines(c,h);if(!bs.length)return null;
-    const obs=(c.analyticsFoundation?.observations||[]).filter(o=>o.videoId===(v?.engineId||v?.id)&&o.windowHours===h).at(-1);
+    const bs=baselineCandidatesFor(c,W,h);if(!bs.length)return null;
+    const obs=(c.analyticsFoundation?.observations||[]).filter(o=>o.videoId===(v?.engineId||v?.id)&&Number(o.windowHours)===Number(h)).at(-1);
     return bs.find(b=>b.engine&&obs&&b.engine.format===obs.format&&b.engine.eraId===obs.eraId&&b.engine.definitionId===obs.definitionId&&b.engine.traffic===obs.traffic&&b.engine.paid===obs.paid)
       ||bs.find(b=>b.manual&&(b.manual.job==='All'||b.manual.job===(c.coachOS?.analytics?.videoJobs?.[v?.engineId||v?.id]||v?.native?.coachOS?.intent?.job||v?.native?.job)))
       ||bs[0];
   }
+  function creatorBaselineFor(c,W,h){
+    const bs=baselineCandidatesFor(c,W,h);if(!bs.length)return null;
+    const score=b=>{
+      if(b.engine){
+        const row=(c.analyticsFoundation?.baselines||[]).filter(x=>x.policyId===b.id&&x.kind==='operating').at(-1);
+        return row?.memberVideoIds?.length||Math.max(0,...Object.values(row?.metrics||{}).map(x=>n(x?.n)||0));
+      }
+      return n(b.manual?.n)||0;
+    };
+    return bs.slice().sort((a,b)=>score(b)-score(a))[0]||null;
+  }
   function baselineDetail(c,W,h){
-    const v=selectedVideoFor(c,W),b=matchingBaselineFor(c,W,v,h);
+    const b=creatorBaselineFor(c,W,h);
     const metricKeys=['views','engagedViews','impressions','ctr','retention30','apv','avdSeconds','browsePct','suggestedPct','searchPct','externalPct'];
     if(!b)return {h,label:'No matching baseline',sample:0,values:Object.fromEntries(metricKeys.map(k=>[k,null])),samples:Object.fromEntries(metricKeys.map(k=>[k,0])),source:'No baseline saved yet'};
     if(b.engine){
@@ -366,8 +387,9 @@
       const values=Object.fromEntries(metricKeys.map(k=>[k,details[k].value]));
       const samples=Object.fromEntries(metricKeys.map(k=>[k,details[k].sample]));
       const verified=Object.fromEntries(metricKeys.map(k=>[k,details[k].verified]));
-      const sample=Math.max(0,...Object.values(samples));
-      return {h,label:b.label,sample,values,samples,verified,source:'Automatic · matched current-strategy videos'};
+      const required=['views','impressions','ctr','apv','avdSeconds'].map(k=>n(samples[k])||0);
+      const sample=required.length?Math.min(...required):0;
+      return {h,label:b.label,sample,values,samples,verified,source:'Automatic · saved current creator baseline'};
     }
     const values=W.values(b.manual),sample=n(b.manual?.n)||0;
     const samples=Object.fromEntries(metricKeys.map(k=>[k,n(values?.[k])===null?0:sample]));
@@ -381,9 +403,10 @@
   }
   function normalMetricCell(label,key,detail,note=''){
     const value=detail.values?.[key],sample=n(detail.samples?.[key])||0,verified=detail.verified?.[key]!==false,conf=normalConfidence(sample);
-    const sampleText=sample?('n='+sample+' · '+(verified?conf.label:'definition unverified')):'Not available';
-    const noteText=[note,!verified?'Shown descriptively only; do not use it for a verified cross-definition comparison.':''].filter(Boolean).join(' · ');
-    return '<div class="adc-normal-metric '+conf.tone+'"><span>'+esc(label)+'</span><b>'+esc(normalValue(key,value))+'</b><small>'+esc(sampleText)+'</small>'+(noteText?'<em>'+esc(noteText)+'</em>':'')+'</div>';
+    const optional=['engagedViews','retention30','browsePct','suggestedPct','searchPct','externalPct'].includes(key);
+    const sampleText=sample?('n='+sample+' · '+(verified?conf.label:'definition unverified')):(optional?'Optional · not returned by Studio':'Required baseline value missing');
+    const noteText=[note,!verified&&sample?'Shown descriptively only; do not use it for a verified cross-definition comparison.':''].filter(Boolean).join(' · ');
+    return '<div class="adc-normal-metric '+(sample?conf.tone:(optional?'muted':'bad'))+'"><span>'+esc(label)+'</span><b>'+esc(normalValue(key,value))+'</b><small>'+esc(sampleText)+'</small>'+(noteText?'<em>'+esc(noteText)+'</em>':'')+'</div>';
   }
   function normalsAtGlance(c,W){
     const p=W.prefs(c),h=AGE_ORDER.includes(Number(p.hours))?Number(p.hours):168,d=baselineDetail(c,W,h),conf=normalConfidence(d.sample);
@@ -429,11 +452,7 @@
     ['impressions','Impressions','Studio → Content → open the video → Analytics → Reach / Advanced Mode. Use the exact same video-age lifespan.'],
     ['ctr','CTR','Studio → Content → open the video → Analytics → Reach / Advanced Mode → Impressions click-through rate. Use the exact same lifespan.'],
     ['apv','APV','Studio → Content → open the video → Analytics → Engagement / Advanced Mode → Average percentage viewed. Use the exact same lifespan.'],
-    ['avdSeconds','AVD','Studio → Content → open the video → Analytics → Engagement / Advanced Mode → Average view duration. Use the exact same lifespan.'],
-    ['browsePct','Browse %','Studio → Content → open the video → Analytics → Reach / Content → How viewers found this video. Match the exact checkpoint lifespan.'],
-    ['suggestedPct','Suggested %','Studio → Content → open the video → Analytics → Reach / Content → How viewers found this video. Match the exact checkpoint lifespan.'],
-    ['searchPct','Search %','Studio → Content → open the video → Analytics → Reach / Content → How viewers found this video. Match the exact checkpoint lifespan.'],
-    ['externalPct','External %','Studio → Content → open the video → Analytics → Reach / Content → How viewers found this video. Match the exact checkpoint lifespan.']
+    ['avdSeconds','AVD','Studio → Content → open the video → Analytics → Engagement / Advanced Mode → Average view duration. Use the exact same lifespan.']
   ];
   const AUDIENCE_COMPLETION_FIELDS=[
     ['newViewers','New viewers'],['casual','Casual viewers'],['regular','Regular viewers'],['returning','Returning viewers']
@@ -1011,5 +1030,5 @@ ${JSON.stringify(schema,null,2)}`;
     paint();
   }
 
-  return {snapshots,distinctAudienceRows,audiencePair,audienceSnapshots,audienceRead,audienceCoachRead,baselineTrajectory,baselineDetail,normalsAtGlance,missingDataReport,missingDataHtml,channelStages,channelHealthRead,deriveFocus,focusAction,overallRead,planSuggestion,channelPrompt,masterPrompt,parseJsonBlock,install};
+  return {snapshots,distinctAudienceRows,audiencePair,audienceSnapshots,audienceRead,audienceCoachRead,baselineTrajectory,baselineCandidatesFor,creatorBaselineFor,baselineDetail,normalsAtGlance,missingDataReport,missingDataHtml,channelStages,channelHealthRead,deriveFocus,focusAction,overallRead,planSuggestion,channelPrompt,masterPrompt,parseJsonBlock,install};
 });
