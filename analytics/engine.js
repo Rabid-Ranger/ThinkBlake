@@ -289,21 +289,32 @@
     }
     return next;
   }
-  function acceptObservation(store, input, nowISO) {
-    const now = instant(nowISO, 'now'), next = storeCopy(store), item = normalizeObservation(input, now);
+  function appendObservation(next, input, now) {
+    const item = normalizeObservation(input, now);
     const sameId = next.observations.find(other => other.id === item.id);
     if (sameId && sameId.logicalKey !== item.logicalKey) fail('An observation ID cannot be reused for a different video or population.');
     const prior = next.observations.filter(other => other.logicalKey === item.logicalKey).slice(-1)[0];
     if (prior && prior.acceptedAt > now) fail('Cannot accept an observation before the current revision.');
     if (prior) {
       const payload = obj => { const value = copy(obj); ['id','revision','revisionId','supersedesId','acceptedAt'].forEach(key => delete value[key]); return stable(value); };
-      if (payload(prior) === payload(item)) return refreshBaselines(next, now);
+      if (payload(prior) === payload(item)) return false;
       item.id = prior.id;
     }
     item.revision = prior ? prior.revision + 1 : 1;
     item.revisionId = item.id + ':r' + item.revision;
     item.supersedesId = prior ? prior.revisionId : null;
     next.observations.push(item);
+    return true;
+  }
+  function acceptObservation(store, input, nowISO) {
+    const now = instant(nowISO, 'now'), next = storeCopy(store);
+    appendObservation(next, input, now);
+    return refreshBaselines(next, now);
+  }
+  function acceptObservations(store, inputs, nowISO) {
+    const now = instant(nowISO, 'now'), next = storeCopy(store);
+    if (!Array.isArray(inputs)) fail('Batch observations must be an array.');
+    for (const input of inputs) appendObservation(next, input, now);
     return refreshBaselines(next, now);
   }
   function metricComparison(metric, current, row, sourceCompatible) {
@@ -397,5 +408,5 @@
     return refreshBaselines(next, now);
   }
   return freeze({ RULE_VERSION, WINDOWS: WINDOWS.slice(), metricDictionary, emptyStore, canonicalVideoId, median, percentile,
-    countBand, sampleLevel, createPolicy, acceptObservation, refreshBaselines, compareVideo, acceptReview });
+    countBand, sampleLevel, createPolicy, acceptObservation, acceptObservations, refreshBaselines, compareVideo, acceptReview });
 });
