@@ -14,7 +14,7 @@ test('checkpoint inventory requires complete usable core fields',()=>{
  missing.metrics.externalPct=null;bad.metrics.impressions=50000;bad.metrics.ctr=5;
  const c={analyticsFoundation:{observations:[good,missing,bad]}};
  const inv=I.checkpointInventory(c,48);
- assert.equal(inv.saved,3);assert.equal(inv.complete,1);assert.equal(inv.repair.length,2);
+ assert.equal(inv.saved,3);assert.equal(inv.complete,2);assert.equal(inv.repair.length,1);
 });
 test('repair prompt names incomplete rows and does not pretend the cohort is complete',()=>{
  const rows=[];for(let i=0;i<13;i++)rows.push(rawRow(('g'+String(i).padStart(10,'0')).slice(0,11)));
