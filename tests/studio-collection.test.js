@@ -102,6 +102,35 @@ test('15 exact rows create a 15-video rolling policy',()=>{
 });
 
 
+test('same-window cumulative revisions cannot silently replace a clean exact checkpoint',()=>{
+ const first=I.parse(packet([row]),c,A.emptyStore(),now);
+ const revised={...row,capturedAt:'2026-09-09T12:00:00Z',metrics:{...row.metrics,views:700,impressions:7000}};
+ const out=I.parse(packet([revised]),c,first.next,now);
+ assert.equal(out.added,0);assert.equal(out.skipped,1);
+ assert.equal(out.next.observations.length,1);
+ assert.match(out.limitations.join(' '),/materially conflicts with the already-saved exact checkpoint value/);
+});
+
+test('views materially below impressions times CTR are rejected as incompatible report populations',()=>{
+ const bad={...row,metrics:{...row.metrics,views:300,impressions:10000,ctr:5}};
+ const out=I.parse(packet([bad]),c,A.emptyStore(),now);
+ assert.equal(out.added,0);assert.equal(out.skipped,1);
+ assert.match(out.limitations.join(' '),/materially below the views implied by registered impressions/);
+});
+
+test('one multi-row revision import refreshes the operating baseline only once',()=>{
+ const rows=Array.from({length:15},(_,i)=>({...row,videoId:'atomic-'+String(i).padStart(5,'0'),publishedAt:new Date(Date.parse('2026-08-01T12:00:00Z')+i*86400000).toISOString(),capturedAt:'2026-09-20T11:00:00Z',metrics:{...fullMetrics,views:1000+i*10,impressions:10000+i*100}}));
+ const first=I.parse(packet(rows),c,A.emptyStore(),now);
+ const policyId=first.next.policies[0].id;
+ assert.equal(first.next.baselines.filter(b=>b.policyId===policyId&&b.kind==='operating').length,1);
+ const revised=rows.map((x,i)=>({...x,capturedAt:'2026-09-21T11:00:00Z',metrics:{...x.metrics,apv:41+i/100}}));
+ const second=I.parse(packet(revised),c,first.next,'2026-09-21T12:30:00Z');
+ assert.equal(second.added,15);
+ assert.equal(second.next.baselines.filter(b=>b.policyId===policyId&&b.kind==='operating').length,2);
+ assert.equal(second.next.baselines.at(-1).reason,'data_revision');
+});
+
+
 test('legacy prompt APIs delegate to the same one-window workflow',()=>{
  for(const h of [24,48,168,672]){
   assert.equal(I.prompt(c,h,now),I.collectionPrompt(c,h,'setup',now));
