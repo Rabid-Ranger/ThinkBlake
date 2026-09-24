@@ -301,8 +301,11 @@
   function setNativeViewState(view){
     try{
       const st=appState();if(!st||!view)return false;
-      if(Object.prototype.hasOwnProperty.call(st,'currentView')||!Object.prototype.hasOwnProperty.call(st,'view'))st.currentView=view;
-      else st.view=view;
+      const hasView=Object.prototype.hasOwnProperty.call(st,'view');
+      const hasCurrentView=Object.prototype.hasOwnProperty.call(st,'currentView');
+      if(hasView)st.view=view;
+      if(hasCurrentView)st.currentView=view;
+      if(!hasView&&!hasCurrentView)st.view=view;
       return true;
     }catch(_){return false}
   }
@@ -1056,12 +1059,16 @@
   `;document.head.appendChild(st); }
 
   document.addEventListener('click',e=>{
-    const n=e.target.closest('.nav button,.v11-primary-nav button');
-    if(n&&n.id!=='accelerator-analytics-nav'){
-      const view=String(n.dataset.view||'').toLowerCase();
-      window.__cgNativeView='';
-      if(['creators','calendar','library'].includes(view)&&setNativeViewState(view))queueMicrotask(()=>nativeRender());
-      syncAnalyticsNavActive();
+    const n=e.target.closest('.nav button[data-view],.v11-primary-nav button[data-view]');
+    if(!n||n.id==='accelerator-analytics-nav')return;
+    const view=String(n.dataset.view||'').toLowerCase();
+    if(!view)return;
+    window.__cgNativeView='';
+    const changed=setNativeViewState(view);
+    syncAnalyticsNavActive();
+    if(changed){
+      queueMicrotask(()=>nativeRender());
+      requestAnimationFrame(()=>{if(window.__cgNativeView!=='analytics')nativeRender();});
     }
   },true);
   document.addEventListener('click',e=>{
