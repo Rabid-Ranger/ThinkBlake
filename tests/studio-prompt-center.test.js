@@ -58,3 +58,19 @@ test('preserved trusted rows are explained instead of making Analytics look empt
  assert.match(live,/You do not need to delete or recreate this creator\./);
  assert.match(live,/Finish clean baseline setup/);
 });
+
+
+test('Analytics owns native exit clicks so native and Analytics routers cannot race',()=>{
+ const page=read('analytics/page.js');
+ assert.match(page,/if\(window\.__cgNativeView!=='analytics'\)\{syncAnalyticsNavActive\(\);return;\}/);
+ assert.match(page,/e\.stopImmediatePropagation\(\)/);
+ assert.match(page,/routeNativeView\(view\)/);
+ assert.match(page,/if\(hasView\)st\.view=view/);
+ assert.match(page,/if\(hasCurrentView\)st\.currentView=view/);
+});
+
+test('Analytics clears stale active state from topbar icon navigation',()=>{
+ const page=read('analytics/page.js');
+ assert.match(page,/\.topbar button\[data-view\],\.topbar nav button/);
+ assert.match(page,/x\.classList\.remove\('active'\)/);
+});
