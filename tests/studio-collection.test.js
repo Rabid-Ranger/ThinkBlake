@@ -131,6 +131,20 @@ test('one multi-row revision import refreshes the operating baseline only once',
 });
 
 
+test('compacting a staged setup keeps only the latest observation revisions and one clean starting baseline',()=>{
+ const rows=Array.from({length:15},(_,i)=>({...row,videoId:'stage-'+String(i).padStart(6,'0'),publishedAt:new Date(Date.parse('2026-08-01T12:00:00Z')+i*86400000).toISOString(),capturedAt:'2026-09-20T11:00:00Z',metrics:{...fullMetrics,views:1000+i*10,impressions:10000+i*100}}));
+ const first=I.parse(packet(rows),c,A.emptyStore(),now);
+ const revised=rows.map((x,i)=>({...x,capturedAt:'2026-09-21T11:00:00Z',metrics:{...x.metrics,apv:42+i/100}}));
+ const second=I.parse(packet(revised),c,first.next,'2026-09-21T12:30:00Z');
+ const compact=I.compactStore(second.next,'2026-09-21T12:45:00Z');
+ const policy=compact.policies[0],starts=compact.baselines.filter(b=>b.policyId===policy.id&&b.kind==='starting'),ops=compact.baselines.filter(b=>b.policyId===policy.id&&b.kind==='operating');
+ assert.equal(compact.observations.length,15);
+ assert.equal(starts.length,1);assert.equal(ops.length,1);
+ assert.equal(starts[0].signature,ops[0].signature);
+ assert.equal(ops[0].metrics.apv.n,15);
+});
+
+
 test('legacy prompt APIs delegate to the same one-window workflow',()=>{
  for(const h of [24,48,168,672]){
   assert.equal(I.prompt(c,h,now),I.collectionPrompt(c,h,'setup',now));
