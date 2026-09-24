@@ -1106,6 +1106,15 @@
     if(paint&&typeof render==='function')render();
   }
   window.AcceleratorDeskBridge={revision:creatorRevision,commitAI,native:openNativeView,current:cNow,currentVideo:vNow,view:()=>{try{return state.view}catch(_){return 'home'}},analyticsActive:()=>window.__cgNativeView==='analytics',homeState:()=>{window.__cgNativeView='';try{state.view='home'}catch(_){}},replace:next=>{const c=cNow();if(!c||next.id!==c.id)throw Error('Creator changed. Reopen this decision.');const prior=c.coachOS?.decisionDesk;c.coachOS=c.coachOS||{};c.coachOS.decisionDesk=next.coachOS.decisionDesk;try{if(typeof save!=='function')throw Error('Save is unavailable');save();}catch(e){c.coachOS.decisionDesk=prior;throw e;}},baselineFor:sameAgeBaseline,analytics:analyticsHome,baselines:baselineSummary,monthly,plan:plan90,review,demo:demoFull,drawer:openGuide,close:closeGuide};
+  let analyticsRefreshQueued=false;
+  function refreshAnalyticsAfterStateChange(){
+    if(window.__cgNativeView!=='analytics'||analyticsRefreshQueued)return;
+    analyticsRefreshQueued=true;
+    requestAnimationFrame(()=>{analyticsRefreshQueued=false;if(window.__cgNativeView==='analytics')renderAnalyticsPage();});
+  }
+  window.addEventListener('accelerator:state-replaced',refreshAnalyticsAfterStateChange);
+  window.addEventListener('accelerator:cloud-saved',refreshAnalyticsAfterStateChange);
+  window.__acceleratorRefreshAnalytics=refreshAnalyticsAfterStateChange;
   injectStyles(); injectButton();
   let injectQueued=false;const mo=new MutationObserver(()=>{if(injectQueued)return;injectQueued=true;queueMicrotask(()=>{injectQueued=false;injectButton();});}); mo.observe(document.documentElement,{childList:true,subtree:true});
   window.__acceleratorCoachGuide={home,analytics:analyticsHome,analyticsPage:renderAnalyticsPage,analyticsSnapshot,baseline,baselineBuilder,baselineHistory:baselineHistoryView,baselineRefreshStatus,baselineHistoryFor,baselineTrendRows,diagnosis,plan90,videoPrep,review,monthly,quarterly,studioHelp,demoFull,installDemoCreator,removeDemoCreator,researchCoverageGuide,situationGuide,buildDemoCreator,analyticsDiagnosis,recentVideoRead,strengthGroups,planProgress,jobScorecard,bestSavedBaseline,sameAgeBaseline,analyticsReportBlock,baselineCoreStatus,upsertAnalyticsPulse,contextualStrip,build:BUILD};
