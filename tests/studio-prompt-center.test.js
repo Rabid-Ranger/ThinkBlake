@@ -20,7 +20,7 @@ test('baseline onboarding is a sequential staged wizard with one final commit',(
  const live=read('analytics/live.js');
  assert.match(live,/analyticsSetupDraft/);
  assert.match(live,/setupDefs=\[\{key:'24'/);
- assert.match(live,/Step 6 of 6/);
+ assert.match(live,/Step 7 of 7/);
  assert.match(live,/Save &amp; continue/);
  assert.match(live,/Complete baseline/);
  assert.match(live,/draftReady=c=>draftActive\(c\)&&setupProgress\(c\)\.every/);
