@@ -265,6 +265,37 @@ Deno.serve(async (req: Request) => {
     await assertWorkspace(user.id, workspaceId);
     const creatorId = validId(body?.creatorId, 160);
 
+    if (actionName === "owner-list") {
+      const { data: links, error } = await admin.from("creator_portal_links")
+        .select("id,video_id,created_at,updated_at")
+        .eq("workspace_id", workspaceId).eq("creator_id", creatorId)
+        .eq("scope", "video").is("revoked_at", null)
+        .not("video_id", "is", null)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      if (!links?.length) return json(req, { links: [] });
+      const ids = links.map((x: any) => x.id);
+      const { data: docs, error: docError } = await admin.from("creator_portal_documents")
+        .select("link_id,creator_revision,coach_seen_creator_revision,creator_updated_at,updated_at")
+        .in("link_id", ids);
+      if (docError) throw docError;
+      const byId = new Map((docs || []).map((d: any) => [d.link_id, d]));
+      return json(req, {
+        links: links.map((link: any) => {
+          const doc: any = byId.get(link.id);
+          const creatorRevision = Number(doc?.creator_revision || 0);
+          const seen = Number(doc?.coach_seen_creator_revision || 0);
+          return {
+            linkId: link.id,
+            videoId: link.video_id,
+            needsReview: creatorRevision > seen,
+            creatorUpdatedAt: doc?.creator_updated_at || null,
+            updatedAt: doc?.updated_at || link.updated_at,
+          };
+        })
+      });
+    }
+
     if (actionName === "owner-get") {
       const requestedVideoId = body?.videoId ? validId(body.videoId, 160) : null;
       let query = admin.from("creator_portal_links")
