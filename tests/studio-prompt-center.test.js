@@ -79,11 +79,12 @@ test('Analytics clears stale active state from topbar icon navigation',()=>{
 });
 
 
-test('wizard enforces one checkpoint type per setup step',()=>{
+test('wizard enforces one data type per setup step',()=>{
  const live=read('analytics/live.js');
  assert.match(live,/This is the '\+def\.short\+' step/);
- assert.match(live,/Channel and audience data belong in Step 5/);
- assert.match(live,/Step 5 is only for 90-day channel and audience data/);
+ assert.match(live,/Channel and audience data have their own later steps/);
+ assert.match(live,/The 90-day channel step must contain channelPeriods only/);
+ assert.match(live,/The audience step must contain audienceSnapshots only/);
 });
 
 test('wizard advances only after the current step is usable',()=>{
@@ -98,4 +99,19 @@ test('intentional baseline rebuild starts with an empty staged foundation',()=>{
  const live=read('analytics/live.js');
  assert.match(live,/ensureSetupDraft\(c,true\)/);
  assert.match(live,/foundation:fresh\?A\.emptyStore\(\):seedSetupFoundation\(c\)/);
+});
+
+
+test('wizard shows traffic-source completeness separately from core completeness',()=>{
+ const live=read('analytics/live.js');
+ assert.match(live,/checkpointTrafficCoverage/);
+ assert.match(live,/Core '\+Math\.min\(inv\.complete,15\)\+'\/15 · traffic mix/);
+ assert.match(live,/90d channel: /);
+ assert.match(live,/Traffic-source context is incomplete/);
+});
+
+test('wizard tells the coach that checkpoint prompts perform a second traffic-source pass',()=>{
+ const live=read('analytics/live.js');
+ assert.match(live,/second exact-window traffic-source pass/);
+ assert.match(live,/Browse, Suggested, Search and External/);
 });
