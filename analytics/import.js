@@ -128,9 +128,11 @@ function studioJson(text,expectedCreatorId){
 function metricDefs(row){
  const overall=String(row?.definitionId||'unknown');
  const knownOverall=overall&&!/unknown|unspecified|unverified/i.test(overall);
+ const currentViews=typeof A.currentViewDefinition==='function'?A.currentViewDefinition('views',row):null;
+ const currentEngaged=typeof A.currentViewDefinition==='function'?A.currentViewDefinition('engagedViews',row):null;
  return {
-   views:knownOverall?overall:'unknown',
-   engagedViews:knownOverall?overall:'unknown',
+   views:currentViews||knownOverall?currentViews||overall:'unknown',
+   engagedViews:currentEngaged||knownOverall?currentEngaged||overall:'unknown',
    impressions:'youtube-studio-registered-impressions-v1',
    ctr:'youtube-studio-impressions-ctr-v1',
    retention30:'youtube-studio-intro-retention-30s-v1',
