@@ -11,7 +11,7 @@
     168:{label:'7d',name:'MAIN READ',purpose:'What happened compared with this creator’s usual result?',act:'Use this to decide what, if anything, should change on the next video.'},
     672:{label:'28d',name:'WHAT TO MAKE NEXT',purpose:'What did this video teach us?',act:'Use this to decide what to make next and what to repeat, change, or stop.'}
   };
-  const STAGE={reach:'TOPIC / REACH',packaging:'PACKAGING',retention:'RETENTION'};
+  const STAGE={reach:'REACH',packaging:'TITLE / THUMBNAIL',retention:'WATCH'};
   const n=v=>v===''||v==null||!Number.isFinite(Number(v))?null:Number(v);
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const fmtCount=v=>n(v)===null?'—':Math.round(n(v)).toLocaleString();
@@ -23,10 +23,10 @@
 
   function countSignal(x){
     const m=n(x?.multiple);
-    if(m===null) return {tone:'muted',label:'Not enough data',detail:'No fair comparison yet',range:'Usual range: 0.70–1.30×'};
+    if(m===null) return {tone:'muted',label:'Not enough data',detail:'No fair comparison yet',range:'Compare with this creator at the same age'};
     const detail=fmtMultiple(m)+' normal · '+signedPctFromMultiple(m)+' vs normal';
-    if(m<.7) return {tone:'bad',label:'Looks weak',detail,range:'Usual range: 0.70–1.30×'};
-    if(m<1.3) return {tone:'normal',label:'Looks normal',detail,range:'Usual range: 0.70–1.30×'};
+    if(m<.7) return {tone:'bad',label:'Below usual',detail,range:'0.70–1.30× is the working normal range'};
+    if(m<1.3) return {tone:'normal',label:'In the usual range',detail,range:'0.70–1.30× is the working normal range'};
     if(m<1.7) return {tone:'good',label:'Above normal',detail,range:'1.30×+ is above usual'};
     if(m<2.5) return {tone:'great',label:'Strong',detail,range:'1.70×+ is a strong result'};
     return {tone:'great',label:'Big win',detail,range:'2.50×+ is a very strong result'};
@@ -34,17 +34,17 @@
   function rateSignal(x,threshold){
     const d=n(x?.deltaPp),m=n(x?.multiple),detail=[m!==null?fmtMultiple(m)+' normal':null,d!==null?signedPp(d):null].filter(Boolean).join(' · ');
     if(d===null&&m===null) return {tone:'muted',label:'Not enough data',detail:'No fair comparison yet',range:'Compare it with what this creator usually gets'};
-    if((d!==null&&d<-threshold)||(d===null&&m!==null&&m<.7)) return {tone:'bad',label:'Looks weak',detail,range:'Review guide: ±'+threshold+' pp; check audience and source mix'};
-    if(d!==null&&d>threshold) return {tone:'good',label:'Strong',detail,range:'Review guide: ±'+threshold+' pp; check audience and source mix'};
-    return {tone:'normal',label:'Looks normal',detail,range:'Review guide: ±'+threshold+' pp; check audience and source mix'};
+    if((d!==null&&d<-threshold)||(d===null&&m!==null&&m<.7)) return {tone:'bad',label:'Below usual',detail,range:'Check traffic source and audience before blaming the package'};
+    if(d!==null&&d>threshold) return {tone:'good',label:'Above usual',detail,range:'Check traffic source and audience for context'};
+    return {tone:'normal',label:'In the usual range',detail,range:'Small differences are not a reason to change strategy'};
   }
   function durationSignal(x){
     const m=n(x?.multiple),d=n(x?.deltaSeconds),detail=[m!==null?fmtMultiple(m)+' normal':null,d!==null?(d>=0?'+':'')+Math.round(d)+' sec':null].filter(Boolean).join(' · ');
     if(m===null&&d===null)return {tone:'muted',label:'Not enough data',detail:'No fair comparison yet',range:'Compare AVD with this creator’s normal'};
-    if(m!==null&&m<.7)return {tone:'bad',label:'Looks weak',detail,range:'AVD is well below this creator’s normal'};
+    if(m!==null&&m<.7)return {tone:'bad',label:'Below usual',detail,range:'AVD is well below this creator’s normal'};
     if(m!==null&&m<.85)return {tone:'warn',label:'A little soft',detail,range:'AVD is below this creator’s normal'};
     if(m!==null&&m>1.15)return {tone:'good',label:'Strong',detail,range:'AVD is above this creator’s normal'};
-    return {tone:'normal',label:'Looks normal',detail,range:'AVD is close to this creator’s normal'};
+    return {tone:'normal',label:'In the usual range',detail,range:'AVD is close to this creator’s normal'};
   }
   function metricRead(r){
     const c=r?.comparisons||{};
