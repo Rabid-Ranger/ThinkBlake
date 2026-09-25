@@ -368,18 +368,19 @@
         return {label:b.label,sample:last.memberVideoIds?.length||0,first,last,
           values:Object.fromEntries(metricKeys.map(k=>[k,get(last,k)])),
           samples:Object.fromEntries(metricKeys.map(k=>[k,getN(last,k)])),
+          verified:Object.fromEntries(metricKeys.map(k=>[k,k==='engagedViews'?getN(last,k)>0:Boolean(last?.metrics?.[k]?.definitionVerified)])),
           firstValues:Object.fromEntries(metricKeys.map(k=>[k,get(first,k)])),
           firstSamples:Object.fromEntries(metricKeys.map(k=>[k,getN(first,k)]))};
       }
       const values=W.values(b.manual),hist=(c.coachOS?.baseline?.history||[]).filter(x=>x.id===b.id),first=W.values(hist[0]||b.manual),sample=n(b.manual?.n)||0;
-      return {label:b.label,sample,values,samples:Object.fromEntries(Object.keys(values).map(k=>[k,n(values[k])===null?0:sample])),firstValues:first,firstSamples:Object.fromEntries(Object.keys(first).map(k=>[k,n(first[k])===null?0:sample])),first:hist[0]||b.manual,last:b.manual};
+      return {label:b.label,sample,values,samples:Object.fromEntries(Object.keys(values).map(k=>[k,n(values[k])===null?0:sample])),verified:Object.fromEntries(Object.keys(values).map(k=>[k,n(values[k])!==null])),firstValues:first,firstSamples:Object.fromEntries(Object.keys(first).map(k=>[k,n(first[k])===null?0:sample])),first:hist[0]||b.manual,last:b.manual};
     }
     function baselineMetric(c,b,k){const rec=baselineRecord(c,b);return rec?.values?.[k]??null;}
     function baselineOutcome(rec){
-      const k=n(rec?.values?.engagedViews)!==null?'engagedViews':n(rec?.values?.views)!==null?'views':n(rec?.values?.impressions)!==null?'impressions':null;
+      const k=n(rec?.values?.engagedViews)!==null?'engagedViews':n(rec?.values?.impressions)!==null?'impressions':n(rec?.values?.views)!==null?'views':null;
       const a=k?n(rec?.firstValues?.[k]):null,z=k?n(rec?.values?.[k]):null;
       const growth=a&&z!==null?z/a:null;
-      return {key:k,current:z,first:a,growth};
+      return {key:k,current:z,first:a,growth,verified:k?rec?.verified?.[k]!==false:false};
     }
     function coverageStatus(sample,rawCount){
       if(sample>=10)return {tone:'good',label:'Ready',detail:sample+' comparable values'};
