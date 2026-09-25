@@ -206,63 +206,63 @@
         goalLink='Judge this video mainly on whether it reached the right people, then use CTR and watch time to see where the path weakened.';
         measure=savedMetric||'Engaged views / views, impressions, and new-viewer growth';
         protect=savedGuard||'CTR, watch quality, and audience fit';
-        if(first==='reach'){meaning='YouTube showed this video less than usual. Start with the topic, audience fit, and traffic sources before changing the title, thumbnail, or hook.';next='Check whether the idea had enough demand and whether Browse / Suggested distribution was normal. If reach was the main miss, change the next topic or angle before tinkering with everything else.';}
-        else if(first==='packaging'){meaning='The video got enough exposure to judge the click, and the title / thumbnail is the clearest weak point.';next='Test a meaningfully different title / thumbnail promise. Keep the core idea stable so you can tell whether packaging was the problem.';}
-        else if(first==='retention'){meaning='People are seeing and clicking the video, but watch performance is weaker than usual.';next='Inspect the opening and retention graph. Check whether the first 30 seconds deliver the promise quickly enough before changing the topic.';}
-        else{meaning='Nothing looks clearly broken for this Reach video.';next='Do not invent a fix. Protect what worked and use the next comparable Reach video as another clean test.';}
+        if(first==='reach'){meaning='Reach is the first thing I would look at. YouTube showed this to fewer people than usual, so I would check the topic, audience fit, and traffic sources before touching the title, thumbnail, or opening.';next='Check Browse and Suggested first. If distribution is genuinely low, I would adjust the next idea or angle before messing with everything else.';}
+        else if(first==='packaging'){meaning='People are seeing the video, but the click is the weak point. I would look at the title / thumbnail before touching the actual video.';next='Test a meaningfully different title / thumbnail promise. Keep the core idea the same so you can tell whether the package was actually the problem.';}
+        else if(first==='retention'){meaning='People are finding and clicking the video, but they are leaving earlier than usual. I would look at the opening and retention graph before changing the topic or thumbnail.';next='Find the first real drop. Then check whether the opening delivered the promise fast enough.';}
+        else{meaning='Nothing here is making me want to change the Reach strategy.';next='Keep going. Use the next comparable Reach video to see if anything actually repeats.';}
       }else if(job==='Trust'){
         jobMeaning='Trust videos should help the right viewers stay longer, watch another useful video, and come back.';
         goalLink='A Trust video does not need maximum reach if the right viewers watch deeply and continue with the channel.';
         measure=savedMetric||'First 30 seconds, APV / AVD, returning viewers, and next-video behavior';
         protect=savedGuard||'Audience fit and enough reach to bring the right viewers in';
-        if(first==='reach'){meaning='Reach is lower than usual, but that alone does not mean a Trust video failed.';next='Check watch quality, next-video behavior, and returning-viewer movement first. Only widen the topic if too few of the right viewers are entering the video.';}
-        else if(first==='packaging'){meaning='The title / thumbnail is getting fewer clicks than usual from the people who see it.';next='Make the promise clearer for the core viewer. Do not broaden it just to chase curiosity clicks.';}
-        else if(first==='retention'){meaning='Watch performance is the clearest weak point, which matters directly for a Trust video.';next='Inspect the first 30 seconds and the retention curve. Improve promise delivery, pacing, proof, and the handoff to the next useful video.';}
-        else{meaning='Nothing looks clearly broken for this Trust video.';next='Protect the viewing experience and make the next useful video obvious. Watch returning-viewer behavior before changing direction.';}
+        if(first==='reach'){meaning='Reach is lower than usual, but I would not call a Trust video a failure from that alone.';next='Check watch quality, next-video behavior, and returning viewers first. Only widen the topic if too few of the right people are getting into the video.';}
+        else if(first==='packaging'){meaning='The right people may be seeing it, but not enough are clicking. The title / thumbnail is where I would look first.';next='Make the promise clearer for the core viewer. Do not broaden it just to chase clicks.';}
+        else if(first==='retention'){meaning='Watch is the clearest weak point, and that matters a lot more on a Trust video.';next='Look at the first 30 seconds and the retention curve. Fix promise delivery, pacing, proof, and the handoff to the next useful video.';}
+        else{meaning='Nothing here is making me want to change the Trust strategy.';next='Keep the viewing experience strong and make the next useful video obvious. I would watch returning viewers before changing direction.';}
       }else if(job==='Convert'){
         const resultMissing=['qualifiedLeads','bookings','sales','revenue'].every(k=>n(c.coachOS?.analytics?.snapshots?.at?.(-1)?.[k])===null);
         jobMeaning='Convert videos are judged by whether the right viewers take the intended business action.';
         goalLink='YouTube metrics explain the path, but leads, bookings, sales, or the creator’s chosen result decide whether the video converted.';
         measure=savedMetric||'Qualified leads / bookings / sales or the creator-specific result';
         protect=savedGuard||'Audience fit, trust, and enough of the right viewers';
-        if(resultMissing){meaning='The YouTube side can be diagnosed, but the business result is not connected yet.';next='Check the actual lead / booking / sales result before calling this video a win or loss. Use reach, CTR, and watch as clues about where the path may be breaking.';}
-        else if(first==='reach'){meaning='Reach is lower than usual, but a Convert video can still work with modest views if the right people take action.';next='Check the business result first. Broaden reach only if too few qualified people are entering the path.';}
-        else if(first==='packaging'){meaning='The title / thumbnail is the clearest weak point.';next='Make the package clearer and more relevant to the intended buyer or prospect, then watch the business result.';}
-        else if(first==='retention'){meaning='People are leaving earlier than usual, which may mean they are not reaching the proof or CTA.';next='Inspect promise delivery, proof, and CTA timing. Confirm the business result before deciding watch time is the main business problem.';}
-        else{meaning='The YouTube path does not show a clear break. The business result should decide what happens next.';next='Judge the actual conversion result. Do not change a healthy video just because it has fewer views than a Reach video.';}
+        if(resultMissing){meaning='I can read the YouTube side, but I still do not know whether the video actually converted.';next='Check the real lead, booking, or sales result before calling this a win or loss. Use reach, CTR, and watch to figure out where the path may be breaking.';}
+        else if(first==='reach'){meaning='Reach is lower than usual, but a Convert video can still do its job with fewer views if the right people take action.';next='Check the business result first. I would only broaden reach if too few qualified people are getting into the path.';}
+        else if(first==='packaging'){meaning='The title / thumbnail is the clearest weak point here.';next='Make the package clearer for the actual buyer or prospect, then watch what happens to the business result.';}
+        else if(first==='retention'){meaning='People are leaving earlier than usual, so they may not even be reaching the proof or CTA.';next='Check promise delivery, proof, and CTA timing. Then confirm the business result before blaming watch time for the business problem.';}
+        else{meaning='I am not seeing a clear YouTube problem here. The business result should decide what happens next.';next='Judge the actual conversion result. I would not change a healthy Convert video just because it got fewer views than a Reach video.';}
       }else{
-        jobMeaning='This video is not assigned as Reach, Trust, or Convert yet.';
-        goalLink='We can still see where performance changed, but we cannot judge whether the video did its strategic job until that job is set.';
+        jobMeaning='This video still needs a job, Reach, Trust, or Convert.';
+        goalLink='I can still tell you what looks off, but I cannot judge whether the video did its job until that job is set.';
         measure=savedMetric||'Use the metric that matches the video’s intended job';
         protect=savedGuard||'The parts of reach, click, and watch that are already healthy';
         meaning=first
           ?(first==='reach'?'YouTube showed this less than usual.':first==='packaging'?'The title / thumbnail is the clearest weak point.':'Watch performance is the clearest weak point.')+' Assign the video job before turning that into a bigger strategy decision.'
           :'No clear performance problem is showing, but the video job is still unassigned.';
-        next='Assign Reach, Trust, or Convert when you can. Until then, use this as a video-level clue, not a channel-wide strategy decision.';
+        next='Set the job when you can. Until then, treat this as a clue on this video, not a reason to change the whole channel strategy.';
         tone=d.kind==='needs_data'?'muted':'warn';
       }
 
       if(d.winner&&soft.length){
         const names={reach:'reach',packaging:'title / thumbnail',retention:'watch'},lesson=soft.map(x=>names[x]||x).join(' + '),multiple=d.outcomeMultiple==null?'well above usual':Number(d.outcomeMultiple).toFixed(2)+'× usual';
-        meaning='This video still produced a strong result at '+multiple+'. '+lesson+' is a lesson for the next video, not a reason to rescue this one.';
+        meaning='This video worked at '+multiple+'. I would not touch it. The only thing I would carry forward is the '+lesson+' lesson.';
         if(job==='Unassigned')next='Keep the winning video. Assign its intended job, then use the softer metric as a learning question for the next upload.';
-        if(job==='Reach')next='Do not panic-change the winner. Protect the idea that worked, check traffic-source context, and carry the '+lesson+' lesson into the next comparable Reach video.';
-        if(job==='Trust')next='Do not rescue a winner because one platform metric is soft. Check returning / next-video behavior, then carry the '+lesson+' lesson forward only if it matters there too.';
-        if(job==='Convert')next='Do not rescue the video before checking the business result. Verify leads / bookings / sales first, then use '+lesson+' only if the conversion result is also weak.';
+        if(job==='Reach')next='Keep the winner. Check traffic sources for context, then carry the '+lesson+' lesson into the next comparable Reach video.';
+        if(job==='Trust')next='Keep the winner. Check returning viewers and next-video behavior, then only carry the '+lesson+' lesson forward if it actually matters there too.';
+        if(job==='Convert')next='Do not touch the video before checking the business result. Verify leads, bookings, or sales first. Only worry about '+lesson+' if conversion is weak too.';
       }
 
       if(d.kind==='needs_data'){meaning=d.explain;next=d.next;tone='muted';}
       if(h===24){
-        meaning='24-hour early read: '+meaning;
-        next='Treat this as an early signal, not a final verdict. '+next+' Recheck at 48 hours, then let the 7-day result carry the main diagnosis.';
+        meaning='Early read only. '+meaning;
+        next='I would not make a big call off day one. '+next+' Check it again at 48 hours, then use 7 days as the main read.';
         protect+=' Do not overreact to first-day audience mix or incomplete processing.';
       }else if(h===48){
-        meaning='48-hour check: '+meaning;
-        next='Use this to decide what deserves a closer look. '+next+' Confirm it again at 7 days before turning it into a creator-wide rule.';
+        meaning='At 48 hours, '+meaning;
+        next='This is enough to know what I would inspect, not enough to rewrite the strategy. '+next+' Check it again at 7 days before making it a channel-wide rule.';
         protect+=' Check traffic sources and audience expansion before reacting to a modest CTR or reach change.';
       }else if(h===672){
         const evidence=d.outcomeMultiple==null?'the mature result':Number(d.outcomeMultiple).toFixed(2)+'× usual at 28 days';
-        meaning='28-day programming read: '+meaning;
+        meaning='At 28 days, '+meaning;
         if(d.winner)next='Use '+evidence+' as evidence for what to make next. Build an adjacent follow-up that keeps the transferable promise and the same video job. '+next;
         else if(hard.length||d.under)next='Use '+evidence+' to improve the NEXT comparable video instead of endlessly rescuing the old upload. '+next;
         else next='This mature result is useful, but it is not strong enough by itself to rewrite the content plan. Keep the next planned video job and wait for repetition.';
