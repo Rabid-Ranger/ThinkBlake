@@ -7,7 +7,7 @@
 
   const PHASES={
     24:{label:'24h · Launch',question:'How did the video start?',decision:'Early directional read. Notice something obviously broken, but usually do not make a big change yet.'},
-    48:{label:'48h · Check',question:'Is there a clear SHOW, CLICK, or WATCH problem?',decision:'Problem check. Decide what deserves inspection, but avoid a channel-wide strategy change from one early result.'},
+    48:{label:'48h · Check',question:'Is reach, packaging, or retention clearly off?',decision:'Problem check. Decide what deserves inspection, but avoid a channel-wide strategy change from one early result.'},
     168:{label:'7d · Diagnosis',question:'Compared with this creator’s normal, what actually happened?',decision:'Main video decision point. Name the main problem, or explicitly decide there is no fix needed.'},
     672:{label:'28d · What to make next',question:'What did this video become after it matured?',decision:'Turn the lesson into what to repeat, change, stop, and what the next video should do.'},
     2160:{label:'90d · Channel Health',question:'Is the channel actually moving after several videos?',decision:'Track whole-channel reach/views, returning viewers, whether people watch more than one video, and business results. This does not set a per-video baseline.'}
@@ -33,7 +33,7 @@
     const raw=String(text||'').trim();
     if(!raw.startsWith('NO FIX NEEDED'))return null;
     const soft=raw.split('·')[1]?.replace(/A LITTLE SOFT/i,'').trim()||'ONE METRIC';
-    return {soft,label:'KEEP STRATEGY · WATCH '+soft};
+    return {soft,label:'KEEP STRATEGY · CHECK '+soft};
   }
 
   function flowHtml(doc,prefs={}){
@@ -90,14 +90,14 @@
           const nextB=next?.querySelector('b'),nextP=next?.querySelector('p');if(nextB)nextB.textContent='No strategy change right now';
           if(nextP){
             if(/PACKAGING/i.test(call.soft))nextP.textContent='The video still won. Keep the strategy. On the next comparable video, check CTR by traffic source. Only test packaging if CTR stays below this creator’s normal without wider distribution explaining it.';
-            else if(/RETENTION/i.test(call.soft))nextP.textContent='The video still won. Keep the strategy. Watch whether the same WATCH weakness repeats on the next comparable video before changing the opening or structure.';
+            else if(/RETENTION/i.test(call.soft))nextP.textContent='The video still won. Keep the strategy. Watch whether the same retention weakness repeats on the next comparable video before changing the opening or structure.';
             else if(/REACH/i.test(call.soft))nextP.textContent='The video still won. Keep the strategy. Check where the views came from and whether the Reach softness repeats before changing the topic approach.';
           }
         }else if(badgeText.trim()==='NO CLEAR ISSUE'){
           const badgeLabel=badge?.querySelector('span'),badgeB=badge?.querySelector('b');if(badgeLabel)badgeLabel.textContent='CURRENT CALL';if(badgeB)badgeB.textContent='NO CHANGE NEEDED';
           const nextB=next?.querySelector('b'),nextP=next?.querySelector('p');if(nextB)nextB.textContent='Keep the current approach';if(nextP)nextP.textContent='Nothing is clearly broken versus this creator’s normal. Do not invent a fix from one normal-looking video. Keep the next planned job and look for a repeated pattern.';
         }else if(/^CHECK THIS/.test(badgeText.trim())){
-          const badgeLabel=badge?.querySelector('span');if(badgeLabel)badgeLabel.textContent='WATCH ITEM';
+          const badgeLabel=badge?.querySelector('span');if(badgeLabel)badgeLabel.textContent='CHECK THIS';
         }
       }
 
