@@ -107,7 +107,7 @@
     }else if(acq==='weak'&&loy==='weak'){
       tone='bad';headline='New viewers and returning viewers are both under pressure.';
       meaning='This is broader than one weak audience metric. The channel may be losing both new-viewer opportunity and reasons to return, or the prior period may have been inflated by a spike.';
-      action='Do not blame one upload. Check new uploads vs older videos, traffic-source changes, topic / market demand, and the recent SHOW → CLICK → WATCH pattern. Then choose one main problem to work on across the next 2–3 videos.';
+      action='Do not blame one upload. Check new uploads vs older videos, traffic-source changes, topic / market demand, and the recent Reach → Packaging → Retention pattern. Then choose one main problem to work on across the next 2–3 videos.';
       protect='Avoid changing topic, packaging, upload schedule, and format all at once. We still need a clean test.';
     }else if(['steady','strong'].includes(acq)&&['steady','strong'].includes(loy)){
       tone='good';headline='New viewers and returning viewers are both healthy.';
@@ -295,7 +295,7 @@
     const seven=trajectory.find(x=>x.hours===168),why=[];
     if(pattern?.n){
       if(pattern.max)why.push((pattern.max===1?'One video clue: ':pattern.source==='hard'?'Repeated issue: ':'Repeated soft spot: ')+(pattern.label||patternFocus(pattern))+' in '+pattern.max+' of '+pattern.n+' recent 7-day videos.');
-      else why.push('No SHOW → CLICK → WATCH issue repeats across '+pattern.n+' recent 7-day videos.');
+      else why.push('No Reach → Packaging → Retention issue repeats across '+pattern.n+' recent 7-day videos.');
     }
     if(seven?.current){
       const current=n(seven.current[seven.outcomeKey]);
@@ -416,12 +416,12 @@
       '<p class="adc-normal-note">This is the current creator normal. The comparison for a selected video can differ because it excludes that video and uses its matching group. Saved starting normals remain available in baseline history.</p><div class="adc-normal-tabs">'+tabs+'</div>'+
       '<div class="adc-normal-channel-link"><div><span>CHANNEL TRACKING</span><b>90-day progress</b><small>Whole-channel movement after several videos. It does not set the 24h / 48h / 7d / 28d video normal.</small></div><button class="btn" data-ac-mode="channel">Open 90-day progress</button></div>'+
       '<div class="adc-normal-groups">'+
-        '<div><div class="adc-normal-group-label">OUTCOME + SHOW</div><div class="adc-normal-metrics">'+
+        '<div><div class="adc-normal-group-label">RESULT + REACH</div><div class="adc-normal-metrics">'+
           normalMetricCell('Views · new count','views',d,'Outcome volume')+
           normalMetricCell('Engaged views · original count','engagedViews',d,'Use only when Studio verifies it')+
           normalMetricCell('Impressions','impressions',d,'How often the package was shown')+
         '</div></div>'+
-        '<div><div class="adc-normal-group-label">CLICK + WATCH</div><div class="adc-normal-metrics">'+
+        '<div><div class="adc-normal-group-label">PACKAGING + RETENTION</div><div class="adc-normal-metrics">'+
           normalMetricCell('CTR','ctr',d,'Choice after an impression')+
           normalMetricCell('First 30 sec','retention30',d,'Exact Intro value when available')+
           normalMetricCell('APV','apv',d,'Average percentage viewed')+
@@ -596,7 +596,7 @@
       primaryMetricKey='engagedViews';
       mix='Protect the Reach / Trust / Convert mix that produced the wins and make adjacent follow-ups before introducing major changes.';
       hypothesis='If the current growth mechanism is repeatable, adjacent videos should keep producing above-normal matched outcomes.';
-      success='Multiple adjacent videos stay above what this creator usually gets without deterioration in CTR or WATCH.';
+      success='Multiple adjacent videos stay above what this creator usually gets without deterioration in CTR or retention.';
       guard='Do not copy the surface topic if the repeatable mechanism is actually package, audience fit or format.';
     }
     return {focus,job,primaryMetricKey,mix,hypothesis,success,guard,next:r?.action?.video||'Use the diagnosis flow before forcing a plan.'};
