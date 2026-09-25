@@ -43,7 +43,7 @@ test('each diagnosis question answers with the metric that question asks for',()
     assert.match(q.click.line,/usual|normal/);
     assert.match(q.watch.line,/0:30/);
     assert.match(q.outcome.next,/channel problem/i);
-    assert.match(q.show.next,/CLICK/i);
+    assert.match(q.show.next,/packaging|CTR/i);
   } finally {restore();}
 });
 
