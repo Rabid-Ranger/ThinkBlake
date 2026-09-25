@@ -154,17 +154,21 @@
   function ageCardRead(r,hours=168,hasCheckpoint=true){
     const age=AGES[hours]||AGES[168];
     if(!hasCheckpoint||r?.status==='missing_observation') return {tone:'muted',score:'No '+age.label+' result',status:'No '+age.label+' checkpoint saved'};
-    const d=diagnose(r,hours),c=r?.comparisons||{};
-    if(d.outcomeMultiple!==null&&d.outcomeMultiple!==undefined) return {tone:d.tone||'muted',score:fmtMultiple(d.outcomeMultiple),status:d.kind==='diagnosed'?(d.hardIssues?.length?d.bottleneck:d.winner?'Winner':d.softIssues?.length?'Check context':'In range'):age.purpose};
+    const d=diagnose(r,hours),c=r?.comparisons||{},outcomeKey=d.metrics?.outcomeKey;
+    if(d.outcomeMultiple!==null&&d.outcomeMultiple!==undefined){
+      const outcomeLabel=outcomeKey==='engagedViews'?'Engaged views':'Views';
+      const status=d.kind==='diagnosed'?(d.hardIssues?.length?d.bottleneck:d.winner?'Strong result':d.softIssues?.length?'One thing to check':'In the usual range'):age.purpose;
+      return {tone:d.tone||'muted',score:outcomeLabel+' '+fmtMultiple(d.outcomeMultiple),status};
+    }
     const imp=n(c.impressions?.multiple),ctr=n(c.ctr?.deltaPp),ret=n(c.retention30?.deltaPp),apv=n(c.apv?.deltaPp),avd=n(c.avdSeconds?.deltaSeconds);
     const fair=[imp,ctr,ret,apv,avd].some(x=>x!==null);
     if(fair){
-      const score=imp!==null?'SHOW '+fmtMultiple(imp):ctr!==null?'CLICK '+(ctr>=0?'+':'')+ctr.toFixed(1)+' pp':'WATCH ready';
-      const status=d.kind==='diagnosed'?(d.hardIssues?.length?d.bottleneck:d.softIssues?.length?'Check context':'Comparison ready'):'Comparison ready';
+      const score=imp!==null?'Impressions '+fmtMultiple(imp):ctr!==null?'CTR '+(ctr>=0?'+':'')+ctr.toFixed(1)+' pp':'Watch data ready';
+      const status=d.kind==='diagnosed'?(d.hardIssues?.length?d.bottleneck:d.softIssues?.length?'One thing to check':'Comparison ready'):'Comparison ready';
       return {tone:d.tone||'normal',score,status};
     }
     const hasResult=Object.values(c).some(x=>n(x?.current)!==null);
-    if(hasResult) return {tone:'muted',score:'Result saved',status:r?.status==='no_baseline'?'No earlier comparison group yet':'No fair comparison yet'};
+    if(hasResult) return {tone:'muted',score:'Result saved',status:r?.status==='no_baseline'?'No earlier videos to compare yet':'No fair comparison yet'};
     return {tone:'muted',score:'No fair comparison',status:age.purpose};
   }
 
@@ -176,7 +180,7 @@
     let source='hard',max=top(hard),counts=hard;
     if(!max){source='soft';max=top(soft);counts=soft;}
     const stages=max?Object.keys(counts).filter(k=>counts[k]===max):[];
-    const confidence=max>=3?'This is becoming a pattern':max===2?'Worth watching':max===1?'One clue so far':'Nothing repeating yet';
+    const confidence=max>=3?max+' of '+usable.length+' recent videos':max===2?'2 of '+usable.length+' recent videos':max===1?'1 of '+usable.length+' recent videos':'Nothing repeating yet';
     return {n:usable.length,source,max,stages,confidence,countsHard:hard,countsSoft:soft};
   }
 
