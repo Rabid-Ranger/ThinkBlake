@@ -107,7 +107,7 @@
       tone=hours<168?'warn':'bad';
       if(hard.length>1){
         headline=(hours<168?'More than one stage may be weak: ':'More than one stage is weak: ')+bottleneck;
-        explain='These are separate abnormal signals, not one proven cause. Start with the earliest weak stage in SHOW → CLICK → WATCH order, then use the later stage as supporting context.';
+        explain='These are separate abnormal signals, not one proven cause. Start with the earliest weak stage in Reach → Packaging → Retention order, then use the later stage as supporting context.';
       }else{
         headline=(hours<168?'This may be the issue: ':'Main issue: ')+bottleneck;
         explain='This is the clearest weak part of the video compared with what this creator usually gets at the same point after publishing.';
@@ -139,14 +139,14 @@
       ? 'First check where the views came from and whether YouTube showed the video to a broader audience. Lower CTR during wider distribution does not automatically mean the thumbnail is bad. Only test the title or thumbnail if CTR still looks clearly weak after that check.'
       : nextFor(all,winner);
     if(all.includes('retention')&&m.watchKey!=='retention30'){
-      const watchName=m.watchKey==='apv'?'APV':'AVD',note=' Exact 0:30 is missing, so WATCH is being flagged from '+watchName+'. Treat that as a viewing-experience clue, not proof that the opening caused the problem.';
+      const watchName=m.watchKey==='apv'?'APV':'AVD',note=' Exact 0:30 is missing, so retention is being judged from '+watchName+'. Treat that as a viewing-experience clue, not proof that the opening caused the problem.';
       if(all.length===1)next='Open the retention curve and pull the exact Intro / first-30-second value if available before deciding the opening is the problem.'+note;
       else next=next+note;
     }
     if(sourceContext&&(all.includes('packaging')||all.includes('reach')))next=sourceContext+' '+next;
     if(all.includes('retention')&&m.watchKey!=='retention30'){
-      bottleneck=bottleneck.replace(/RETENTION/g,'WATCH / VIEWING EXPERIENCE');
-      headline=headline.replace(/RETENTION/g,'WATCH / VIEWING EXPERIENCE');
+      bottleneck=bottleneck.replace(/RETENTION/g,'RETENTION / VIEWING EXPERIENCE');
+      headline=headline.replace(/RETENTION/g,'RETENTION / VIEWING EXPERIENCE');
     }
     return {tone,kind:'diagnosed',headline,bottleneck,explain,next,sourceContext,hardIssues:hard,softIssues:soft,winner,under,outcomeMultiple,metrics:m,age};
   }
