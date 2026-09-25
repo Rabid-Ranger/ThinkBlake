@@ -108,7 +108,7 @@
       tone='bad';headline='New viewers and returning viewers are both under pressure.';
       meaning='This is broader than one weak audience metric. The channel may be losing both new-viewer opportunity and reasons to return, or the prior period may have been inflated by a spike.';
       action='Do not blame one upload. Check new uploads vs older videos, traffic-source changes, topic / market demand, and the recent Reach → title / thumbnail → watch pattern. Then choose one main problem to work on across the next 2–3 videos.';
-      protect='Avoid changing topic, packaging, upload schedule, and format all at once. We still need a clean test.';
+      protect='Avoid changing topic, title / thumbnail, upload schedule, and format all at once. We still need a clean test.';
     }else if(['steady','strong'].includes(acq)&&['steady','strong'].includes(loy)){
       tone='good';headline='New viewers and returning viewers are both healthy.';
       meaning='The audience is not the obvious problem right now. The channel is bringing people in while also keeping people coming back.';
@@ -149,7 +149,8 @@
         const cur=n(current[k]),start=n(first[k]),isRate=['ctr','ret30','apv'].includes(k);
         metrics[k]={current:cur,first:start,change:hasHistory&&cur!==null&&start!==null?(isRate?cur-start:ratio(cur,start)):null};
       }
-      const outcomeKey=n(current.engagedViews)!==null?'engagedViews':n(current.views)!==null?'views':n(current.impressions)!==null?'impressions':null;
+      const studioManaged=current.managedByStudio===true;
+      const outcomeKey=n(current.engagedViews)!==null?'engagedViews':studioManaged&&n(current.impressions)!==null?'impressions':n(current.views)!==null?'views':n(current.impressions)!==null?'impressions':null;
       const growth=hasHistory&&outcomeKey?ratio(current[outcomeKey],first[outcomeKey]):null;
       return {hours,key,current,first,outcomeKey,growth,metrics,hasHistory,sample:n(current.n)||0};
     });
@@ -197,7 +198,7 @@
       protect='Keep the Trust / follow-up videos that are still bringing people back.';
     }else if(attBand==='weak'&&retBand==='weak'){
       tone='bad';headline='Both reach/views and repeat viewing are under pressure.';
-      meaning='This is a broader channel problem. Separate new uploads from older videos, then check the audience, traffic source / Reach, packaging, watch experience, content mix, and current demand before naming the main problem.';
+      meaning='This is a broader channel problem. Separate new uploads from older videos, then check the audience, traffic source / Reach, title / thumbnail, watch experience, content mix, and current demand before naming the main problem.';
       action='Run the channel check in order and choose ONE main 90-day problem. Do not hand the creator ten equal fixes.';
       protect='Change one major thing at a time so the next 2–3 comparable videos can actually teach us something.';
     }else if(['steady','strong'].includes(attBand)&&['steady','strong'].includes(retBand)){
@@ -567,7 +568,7 @@
     let guard='Do not improve one number by attracting the wrong audience or hurting another important part of the video.';
     if(stageId(focus)==='packaging'){
       primaryMetricKey='ctr';
-      hypothesis='If the title/thumbnail is the real problem, stronger packaging should move CTR closer to what this creator usually gets while retention stays healthy.';
+      hypothesis='If the title / thumbnail is the real problem, a stronger package should move CTR closer to what this creator usually gets while retention stays healthy.';
       success='CTR improves across several similar videos without a meaningful drop in 0:30 / APV.';
       guard='Do not chase CTR with a promise the video cannot deliver.';
     }else if(x.includes('opening')||x.includes('viewing')||x.includes('retention')){
@@ -598,7 +599,7 @@
       mix='Protect the Reach / Trust / Convert mix that produced the wins and make adjacent follow-ups before introducing major changes.';
       hypothesis='If the current growth mechanism is repeatable, adjacent videos should keep producing above-normal matched outcomes.';
       success='Multiple adjacent videos stay above what this creator usually gets without deterioration in CTR or WATCH.';
-      guard='Do not copy the surface topic if the repeatable mechanism is actually package, audience fit or format.';
+      guard='Do not copy the surface topic if the repeatable mechanism is actually title / thumbnail, audience fit, or format.';
     }
     return {focus,job,primaryMetricKey,mix,hypothesis,success,guard,next:r?.action?.video||'Use the diagnosis flow before forcing a plan.'};
   }
