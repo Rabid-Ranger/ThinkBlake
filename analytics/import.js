@@ -128,8 +128,9 @@ function studioJson(text,expectedCreatorId){
 function metricDefs(row){
  const overall=String(row?.definitionId||'unknown');
  const knownOverall=overall&&!/unknown|unspecified|unverified/i.test(overall);
- const currentViews=typeof A.currentViewDefinition==='function'?A.currentViewDefinition('views',row):null;
- const currentEngaged=typeof A.currentViewDefinition==='function'?A.currentViewDefinition('engagedViews',row):null;
+ const afterViewChange=Number.isFinite(Date.parse(row?.capturedAt||''))&&Date.parse(row.capturedAt)>=Date.parse('2026-08-24T00:00:00Z');
+ const currentViews=afterViewChange?(A.CURRENT_VIEW_DEFINITION||'youtube-studio-views-started-2026-08-24-v1'):(typeof A.currentViewDefinition==='function'?A.currentViewDefinition('views',row):null);
+ const currentEngaged=afterViewChange?(A.ENGAGED_VIEW_DEFINITION||'youtube-studio-engaged-views-original-v1'):(typeof A.currentViewDefinition==='function'?A.currentViewDefinition('engagedViews',row):null);
  return {
    views:currentViews||knownOverall?currentViews||overall:'unknown',
    engagedViews:currentEngaged||knownOverall?currentEngaged||overall:'unknown',
