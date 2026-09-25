@@ -149,7 +149,7 @@
         const cur=n(current[k]),start=n(first[k]),isRate=['ctr','ret30','apv'].includes(k);
         metrics[k]={current:cur,first:start,change:hasHistory&&cur!==null&&start!==null?(isRate?cur-start:ratio(cur,start)):null};
       }
-      const outcomeKey=n(current.engagedViews)!==null?'engagedViews':n(current.views)!==null?'views':n(current.impressions)!==null?'impressions':null;
+      const outcomeKey=n(current.views)!==null?'views':n(current.engagedViews)!==null?'engagedViews':n(current.impressions)!==null?'impressions':null;
       const growth=hasHistory&&outcomeKey?ratio(current[outcomeKey],first[outcomeKey]):null;
       return {hours,key,current,first,outcomeKey,growth,metrics,hasHistory,sample:n(current.n)||0};
     });
@@ -166,8 +166,8 @@
     const engagedComparable=defsKnown&&n(cur.engagedViews)!==null&&n(prev.engagedViews)!==null;
     const viewsComparable=defsKnown&&n(cur.views)!==null&&n(prev.views)!==null;
     const impressions=ratio(cur.impressions,prev.impressions),watchTime=ratio(cur.watchTime,prev.watchTime);
-    const attention=engagedComparable?ratio(cur.engagedViews,prev.engagedViews):viewsComparable?ratio(cur.views,prev.views):impressions;
-    const attentionLabel=engagedComparable?'Engaged views':viewsComparable?'Views':'Impressions';
+    const attention=viewsComparable?ratio(cur.views,prev.views):engagedComparable?ratio(cur.engagedViews,prev.engagedViews):impressions;
+    const attentionLabel=viewsComparable?'Views':engagedComparable?'Engaged views':'Impressions';
     const returnRatio=audience.loyalty,depth=audience.depth;
     const resultKey=['qualifiedLeads','bookings','sales'].find(k=>n(cur[k])!==null&&n(prev[k])!==null)||null;
     const resultRatio=resultKey?ratio(cur[resultKey],prev[resultKey]):null;
