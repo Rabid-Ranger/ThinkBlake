@@ -502,7 +502,7 @@
       apv:readInput(drawer,'cg-r-apv',v.analytics?.[rw.win]?.apv),
       avdSeconds:readInput(drawer,'cg-r-avd',v.analytics?.[rw.win]?.avdSeconds)
     };
-    const outcomeKey=cur.engagedViews!==null&&n(b.engagedViews)!==null?'engagedViews':'views';
+    const outcomeKey=cur.views!==null&&n(b.views)!==null?'views':cur.engagedViews!==null&&n(b.engagedViews)!==null?'engagedViews':'views';
     const cmp=(a,z)=>n(a)!==null&&n(z)!==null&&n(z)!==0?n(a)/n(z):null;
     const comparisons={
       views:{current:cur.views,baseline:n(b.views),multiple:cmp(cur.views,b.views)},
