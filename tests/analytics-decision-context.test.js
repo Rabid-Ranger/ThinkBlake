@@ -149,3 +149,15 @@ test('Normals at a glance can show descriptive Views from saved baseline members
  assert.match(source,/Shown descriptively only/);
  assert.match(source,/observationRevisionIds/);
 });
+
+
+test('90-day channel read uses explicit Engaged views even when public Views definitions differ or are unknown',()=>{
+  const c={coachOS:{analytics:{snapshots:[
+    {period:'90d',date:'2026-06-01',metricDefinitionId:'unknown',views:2000,engagedViews:1000,impressions:10000},
+    {period:'90d',date:'2026-09-01',metricDefinitionId:'unknown',views:3000,engagedViews:1200,impressions:9000}
+  ]}}};
+  const stages=A.channelStages(c,{loyalty:null,depth:null});
+  const reach=stages.find(x=>x.key==='attention');
+  assert.match(reach.value,/Engaged views \+20\.0% vs prior/);
+  assert.doesNotMatch(reach.sub,/uses Impressions instead/i);
+});

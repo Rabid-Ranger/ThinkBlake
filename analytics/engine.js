@@ -81,7 +81,12 @@
     return JSON.stringify(value);
   }
   function definition(observation, metric) {
-    return observation.metricDefinitions && observation.metricDefinitions[metric] || observation.definitionId || 'unknown';
+    const saved = observation.metricDefinitions && observation.metricDefinitions[metric] || observation.definitionId || 'unknown';
+    // "Engaged views" is already a metric-specific field. Older imports stored its
+    // definition as unknown even when the value came directly from Studio, which
+    // unnecessarily blocked apples-to-apples Engaged views comparisons.
+    if (metric === 'engagedViews' && !knownDefinition(saved)) return 'youtube-studio-engaged-views-advanced-mode-v1';
+    return saved;
   }
   function knownDefinition(value) { return Boolean(value && !/^(unknown|legacy|unverified)$/i.test(value)); }
   function logicalKey(observation) {

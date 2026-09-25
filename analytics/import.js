@@ -130,7 +130,7 @@ function metricDefs(row){
  const knownOverall=overall&&!/unknown|unspecified|unverified/i.test(overall);
  return {
    views:knownOverall?overall:'unknown',
-   engagedViews:knownOverall?overall:'unknown',
+   engagedViews:Number.isFinite(row?.metrics?.engagedViews)?'youtube-studio-engaged-views-advanced-mode-v1':(knownOverall?overall:'unknown'),
    impressions:'youtube-studio-registered-impressions-v1',
    ctr:'youtube-studio-impressions-ctr-v1',
    retention30:'youtube-studio-intro-retention-30s-v1',

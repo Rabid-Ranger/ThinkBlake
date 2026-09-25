@@ -107,8 +107,8 @@
     }else if(acq==='weak'&&loy==='weak'){
       tone='bad';headline='New viewers and returning viewers are both under pressure.';
       meaning='This is broader than one weak audience metric. The channel may be losing both new-viewer opportunity and reasons to return, or the prior period may have been inflated by a spike.';
-      action='Do not blame one upload. Check new uploads vs older videos, traffic-source changes, topic / market demand, and the recent SHOW → CLICK → WATCH pattern. Then choose one main problem to work on across the next 2–3 videos.';
-      protect='Avoid changing topic, packaging, upload schedule, and format all at once. We still need a clean test.';
+      action='Do not blame one upload. Check new uploads vs older videos, traffic-source changes, topic / market demand, and the recent Reach → title / thumbnail → watch pattern. Then choose one main problem to work on across the next 2–3 videos.';
+      protect='Avoid changing topic, title / thumbnail, upload schedule, and format all at once. We still need a clean test.';
     }else if(['steady','strong'].includes(acq)&&['steady','strong'].includes(loy)){
       tone='good';headline='New viewers and returning viewers are both healthy.';
       meaning='The audience is not the obvious problem right now. The channel is bringing people in while also keeping people coming back.';
@@ -149,7 +149,8 @@
         const cur=n(current[k]),start=n(first[k]),isRate=['ctr','ret30','apv'].includes(k);
         metrics[k]={current:cur,first:start,change:hasHistory&&cur!==null&&start!==null?(isRate?cur-start:ratio(cur,start)):null};
       }
-      const outcomeKey=n(current.engagedViews)!==null?'engagedViews':n(current.views)!==null?'views':n(current.impressions)!==null?'impressions':null;
+      const studioManaged=current.managedByStudio===true;
+      const outcomeKey=n(current.engagedViews)!==null?'engagedViews':studioManaged&&n(current.impressions)!==null?'impressions':n(current.views)!==null?'views':n(current.impressions)!==null?'impressions':null;
       const growth=hasHistory&&outcomeKey?ratio(current[outcomeKey],first[outcomeKey]):null;
       return {hours,key,current,first,outcomeKey,growth,metrics,hasHistory,sample:n(current.n)||0};
     });
@@ -163,17 +164,18 @@
   function channelStages(c,audience){
     const rows=snapshots(c),cur=rows.at(-1)||{},prev=rows.at(-2)||{};
     const defsKnown=cur.metricDefinitionId&&prev.metricDefinitionId&&!/unknown|unspecified|unverified/i.test(String(cur.metricDefinitionId))&&cur.metricDefinitionId===prev.metricDefinitionId;
-    const engagedComparable=defsKnown&&n(cur.engagedViews)!==null&&n(prev.engagedViews)!==null;
+    const engagedComparable=n(cur.engagedViews)!==null&&n(prev.engagedViews)!==null;
     const viewsComparable=defsKnown&&n(cur.views)!==null&&n(prev.views)!==null;
     const impressions=ratio(cur.impressions,prev.impressions),watchTime=ratio(cur.watchTime,prev.watchTime);
     const attention=engagedComparable?ratio(cur.engagedViews,prev.engagedViews):viewsComparable?ratio(cur.views,prev.views):impressions;
     const attentionLabel=engagedComparable?'Engaged views':viewsComparable?'Views':'Impressions';
+    const countNote=engagedComparable||viewsComparable?'':(n(cur.views)!==null&&n(prev.views)!==null?'Public Views changed counting methods, so this trend uses Impressions instead. ':'');
     const returnRatio=audience.loyalty,depth=audience.depth;
     const resultKey=['qualifiedLeads','bookings','sales'].find(k=>n(cur[k])!==null&&n(prev[k])!==null)||null;
     const resultRatio=resultKey?ratio(cur[resultKey],prev[resultKey]):null;
     const phrase=(r,label)=>r===null?'No comparable trend yet':label+' '+signed(r-1)+' vs prior';
     return [
-      {key:'attention',label:'REACH / VIEWS',band:stageBand(attention),value:phrase(attention,attentionLabel),sub:(defsKnown?'':'Views definition is not verified across these reports, so this read uses Impressions instead. ')+(watchTime===null?'':'Watch time '+signed(watchTime-1)+' vs prior.'),action:attention!==null&&attention<.85?'Check whether the decline is new-upload opportunity, traffic mix, market demand, or library contribution before changing packaging.':'Keep checking whether more reach/views are also leading to more people coming back.'},
+      {key:'attention',label:'REACH / VIEWS',band:stageBand(attention),value:phrase(attention,attentionLabel),sub:countNote+(watchTime===null?'':'Watch time '+signed(watchTime-1)+' vs prior.'),action:attention!==null&&attention<.85?'Check whether the decline is new-upload opportunity, traffic mix, market demand, or library contribution before changing the title / thumbnail.':'Keep checking whether more reach/views are also leading to more people coming back.'},
       {key:'return',label:'COME BACK',band:stageBand(returnRatio),value:returnRatio===null?'No comparable repeat-audience trend yet':'Repeat-audience trend '+signed(returnRatio-1),sub:'Dashboard summary of segment changes, not a YouTube metric or a conversion funnel.',action:returnRatio===null?'Add/verify comparable 28-day audience snapshots.':returnRatio<.85?'Test stronger follow-ups, series, consistent promises, and obvious next-video paths.':'Repeat viewing is not the obvious break; protect what is bringing people back.'},
       {key:'depth',label:'WATCH MORE',band:stageBand(depth),value:depth===null?'Average views/viewer not connected yet':'Avg views/viewer '+signed(depth-1)+' vs prior',sub:'Average views per viewer can include repeat plays; it does not prove viewing multiple different videos.',action:depth===null?'Manually pull Average views per viewer in Studio Advanced Mode / SEE MORE. Also add exact new-upload vs older-library views if Studio can isolate them.':depth<.85?'Inspect own-Suggested, end screens, follow-up paths, and whether viewers have an obvious second video.':'Average views per viewer is holding; keep checking the follow-up videos driving it.'},
       {key:'result',label:'BUSINESS RESULT',band:stageBand(resultRatio),value:resultRatio===null?'Business result not connected yet':(resultKey==='qualifiedLeads'?'Qualified leads':resultKey==='bookings'?'Bookings':'Sales')+' '+signed(resultRatio-1),sub:'Are the views turning into the business result we care about?',action:resultRatio===null?'If this creator has a business goal, enter qualified leads / bookings / sales from the CRM or business system. Do not invent these from YouTube.':resultRatio<.85?'Check CTA/offer alignment and attribution before changing Reach or Trust content.':'Business result is keeping pace; protect the path that is working.'}
@@ -196,7 +198,7 @@
       protect='Keep the Trust / follow-up videos that are still bringing people back.';
     }else if(attBand==='weak'&&retBand==='weak'){
       tone='bad';headline='Both reach/views and repeat viewing are under pressure.';
-      meaning='This is a broader channel problem. Separate new uploads from older videos, then check the audience, traffic source / Reach, packaging, watch experience, content mix, and current demand before naming the main problem.';
+      meaning='This is a broader channel problem. Separate new uploads from older videos, then check the audience, traffic source / Reach, title / thumbnail, watch experience, content mix, and current demand before naming the main problem.';
       action='Run the channel check in order and choose ONE main 90-day problem. Do not hand the creator ten equal fixes.';
       protect='Change one major thing at a time so the next 2–3 comparable videos can actually teach us something.';
     }else if(['steady','strong'].includes(attBand)&&['steady','strong'].includes(retBand)){
@@ -295,7 +297,7 @@
     const seven=trajectory.find(x=>x.hours===168),why=[];
     if(pattern?.n){
       if(pattern.max)why.push((pattern.max===1?'One video clue: ':pattern.source==='hard'?'Repeated issue: ':'Repeated soft spot: ')+(pattern.label||patternFocus(pattern))+' in '+pattern.max+' of '+pattern.n+' recent 7-day videos.');
-      else why.push('No SHOW → CLICK → WATCH issue repeats across '+pattern.n+' recent 7-day videos.');
+      else why.push('No Reach, title / thumbnail, or watch issue repeats across '+pattern.n+' recent 7-day videos.');
     }
     if(seven?.current){
       const current=n(seven.current[seven.outcomeKey]);
@@ -372,7 +374,7 @@
       const median=xs=>{const a=xs.filter(Number.isFinite).slice().sort((x,y)=>x-y);if(!a.length)return null;const m=Math.floor(a.length/2);return a.length%2?a[m]:(a[m-1]+a[m])/2;};
       const metricDetail=k=>{
         const saved=last?.metrics?.[k],savedValue=n(saved?.median),savedN=n(saved?.n)||0;
-        if(savedValue!==null&&savedN>0)return {value:savedValue,sample:savedN,verified:saved?.definitionVerified!==false&&knownDef(saved?.definitionId||b.engine.metricDefinitions?.[k]||(k===b.engine.primaryMetric?b.engine.definitionId:null))};
+        if(savedValue!==null&&savedN>0)return {value:savedValue,sample:savedN,verified:k==='engagedViews'||(saved?.definitionVerified!==false&&knownDef(saved?.definitionId||b.engine.metricDefinitions?.[k]||(k===b.engine.primaryMetric?b.engine.definitionId:null)))};
         const expected=b.engine.metricDefinitions?.[k]||(k===b.engine.primaryMetric?b.engine.definitionId:'unknown');
         if(knownDef(expected))return {value:savedValue,sample:savedN,verified:true};
         const revs=new Set(last.observationRevisionIds||[]),vals=[];
@@ -389,7 +391,7 @@
       const verified=Object.fromEntries(metricKeys.map(k=>[k,details[k].verified]));
       const required=['views','impressions','ctr','apv','avdSeconds'].map(k=>n(samples[k])||0);
       const sample=required.length?Math.min(...required):0;
-      return {h,label:b.label,sample,values,samples,verified,source:'Automatic · saved current creator baseline'};
+      return {h,label:b.label,sample,values,samples,verified,source:'Saved YouTube Studio creator normal'};
     }
     const values=W.values(b.manual),sample=n(b.manual?.n)||0;
     const samples=Object.fromEntries(metricKeys.map(k=>[k,n(values?.[k])===null?0:sample]));
@@ -416,13 +418,13 @@
       '<p class="adc-normal-note">This is the current creator normal. The comparison for a selected video can differ because it excludes that video and uses its matching group. Saved starting normals remain available in baseline history.</p><div class="adc-normal-tabs">'+tabs+'</div>'+
       '<div class="adc-normal-channel-link"><div><span>CHANNEL TRACKING</span><b>90-day progress</b><small>Whole-channel movement after several videos. It does not set the 24h / 48h / 7d / 28d video normal.</small></div><button class="btn" data-ac-mode="channel">Open 90-day progress</button></div>'+
       '<div class="adc-normal-groups">'+
-        '<div><div class="adc-normal-group-label">OUTCOME + SHOW</div><div class="adc-normal-metrics">'+
-          normalMetricCell('Views · new count','views',d,'Outcome volume')+
-          normalMetricCell('Engaged views · original count','engagedViews',d,'Use only when Studio verifies it')+
-          normalMetricCell('Impressions','impressions',d,'How often the package was shown')+
+        '<div><div class="adc-normal-group-label">COUNTS + REACH</div><div class="adc-normal-metrics">'+
+          normalMetricCell('Views','views',d,'New public count · descriptive if the counting method changed')+
+          normalMetricCell('Engaged views','engagedViews',d,'Original apples-to-apples view count when available')+
+          normalMetricCell('Impressions','impressions',d,'How often YouTube showed the thumbnail')+
         '</div></div>'+
-        '<div><div class="adc-normal-group-label">CLICK + WATCH</div><div class="adc-normal-metrics">'+
-          normalMetricCell('CTR','ctr',d,'Choice after an impression')+
+        '<div><div class="adc-normal-group-label">TITLE / THUMBNAIL + WATCH</div><div class="adc-normal-metrics">'+
+          normalMetricCell('CTR','ctr',d,'How often people clicked after seeing the thumbnail')+
           normalMetricCell('First 30 sec','retention30',d,'Exact Intro value when available')+
           normalMetricCell('APV','apv',d,'Average percentage viewed')+
           normalMetricCell('AVD','avdSeconds',d,'Average view duration')+
@@ -431,7 +433,7 @@
           normalMetricCell('Browse','browsePct',d)+normalMetricCell('Suggested','suggestedPct',d)+normalMetricCell('Search','searchPct',d)+normalMetricCell('External','externalPct',d)+
         '</div></div>'+
       '</div>'+
-      '<p class="adc-normal-note"><b>How to use this:</b> this is the reference point, not the diagnosis. First see what is normal for the creator at this exact age. Then compare the selected video below, find the first meaningful break, and only change strategy when the evidence repeats or clearly matters for the video’s job.</p>'+
+      '<p class="adc-normal-note"><b>How to use this:</b> this is the reference point, not the diagnosis. Compare the selected video at the same age, then ask: was reach low, was CTR low, or did viewers leave earlier than usual? Only make a bigger strategy change when the pattern repeats or clearly matters for the video’s job.</p>'+
     '</div>';
   }
 
@@ -566,7 +568,7 @@
     let guard='Do not improve one number by attracting the wrong audience or hurting another important part of the video.';
     if(stageId(focus)==='packaging'){
       primaryMetricKey='ctr';
-      hypothesis='If the title/thumbnail is the real problem, stronger packaging should move CTR closer to what this creator usually gets while retention stays healthy.';
+      hypothesis='If the title / thumbnail is the real problem, a stronger package should move CTR closer to what this creator usually gets while retention stays healthy.';
       success='CTR improves across several similar videos without a meaningful drop in 0:30 / APV.';
       guard='Do not chase CTR with a promise the video cannot deliver.';
     }else if(x.includes('opening')||x.includes('viewing')||x.includes('retention')){
@@ -597,7 +599,7 @@
       mix='Protect the Reach / Trust / Convert mix that produced the wins and make adjacent follow-ups before introducing major changes.';
       hypothesis='If the current growth mechanism is repeatable, adjacent videos should keep producing above-normal matched outcomes.';
       success='Multiple adjacent videos stay above what this creator usually gets without deterioration in CTR or WATCH.';
-      guard='Do not copy the surface topic if the repeatable mechanism is actually package, audience fit or format.';
+      guard='Do not copy the surface topic if the repeatable mechanism is actually title / thumbnail, audience fit, or format.';
     }
     return {focus,job,primaryMetricKey,mix,hypothesis,success,guard,next:r?.action?.video||'Use the diagnosis flow before forcing a plan.'};
   }

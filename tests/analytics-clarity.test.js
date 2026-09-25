@@ -12,20 +12,20 @@ const result=(x={})=>({status:'compared',comparisons:{
 }});
 
 test('same-age count and rate ranges stay simple and explicit',()=>{
-  assert.equal(A.countSignal({multiple:.69}).label,'Looks weak');
-  assert.equal(A.countSignal({multiple:1}).label,'Looks normal');
+  assert.equal(A.countSignal({multiple:.69}).label,'Below usual');
+  assert.equal(A.countSignal({multiple:1}).label,'In the usual range');
   assert.equal(A.countSignal({multiple:1.5}).label,'Above normal');
   assert.equal(A.countSignal({multiple:2}).label,'Strong');
   assert.equal(A.countSignal({multiple:3}).label,'Big win');
-  assert.equal(A.rateSignal({deltaPp:-.6},.5).label,'Looks weak');
-  assert.equal(A.rateSignal({deltaPp:-.4},.5).label,'Looks normal');
+  assert.equal(A.rateSignal({deltaPp:-.6},.5).label,'Below usual');
+  assert.equal(A.rateSignal({deltaPp:-.4},.5).label,'In the usual range');
 });
 
 test('diagnosis isolates reach packaging retention and combinations',()=>{
-  assert.equal(A.diagnose(result({outcome:.55,imp:.5}),168).bottleneck,'TOPIC / REACH');
-  assert.equal(A.diagnose(result({outcome:.85,ctr:-1.2}),168).bottleneck,'PACKAGING');
-  assert.equal(A.diagnose(result({outcome:.85,ret:-6}),168).bottleneck,'RETENTION');
-  assert.equal(A.diagnose(result({outcome:.6,ctr:-1,ret:-5}),168).bottleneck,'PACKAGING + RETENTION');
+  assert.equal(A.diagnose(result({outcome:.55,imp:.5}),168).bottleneck,'REACH');
+  assert.equal(A.diagnose(result({outcome:.85,ctr:-1.2}),168).bottleneck,'TITLE / THUMBNAIL');
+  assert.equal(A.diagnose(result({outcome:.85,ret:-6}),168).bottleneck,'WATCH');
+  assert.equal(A.diagnose(result({outcome:.6,ctr:-1,ret:-5}),168).bottleneck,'TITLE / THUMBNAIL + WATCH');
 });
 
 test('winner soft spots do not become rescue recommendations',()=>{
@@ -47,10 +47,10 @@ test('CTR cooling during expansion checks audience context before package change
 test('repeated 7-day issues become a pattern only after repeated evidence',()=>{
   const packaging=A.diagnose(result({outcome:.8,ctr:-1}),168);
   const normal=A.diagnose(result({outcome:1.05}),168);
-  assert.equal(A.patternFromDiagnoses([packaging]).confidence,'One clue so far');
-  assert.equal(A.patternFromDiagnoses([packaging,packaging]).confidence,'Worth watching');
+  assert.equal(A.patternFromDiagnoses([packaging]).confidence,'1 of 1 recent videos');
+  assert.equal(A.patternFromDiagnoses([packaging,packaging]).confidence,'2 of 2 recent videos');
   const p=A.patternFromDiagnoses([packaging,packaging,packaging,normal]);
-  assert.equal(p.confidence,'This is becoming a pattern');
+  assert.equal(p.confidence,'3 of 4 recent videos');
   assert.deepEqual(p.stages,['packaging']);
 });
 
@@ -66,8 +66,8 @@ test('APV fallback does not pretend the first 30 seconds caused the problem',()=
     avdSeconds:{current:180,baseline:240,multiple:.75,deltaSeconds:-60}
   }};
   const d=A.diagnose(r,168);
-  assert.match(d.headline,/More than one stage is weak/i);
-  assert.match(d.bottleneck,/WATCH \/ VIEWING EXPERIENCE/);
+  assert.match(d.headline,/More than one thing looks weak/i);
+  assert.match(d.bottleneck,/WATCH/);
   assert.match(d.next,/Exact 0:30 is missing/i);
   assert.match(d.next,/not proof/i);
 });
@@ -84,7 +84,7 @@ test('checkpoint tiles do not say no comparison when verified stage metrics are 
     avdSeconds:{deltaSeconds:-4,current:566,baseline:570}
   }};
   const card=A.ageCardRead(r,48,true);
-  assert.equal(card.score,'SHOW 0.92×');
+  assert.equal(card.score,'Impressions 0.92×');
   assert.equal(card.status,'Comparison ready');
 });
 
