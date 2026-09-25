@@ -295,7 +295,7 @@
     const seven=trajectory.find(x=>x.hours===168),why=[];
     if(pattern?.n){
       if(pattern.max)why.push((pattern.max===1?'One video clue: ':pattern.source==='hard'?'Repeated issue: ':'Repeated soft spot: ')+(pattern.label||patternFocus(pattern))+' in '+pattern.max+' of '+pattern.n+' recent 7-day videos.');
-      else why.push('No SHOW → CLICK → WATCH issue repeats across '+pattern.n+' recent 7-day videos.');
+      else why.push('No Reach, title / thumbnail, or watch issue repeats across '+pattern.n+' recent 7-day videos.');
     }
     if(seven?.current){
       const current=n(seven.current[seven.outcomeKey]);
@@ -372,7 +372,7 @@
       const median=xs=>{const a=xs.filter(Number.isFinite).slice().sort((x,y)=>x-y);if(!a.length)return null;const m=Math.floor(a.length/2);return a.length%2?a[m]:(a[m-1]+a[m])/2;};
       const metricDetail=k=>{
         const saved=last?.metrics?.[k],savedValue=n(saved?.median),savedN=n(saved?.n)||0;
-        if(savedValue!==null&&savedN>0)return {value:savedValue,sample:savedN,verified:saved?.definitionVerified!==false&&knownDef(saved?.definitionId||b.engine.metricDefinitions?.[k]||(k===b.engine.primaryMetric?b.engine.definitionId:null))};
+        if(savedValue!==null&&savedN>0)return {value:savedValue,sample:savedN,verified:k==='engagedViews'||(saved?.definitionVerified!==false&&knownDef(saved?.definitionId||b.engine.metricDefinitions?.[k]||(k===b.engine.primaryMetric?b.engine.definitionId:null)))};
         const expected=b.engine.metricDefinitions?.[k]||(k===b.engine.primaryMetric?b.engine.definitionId:'unknown');
         if(knownDef(expected))return {value:savedValue,sample:savedN,verified:true};
         const revs=new Set(last.observationRevisionIds||[]),vals=[];
@@ -389,7 +389,7 @@
       const verified=Object.fromEntries(metricKeys.map(k=>[k,details[k].verified]));
       const required=['views','impressions','ctr','apv','avdSeconds'].map(k=>n(samples[k])||0);
       const sample=required.length?Math.min(...required):0;
-      return {h,label:b.label,sample,values,samples,verified,source:'Automatic · saved current creator baseline'};
+      return {h,label:b.label,sample,values,samples,verified,source:'Saved YouTube Studio creator normal'};
     }
     const values=W.values(b.manual),sample=n(b.manual?.n)||0;
     const samples=Object.fromEntries(metricKeys.map(k=>[k,n(values?.[k])===null?0:sample]));
@@ -416,13 +416,13 @@
       '<p class="adc-normal-note">This is the current creator normal. The comparison for a selected video can differ because it excludes that video and uses its matching group. Saved starting normals remain available in baseline history.</p><div class="adc-normal-tabs">'+tabs+'</div>'+
       '<div class="adc-normal-channel-link"><div><span>CHANNEL TRACKING</span><b>90-day progress</b><small>Whole-channel movement after several videos. It does not set the 24h / 48h / 7d / 28d video normal.</small></div><button class="btn" data-ac-mode="channel">Open 90-day progress</button></div>'+
       '<div class="adc-normal-groups">'+
-        '<div><div class="adc-normal-group-label">OUTCOME + SHOW</div><div class="adc-normal-metrics">'+
-          normalMetricCell('Views · new count','views',d,'Outcome volume')+
-          normalMetricCell('Engaged views · original count','engagedViews',d,'Use only when Studio verifies it')+
-          normalMetricCell('Impressions','impressions',d,'How often the package was shown')+
+        '<div><div class="adc-normal-group-label">COUNTS + REACH</div><div class="adc-normal-metrics">'+
+          normalMetricCell('Views','views',d,'New public count · descriptive if the counting method changed')+
+          normalMetricCell('Engaged views','engagedViews',d,'Original apples-to-apples view count when available')+
+          normalMetricCell('Impressions','impressions',d,'How often YouTube showed the thumbnail')+
         '</div></div>'+
-        '<div><div class="adc-normal-group-label">CLICK + WATCH</div><div class="adc-normal-metrics">'+
-          normalMetricCell('CTR','ctr',d,'Choice after an impression')+
+        '<div><div class="adc-normal-group-label">TITLE / THUMBNAIL + WATCH</div><div class="adc-normal-metrics">'+
+          normalMetricCell('CTR','ctr',d,'How often people clicked after seeing the thumbnail')+
           normalMetricCell('First 30 sec','retention30',d,'Exact Intro value when available')+
           normalMetricCell('APV','apv',d,'Average percentage viewed')+
           normalMetricCell('AVD','avdSeconds',d,'Average view duration')+
@@ -431,7 +431,7 @@
           normalMetricCell('Browse','browsePct',d)+normalMetricCell('Suggested','suggestedPct',d)+normalMetricCell('Search','searchPct',d)+normalMetricCell('External','externalPct',d)+
         '</div></div>'+
       '</div>'+
-      '<p class="adc-normal-note"><b>How to use this:</b> this is the reference point, not the diagnosis. First see what is normal for the creator at this exact age. Then compare the selected video below, find the first meaningful break, and only change strategy when the evidence repeats or clearly matters for the video’s job.</p>'+
+      '<p class="adc-normal-note"><b>How to use this:</b> this is the reference point, not the diagnosis. Compare the selected video at the same age, then ask: was reach low, was CTR low, or did viewers leave earlier than usual? Only make a bigger strategy change when the pattern repeats or clearly matters for the video’s job.</p>'+
     '</div>';
   }
 
