@@ -391,17 +391,17 @@
     }
     function dataCoverageHtml(c,b,h){
       const rec=baselineRecord(c,b),obs=(c.analyticsFoundation?.observations||[]).filter(o=>o.windowHours===h);
-      const rawN=k=>obs.filter(o=>n(o?.metrics?.[k])!==null).length,sample=k=>n(rec?.samples?.[k])||0;
+      const rawN=k=>obs.filter(o=>n(o?.metrics?.[k])!==null).length,sample=k=>n(rec?.samples?.[k])||0,usable=k=>sample(k)>0&&rec?.verified?.[k]!==false;
       const checks=[['Impressions','impressions'],['CTR','ctr'],['0:30','retention30'],['APV','apv'],['AVD','avdSeconds'],['Views','views'],['Engaged views','engagedViews']];
-      const ready=checks.filter(([,k])=>sample(k)>=5),partial=checks.filter(([,k])=>sample(k)>0&&sample(k)<5),missing=checks.filter(([,k])=>sample(k)===0);
-      const sourceSample=Math.min(...['browsePct','suggestedPct','searchPct','externalPct'].map(sample));
+      const ready=checks.filter(([,k])=>usable(k)&&sample(k)>=5),partial=checks.filter(([,k])=>usable(k)&&sample(k)>0&&sample(k)<5),blocked=checks.filter(([,k])=>sample(k)>0&&!usable(k)),missing=checks.filter(([,k])=>sample(k)===0);
+      const sourceKeys=['browsePct','suggestedPct','searchPct','externalPct'],sourceSample=Math.min(...sourceKeys.map(sample)),sourceReady=sourceKeys.every(usable);
       const instructions=[];
-      if(sample('retention30')<5)instructions.push('<li><b>Exact 0:30 / Intro:</b> Studio → Content → open the video → Analytics → Engagement / Audience retention → Intro. Enter the exact percentage only if Studio reports it. Do not eyeball the curve.</li>');
-      if(sample('engagedViews')<5)instructions.push('<li><b>Engaged views:</b> Studio → Analytics → Advanced Mode / SEE MORE → add Engaged views for the same lifespan. Never copy public Views into this field.</li>');
-      if(sourceSample<5)instructions.push('<li><b>Per-video traffic source:</b> open the video → Analytics → Reach/Content → How viewers found this video. Use Browse / Suggested / Search / External for the same lifespan when Studio lets you isolate it.</li>');
-      if(sample('views')<5&&rawN('views')>=5)instructions.push('<li><b>Views:</b> we have the numbers, but the Views definition is not verified across the comparison set. Use Engaged views when available, plus impressions, CTR, and watch metrics, until the Views definition is consistent.</li>');
+      if(sample('retention30')<5)instructions.push('<li><b>First 30 seconds:</b> Studio → Content → open the video → Analytics → Engagement / Audience retention → Intro. Use the exact percentage only if Studio reports it.</li>');
+      if(sample('engagedViews')<5)instructions.push('<li><b>Engaged views:</b> Studio → Analytics → Advanced Mode / SEE MORE → use Engaged views for the same checkpoint. Never copy public Views into this field.</li>');
+      if(sourceSample<5||!sourceReady)instructions.push('<li><b>Traffic sources:</b> open the video → Analytics → Reach/Content → How viewers found this video. Use Browse / Suggested / Search / External from the same checkpoint when Studio can isolate it.</li>');
+      if(blocked.some(([,k])=>k==='views'))instructions.push('<li><b>Views:</b> the raw numbers are saved, but the counting definition is not verified across the comparison set. Keep them descriptive only. Use Engaged views when available, plus impressions, CTR, and watch metrics for the actual comparison.</li>');
       const readyText=ready.length?ready.map(x=>x[0]).join(' · '):'No matched metrics ready yet';
-      const missingText=[...missing.map(x=>x[0]),sourceSample<5?'Traffic source':null].filter(Boolean).join(' · ');
+      const missingText=[...missing.map(x=>x[0]),...blocked.map(x=>x[0]+' not comparable'),(sourceSample<5||!sourceReady)?'Traffic sources':null].filter(Boolean).join(' · ');
       return '<details class="ac-data-compact"><summary><span><b>Data quality</b> · '+esc(readyText)+'</span><small>'+(missingText?esc('Still missing: '+missingText):'Main comparison data is ready')+'</small></summary><div class="ac-data-compact-body">'+
         (partial.length?'<p><b>Small sample:</b> '+esc(partial.map(x=>x[0]).join(' · '))+'. Treat these as directional.</p>':'')+
         (instructions.length?'<p><b>Only fill these if they would change the decision:</b></p><ul>'+instructions.join('')+'</ul>':'<p>The main numbers needed for this checkpoint are ready.</p>')+
@@ -518,11 +518,12 @@
       const cards=[24,48,168,672].map(h=>{
         const b=matchingBaseline(c,v,h),rec=baselineRecord(c,b);
         if(!rec)return '<div class="ac-normal-card muted"><div class="ac-normal-card-head"><span>'+AGES[h].label+'</span><b>No normal yet</b></div><p>Import or build at least five comparable '+AGES[h].label+' results.</p></div>';
-        const viewNote=n(rec.values.engagedViews)!==null?'Both view-count methods available':'Engaged views not available yet';
+        const viewNote=n(rec.values.engagedViews)!==null?'Engaged views available for fair comparison':'Engaged views not available yet';
+        const rawViewsNote=rec.verified?.views===false?'Descriptive only · counting method not verified':'Comparable Views';
         return '<div class="ac-normal-card"><div class="ac-normal-card-head"><span>'+AGES[h].label+'</span><b>'+esc(rec.sample)+' videos</b></div>'+
           '<div class="ac-normal-cells">'+
-            normalCell('Views · new count',rec.values.views,fmtCount)+
-            normalCell('Engaged views · old count',rec.values.engagedViews,fmtCount,viewNote)+
+            normalCell('Views',rec.values.views,fmtCount,rawViewsNote)+
+            normalCell('Engaged views',rec.values.engagedViews,fmtCount,viewNote)+
             normalCell('Impressions',rec.values.impressions,fmtCount)+
             normalCell('CTR',rec.values.ctr,fmtRate)+
             normalCell('First 30 sec',rec.values.retention30,fmtRate)+
@@ -561,7 +562,7 @@
       return '<section class="ac-section ac-baseline-section">'+
         '<div class="ac-section-head"><div class="ac-section-index">03</div><div><div class="ac-kicker">YOUR NORMAL · '+AGES[h].label+'</div><h2>'+esc(rec.label)+'</h2><p><b>'+esc(startLine)+'</b> '+esc(evo)+' Built from '+esc(rec.sample)+' comparable video'+(rec.sample===1?'':'s')+'.</p></div><button class="btn" data-aw="edit-baseline">Review baseline</button></div>'+
         '<div class="ac-section-body"><div class="ac-baseline-grid">'+
-          '<div><span>Outcome</span><b>'+fmtCount(o.current)+'</b><small>'+(o.key==='engagedViews'?'Engaged views':'Views')+'</small></div>'+
+          '<div><span>Main count</span><b>'+fmtCount(o.current)+'</b><small>'+(o.key==='engagedViews'?'Engaged views':o.key==='impressions'?'Impressions':'Views · descriptive only')+'</small></div>'+
           '<div><span>Show</span><b>'+fmtCount(rec.values.impressions)+'</b><small>Impressions</small></div>'+
           '<div><span>Click</span><b>'+fmtRate(rec.values.ctr)+'</b><small>CTR</small></div>'+
           '<div><span>Watch</span><b>'+fmtRate(watch[1])+'</b><small>'+esc(watch[0])+'</small></div>'+
