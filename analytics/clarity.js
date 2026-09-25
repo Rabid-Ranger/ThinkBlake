@@ -11,7 +11,7 @@
     168:{label:'7d',name:'MAIN READ',purpose:'What happened compared with this creator’s usual result?',act:'Use this to decide what, if anything, should change on the next video.'},
     672:{label:'28d',name:'WHAT TO MAKE NEXT',purpose:'What did this video teach us?',act:'Use this to decide what to make next and what to repeat, change, or stop.'}
   };
-  const STAGE={reach:'TOPIC / REACH',packaging:'PACKAGING',retention:'RETENTION'};
+  const STAGE={reach:'REACH / TOPIC',packaging:'TITLE + THUMBNAIL',retention:'RETENTION'};
   const n=v=>v===''||v==null||!Number.isFinite(Number(v))?null:Number(v);
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const fmtCount=v=>n(v)===null?'—':Math.round(n(v)).toLocaleString();
@@ -153,18 +153,26 @@
 
   function ageCardRead(r,hours=168,hasCheckpoint=true){
     const age=AGES[hours]||AGES[168];
-    if(!hasCheckpoint||r?.status==='missing_observation') return {tone:'muted',score:'No '+age.label+' result',status:'No '+age.label+' checkpoint saved'};
+    if(!hasCheckpoint||r?.status==='missing_observation') return {tone:'muted',score:'No '+age.label+' result',status:'No '+age.label+' data saved'};
     const d=diagnose(r,hours),c=r?.comparisons||{};
-    if(d.outcomeMultiple!==null&&d.outcomeMultiple!==undefined) return {tone:d.tone||'muted',score:fmtMultiple(d.outcomeMultiple),status:d.kind==='diagnosed'?(d.hardIssues?.length?d.bottleneck:d.winner?'Winner':d.softIssues?.length?'Check context':'In range'):age.purpose};
+    const issue=(d.hardIssues||[])[0]||(d.softIssues||[])[0]||null;
+    const plainStatus=()=>{
+      if(d.winner)return 'Strong result';
+      if((d.hardIssues||[]).length>1)return 'More than one thing needs a look';
+      if(issue==='reach')return hours<168?'Reach is low so far':'Reach is below normal';
+      if(issue==='packaging')return 'Title + thumbnail need a look';
+      if(issue==='retention')return 'Retention needs a look';
+      return d.kind==='diagnosed'?'Looks normal':'Comparison ready';
+    };
+    if(d.outcomeMultiple!==null&&d.outcomeMultiple!==undefined) return {tone:d.tone||'muted',score:fmtMultiple(d.outcomeMultiple)+' usual',status:plainStatus()};
     const imp=n(c.impressions?.multiple),ctr=n(c.ctr?.deltaPp),ret=n(c.retention30?.deltaPp),apv=n(c.apv?.deltaPp),avd=n(c.avdSeconds?.deltaSeconds);
-    const fair=[imp,ctr,ret,apv,avd].some(x=>x!==null);
-    if(fair){
-      const score=imp!==null?'SHOW '+fmtMultiple(imp):ctr!==null?'CLICK '+(ctr>=0?'+':'')+ctr.toFixed(1)+' pp':'WATCH ready';
-      const status=d.kind==='diagnosed'?(d.hardIssues?.length?d.bottleneck:d.softIssues?.length?'Check context':'Comparison ready'):'Comparison ready';
-      return {tone:d.tone||'normal',score,status};
-    }
+    if(imp!==null)return {tone:d.tone||'normal',score:'Impressions '+fmtMultiple(imp),status:plainStatus()};
+    if(ctr!==null)return {tone:d.tone||'normal',score:'CTR '+(ctr>=0?'+':'')+ctr.toFixed(1)+' pp',status:plainStatus()};
+    if(ret!==null)return {tone:d.tone||'normal',score:'0:30 '+(ret>=0?'+':'')+ret.toFixed(1)+' pp',status:plainStatus()};
+    if(apv!==null)return {tone:d.tone||'normal',score:'APV '+(apv>=0?'+':'')+apv.toFixed(1)+' pp',status:plainStatus()};
+    if(avd!==null)return {tone:d.tone||'normal',score:'AVD '+(avd>=0?'+':'')+Math.round(avd)+' sec',status:plainStatus()};
     const hasResult=Object.values(c).some(x=>n(x?.current)!==null);
-    if(hasResult) return {tone:'muted',score:'Result saved',status:r?.status==='no_baseline'?'No earlier comparison group yet':'No fair comparison yet'};
+    if(hasResult) return {tone:'muted',score:'Result saved',status:r?.status==='no_baseline'?'Need earlier videos to compare':'No fair comparison yet'};
     return {tone:'muted',score:'No fair comparison',status:age.purpose};
   }
 
@@ -342,11 +350,9 @@
     function action(a,t,extra=''){return '<button class="btn" data-aw="'+a+'" '+extra+'>'+esc(t)+'</button>';}
     function selectedVideo(c){const p=W.prefs(c),vs=W.videos(c);return vs.find(v=>v.id===p.videoId)||vs[0]||null;}
     function matchingBaseline(c,v,h){
-      const bs=W.baselines(c,h); if(!bs.length)return null;
-      const obs=(c.analyticsFoundation?.observations||[]).filter(o=>o.videoId===(v?.engineId||v?.id)&&o.windowHours===h).at(-1);
-      return bs.find(b=>b.engine&&obs&&b.engine.format===obs.format&&b.engine.eraId===obs.eraId&&b.engine.definitionId===obs.definitionId&&b.engine.traffic===obs.traffic&&b.engine.paid===obs.paid)
-        ||bs.find(b=>b.manual&&(b.manual.job==='All'||b.manual.job===(c.coachOS?.analytics?.videoJobs?.[v?.engineId||v?.id]||v?.native?.coachOS?.intent?.job||v?.native?.job)))
-        ||bs[0];
+      if(typeof W.matchingBaseline==='function')return W.matchingBaseline(c,v,h);
+      const bs=W.baselines(c,h);if(!bs.length)return null;
+      return bs[0];
     }
     function readFor(c,v,h){
       const b=matchingBaseline(c,v,h); if(!b)return null;
@@ -496,10 +502,10 @@
       const watchX=c[m.watchKey]||{};
       const watchLabel=m.watchKey==='retention30'?'First 30 sec':m.watchKey==='apv'?'Average % viewed':'Average view duration',watchFormat=m.watchKey==='avdSeconds'?(v=>n(v)===null?'—':Math.round(n(v))+' sec'):fmtRate;
       return viewCountsHtml(r)+'<div class="ac-metrics">'+
-        metricCard('OUTCOME',m.outcomeKey==='engagedViews'?'Engaged views':'Views',outcomeX,m.outcome,fmtCount)+
-        metricCard('SHOW','Impressions',c.impressions||{},m.show,fmtCount)+
-        metricCard('CLICK','CTR',c.ctr||{},m.click,fmtRate)+
-        metricCard('WATCH',watchLabel,watchX,m.watch,watchFormat)+
+        metricCard('RESULT',m.outcomeKey==='engagedViews'?'Engaged views':'Views',outcomeX,m.outcome,fmtCount)+
+        metricCard('REACH','Impressions',c.impressions||{},m.show,fmtCount)+
+        metricCard('PACKAGING','CTR',c.ctr||{},m.click,fmtRate)+
+        metricCard('RETENTION',watchLabel,watchX,m.watch,watchFormat)+
       '</div>'+sourceMixHtml(r);
     }
     function normalCell(label,value,format=fmtCount,note=''){
@@ -602,7 +608,7 @@
     function patternHtml(c){
       const p=pattern(c),tone=p.max?(p.source==='hard'?'bad':'warn'):'normal';
       return '<section class="ac-section ac-pattern-section '+tone+'">'+
-        '<div class="ac-section-head"><div class="ac-section-index">04</div><div><div class="ac-kicker">CHANNEL PATTERN · RECENT 7-DAY VIDEOS</div><h2>'+(p.max===1?'One video clue to review':p.max?'Pattern to review: '+esc(p.label):'Nothing is repeating yet')+'</h2><p>'+esc(p.explain)+'</p></div><span class="ac-badge '+tone+'">'+esc(p.confidence)+'</span></div>'+
+        '<div class="ac-section-head"><div class="ac-section-index">04</div><div><div class="ac-kicker">CHANNEL PATTERN · RECENT 7-DAY VIDEOS</div><h2>'+(p.max===1?'One video clue to review':p.max?'Pattern to review: '+esc(p.label):'Nothing is repeating yet')+'</h2><p>'+esc(p.explain)+'</p></div><span class="ac-badge '+tone+'">'+esc(p.max?p.max+' of '+p.n+' recent 7d videos':p.confidence)+'</span></div>'+
         '<div class="ac-section-body"><div class="ac-decision-callout"><span>WHAT I’D DO NEXT</span><b>'+esc(p.next)+'</b></div><small>One result is worth noticing. Two similar results are worth watching. Three or more may be a real pattern.</small></div>'+
       '</section>';
     }
