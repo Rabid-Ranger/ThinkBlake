@@ -204,41 +204,41 @@
       const hard=d.hardIssues||[],soft=d.softIssues||[],first=['reach','packaging','retention'].find(x=>hard.includes(x))||['reach','packaging','retention'].find(x=>soft.includes(x))||null;
       let meaning='',next='',measure='',protect='',jobMeaning='',goalLink='',tone=d.tone;
       if(job==='Reach'){
-        jobMeaning='Reach videos should get in front of more of the right new viewers. SHOW / impressions and views matter first; CTR and WATCH tell you whether that reach is healthy.';goalLink='This video’s job is to bring in more of the right new viewers. Do not force this one video to also carry the full Trust or Convert job.';
+        jobMeaning='Reach videos should get in front of more of the right new viewers. Impressions and views matter first; CTR and retention tell you whether that reach is healthy.';goalLink='This video’s job is to bring in more of the right new viewers. Do not force this one video to also carry the full Trust or Convert job.';
         measure=savedMetric||'Impressions / outcome volume + new-viewer growth';
-        protect=savedGuard||'CTR, WATCH quality, and audience fit';
-        if(first==='reach'){meaning='The earliest break is SHOW. For a Reach video, investigate topic opportunity, audience breadth, and distribution before blaming the opening.';next='Check topic / audience opportunity and traffic-source context. Keep the package and opening stable enough to learn what actually limited distribution.';}
-        else if(first==='packaging'){meaning='The video is getting enough opportunity to judge the click, and CLICK is soft. For a Reach video, packaging is the cleaner next test.';next='Test a meaningfully different title / thumbnail promise while keeping the underlying idea stable. Make sure the new package still attracts the right viewer.';}
-        else if(first==='retention'){meaning='Reach and CLICK are not the clearest break, but WATCH is soft. The idea may be getting the opportunity and the click without delivering the promise strongly enough.';next='Improve promise delivery / opening structure without making the topic smaller just to raise retention.';}
-        else{meaning='Nothing in SHOW → CLICK → WATCH is clearly broken for this Reach video.';next='Do not manufacture a fix. Protect what worked in the topic/package and use the next comparable Reach video as another clean test.';}
+        protect=savedGuard||'CTR, retention quality, and audience fit';
+        if(first==='reach'){meaning='The clearest issue is Reach. For a Reach video, investigate the topic, audience breadth, and distribution before blaming the opening.';next='Check topic / audience opportunity and traffic-source context. Keep the package and opening stable enough to learn what actually limited distribution.';}
+        else if(first==='packaging'){meaning='The video is getting enough reach to judge the click, and CTR is soft. For a Reach video, title + thumbnail is the cleaner next test.';next='Test a meaningfully different title / thumbnail promise while keeping the underlying idea stable. Make sure the new package still attracts the right viewer.';}
+        else if(first==='retention'){meaning='Reach and CTR are not the clearest problem, but retention is soft. The idea may be getting the opportunity and the click without delivering the promise strongly enough.';next='Improve promise delivery / opening structure without making the topic smaller just to raise retention.';}
+        else{meaning='Nothing in Reach → Packaging → Retention is clearly broken for this Reach video.';next='Do not manufacture a fix. Protect what worked in the topic/package and use the next comparable Reach video as another clean test.';}
       }else if(job==='Trust'){
         jobMeaning='Trust videos should get the right viewers to watch longer, watch another video, and come back. That matters more than maximizing raw reach by itself.';goalLink='This video’s job is to help the right viewer stay, watch the next useful video, or come back. Do not widen the idea just to chase Reach if that weakens the Trust job.';
         measure=savedMetric||'0:30 / APV / AVD + returning-viewer / next-video trends';
         protect=savedGuard||'Audience fit and enough Reach to keep bringing the right viewers in';
-        if(first==='reach'){meaning='SHOW is soft, but lower reach alone does not prove a Trust video failed. A narrower Trust video can still do its job if the right people watch deeply and move to the next useful video.';next='Check WATCH, next-video behavior, and returning-viewer trends before widening the topic. Only treat Reach as the main problem if the intended audience is not being reached enough to do the job.';}
-        else if(first==='packaging'){meaning='CLICK is soft. For Trust content, the package still has to clearly signal the value to the intended audience, but it does not need to become a broad Reach package.';next='Clarify the promise for the core viewer. Test packaging that increases qualified clicks without changing the video into a broader topic.';}
-        else if(first==='retention'){meaning='WATCH is soft, which directly matters for a Trust video because the viewer has to stay long enough to receive the value and build confidence.';next='Inspect exact 0:30 / the retention curve and the points where viewers should move to the next idea or video. Improve promise delivery, progression, proof, and the handoff to the next useful video.';}
-        else{meaning='SHOW → CLICK → WATCH does not show a clear Trust problem.';next='Protect the viewing experience and make the next logical follow-up obvious. Watch returning-viewer and next-video trends before changing the strategy.';}
+        if(first==='reach'){meaning='Reach is soft, but lower reach alone does not prove a Trust video failed. A narrower Trust video can still do its job if the right people watch deeply and move to the next useful video.';next='Check retention, next-video behavior, and returning-viewer trends before widening the topic. Only treat Reach as the main problem if the intended audience is not being reached enough to do the job.';}
+        else if(first==='packaging'){meaning='CTR is soft. For Trust content, the title + thumbnail still need to clearly signal the value to the intended audience, but the video does not need to become a broad Reach topic.';next='Clarify the promise for the core viewer. Test packaging that increases qualified clicks without changing the video into a broader topic.';}
+        else if(first==='retention'){meaning='Retention is soft, which directly matters for a Trust video because the viewer has to stay long enough to receive the value and build confidence.';next='Inspect exact 0:30 / the retention curve and the points where viewers should move to the next idea or video. Improve promise delivery, progression, proof, and the handoff to the next useful video.';}
+        else{meaning='Reach → Packaging → Retention does not show a clear Trust problem.';next='Protect the viewing experience and make the next logical follow-up obvious. Watch returning-viewer and next-video trends before changing the strategy.';}
       }else if(job==='Convert'){
         const resultMissing=['qualifiedLeads','bookings','sales','revenue'].every(k=>n(c.coachOS?.analytics?.snapshots?.at?.(-1)?.[k])===null);
         jobMeaning='Convert videos are judged by whether the right viewers take the intended business action. YouTube metrics help explain the path, but Views alone are not the score.';goalLink='This video’s job is to turn the right viewer into the intended business action. Judge the result against the offer / business goal, not a Reach-video views target.';
         measure=savedMetric||'Qualified leads / bookings / sales or the creator-specific business result';
         protect=savedGuard||'Audience fit, trust, and enough of the right viewers';
-        if(resultMissing){meaning='YouTube can tell us whether the video got reach, clicks, and watch time, but the business result is not connected. A Convert verdict is incomplete without it.';next='Pull the relevant CRM / booking / sales result before calling this video a win or loss. Use SHOW / CLICK / WATCH only as clues about where the path to the business action may be breaking.';}
+        if(resultMissing){meaning='YouTube can tell us whether the video got reach, clicks, and watch time, but the business result is not connected. A Convert verdict is incomplete without it.';next='Pull the relevant CRM / booking / sales result before calling this video a win or loss. Use Reach / Packaging / Retention only as clues about where the path to the business action may be breaking.';}
         else if(first==='reach'){meaning='Reach is soft, but a Convert video can still work at modest view volume if qualified-action yield is strong.';next='Check qualified-action yield first. Only broaden Reach if the business result is weak because too few qualified people are entering the path.';}
-        else if(first==='packaging'){meaning='CLICK is soft. A Convert package still needs enough qualified people to choose the video, but broader curiosity is not automatically better.';next='Improve clarity / relevance of the package for the intended buyer or prospect, then watch qualified-action yield.';}
-        else if(first==='retention'){meaning='WATCH is soft. If the viewer leaves before the value / CTA is earned, the path to the business action may be breaking before the ask.';next='Inspect promise delivery, proof, and CTA timing. Confirm the business result before deciding retention is the main business problem.';}
-        else{meaning='SHOW → CLICK → WATCH does not show a clear break. The Convert decision should now come from the business result.';next='Judge qualified action and yield. Do not change a healthy platform strategy because the video has fewer views than a Reach video.';}
+        else if(first==='packaging'){meaning='CTR is soft. A Convert title + thumbnail still need enough qualified people to choose the video, but broader curiosity is not automatically better.';next='Improve clarity / relevance of the package for the intended buyer or prospect, then watch qualified-action yield.';}
+        else if(first==='retention'){meaning='Retention is soft. If the viewer leaves before the value / CTA is earned, the path to the business action may be breaking before the ask.';next='Inspect promise delivery, proof, and CTA timing. Confirm the business result before deciding retention is the main business problem.';}
+        else{meaning='Reach → Packaging → Retention does not show a clear break. The Convert decision should now come from the business result.';next='Judge qualified action and yield. Do not change a healthy platform strategy because the video has fewer views than a Reach video.';}
       }else{
-        jobMeaning='This video has not been assigned a Reach / Trust / Convert job, so the dashboard can diagnose SHOW → CLICK → WATCH but cannot fully judge whether the result accomplished its strategic purpose.';goalLink='The system cannot connect this upload cleanly to the program goal until you tell it whether the video is Reach, Trust, or Convert.';
+        jobMeaning='This video has not been assigned a Reach / Trust / Convert job, so the dashboard can read Reach → Packaging → Retention but cannot fully judge whether the result accomplished its strategic purpose.';goalLink='The system cannot connect this upload cleanly to the program goal until you tell it whether the video is Reach, Trust, or Convert.';
         measure=savedMetric||'Use the metric closest to the intended job';
-        protect=savedGuard||'The other healthy parts of SHOW → CLICK → WATCH';
-        meaning=first?'SHOW → CLICK → WATCH shows '+(first==='reach'?'a SHOW / Reach issue':first==='packaging'?'a CLICK / packaging issue':'a WATCH / viewing-experience issue')+', but the strategic meaning is limited until the video job is set.':'No clear SHOW → CLICK → WATCH problem is visible, but the system still needs the video job to know what “success” should mean.';
-        next='Assign the video as Reach, Trust, or Convert in the video strategy when possible. Until then, use the SHOW → CLICK → WATCH diagnosis only and avoid making a channel-wide strategy change from this one result.';
+        protect=savedGuard||'The other healthy parts of Reach → Packaging → Retention';
+        meaning=first?'Reach → Packaging → Retention shows '+(first==='reach'?'a Reach issue':first==='packaging'?'a title + thumbnail / CTR issue':'a retention / viewing-experience issue')+', but the strategic meaning is limited until the video job is set.':'No clear Reach → Packaging → Retention problem is visible, but the system still needs the video job to know what “success” should mean.';
+        next='Assign the video as Reach, Trust, or Convert in the video strategy when possible. Until then, use the Reach → Packaging → Retention diagnosis only and avoid making a channel-wide strategy change from this one result.';
         tone='warn';
       }
       if(d.winner&&soft.length){
-        const names={reach:'SHOW / Reach',packaging:'CLICK / packaging',retention:'WATCH / viewing experience'},lesson=soft.map(x=>names[x]||x).join(' + '),multiple=d.outcomeMultiple==null?'well above normal':Number(d.outcomeMultiple).toFixed(2)+'× normal';
+        const names={reach:'Reach',packaging:'Title + thumbnail / CTR',retention:'Retention / viewing experience'},lesson=soft.map(x=>names[x]||x).join(' + '),multiple=d.outcomeMultiple==null?'well above normal':Number(d.outcomeMultiple).toFixed(2)+'× normal';
         meaning='The video still won on the available platform outcome at '+multiple+'. '+lesson+' is a learning / efficiency lane, not a reason to rescue a winning video. '+(job==='Reach'?'Protect what made the Reach video work while you improve the softer stage.':job==='Trust'?'This does not by itself prove the Trust job succeeded; use next-video / returning-viewer evidence for that judgment.':job==='Convert'?'This does not prove the Convert job succeeded; the business RESULT still decides that.':'Assign the intended job before judging strategic success.');
         if(job==='Unassigned')next='Keep the winning video. Set its intended Reach, Trust, or Convert job, then use the softer metric as a next-video learning question rather than a repair order.';
         if(job==='Reach')next='Do not panic-change the winning video. Protect the idea / audience doorway that created the win, check traffic-source context, and carry '+lesson+' into the next comparable Reach video as one controlled improvement.';
@@ -389,23 +389,23 @@
       if(rawCount>=5)return {tone:'warn',label:'Collected, comparison blocked',detail:rawCount+' raw rows'};
       return {tone:'muted',label:'Missing',detail:rawCount?rawCount+' raw rows':'Not returned'};
     }
-    function dataCoverageHtml(c,b,h){
-      const rec=baselineRecord(c,b),obs=(c.analyticsFoundation?.observations||[]).filter(o=>o.windowHours===h);
-      const rawN=k=>obs.filter(o=>n(o?.metrics?.[k])!==null).length,sample=k=>n(rec?.samples?.[k])||0;
-      const checks=[['Impressions','impressions'],['CTR','ctr'],['0:30','retention30'],['APV','apv'],['AVD','avdSeconds'],['Views','views'],['Engaged views','engagedViews']];
-      const ready=checks.filter(([,k])=>sample(k)>=5),partial=checks.filter(([,k])=>sample(k)>0&&sample(k)<5),missing=checks.filter(([,k])=>sample(k)===0);
-      const sourceSample=Math.min(...['browsePct','suggestedPct','searchPct','externalPct'].map(sample));
-      const instructions=[];
-      if(sample('retention30')<5)instructions.push('<li><b>Exact 0:30 / Intro:</b> Studio → Content → open the video → Analytics → Engagement / Audience retention → Intro. Enter the exact percentage only if Studio reports it. Do not eyeball the curve.</li>');
-      if(sample('engagedViews')<5)instructions.push('<li><b>Engaged views:</b> Studio → Analytics → Advanced Mode / SEE MORE → add Engaged views for the same lifespan. Never copy public Views into this field.</li>');
-      if(sourceSample<5)instructions.push('<li><b>Per-video traffic source:</b> open the video → Analytics → Reach/Content → How viewers found this video. Use Browse / Suggested / Search / External for the same lifespan when Studio lets you isolate it.</li>');
-      if(sample('views')<5&&rawN('views')>=5)instructions.push('<li><b>Views normal:</b> raw Views were collected, but one compatible Views definition was not verified across the comparison group. Keep using Impressions / CTR / WATCH until a same-definition set is verified.</li>');
-      const readyText=ready.length?ready.map(x=>x[0]).join(' · '):'No comparison metrics ready';
-      const missingText=[...missing.map(x=>x[0]),sourceSample<5?'Traffic source':null].filter(Boolean).join(' · ');
-      return '<details class="ac-data-compact"><summary><span><b>Data check</b> · '+esc(readyText)+'</span><small>'+(missingText?esc('Missing / blocked: '+missingText):'Core comparison data ready')+'</small></summary><div class="ac-data-compact-body">'+
-        (partial.length?'<p><b>Limited sample:</b> '+esc(partial.map(x=>x[0]).join(' · '))+'.</p>':'')+
-        (instructions.length?'<p><b>Fill these manually only if they matter for the decision:</b></p><ul>'+instructions.join('')+'</ul>':'<p>The main matched fields for this checkpoint are ready.</p>')+
-        '<div class="actions"><button class="btn dark" data-ac-manual-edit>Edit this video\'s checkpoint</button><button class="btn" data-aw="baseline">Edit creator normal</button></div></div></details>';
+    function dataCoverageHtml(c,v,b,h,r){
+      const age=AGES[h]||AGES[168],rec=baselineRecord(c,b),normalSample=rec?.sample||0,hasCheckpoint=checkpointSaved(c,v,h);
+      if(!hasCheckpoint||r?.status==='missing_observation'){
+        return '<details class="ac-data-compact"><summary><span><b>Data check</b> · No '+esc(age.label)+' data saved for this video</span><small>'+(normalSample?esc('Creator normal: '+normalSample+' videos'):'No creator normal yet')+'</small></summary><div class="ac-data-compact-body"><p>We '+(normalSample?'already have a '+esc(age.label)+' normal based on '+esc(normalSample)+' other video'+(normalSample===1?'':'s')+', but ':'')+'need this video\'s own '+esc(age.label)+' numbers before there is anything fair to compare.</p><p><b>Next:</b> import the '+esc(age.label)+' result if Studio can still return it, or switch to a checkpoint that is already saved for this video.</p><div class="actions"><button class="btn" data-aw="baseline">Review creator normal</button></div></div></details>';
+      }
+      const cpr=r?.comparisons||{},checks=[['Views','views'],['Engaged views','engagedViews'],['Impressions','impressions'],['CTR','ctr'],['0:30','retention30'],['APV','apv'],['AVD','avdSeconds']];
+      const current=k=>n(cpr[k]?.current)!==null,comparable=k=>n(cpr[k]?.multiple)!==null||n(cpr[k]?.deltaPp)!==null||n(cpr[k]?.deltaSeconds)!==null;
+      const ready=checks.filter(([,k])=>current(k)&&comparable(k)),currentOnly=checks.filter(([,k])=>current(k)&&!comparable(k)),missing=checks.filter(([,k])=>!current(k));
+      const sourceReady=['browsePct','suggestedPct','searchPct','externalPct'].some(k=>current(k)&&comparable(k));
+      const readyText=ready.length?ready.map(x=>x[0]).join(' · '):'No fair metric comparisons yet';
+      const notes=[];
+      if(currentOnly.length)notes.push('<p><b>Saved on this video, but not fairly comparable yet:</b> '+esc(currentOnly.map(x=>x[0]).join(' · '))+'.</p>');
+      if(missing.length)notes.push('<p><b>Not saved on this video:</b> '+esc(missing.map(x=>x[0]).join(' · '))+'.</p>');
+      if(!sourceReady)notes.push('<p><b>Traffic-source context:</b> not available for a fair comparison at this checkpoint. That matters most before blaming CTR.</p>');
+      if(!notes.length)notes.push('<p>The main numbers for this checkpoint are ready to use.</p>');
+      return '<details class="ac-data-compact"><summary><span><b>Data check</b> · '+esc(readyText)+'</span><small>'+esc(normalSample?normalSample+'-video normal':'Check the creator normal')+'</small></summary><div class="ac-data-compact-body">'+notes.join('')+
+        '<div class="actions"><button class="btn dark" data-ac-manual-edit>Edit this video\'s checkpoint</button><button class="btn" data-aw="baseline">Review creator normal</button></div></div></details>';
     }
     W.strategistRead=strategistRead;
     function strategistReadHtml(c,v,r,d,h){
@@ -436,19 +436,22 @@
       return '<label><span>'+esc(label)+'</span><input type="number" step="'+esc(step)+'" data-ac-quick-field="'+esc(field)+'" value="'+esc(value??'')+'" placeholder="optional"></label>';
     }
     function diagnosisWhyHtml(r,d){
+      if(!r||r.status==='missing_observation'||!Object.keys(r.comparisons||{}).length){
+        return '<details class="ac-why-compact"><summary><b>Why no diagnosis yet?</b><span>No result saved at this checkpoint</span></summary><div class="ac-why-body"><p>There is no result saved for this video at this checkpoint, so there is nothing fair to diagnose yet. A creator normal by itself is not enough; this video needs its own numbers at the same age.</p></div></details>';
+      }
       const m=d.metrics,c=r?.comparisons||{},watchLabel=m.watchKey==='retention30'?'exact 0:30':m.watchKey==='apv'?'APV':'AVD';
-      const evidence=['SHOW: '+(m.show.detail||'No fair impression comparison yet.'),'CLICK: '+(m.click.detail||'No fair CTR comparison yet.'),'WATCH ('+watchLabel+'): '+(m.watch.detail||'No fair WATCH comparison yet.')];
+      const evidence=['REACH · Impressions: '+(m.show.detail||'No fair impression comparison yet.'),'PACKAGING · CTR: '+(m.click.detail||'No fair CTR comparison yet.'),'RETENTION · '+watchLabel+': '+(m.watch.detail||'No fair retention comparison yet.')];
       const missing=[];
       if(n(c.retention30?.current)===null||n(c.retention30?.baseline)===null)missing.push('exact 0:30');
       if(!['browsePct','suggestedPct','searchPct','externalPct'].some(k=>n(c[k]?.current)!==null&&n(c[k]?.baseline)!==null))missing.push('traffic-source context');
       if(n(c.engagedViews?.current)===null||n(c.engagedViews?.baseline)===null)missing.push('Engaged views');
-      let logic='No stage is clearly weak enough to justify inventing a fix.';
-      if(d.hardIssues?.includes('reach'))logic='SHOW is clearly weak versus this creator’s normal. Topic / opportunity / distribution is the first place to investigate. This does not prove why impressions are low.';
-      else if(d.hardIssues?.includes('packaging'))logic='SHOW is not the main break while CLICK is clearly weak. Packaging becomes a candidate after traffic-source / audience-expansion context is checked.';
-      else if(d.hardIssues?.includes('retention'))logic=m.watchKey==='retention30'?'WATCH is clearly weak on exact 0:30. Inspect the opening and retention curve, but the number still does not prove the cause.':'WATCH is clearly weak based on '+watchLabel+'. Exact 0:30 is missing, so this is a viewing-experience clue, not proof that the opening is the cause.';
-      else if(d.softIssues?.length)logic='A metric is soft, but the result/context does not justify a strategy change yet. Watch for repetition.';
-      const change=d.hardIssues?.includes('reach')?'The call changes if comparable topic/source evidence looks healthy while CLICK or WATCH becomes the clearer repeated break.':d.hardIssues?.includes('packaging')?'The call weakens if CTR looks normal inside a comparable traffic source or wider distribution explains the drop.':d.hardIssues?.includes('retention')?'The call weakens if exact 0:30 / the retention curve is healthy and APV/AVD is explained by length or audience mix.':'A repeated abnormal stage across comparable videos would raise confidence.';
-      return '<details class="ac-why-compact"><summary><b>Why this diagnosis?</b><span>'+esc(missing.length?'Confidence limited by '+missing.join(', '):'See the evidence behind the call')+'</span></summary><div class="ac-why-body"><p><b>Logic:</b> '+esc(logic)+'</p><ul>'+evidence.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul><p><b>What would change the call:</b> '+esc(change)+'</p></div></details>';
+      let logic='Nothing is clearly weak enough to justify inventing a fix.';
+      if(d.hardIssues?.includes('reach'))logic='Reach is clearly below this creator’s normal. Start with the topic, audience fit, and distribution. Low impressions tell us where the problem shows up, not why it happened.';
+      else if(d.hardIssues?.includes('packaging'))logic='Reach is healthy enough to judge the click, while CTR is clearly weak. Title + thumbnail become the next thing to inspect after checking traffic source and audience expansion.';
+      else if(d.hardIssues?.includes('retention'))logic=m.watchKey==='retention30'?'The exact first-30-second retention is clearly weak. Inspect the opening and retention curve, but the number still does not tell us the cause by itself.':'Viewing is clearly weak based on '+watchLabel+'. Exact 0:30 is missing, so treat this as a retention / viewing-experience clue, not proof that the opening caused it.';
+      else if(d.softIssues?.length)logic='One number is soft, but the overall result or context does not justify a strategy change yet. Look for the same thing to repeat.';
+      const change=d.hardIssues?.includes('reach')?'This changes if reach looks healthy on comparable topics/sources while CTR or retention becomes the clearer repeated problem.':d.hardIssues?.includes('packaging')?'This weakens if CTR is normal inside a comparable traffic source or wider distribution explains the drop.':d.hardIssues?.includes('retention')?'This weakens if the exact 0:30 / retention curve is healthy and APV or AVD is explained by video length or audience mix.':'A repeated weak area across comparable videos would raise confidence.';
+      return '<details class="ac-why-compact"><summary><b>Why this diagnosis?</b><span>'+esc(missing.length?'Useful context still missing: '+missing.join(', '):'See the numbers behind the call')+'</span></summary><div class="ac-why-body"><p><b>What the numbers are saying:</b> '+esc(logic)+'</p><ul>'+evidence.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul><p><b>What would change the call:</b> '+esc(change)+'</p></div></details>';
     }
     function quickCheckHtml(c,b,h){
       const p=W.prefs(c);if(!p.quickOpen)return '<button class="btn ac-quick-open" data-ac-quick-toggle>Quick check newest / custom video</button>';
@@ -559,9 +562,9 @@
         '<div class="ac-section-head"><div class="ac-section-index">03</div><div><div class="ac-kicker">YOUR NORMAL · '+AGES[h].label+'</div><h2>'+esc(rec.label)+'</h2><p><b>'+esc(startLine)+'</b> '+esc(evo)+' Built from '+esc(rec.sample)+' comparable video'+(rec.sample===1?'':'s')+'.</p></div><button class="btn" data-aw="edit-baseline">Review baseline</button></div>'+
         '<div class="ac-section-body"><div class="ac-baseline-grid">'+
           '<div><span>Outcome</span><b>'+fmtCount(o.current)+'</b><small>'+(o.key==='engagedViews'?'Engaged views':'Views')+'</small></div>'+
-          '<div><span>Show</span><b>'+fmtCount(rec.values.impressions)+'</b><small>Impressions</small></div>'+
-          '<div><span>Click</span><b>'+fmtRate(rec.values.ctr)+'</b><small>CTR</small></div>'+
-          '<div><span>Watch</span><b>'+fmtRate(watch[1])+'</b><small>'+esc(watch[0])+'</small></div>'+
+          '<div><span>Reach</span><b>'+fmtCount(rec.values.impressions)+'</b><small>Impressions</small></div>'+
+          '<div><span>Packaging</span><b>'+fmtRate(rec.values.ctr)+'</b><small>CTR</small></div>'+
+          '<div><span>Retention</span><b>'+fmtRate(watch[1])+'</b><small>'+esc(watch[0])+'</small></div>'+
         '</div></div>'+
       '</section>';
     }
@@ -616,25 +619,25 @@
       const p=W.prefs(c),v=selectedVideo(c);if(!v)return full;
       const b=matchingBaseline(c,v,p.hours); if(b)p.baselineId=b.id;
       let r;try{r=W.compare(c,v,b,p.hours);}catch(e){r={status:'needs_evidence',comparisons:{},message:e.message};}
-      const d=diagnose(r,p.hours),age=AGES[p.hours],baselineName=b?.label||'No usual result saved yet';
+      let d=diagnose(r,p.hours),age=AGES[p.hours],baselineName=b?.label||'No usual result saved yet';
+      if(!checkpointSaved(c,v,p.hours)||r?.status==='missing_observation')d={...d,headline:'No '+age.label+' result saved for this video.',bottleneck:'NO '+age.label.toUpperCase()+' RESULT SAVED',explain:'There is nothing to diagnose at '+age.label+' until this video has its own '+age.label+' numbers.'};
       const quickToggle='<button class="btn ac-quick-open" data-ac-quick-toggle>'+(p.quickOpen?'Close quick check':'Quick check newest / custom video')+'</button>';
       const quickPanel=p.quickOpen?quickCheckHtml(c,b,p.hours):'';
       const memberNames=(r.baseline?.memberVideoIds||[]).map(id=>W.videos(c).find(x=>(x.engineId||x.id)===id)?.title||id);
       const comparisonDetail='<details><summary>Which normal is this video using?</summary><p>'+(r.manual?'Coach-selected summary. Confirm the source, format and age match this video.':'Earlier compatible uploads only; this video and later uploads are excluded. Each metric uses its own available sample.')+'</p><p>'+esc(r.source||r.target?.source?.report||'Source details are in the saved observations.')+'</p>'+(r.baseline?'<p>Comparison as of '+esc(r.asOf||r.baseline.evidenceAsOf||'current review')+' · '+esc(r.baselineVersionId||'calculated for this video')+'</p><ul>'+memberNames.map(name=>'<li>'+esc(name)+'</li>').join('')+'</ul>':'')+'</details>';
       const savedText=savedCheckpointText(c,v),hasCheckpoint=checkpointSaved(c,v,p.hours),normalSample=baselineRecord(c,b)?.sample||0;
       const normalLine=hasCheckpoint
-        ? 'Normal used for this video: <b>'+esc(baselineName)+'</b> at the same point after publishing. Automatic comparisons exclude this video; see the comparison group below.'
-        : '<b>'+esc(age.label)+' normal available:</b> '+esc(baselineName)+'. This video cannot be compared with it until a '+esc(age.label)+' checkpoint exists for this upload.';
+        ? 'Comparing this video with the creator\'s <b>'+esc(age.label)+' normal</b> at the same point after publishing. This video and newer uploads are left out of its comparison group.'
+        : normalSample?'We have a <b>'+esc(age.label)+' normal based on '+esc(normalSample)+' other video'+(normalSample===1?'':'s')+'</b>, but this video has no '+esc(age.label)+' result to compare with it.':'This video has no '+esc(age.label)+' result saved yet.';
       const controls='<div class="ac-video-controls"><div class="ac-video-select-row"><label>Video<select id="ac-video">'+W.videos(c).map(x=>'<option value="'+esc(x.id)+'" '+(x.id===v.id?'selected':'')+'>'+esc(x.title)+'</option>').join('')+'</select></label>'+quickToggle+'</div><div class="ac-age-grid">'+ageOverview(c,v)+'</div><p class="ac-ready-note"><b>Saved checkpoints for this video:</b> '+esc(savedText)+'.</p><p>'+normalLine+'</p>'+(hasCheckpoint?comparisonDetail:'')+quickPanel+'</div>';
-      const cohortCopy=normalSample?' The '+esc(age.label)+' creator normal is still built from '+esc(normalSample)+' eligible video'+(normalSample===1?'':'s')+'.':'';
-      const numbersHtml=hasCheckpoint?metricsHtml(r,d):'<div class="ac-why ac-why-missing"><p><b>No '+esc(age.label)+' result is saved for this specific video.</b></p><p>Saved checkpoints for this video: '+esc(savedText)+'.'+cohortCopy+' A checkpoint baseline and a per-video checkpoint are different things, so not every video in the dropdown has every age measurement.</p><p>Nothing is being hidden here. Import the missing '+esc(age.label)+' checkpoint if Studio can still return it, or switch to one of the saved checkpoints above.</p></div>';
+      const numbersHtml=hasCheckpoint?metricsHtml(r,d):'<div class="ac-why ac-why-missing"><p><b>No '+esc(age.label)+' numbers are saved for this video.</b></p><p>We '+(normalSample?'do have a '+esc(age.label)+' normal based on '+esc(normalSample)+' other video'+(normalSample===1?'':'s')+', but ':'')+'need this video\'s own '+esc(age.label)+' numbers before we can compare it. Saved for this video: <b>'+esc(savedText)+'</b>.</p><p>Import the '+esc(age.label)+' result if Studio can still return it, or use one of the saved checkpoints above.</p></div>';
       const actions='<div class="actions ac-video-actions">'+(v.native&&!v.engineId?action('result','Update this video’s results'):action('import',v.engineId?'Update imported results':'Import results'))+action('baseline','Build / update baseline')+action('diagnosis','Use this in Diagnosis')+'</div>';
       return '<div class="ac-shell">'+
         '<section class="ac-section ac-video-section '+d.tone+'"><div class="ac-section-head ac-video-head"><div class="ac-section-index">02</div><div><div class="ac-kicker">THIS VIDEO READ · '+age.label+' · '+age.name+'</div><h2>'+esc(d.headline)+'</h2><p>'+esc(d.explain)+'</p></div><div class="ac-top-badge"><span>CURRENT CALL</span><b>'+esc(d.bottleneck)+'</b><small>'+esc(age.act)+'</small></div></div>'+
         '<div class="ac-section-body">'+controls+
           '<div class="ac-subsection"><div class="ac-subsection-label">HOW THE NUMBERS LOOK</div>'+numbersHtml+'</div>'+
           strategistReadHtml(c,v,r,d,p.hours)+
-          '<div class="ac-support-row">'+diagnosisWhyHtml(r,d)+dataCoverageHtml(c,b,p.hours)+'</div>'+
+          '<div class="ac-support-row">'+diagnosisWhyHtml(r,d)+dataCoverageHtml(c,v,b,p.hours,r)+'</div>'+
           actions+
         '</div></section>'+
         baselineHtml(c,v,p.hours,b)+patternHtml(c)+recentHtml(c)+
