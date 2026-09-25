@@ -37,7 +37,7 @@ test('one clue does not rewrite the plan; multiple stages start at the earliest'
 test('an unassigned winner retains the win without claiming strategic success',()=>{
  const r={status:'compared',comparisons:{views:{multiple:3.04},impressions:{multiple:1.39},ctr:{deltaPp:-.6},apv:{deltaPp:-4.8}}};
  const d=C.diagnose(r),s=C.strategistRead({}, {id:'v'},r,d,168);
- assert.equal(d.winner,true);assert.match(s.meaning,/still won/);assert.match(s.meaning,/Assign the intended job/);
+ assert.equal(d.winner,true);assert.match(s.meaning,/strong result/i);assert.match(s.next,/Assign its intended job/i);
  assert.match(s.next,/Keep the winning video/);assert.doesNotMatch(s.meaning,/a CLICK \/ packaging issue/);
 });
 test('missing checkpoint never becomes a healthy strategist read for any video job',()=>{
