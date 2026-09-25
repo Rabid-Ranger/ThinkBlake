@@ -22,10 +22,10 @@ test('same-age count and rate ranges stay simple and explicit',()=>{
 });
 
 test('diagnosis isolates reach packaging retention and combinations',()=>{
-  assert.equal(A.diagnose(result({outcome:.55,imp:.5}),168).bottleneck,'TOPIC / REACH');
-  assert.equal(A.diagnose(result({outcome:.85,ctr:-1.2}),168).bottleneck,'PACKAGING');
+  assert.equal(A.diagnose(result({outcome:.55,imp:.5}),168).bottleneck,'REACH / TOPIC');
+  assert.equal(A.diagnose(result({outcome:.85,ctr:-1.2}),168).bottleneck,'TITLE + THUMBNAIL');
   assert.equal(A.diagnose(result({outcome:.85,ret:-6}),168).bottleneck,'RETENTION');
-  assert.equal(A.diagnose(result({outcome:.6,ctr:-1,ret:-5}),168).bottleneck,'PACKAGING + RETENTION');
+  assert.equal(A.diagnose(result({outcome:.6,ctr:-1,ret:-5}),168).bottleneck,'TITLE + THUMBNAIL + RETENTION');
 });
 
 test('winner soft spots do not become rescue recommendations',()=>{
@@ -67,7 +67,7 @@ test('APV fallback does not pretend the first 30 seconds caused the problem',()=
   }};
   const d=A.diagnose(r,168);
   assert.match(d.headline,/More than one stage is weak/i);
-  assert.match(d.bottleneck,/WATCH \/ VIEWING EXPERIENCE/);
+  assert.match(d.bottleneck,/RETENTION \/ VIEWING EXPERIENCE/);
   assert.match(d.next,/Exact 0:30 is missing/i);
   assert.match(d.next,/not proof/i);
 });
@@ -84,12 +84,21 @@ test('checkpoint tiles do not say no comparison when verified stage metrics are 
     avdSeconds:{deltaSeconds:-4,current:566,baseline:570}
   }};
   const card=A.ageCardRead(r,48,true);
-  assert.equal(card.score,'SHOW 0.92×');
-  assert.equal(card.status,'Comparison ready');
+  assert.equal(card.score,'Impressions 0.92×');
+  assert.equal(card.status,'Looks normal');
 });
 
 test('checkpoint tiles distinguish a missing saved checkpoint from a missing comparison',()=>{
   const card=A.ageCardRead({status:'missing_observation',comparisons:{}},48,false);
   assert.equal(card.score,'No 48h result');
-  assert.equal(card.status,'No 48h checkpoint saved');
+  assert.equal(card.status,'No 48h data saved');
+});
+
+
+test('checkpoint tile leads with result vs usual when the result metric is comparable',()=>{
+  const r=result({outcome:.66,imp:.65,ctr:0,ret:0});
+  const card=A.ageCardRead(r,24,true);
+  assert.equal(card.score,'0.66× usual');
+  assert.equal(card.status,'Reach is low so far');
+  assert.doesNotMatch(card.score,/SHOW|CLICK|WATCH/);
 });
