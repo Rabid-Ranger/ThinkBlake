@@ -158,7 +158,7 @@
     if(d.outcomeMultiple!==null&&d.outcomeMultiple!==undefined){
       const outcomeLabel=outcomeKey==='engagedViews'?'Engaged views':'Views';
       const hardStatus=d.hardIssues?.length?(d.hardIssues.length>1?'More than one thing is weak':d.hardIssues[0]==='reach'?'Reach is below usual':d.hardIssues[0]==='packaging'?'CTR is below usual':'Watch is below usual'):null;
-      const status=d.kind==='diagnosed'?(hardStatus||d.winner?'Strong result':d.softIssues?.length?'One thing to check':'In the usual range'):age.purpose;
+      const status=d.kind==='diagnosed'?(hardStatus||(d.winner?'Strong result':d.softIssues?.length?'One thing to check':'In the usual range')):age.purpose;
       return {tone:d.tone||'muted',score:outcomeLabel+' '+fmtMultiple(d.outcomeMultiple),status};
     }
     const imp=n(c.impressions?.multiple),ctr=n(c.ctr?.deltaPp),ret=n(c.retention30?.deltaPp),apv=n(c.apv?.deltaPp),avd=n(c.avdSeconds?.deltaSeconds);
@@ -166,7 +166,7 @@
     if(fair){
       const score=imp!==null?'Impressions '+fmtMultiple(imp):ctr!==null?'CTR '+(ctr>=0?'+':'')+ctr.toFixed(1)+' pp':'Watch data ready';
       const hardStatus=d.hardIssues?.length?(d.hardIssues.length>1?'More than one thing is weak':d.hardIssues[0]==='reach'?'Reach is below usual':d.hardIssues[0]==='packaging'?'CTR is below usual':'Watch is below usual'):null;
-      const status=d.kind==='diagnosed'?(hardStatus||d.softIssues?.length?'One thing to check':'Comparison ready'):'Comparison ready';
+      const status=d.kind==='diagnosed'?(hardStatus||(d.softIssues?.length?'One thing to check':'Comparison ready')):'Comparison ready';
       return {tone:d.tone||'normal',score,status};
     }
     const hasResult=Object.values(c).some(x=>n(x?.current)!==null);
