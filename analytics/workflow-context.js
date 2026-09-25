@@ -144,7 +144,7 @@
   }
   function durationAnswer(rate,label='AVD'){
     const ratioV=n(rate?.multiple),delta=n(rate?.deltaSeconds),current=n(rate?.current),baseline=n(rate?.baseline);
-    if(ratioV===null&&delta===null)return {tone:'muted',label:'Not enough data yet',line:'We do not have a fair Average View Duration comparison yet.',meaning:'AVD can support WATCH when exact 0:30 and APV are unavailable.',next:'Add or verify the same-age AVD normal, then inspect the retention curve if retention looks weak.'};
+    if(ratioV===null&&delta===null)return {tone:'muted',label:'Not enough data yet',line:'We do not have a fair Average View Duration comparison yet.',meaning:'AVD can support the retention read when exact 0:30 and APV are unavailable.',next:'Add or verify the same-age AVD normal, then inspect the retention curve if retention looks weak.'};
     const line=(current!==null&&baseline!==null?label+' '+Math.round(current)+' sec vs '+Math.round(baseline)+' sec normal':label+' comparison available')+
       (ratioV!==null?' · '+mult(ratioV)+' normal':'')+(delta!==null?' · '+(delta>=0?'+':'')+Math.round(delta)+' sec':'');
     if(ratioV!==null&&ratioV<.7)return {tone:'bad',label:'Yes. Retention looks clearly weak for this creator.',line,meaning:'Average viewing time is well below this creator’s normal. That flags the viewing experience, even without an exact 0:30 number.',next:'Open the retention curve and inspect the first meaningful divergence, promise delivery, pacing, and structure.'};
@@ -303,7 +303,7 @@
       const bad=tones.includes('bad'),warn=tones.includes('warn'),healthy=tones.length>0&&!bad&&!warn;
       let verdict='Not enough retention data yet.',line='Add 0:30 retention first. APV and AVD help show whether the problem continues after the opening.';
       if(bad){verdict='Analytics lean NO: viewers are leaving more than usual.';line='At least one key watch metric is clearly weaker than this creator’s usual result.';}
-      else if(warn){verdict='Analytics say WATCH is a little soft, but not clearly the main break.';line='One or more watch metrics are a little below usual, but the pattern is not strong enough by itself.';}
+      else if(warn){verdict='Analytics say retention is a little soft, but not clearly the main break.';line='One or more watch metrics are a little below usual, but the pattern is not strong enough by itself.';}
       else if(healthy){verdict='Analytics support YES: watch performance looks healthy.';line='0:30 / APV / AVD do not show a clear watch problem against this creator’s usual results.';}
       return {tone:bad?'bad':warn?'warn':healthy?'good':'muted',verdict,line,meaning:bad?'The viewing experience is worth checking. 0:30 tells you about the opening; APV/AVD help show whether the weakness continues later.':healthy?'Retention does not look like the first obvious break.':'The averages are not enough to force an answer.',next:bad?'Open the retention curve. Find the first meaningful divergence and rewind 30–60 seconds before the visible drop before deciding what caused it.':'If this looks healthy, move to whether people come back. If you are still unsure, inspect the full retention curve.',metrics:[
         {label:'First 30 sec',value:r30.value,compare:r30.compare,tone:r30.tone},
@@ -381,7 +381,7 @@
     const q=questionAnswers(c,W,ADC),r=q.raw,a=r.audience||{},p=r.p||{};
     let leading='Not enough data yet',because='',next='',alternative='',confidence='Low';
     if(r.outcome===null){
-      because='We still cannot answer OUTCOME because we do not have a fair 7-day comparison yet.';
+      because='We still cannot judge the result because we do not have a fair 7-day comparison yet.';
       next='Verify the 7-day result before deciding what the main issue is.';
     }else if(r.outcome>=1.7){
       leading='Growth pattern worth protecting';
