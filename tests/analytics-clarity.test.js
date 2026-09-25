@@ -66,7 +66,7 @@ test('APV fallback does not pretend the first 30 seconds caused the problem',()=
     avdSeconds:{current:180,baseline:240,multiple:.75,deltaSeconds:-60}
   }};
   const d=A.diagnose(r,168);
-  assert.match(d.headline,/More than one thing looks weak/i);
+  assert.match(d.headline,/couple things look off/i);
   assert.match(d.bottleneck,/WATCH/);
   assert.match(d.next,/Exact 0:30 is missing/i);
   assert.match(d.next,/not proof/i);
@@ -92,4 +92,22 @@ test('checkpoint tiles distinguish a missing saved checkpoint from a missing com
   const card=A.ageCardRead({status:'missing_observation',comparisons:{}},48,false);
   assert.equal(card.score,'No 48h result');
   assert.equal(card.status,'No 48h checkpoint saved');
+});
+
+
+test('quick and strategist reads explain why what to do and how in plain language',()=>{
+  const r=result({outcome:.56,imp:.54,ctr:-.04,apv:9.1});
+  const d=A.diagnose(r,48);
+  const q=A.quickStrategistRead(r,d,48);
+  assert.match(q.why,/Engaged views are 0\.56× normal/i);
+  assert.match(q.why,/CTR is basically normal/i);
+  assert.match(q.why,/APV is 9\.1 pp above normal/i);
+  assert.match(q.doNext,/Browse and Suggested/i);
+  assert.match(q.how,/traffic sources/i);
+
+  const deep=A.strategistRead({coachOS:{}},{id:'video-1'},r,d,48);
+  assert.match(deep.meaning,/Reach is the first thing I would look at/i);
+  assert.match(deep.next,/Browse and Suggested/i);
+  assert.match(deep.how,/traffic sources/i);
+  assert.match(deep.measure,/Engaged views, impressions/i);
 });
