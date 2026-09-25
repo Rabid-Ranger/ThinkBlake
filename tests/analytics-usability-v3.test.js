@@ -8,7 +8,7 @@ test('checkpoint guide uses the exact decision language requested',()=>{
   assert.equal(U.PHASES[168].label,'7d · Diagnosis');
   assert.equal(U.PHASES[672].label,'28d · What to make next');
   assert.equal(U.PHASES[2160].label,'90d · Channel Health');
-  assert.match(U.PHASES[48].question,/SHOW, CLICK, or WATCH/i);
+  assert.match(U.PHASES[48].question,/reach, packaging, or retention/i);
   assert.match(U.PHASES[168].decision,/main video decision point/i);
   assert.match(U.PHASES[672].decision,/what the next video should do/i);
   assert.match(U.PHASES[2160].decision,/does not set a per-video baseline/i);
@@ -24,8 +24,8 @@ test('optional checkpoint wording is removed everywhere',()=>{
 });
 
 test('winner with a soft metric is framed as keep strategy plus watch item',()=>{
-  assert.deepEqual(U.winnerCall('NO FIX NEEDED · PACKAGING A LITTLE SOFT'),{soft:'PACKAGING',label:'KEEP STRATEGY · WATCH PACKAGING'});
-  assert.deepEqual(U.winnerCall('NO FIX NEEDED · RETENTION A LITTLE SOFT'),{soft:'RETENTION',label:'KEEP STRATEGY · WATCH RETENTION'});
+  assert.deepEqual(U.winnerCall('NO FIX NEEDED · PACKAGING A LITTLE SOFT'),{soft:'PACKAGING',label:'KEEP STRATEGY · CHECK PACKAGING'});
+  assert.deepEqual(U.winnerCall('NO FIX NEEDED · RETENTION A LITTLE SOFT'),{soft:'RETENTION',label:'KEEP STRATEGY · CHECK RETENTION'});
   assert.equal(U.winnerCall('NO CLEAR ISSUE'),null);
 });
 
