@@ -398,12 +398,12 @@
       if(sample('retention30')<5)instructions.push('<li><b>Exact 0:30 / Intro:</b> Studio → Content → open the video → Analytics → Engagement / Audience retention → Intro. Enter the exact percentage only if Studio reports it. Do not eyeball the curve.</li>');
       if(sample('engagedViews')<5)instructions.push('<li><b>Engaged views:</b> Studio → Analytics → Advanced Mode / SEE MORE → add Engaged views for the same lifespan. Never copy public Views into this field.</li>');
       if(sourceSample<5)instructions.push('<li><b>Per-video traffic source:</b> open the video → Analytics → Reach/Content → How viewers found this video. Use Browse / Suggested / Search / External for the same lifespan when Studio lets you isolate it.</li>');
-      if(sample('views')<5&&rawN('views')>=5)instructions.push('<li><b>Views normal:</b> raw Views were collected, but one compatible Views definition was not verified across the comparison group. Keep using Impressions / CTR / WATCH until a same-definition set is verified.</li>');
-      const readyText=ready.length?ready.map(x=>x[0]).join(' · '):'No comparison metrics ready';
+      if(sample('views')<5&&rawN('views')>=5)instructions.push('<li><b>Views:</b> we have the numbers, but the Views definition is not verified across the comparison set. Use Engaged views when available, plus impressions, CTR, and watch metrics, until the Views definition is consistent.</li>');
+      const readyText=ready.length?ready.map(x=>x[0]).join(' · '):'No matched metrics ready yet';
       const missingText=[...missing.map(x=>x[0]),sourceSample<5?'Traffic source':null].filter(Boolean).join(' · ');
-      return '<details class="ac-data-compact"><summary><span><b>Data check</b> · '+esc(readyText)+'</span><small>'+(missingText?esc('Missing / blocked: '+missingText):'Core comparison data ready')+'</small></summary><div class="ac-data-compact-body">'+
-        (partial.length?'<p><b>Limited sample:</b> '+esc(partial.map(x=>x[0]).join(' · '))+'.</p>':'')+
-        (instructions.length?'<p><b>Fill these manually only if they matter for the decision:</b></p><ul>'+instructions.join('')+'</ul>':'<p>The main matched fields for this checkpoint are ready.</p>')+
+      return '<details class="ac-data-compact"><summary><span><b>Data quality</b> · '+esc(readyText)+'</span><small>'+(missingText?esc('Still missing: '+missingText):'Main comparison data is ready')+'</small></summary><div class="ac-data-compact-body">'+
+        (partial.length?'<p><b>Small sample:</b> '+esc(partial.map(x=>x[0]).join(' · '))+'. Treat these as directional.</p>':'')+
+        (instructions.length?'<p><b>Only fill these if they would change the decision:</b></p><ul>'+instructions.join('')+'</ul>':'<p>The main numbers needed for this checkpoint are ready.</p>')+
         '<div class="actions"><button class="btn dark" data-ac-manual-edit>Edit this video\'s checkpoint</button><button class="btn" data-aw="baseline">Edit creator normal</button></div></div></details>';
     }
     W.strategistRead=strategistRead;
@@ -502,8 +502,8 @@
       const watchLabel=m.watchKey==='retention30'?'First 30 sec':m.watchKey==='apv'?'Average % viewed':'Average view duration',watchFormat=m.watchKey==='avdSeconds'?(v=>n(v)===null?'—':Math.round(n(v))+' sec'):fmtRate;
       return viewCountsHtml(r)+'<div class="ac-metrics">'+
         metricCard('OUTCOME',m.outcomeKey==='engagedViews'?'Engaged views':'Views',outcomeX,m.outcome,fmtCount)+
-        metricCard('SHOW','Impressions',c.impressions||{},m.show,fmtCount)+
-        metricCard('CLICK','CTR',c.ctr||{},m.click,fmtRate)+
+        metricCard('REACH','Impressions',c.impressions||{},m.show,fmtCount)+
+        metricCard('TITLE / THUMBNAIL','CTR',c.ctr||{},m.click,fmtRate)+
         metricCard('WATCH',watchLabel,watchX,m.watch,watchFormat)+
       '</div>'+sourceMixHtml(r);
     }
