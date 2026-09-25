@@ -99,7 +99,7 @@
       label:kind==='show'?'No. YouTube is showing these videos more than usual.':'No. Results are above normal.',
       line:'Recent middle result: '+mult(v)+' of what this creator usually gets'+(sample?' across '+sample+' 7-day video'+(sample===1?'':'s'):'')+'.',
       meaning:kind==='show'?'YouTube is showing these videos more than it usually does.':'This looks like a strength, not a problem.',
-      next:kind==='show'?'If the result is still weak, check CLICK and WATCH next. The problem is not that YouTube failed to show it.':'Protect what is working and figure out what you can repeat before changing it.'
+      next:kind==='show'?'If the result is still weak, check packaging and retention next. The problem is not that YouTube failed to show it.':'Protect what is working and figure out what you can repeat before changing it.'
     };
   }
   function rateAnswer(rate,label,thresholdRatio,missingMetric){
@@ -127,29 +127,29 @@
       tone:'warn',label:'A little below normal, but not enough to call it the main problem.',
       line,
       meaning:label==='CTR'?'CTR is a little low, but not low enough by itself to say the title/thumbnail is the main problem.':'Watch performance is a little low, but not low enough by itself to say retention is the main problem.',
-      next:label==='CTR'?'Keep it in mind, check where the views came from, then look at WATCH.':'Keep it in mind and continue to RETURN + RESULT.'
+      next:label==='CTR'?'Keep it in mind, check where the views came from, then look at retention.':'Keep it in mind and continue to RETURN + RESULT.'
     };
     if(strong)return {
       tone:'good',label:'No. This looks stronger than usual.',
       line,
       meaning:label==='CTR'?'Clicking does not look like the problem.':'Watching does not look like the problem.',
-      next:label==='CTR'?'Move to WATCH.':'Protect the viewing pattern and continue to RETURN + RESULT.'
+      next:label==='CTR'?'Move to retention.':'Protect the viewing pattern and continue to RETURN + RESULT.'
     };
     return {
       tone:'normal',label:'Nothing looks clearly wrong here.',
       line,
       meaning:label==='CTR'?'CTR is close to what this creator usually gets, so I would not stop here.':'Watch performance is close to what this creator usually gets, so I would not stop here.',
-      next:label==='CTR'?'Next, look at WATCH unless the traffic source clearly changed.':'Next, look at RETURN + RESULT.'
+      next:label==='CTR'?'Next, look at retention unless the traffic source clearly changed.':'Next, look at RETURN + RESULT.'
     };
   }
   function durationAnswer(rate,label='AVD'){
     const ratioV=n(rate?.multiple),delta=n(rate?.deltaSeconds),current=n(rate?.current),baseline=n(rate?.baseline);
-    if(ratioV===null&&delta===null)return {tone:'muted',label:'Not enough data yet',line:'We do not have a fair Average View Duration comparison yet.',meaning:'AVD can support WATCH when exact 0:30 and APV are unavailable.',next:'Add or verify the same-age AVD normal, then inspect the retention curve if WATCH looks weak.'};
+    if(ratioV===null&&delta===null)return {tone:'muted',label:'Not enough data yet',line:'We do not have a fair Average View Duration comparison yet.',meaning:'AVD can support WATCH when exact 0:30 and APV are unavailable.',next:'Add or verify the same-age AVD normal, then inspect the retention curve if retention looks weak.'};
     const line=(current!==null&&baseline!==null?label+' '+Math.round(current)+' sec vs '+Math.round(baseline)+' sec normal':label+' comparison available')+
       (ratioV!==null?' · '+mult(ratioV)+' normal':'')+(delta!==null?' · '+(delta>=0?'+':'')+Math.round(delta)+' sec':'');
-    if(ratioV!==null&&ratioV<.7)return {tone:'bad',label:'Yes. WATCH looks clearly weak for this creator.',line,meaning:'Average viewing time is well below this creator’s normal. That flags the viewing experience, even without an exact 0:30 number.',next:'Open the retention curve and inspect the first meaningful divergence, promise delivery, pacing, and structure.'};
-    if(ratioV!==null&&ratioV<.85)return {tone:'warn',label:'WATCH is a little below normal.',line,meaning:'AVD is softer than usual, but not enough by itself to prove the opening is the main problem.',next:'Keep it in context with CTR, traffic source, APV when available, and the retention curve.'};
-    if(ratioV!==null&&ratioV>1.15)return {tone:'good',label:'No. WATCH looks stronger than usual.',line,meaning:'Average viewing time is above this creator’s normal.',next:'Protect the viewing pattern and continue to RETURN + RESULT.'};
+    if(ratioV!==null&&ratioV<.7)return {tone:'bad',label:'Yes. Retention looks clearly weak for this creator.',line,meaning:'Average viewing time is well below this creator’s normal. That flags the viewing experience, even without an exact 0:30 number.',next:'Open the retention curve and inspect the first meaningful divergence, promise delivery, pacing, and structure.'};
+    if(ratioV!==null&&ratioV<.85)return {tone:'warn',label:'Retention is a little below normal.',line,meaning:'AVD is softer than usual, but not enough by itself to prove the opening is the main problem.',next:'Keep it in context with CTR, traffic source, APV when available, and the retention curve.'};
+    if(ratioV!==null&&ratioV>1.15)return {tone:'good',label:'No. Retention looks stronger than usual.',line,meaning:'Average viewing time is above this creator’s normal.',next:'Protect the viewing pattern and continue to RETURN + RESULT.'};
     return {tone:'normal',label:'Nothing looks clearly wrong here.',line,meaning:'Average viewing time is close to this creator’s normal.',next:'Continue to RETURN + RESULT.'};
   }
   function questionAnswers(c,W,ADC){
@@ -309,7 +309,7 @@
         {label:'First 30 sec',value:r30.value,compare:r30.compare,tone:r30.tone},
         {label:'APV',value:apv.value,compare:apv.compare,tone:apv.tone},
         {label:'AVD',value:avd.value,compare:avd.compare,tone:avd.tone}
-      ],note:'The dashboard does not have the full retention curve or exact drop timestamps. These numbers tell you whether to inspect WATCH, not why viewers left.'};
+      ],note:'The dashboard does not have the full retention curve or exact drop timestamps. These numbers tell you whether to inspect retention, not why viewers left.'};
     }
     if(index===5){
       const metrics=[
@@ -390,17 +390,17 @@
       alternative='Wider distribution can lower rates; platform reach does not by itself prove Trust or business success.';
     }else if(r.show!==null&&r.show<.7){
       leading='Topic / Reach';
-      because='The videos are under normal, and the first place the drop shows up is SHOW: YouTube is showing them at '+mult(r.show)+' of the usual level.';
+      because='The videos are under normal, and the first place the drop shows up is Reach / impressions: YouTube is showing them at '+mult(r.show)+' of the usual level.';
       next='Check the topic, who the video reached, and where the views came from before changing the title or thumbnail.';
       alternative='A narrower intentional audience, source shift or mixed comparison set could lower impressions without making the idea bad.';
     }else if(q.click.tone==='bad'){
       leading='Packaging / click';
-      because='SHOW is not the first clear failure, but CLICK is. '+q.click.line;
+      because='Reach is not the first clear problem, but CTR is. '+q.click.line;
       next=q.click.next;
       alternative='A colder or broader audience mix can cool CTR without proving the package is bad.';
     }else if(q.watch.tone==='bad'){
       leading='Promise / opening / viewing experience';
-      because='SHOW and CLICK hold better, while WATCH is the first clear weak stage. '+q.watch.line;
+      because='Reach and CTR hold better, while retention is the first clear weak area. '+q.watch.line;
       next=q.watch.next;
       alternative='Traffic source or audience-temperature changes can depress retention without proving structure is the only cause.';
     }else if(a.acquisitionBand==='weak'&&['steady','strong'].includes(a.loyaltyBand)){
@@ -441,10 +441,10 @@
     const drawer=win.document.getElementById('drawerBack');
     if(!drawer||!drawer.classList.contains('show')||!/Channel Diagnosis/i.test(drawer.textContent||''))return;
     const q=questionAnswers(c,W,ADC),map=[
-      ['1 · OUTCOME',q.outcome,'Uses 7-day views / engaged views. Source: '+q.raw.sources.outcome+'.'],
-      ['2 · SHOW',q.show,'Uses impressions from the same point after publishing. Source: '+q.raw.sources.show+'.'],
-      ['3 · CLICK',q.click,'Uses CTR vs what this creator usually gets, with impression expansion context. Source: '+q.raw.sources.click+'.'],
-      ['4 · WATCH',q.watch,'Uses 0:30 first, APV fallback, AVD as support when available. Source: '+q.raw.sources.watch+'.'],
+      ['1 · RESULT',q.outcome,'Uses 7-day views / engaged views. Source: '+q.raw.sources.outcome+'.'],
+      ['2 · REACH',q.show,'Uses impressions from the same point after publishing. Source: '+q.raw.sources.show+'.'],
+      ['3 · PACKAGING',q.click,'Uses CTR vs what this creator usually gets, with impression expansion context. Source: '+q.raw.sources.click+'.'],
+      ['4 · RETENTION',q.watch,'Uses 0:30 first, APV fallback, AVD as support when available. Source: '+q.raw.sources.watch+'.'],
       ['5 · RETURN + RESULT',q.returnResult,'Uses New / Casual / Regular / Returning trend plus Reach / Trust / Convert job results when available.']
     ];
     for(const [label,val,detail] of map){
@@ -527,7 +527,7 @@
     const rateText=x=>[n(x?.multiple)!==null?mult(x.multiple)+' normal':null,n(x?.deltaPp)!==null?pp(x.deltaPp):null].filter(Boolean).join(' · ')||'—';
     const durationText=x=>[n(x?.multiple)!==null?mult(x.multiple)+' normal':null,n(x?.deltaSeconds)!==null?(x.deltaSeconds>=0?'+':'')+Math.round(x.deltaSeconds)+' sec':null].filter(Boolean).join(' · ')||'—';
     const watch=n(c.retention30?.deltaPp)!==null?['0:30',rateText(c.retention30)]:n(c.apv?.deltaPp)!==null?['APV',rateText(c.apv)]:['AVD',durationText(c.avdSeconds)],avd=durationText(c.avdSeconds);
-    return '<section class="awf-live '+esc(d.tone||'normal')+'" id="awf-live-review"><div class="awf-live-head"><div><div class="awf-kicker">LIVE READ VS WHAT THIS CREATOR USUALLY GETS · '+esc(read.rw.hours===24?'24H':read.rw.hours===48?'48H':read.rw.hours===168?'7D':'28D')+'</div><h3>'+esc(d.headline||'Current read')+'</h3><p>'+esc(d.explain||'Compared with this creator’s usual result at the same point after publishing.')+'</p></div><div class="awf-main-issue"><span>MAIN ISSUE</span><b>'+esc(d.bottleneck||'—')+'</b></div></div><div class="awf-live-metrics"><div><span>OUTCOME</span><b>'+mult(c[read.outcomeKey]?.multiple)+'</b><small>vs normal</small></div><div><span>SHOW</span><b>'+mult(c.impressions.multiple)+'</b><small>impressions</small></div><div><span>CLICK</span><b>'+esc(rateText(c.ctr))+'</b><small>CTR vs normal</small></div><div><span>WATCH</span><b>'+esc(watch[1])+'</b><small>'+esc(watch[0])+' vs normal'+(watch[0]==='AVD'?'':' · AVD '+esc(avd))+'</small></div></div><p><b>What I would do next:</b> '+esc(d.next||'Keep collecting data before changing the strategy.')+'</p><button class="btn" data-awf-use-read>Use this read in the review</button></section>';
+    return '<section class="awf-live '+esc(d.tone||'normal')+'" id="awf-live-review"><div class="awf-live-head"><div><div class="awf-kicker">LIVE READ VS WHAT THIS CREATOR USUALLY GETS · '+esc(read.rw.hours===24?'24H':read.rw.hours===48?'48H':read.rw.hours===168?'7D':'28D')+'</div><h3>'+esc(d.headline||'Current read')+'</h3><p>'+esc(d.explain||'Compared with this creator’s usual result at the same point after publishing.')+'</p></div><div class="awf-main-issue"><span>MAIN ISSUE</span><b>'+esc(d.bottleneck||'—')+'</b></div></div><div class="awf-live-metrics"><div><span>RESULT</span><b>'+mult(c[read.outcomeKey]?.multiple)+'</b><small>vs normal</small></div><div><span>REACH</span><b>'+mult(c.impressions.multiple)+'</b><small>impressions</small></div><div><span>PACKAGING</span><b>'+esc(rateText(c.ctr))+'</b><small>CTR vs normal</small></div><div><span>RETENTION</span><b>'+esc(watch[1])+'</b><small>'+esc(watch[0])+' vs normal'+(watch[0]==='AVD'?'':' · AVD '+esc(avd))+'</small></div></div><p><b>What I would do next:</b> '+esc(d.next||'Keep collecting data before changing the strategy.')+'</p><button class="btn" data-awf-use-read>Use this read in the review</button></section>';
   }
   function fillReview(drawer,read){
     if(!read?.d)return;
