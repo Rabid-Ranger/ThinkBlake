@@ -39,7 +39,7 @@ test('plain-language diagnosis outputs say what happened and what to do next',()
     retention30:{deltaPp:0,current:65,baseline:65},
     apv:{deltaPp:0,current:45,baseline:45}
   }},168);
-  assert.equal(normal.headline,'Nothing looks clearly wrong here.');
+  assert.equal(normal.headline,'Nothing looks clearly broken here.');
   assert.match(normal.explain,/what this creator usually gets/);
   assert.doesNotMatch(normal.explain,/working range|same-age normal/i);
 });
