@@ -107,7 +107,7 @@
     }else if(acq==='weak'&&loy==='weak'){
       tone='bad';headline='New viewers and returning viewers are both under pressure.';
       meaning='This is broader than one weak audience metric. The channel may be losing both new-viewer opportunity and reasons to return, or the prior period may have been inflated by a spike.';
-      action='Do not blame one upload. Check new uploads vs older videos, traffic-source changes, topic / market demand, and the recent SHOW → CLICK → WATCH pattern. Then choose one main problem to work on across the next 2–3 videos.';
+      action='Do not blame one upload. Check new uploads vs older videos, traffic-source changes, topic / market demand, and the recent Reach → title / thumbnail → watch pattern. Then choose one main problem to work on across the next 2–3 videos.';
       protect='Avoid changing topic, packaging, upload schedule, and format all at once. We still need a clean test.';
     }else if(['steady','strong'].includes(acq)&&['steady','strong'].includes(loy)){
       tone='good';headline='New viewers and returning viewers are both healthy.';
@@ -163,17 +163,18 @@
   function channelStages(c,audience){
     const rows=snapshots(c),cur=rows.at(-1)||{},prev=rows.at(-2)||{};
     const defsKnown=cur.metricDefinitionId&&prev.metricDefinitionId&&!/unknown|unspecified|unverified/i.test(String(cur.metricDefinitionId))&&cur.metricDefinitionId===prev.metricDefinitionId;
-    const engagedComparable=defsKnown&&n(cur.engagedViews)!==null&&n(prev.engagedViews)!==null;
+    const engagedComparable=n(cur.engagedViews)!==null&&n(prev.engagedViews)!==null;
     const viewsComparable=defsKnown&&n(cur.views)!==null&&n(prev.views)!==null;
     const impressions=ratio(cur.impressions,prev.impressions),watchTime=ratio(cur.watchTime,prev.watchTime);
     const attention=engagedComparable?ratio(cur.engagedViews,prev.engagedViews):viewsComparable?ratio(cur.views,prev.views):impressions;
     const attentionLabel=engagedComparable?'Engaged views':viewsComparable?'Views':'Impressions';
+    const countNote=engagedComparable||viewsComparable?'':(n(cur.views)!==null&&n(prev.views)!==null?'Public Views changed counting methods, so this trend uses Impressions instead. ':'');
     const returnRatio=audience.loyalty,depth=audience.depth;
     const resultKey=['qualifiedLeads','bookings','sales'].find(k=>n(cur[k])!==null&&n(prev[k])!==null)||null;
     const resultRatio=resultKey?ratio(cur[resultKey],prev[resultKey]):null;
     const phrase=(r,label)=>r===null?'No comparable trend yet':label+' '+signed(r-1)+' vs prior';
     return [
-      {key:'attention',label:'REACH / VIEWS',band:stageBand(attention),value:phrase(attention,attentionLabel),sub:(defsKnown?'':'Views definition is not verified across these reports, so this read uses Impressions instead. ')+(watchTime===null?'':'Watch time '+signed(watchTime-1)+' vs prior.'),action:attention!==null&&attention<.85?'Check whether the decline is new-upload opportunity, traffic mix, market demand, or library contribution before changing packaging.':'Keep checking whether more reach/views are also leading to more people coming back.'},
+      {key:'attention',label:'REACH / VIEWS',band:stageBand(attention),value:phrase(attention,attentionLabel),sub:countNote+(watchTime===null?'':'Watch time '+signed(watchTime-1)+' vs prior.'),action:attention!==null&&attention<.85?'Check whether the decline is new-upload opportunity, traffic mix, market demand, or library contribution before changing the title / thumbnail.':'Keep checking whether more reach/views are also leading to more people coming back.'},
       {key:'return',label:'COME BACK',band:stageBand(returnRatio),value:returnRatio===null?'No comparable repeat-audience trend yet':'Repeat-audience trend '+signed(returnRatio-1),sub:'Dashboard summary of segment changes, not a YouTube metric or a conversion funnel.',action:returnRatio===null?'Add/verify comparable 28-day audience snapshots.':returnRatio<.85?'Test stronger follow-ups, series, consistent promises, and obvious next-video paths.':'Repeat viewing is not the obvious break; protect what is bringing people back.'},
       {key:'depth',label:'WATCH MORE',band:stageBand(depth),value:depth===null?'Average views/viewer not connected yet':'Avg views/viewer '+signed(depth-1)+' vs prior',sub:'Average views per viewer can include repeat plays; it does not prove viewing multiple different videos.',action:depth===null?'Manually pull Average views per viewer in Studio Advanced Mode / SEE MORE. Also add exact new-upload vs older-library views if Studio can isolate them.':depth<.85?'Inspect own-Suggested, end screens, follow-up paths, and whether viewers have an obvious second video.':'Average views per viewer is holding; keep checking the follow-up videos driving it.'},
       {key:'result',label:'BUSINESS RESULT',band:stageBand(resultRatio),value:resultRatio===null?'Business result not connected yet':(resultKey==='qualifiedLeads'?'Qualified leads':resultKey==='bookings'?'Bookings':'Sales')+' '+signed(resultRatio-1),sub:'Are the views turning into the business result we care about?',action:resultRatio===null?'If this creator has a business goal, enter qualified leads / bookings / sales from the CRM or business system. Do not invent these from YouTube.':resultRatio<.85?'Check CTA/offer alignment and attribution before changing Reach or Trust content.':'Business result is keeping pace; protect the path that is working.'}
