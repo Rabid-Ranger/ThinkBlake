@@ -435,19 +435,19 @@
       return '<label><span>'+esc(label)+'</span><input type="number" step="'+esc(step)+'" data-ac-quick-field="'+esc(field)+'" value="'+esc(value??'')+'" placeholder="optional"></label>';
     }
     function diagnosisWhyHtml(r,d){
-      const m=d.metrics,c=r?.comparisons||{},watchLabel=m.watchKey==='retention30'?'exact 0:30':m.watchKey==='apv'?'APV':'AVD';
-      const evidence=['SHOW: '+(m.show.detail||'No fair impression comparison yet.'),'CLICK: '+(m.click.detail||'No fair CTR comparison yet.'),'WATCH ('+watchLabel+'): '+(m.watch.detail||'No fair WATCH comparison yet.')];
+      const m=d.metrics,c=r?.comparisons||{},watchLabel=m.watchKey==='retention30'?'first 30 seconds':m.watchKey==='apv'?'average % viewed':'average view duration';
+      const evidence=['Reach / impressions: '+(m.show.detail||'No fair impression comparison yet.'),'Title / thumbnail / CTR: '+(m.click.detail||'No fair CTR comparison yet.'),'Watch ('+watchLabel+'): '+(m.watch.detail||'No fair watch comparison yet.')];
       const missing=[];
-      if(n(c.retention30?.current)===null||n(c.retention30?.baseline)===null)missing.push('exact 0:30');
-      if(!['browsePct','suggestedPct','searchPct','externalPct'].some(k=>n(c[k]?.current)!==null&&n(c[k]?.baseline)!==null))missing.push('traffic-source context');
+      if(n(c.retention30?.current)===null||n(c.retention30?.baseline)===null)missing.push('first 30 seconds');
+      if(!['browsePct','suggestedPct','searchPct','externalPct'].some(k=>n(c[k]?.current)!==null&&n(c[k]?.baseline)!==null))missing.push('traffic sources');
       if(n(c.engagedViews?.current)===null||n(c.engagedViews?.baseline)===null)missing.push('Engaged views');
-      let logic='No stage is clearly weak enough to justify inventing a fix.';
-      if(d.hardIssues?.includes('reach'))logic='SHOW is clearly weak versus this creator’s normal. Topic / opportunity / distribution is the first place to investigate. This does not prove why impressions are low.';
-      else if(d.hardIssues?.includes('packaging'))logic='SHOW is not the main break while CLICK is clearly weak. Packaging becomes a candidate after traffic-source / audience-expansion context is checked.';
-      else if(d.hardIssues?.includes('retention'))logic=m.watchKey==='retention30'?'WATCH is clearly weak on exact 0:30. Inspect the opening and retention curve, but the number still does not prove the cause.':'WATCH is clearly weak based on '+watchLabel+'. Exact 0:30 is missing, so this is a viewing-experience clue, not proof that the opening is the cause.';
-      else if(d.softIssues?.length)logic='A metric is soft, but the result/context does not justify a strategy change yet. Watch for repetition.';
-      const change=d.hardIssues?.includes('reach')?'The call changes if comparable topic/source evidence looks healthy while CLICK or WATCH becomes the clearer repeated break.':d.hardIssues?.includes('packaging')?'The call weakens if CTR looks normal inside a comparable traffic source or wider distribution explains the drop.':d.hardIssues?.includes('retention')?'The call weakens if exact 0:30 / the retention curve is healthy and APV/AVD is explained by length or audience mix.':'A repeated abnormal stage across comparable videos would raise confidence.';
-      return '<details class="ac-why-compact"><summary><b>Why this diagnosis?</b><span>'+esc(missing.length?'Confidence limited by '+missing.join(', '):'See the evidence behind the call')+'</span></summary><div class="ac-why-body"><p><b>Logic:</b> '+esc(logic)+'</p><ul>'+evidence.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul><p><b>What would change the call:</b> '+esc(change)+'</p></div></details>';
+      let logic='Nothing is weak enough to justify inventing a fix.';
+      if(d.hardIssues?.includes('reach'))logic='Impressions are clearly below this creator’s usual result. Start with topic demand, audience fit, and distribution. Low impressions do not tell us the exact reason by themselves.';
+      else if(d.hardIssues?.includes('packaging'))logic='Reach is not the main problem, but CTR is clearly below usual. That makes the title / thumbnail the next thing to inspect after traffic-source context.';
+      else if(d.hardIssues?.includes('retention'))logic=m.watchKey==='retention30'?'The first 30 seconds are clearly below usual. Inspect the opening and retention curve, but do not assume the cause from one number.':'Watch is clearly below usual based on '+watchLabel+'. The exact first-30-second number is missing, so treat this as a viewing-experience clue, not proof that the hook caused it.';
+      else if(d.softIssues?.length)logic='One number is a little soft, but the full result does not justify a strategy change yet.';
+      const change=d.hardIssues?.includes('reach')?'If reach looks healthy on comparable topics / traffic sources and CTR or watch becomes the repeated weak point, the diagnosis should move there.':d.hardIssues?.includes('packaging')?'If CTR is healthy inside the same traffic source, or wider distribution explains the lower CTR, title / thumbnail becomes a weaker explanation.':d.hardIssues?.includes('retention')?'If the first 30 seconds and retention curve are healthy, the watch diagnosis weakens.':'Repetition across more comparable videos would make the call stronger.';
+      return '<details class="ac-why-compact"><summary><b>Why this read?</b><span>'+esc(missing.length?'Still missing: '+missing.join(', '):'See the numbers behind the call')+'</span></summary><div class="ac-why-body"><p><b>Why:</b> '+esc(logic)+'</p><ul>'+evidence.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul><p><b>What would change my mind:</b> '+esc(change)+'</p></div></details>';
     }
     function quickCheckHtml(c,b,h){
       const p=W.prefs(c);if(!p.quickOpen)return '<button class="btn ac-quick-open" data-ac-quick-toggle>Quick check newest / custom video</button>';
