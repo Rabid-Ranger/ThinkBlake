@@ -425,9 +425,12 @@
       };
       let comparableCount=0;
       for(const k of Object.keys(current)){
-        const cur=current[k],base=n(rec?.values?.[k]),sample=n(rec?.samples?.[k])||0,ready=cur!==null&&base!==null&&sample>0;
+        const cur=current[k],base=n(rec?.values?.[k]),sample=n(rec?.samples?.[k])||0;
+        const savedDef=b?.engine?.metricDefinitions?.[k]||(k===b?.engine?.primaryMetric?b?.engine?.definitionId:null);
+        const definitionSafe=k!=='views'||!b?.engine||Boolean(savedDef&&!/unknown|unspecified|unverified|legacy/i.test(String(savedDef)));
+        const ready=cur!==null&&base!==null&&sample>0&&definitionSafe;
         if(ready)comparableCount++;
-        comparisons[k]={current:cur,baseline:base,n:sample,multiple:ready&&base>0&&!sourceKeys.has(k)?cur/base:null,relativeChangePct:ready&&base>0?100*(cur-base)/base:null,deltaPp:ready&&rateKeys.has(k)?(cur-base)*100:null,deltaSeconds:ready&&k==='avdSeconds'?cur-base:null,status:ready?'quick_check':'unavailable'};
+        comparisons[k]={current:cur,baseline:base,n:sample,multiple:ready&&base>0&&!sourceKeys.has(k)?cur/base:null,relativeChangePct:ready&&base>0?100*(cur-base)/base:null,deltaPp:ready&&rateKeys.has(k)?(cur-base)*100:null,deltaSeconds:ready&&k==='avdSeconds'?cur-base:null,status:ready?'quick_check':(!definitionSafe?'definition_mismatch':'unavailable')};
       }
       return {status:rec&&comparableCount?'compared':'needs_evidence',comparisons,source:'Quick check · not saved',baselineName:rec?.label||'No matching baseline',message:!rec?'Choose a matching baseline first.':comparableCount?'Quick check against the selected creator normal. Nothing here is saved.':'Enter at least one metric that has a matching creator normal.'};
     }
@@ -599,15 +602,15 @@
       return '<section class="ac-section ac-recent-section">'+
         '<div class="ac-section-head"><div class="ac-section-index">05</div><div><div class="ac-kicker">RECENT VIDEOS</div><h2>See the pattern without opening every video</h2><p>Latest usable checkpoint, score vs usual, and the main issue for each video.</p></div></div>'+
         '<div class="ac-section-body"><div class="ac-recent">'+reads.map(x=>{
-          const out=x.d.outcomeMultiple===null?'—':fmtMultiple(x.d.outcomeMultiple);
-          return '<div class="ac-row"><div><b>'+esc(x.v.title)+'</b><small>'+AGES[x.h].label+' · '+AGES[x.h].name+'</small></div><strong class="'+x.d.tone+'">'+out+'</strong><span class="ac-badge '+x.d.tone+'">'+esc(x.d.bottleneck)+'</span></div>';
+          const card=ageCardRead(x.r,x.h,true);
+          return '<div class="ac-row"><div><b>'+esc(x.v.title)+'</b><small>'+AGES[x.h].label+' · '+AGES[x.h].name+'</small></div><strong class="'+x.d.tone+'">'+esc(card.score)+'</strong><span class="ac-badge '+x.d.tone+'">'+esc(x.d.bottleneck)+'</span></div>';
         }).join('')+'</div></div>'+
       '</section>';
     }
     function patternHtml(c){
       const p=pattern(c),tone=p.max?(p.source==='hard'?'bad':'warn'):'normal';
       return '<section class="ac-section ac-pattern-section '+tone+'">'+
-        '<div class="ac-section-head"><div class="ac-section-index">04</div><div><div class="ac-kicker">CHANNEL PATTERN · RECENT 7-DAY VIDEOS</div><h2>'+(p.max===1?'One video clue to review':p.max?'Pattern to review: '+esc(p.label):'Nothing is repeating yet')+'</h2><p>'+esc(p.explain)+'</p></div><span class="ac-badge '+tone+'">'+esc(p.confidence)+'</span></div>'+
+        '<div class="ac-section-head"><div class="ac-section-index">04</div><div><div class="ac-kicker">RECENT 7-DAY PATTERN</div><h2>'+(p.max===1?'One video has a clue worth checking':p.max?'Repeated issue: '+esc(p.label):'Nothing is repeating yet')+'</h2><p>'+esc(p.explain)+'</p></div><span class="ac-badge '+tone+'">'+esc(p.confidence)+'</span></div>'+
         '<div class="ac-section-body"><div class="ac-decision-callout"><span>WHAT I’D DO NEXT</span><b>'+esc(p.next)+'</b></div><small>One result is worth noticing. Two similar results are worth watching. Three or more may be a real pattern.</small></div>'+
       '</section>';
     }
@@ -625,7 +628,7 @@
         ? 'Compared with <b>'+esc(baselineName)+'</b> at the same age. This video is never included in its own normal.'
         : '<b>'+esc(age.label)+' normal is ready:</b> '+esc(baselineName)+'. We just do not have a '+esc(age.label)+' result saved for this specific video yet.';
       const controls='<div class="ac-video-controls"><div class="ac-video-select-row"><label>Video<select id="ac-video">'+W.videos(c).map(x=>'<option value="'+esc(x.id)+'" '+(x.id===v.id?'selected':'')+'>'+esc(x.title)+'</option>').join('')+'</select></label>'+quickToggle+'</div><div class="ac-age-grid">'+ageOverview(c,v)+'</div><p class="ac-ready-note"><b>Saved checkpoints for this video:</b> '+esc(savedText)+'.</p><p>'+normalLine+'</p>'+(hasCheckpoint?comparisonDetail:'')+quickPanel+'</div>';
-      const cohortCopy=normalSample?' The '+esc(age.label)+' creator normal is still built from '+esc(normalSample)+' eligible video'+(normalSample===1?'':'s')+'.':'';
+      const cohortCopy=normalSample?' The '+esc(age.label)+' normal is still built from '+esc(normalSample)+' similar earlier video'+(normalSample===1?'':'s')+'.':'';
       const numbersHtml=hasCheckpoint?metricsHtml(r,d):'<div class="ac-why ac-why-missing"><p><b>No '+esc(age.label)+' result is saved for this video.</b></p><p>This video currently has: '+esc(savedText)+'.'+cohortCopy+'</p><p>The creator normal and the video result are separate. The normal can be ready even when this older video was never saved at this checkpoint. Switch to a saved checkpoint above, or import the missing '+esc(age.label)+' result if Studio can still return it.</p></div>';
       const actions='<div class="actions ac-video-actions">'+(v.native&&!v.engineId?action('result','Update this video’s results'):action('import',v.engineId?'Update imported results':'Import results'))+action('baseline','Build / update baseline')+action('diagnosis','Use this in Diagnosis')+'</div>';
       return '<div class="ac-shell">'+
