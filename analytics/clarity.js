@@ -87,7 +87,7 @@
 
   function diagnose(r,hours=168){
     const age=AGES[hours]||AGES[168],m=metricRead(r);
-    if(!r||r.status!=='compared'||!Object.values(r.comparisons||{}).some(x=>n(x?.multiple)!==null||n(x?.deltaPp)!==null||n(x?.deltaSeconds)!==null)) return {tone:'muted',kind:'needs_data',headline:'Not enough data yet.',bottleneck:'NOT ENOUGH DATA YET',explain:r?.message||'We need this video compared with what this creator usually gets at the same point after publishing.',next:'Get the missing comparison first. Don’t change the strategy yet.',hardIssues:[],softIssues:[],metrics:m,age};
+    if(!r||r.status!=='compared'||!Object.values(r.comparisons||{}).some(x=>n(x?.multiple)!==null||n(x?.deltaPp)!==null||n(x?.deltaSeconds)!==null)) return {tone:'muted',kind:'needs_data',headline:'Not enough to call this yet.',bottleneck:'NEED MORE DATA',explain:r?.message||'I do not have a fair comparison for this video yet.',next:'Get the missing checkpoint first. I would not change anything yet.',hardIssues:[],softIssues:[],metrics:m,age};
     const outcomeMultiple=n(r.comparisons?.[m.outcomeKey]?.multiple);
     const winner=outcomeMultiple!==null&&outcomeMultiple>=1.7;
     const under=outcomeMultiple!==null&&outcomeMultiple<.7;
@@ -106,31 +106,31 @@
       bottleneck=stageLabel(hard);
       tone=hours<168?'warn':'bad';
       if(hard.length>1){
-        headline=(hours<168?'Early warning: more than one thing looks weak: ':'More than one thing looks weak: ')+bottleneck;
-        explain='These are separate warning signs, not one proven cause. Start with the first weak step: reach, then title / thumbnail, then watch.';
+        headline=hours<168?'A couple things look off so far.':'A couple things look off here.';
+        explain='I would not try to fix all of them at once. Start with the first break, reach, then title / thumbnail, then watch.';
       }else{
-        headline=(hours<168?'Early warning: ':'Main issue: ')+bottleneck;
-        explain='This is the clearest weak point compared with what this creator usually gets at the same age.';
+        headline=hours<168?'So far, this looks like '+(hard[0]==='reach'?'a reach issue.':hard[0]==='packaging'?'a title / thumbnail issue.':'a watch issue.'):'This looks like '+(hard[0]==='reach'?'a reach issue.':hard[0]==='packaging'?'a title / thumbnail issue.':'a watch issue.');
+        explain='This is the one thing that stands out most against what this creator normally gets at the same age.';
       }
     }else if(winner){
       bottleneck=soft.length?'NO FIX NEEDED · '+stageLabel(soft)+' A LITTLE SOFT':'NO CLEAR ISSUE';
       tone='great';
-      headline=soft.length?'Strong result. '+stageLabel(soft)+' is softer than usual, but the video still worked.':'Strong result. Nothing obvious is broken.';
-      explain='The video is at '+fmtMultiple(outcomeMultiple)+' of its usual result. Treat the softer metric as a lesson for the next video, not a rescue order.';
+      headline=soft.length?'This video worked. One thing is a little soft, but I would not mess with the winner.':'This video worked. I would not try to fix it.';
+      explain='The video is at '+fmtMultiple(outcomeMultiple)+' of its usual result. Use the softer number as a note for the next video, not a reason to start changing this one.';
     }else if(under){
       bottleneck=soft.length?stageLabel(soft):'CAUSE NOT CLEAR';
       tone='warn';
-      headline='The result is below usual, but the cause is not clear yet.';
-      explain='The video is at '+fmtMultiple(outcomeMultiple)+' of its normal result, but the numbers do not point to one clear reason yet.';
+      headline='This is below normal, but I cannot pin it on one thing yet.';
+      explain='The video is at '+fmtMultiple(outcomeMultiple)+' of its usual result, but the numbers are not giving me one clean reason why.';
     }else if(soft.length){
       bottleneck='CHECK THIS · '+stageLabel(soft);
       tone='warn';
-      headline=stageLabel(soft)+' is a little soft, but not enough to overreact.';
-      explain='One number is below usual, but the full result does not justify a big change yet.';
+      headline='One thing is a little soft, but I would not react to it yet.';
+      explain=stageLabel(soft)+' is below usual, but not enough to make me change the strategy from this alone.';
     }else{
       bottleneck='NO CLEAR ISSUE';
-      headline='Nothing looks clearly broken here.';
-      explain='These numbers are close to what this creator usually gets at the same age.';
+      headline='Nothing here is making me want to change anything.';
+      explain='The numbers are pretty close to what this creator normally gets at the same age.';
     }
     const all=[...new Set([...hard,...soft])];
     const expansionContext=expandedAudience&&soft.includes('packaging')&&!winner;
@@ -157,7 +157,7 @@
     const d=diagnose(r,hours),c=r?.comparisons||{},outcomeKey=d.metrics?.outcomeKey;
     if(d.outcomeMultiple!==null&&d.outcomeMultiple!==undefined){
       const outcomeLabel=outcomeKey==='engagedViews'?'Engaged views':'Views';
-      const hardStatus=d.hardIssues?.length?(d.hardIssues.length>1?'More than one thing is weak':d.hardIssues[0]==='reach'?'Reach is below usual':d.hardIssues[0]==='packaging'?'CTR is below usual':'Watch is below usual'):null;
+      const hardStatus=d.hardIssues?.length?(d.hardIssues.length>1?'A couple things look off':d.hardIssues[0]==='reach'?'Looks like reach':d.hardIssues[0]==='packaging'?'Looks like title / thumbnail':'Looks like watch'):null;
       const status=d.kind==='diagnosed'?(hardStatus||(d.winner?'Strong result':d.softIssues?.length?'One thing to check':'In the usual range')):age.purpose;
       return {tone:d.tone||'muted',score:outcomeLabel+' '+fmtMultiple(d.outcomeMultiple),status};
     }
@@ -165,7 +165,7 @@
     const fair=[imp,ctr,ret,apv,avd].some(x=>x!==null);
     if(fair){
       const score=imp!==null?'Impressions '+fmtMultiple(imp):ctr!==null?'CTR '+(ctr>=0?'+':'')+ctr.toFixed(1)+' pp':'Watch data ready';
-      const hardStatus=d.hardIssues?.length?(d.hardIssues.length>1?'More than one thing is weak':d.hardIssues[0]==='reach'?'Reach is below usual':d.hardIssues[0]==='packaging'?'CTR is below usual':'Watch is below usual'):null;
+      const hardStatus=d.hardIssues?.length?(d.hardIssues.length>1?'A couple things look off':d.hardIssues[0]==='reach'?'Looks like reach':d.hardIssues[0]==='packaging'?'Looks like title / thumbnail':'Looks like watch'):null;
       const status=d.kind==='diagnosed'?(hardStatus||(d.softIssues?.length?'One thing to check':'Comparison ready')):'Comparison ready';
       return {tone:d.tone||'normal',score,status};
     }
@@ -413,8 +413,8 @@
     function strategistReadHtml(c,v,r,d,h){
       const s=strategistRead(c,v,r,d,h);
       return '<section class="ac-strategist '+s.tone+'"><div class="ac-strategist-top"><div><span>VIDEO JOB</span><div class="ac-job-row"><select data-ac-job-select><option value="Unassigned" '+(s.job==='Unassigned'?'selected':'')+'>Unassigned</option><option value="Reach" '+(s.job==='Reach'?'selected':'')+'>Reach</option><option value="Trust" '+(s.job==='Trust'?'selected':'')+'>Trust</option><option value="Convert" '+(s.job==='Convert'?'selected':'')+'>Convert</option></select><small>Changes how the system interprets success, not the imported analytics.</small></div><small>'+esc(s.jobMeaning)+'</small></div><div><span>PROGRAM GOAL</span><b>'+esc(s.goal)+'</b>'+(s.desiredAudience?'<small>Desired audience: '+esc(s.desiredAudience)+'</small>':'')+'<small>'+esc(s.goalLink)+'</small></div></div>'+
-        '<div class="ac-strategist-read"><span>SYSTEM INTERPRETATION</span><b>'+esc(s.meaning)+'</b></div>'+
-        '<div class="ac-strategist-next"><div><span>COACH NEXT MOVE</span><b>'+esc(s.next)+'</b></div><div><span>MEASURE</span><b>'+esc(s.measure)+'</b></div><div><span>PROTECT</span><b>'+esc(s.protect)+'</b></div></div>'+
+        '<div class="ac-strategist-read"><span>WHAT I THINK IS HAPPENING</span><b>'+esc(s.meaning)+'</b></div>'+
+        '<div class="ac-strategist-next"><div><span>WHAT I WOULD DO NEXT</span><b>'+esc(s.next)+'</b></div><div><span>WHAT I WOULD WATCH</span><b>'+esc(s.measure)+'</b></div><div><span>DO NOT BREAK</span><b>'+esc(s.protect)+'</b></div></div>'+
       '</section>';
     }
 
