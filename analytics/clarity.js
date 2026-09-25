@@ -174,6 +174,63 @@
     return {tone:'muted',score:'No fair comparison',status:age.purpose};
   }
 
+  function quickStrategistRead(r,d,hours=168){
+    const c=r?.comparisons||{},m=d?.metrics||{},parts=[];
+    const outcomeKey=m.outcomeKey||'engagedViews',outcomeLabel=outcomeKey==='engagedViews'?'Engaged views':'Views';
+    const outcome=n(c[outcomeKey]?.multiple),imp=n(c.impressions?.multiple),ctr=n(c.ctr?.deltaPp);
+    const ret=n(c.retention30?.deltaPp),apv=n(c.apv?.deltaPp),avd=n(c.avdSeconds?.deltaSeconds);
+    const first=d?.hardIssues?.[0]||d?.softIssues?.[0]||null;
+    const pp=x=>Math.abs(x).toFixed(1)+' pp';
+    const watchLine=ret!==null
+      ?(Math.abs(ret)<2?'first 30 seconds are basically normal':'first 30 seconds are '+pp(ret)+' '+(ret>0?'above':'below')+' normal')
+      :apv!==null
+        ?(Math.abs(apv)<2?'APV is basically normal':'APV is '+pp(apv)+' '+(apv>0?'above':'below')+' normal')
+        :avd!==null
+          ?(Math.abs(avd)<30?'AVD is basically normal':'AVD is '+Math.abs(Math.round(avd))+' sec '+(avd>0?'above':'below')+' normal')
+          :null;
+    if(outcome!==null)parts.push(outcomeLabel+(outcomeKey==='engagedViews'?' are ':' is ')+fmtMultiple(outcome)+' normal');
+    if(imp!==null)parts.push('impressions are '+fmtMultiple(imp)+' normal');
+    if(ctr!==null)parts.push(Math.abs(ctr)<.5?'CTR is basically normal':'CTR is '+pp(ctr)+' '+(ctr>0?'above':'below')+' normal');
+    if(watchLine)parts.push(watchLine);
+    let why=parts.length?parts.join(', ')+'.':'I do not have enough clean comparison data yet.';
+    let doNext='Keep the current plan and use the next comparable checkpoint to see if anything repeats.';
+    let how='Do not change multiple things at once. Use the next clean comparison to confirm the read.';
+    if(d?.kind==='needs_data'){
+      why=d.explain||'I do not have a fair comparison yet.';
+      doNext='Get the missing checkpoint first. I would not change anything yet.';
+      how='Pull the missing result at the same video age, then run the comparison again.';
+    }else if(d?.winner){
+      why+=' The video still produced a strong result, so I would not turn the softer number into a rescue project.';
+      doNext='Leave the winner alone. Carry the softer metric forward as a note for the next video.';
+      how='Check whether that same weak spot shows up again on the next comparable upload before changing anything.';
+    }else if((d?.hardIssues||[]).length>1){
+      why+=' More than one thing is off, so I would start with the first break instead of trying to fix everything.';
+      doNext='Start with '+(first==='reach'?'reach':first==='packaging'?'the title / thumbnail':'watch')+'. Do not change the whole strategy at once.';
+      how='Check reach first, then title / thumbnail, then watch. If one step is explained by traffic source or audience mix, move to the next. Change one major variable at a time.';
+    }else if(first==='reach'){
+      why+=' That is why I am looking at reach before the title / thumbnail or the video itself.';
+      doNext='Check Browse and Suggested first. If distribution is genuinely low, I would change the next idea or angle before touching everything else.';
+      how='Open traffic sources and compare Browse / Suggested with this creator’s normal. Then compare the topic and angle with recent winners. If CTR and watch are healthy but distribution is low, change the next idea, not the thumbnail or hook.';
+    }else if(first==='packaging'){
+      why+=' That points me to the title / thumbnail before the actual video.';
+      doNext='Test a meaningfully different title / thumbnail promise. Keep the topic and video itself stable.';
+      how='Break CTR out by traffic source. If Browse / Suggested CTR is still clearly low, test the package. If wider distribution explains the lower CTR, do not blame the thumbnail.';
+    }else if(first==='retention'){
+      why+=' That points me to the viewing experience before the topic or package.';
+      doNext='Open the retention graph and find the first real drop before changing the topic or thumbnail.';
+      how='Pull the exact first-30-second number if Studio has it, then compare the opening with the promise from the title / thumbnail. Fix the first meaningful drop, not the whole video blindly.';
+    }else if(d?.under){
+      why+=' The result is down, but I still do not have one clean cause.';
+      doNext='Do not guess. Check traffic sources and the retention curve before making a change.';
+      how='Use traffic source to rule reach / CTR in or out, then use exact retention data to see whether watch is the actual break.';
+    }else{
+      why+=' Nothing is far enough away from normal to make me want to force a fix.';
+      doNext='Keep going. I would use the next comparable video as another clean test.';
+      how='Protect what is working and only react if the same issue starts repeating across comparable videos.';
+    }
+    return {why,doNext,how};
+  }
+
   function patternFromDiagnoses(diags){
     const usable=(diags||[]).filter(Boolean);
     const hard={reach:0,packaging:0,retention:0},soft={reach:0,packaging:0,retention:0};
@@ -195,7 +252,7 @@
       return c.coachOS?.analytics?.videoJobs?.[v?.engineId||v?.id]||v?.native?.coachOS?.intent?.job||v?.native?.job||o?.job||'Unassigned';
     }
     function strategistRead(c,v,r,d,h){
-      const job=videoJob(c,v,h),plan=c.coachOS?.plan90||{},ctx=c.coachOS?.baseline?.context||{},intent=v?.native?.coachOS?.intent||{};
+      const job=videoJob(c,v,h),plan=c.coachOS?.plan90||{},ctx=c.coachOS?.baseline?.context||{},intent=v?.native?.coachOS?.intent||{},quick=quickStrategistRead(r,d,h);
       const goal=plan.outcome||ctx.channelGoal||ctx.businessGoal||'No 90-day goal saved yet',desiredAudience=ctx.desiredAudience||'';
       const savedMetric=intent.primaryMetric||plan.primaryMetric||'',savedGuard=intent.guardrails||plan.guardrails||'';
       const hard=d.hardIssues||[],soft=d.softIssues||[],first=['reach','packaging','retention'].find(x=>hard.includes(x))||['reach','packaging','retention'].find(x=>soft.includes(x))||null;
@@ -231,15 +288,30 @@
         else if(first==='retention'){meaning='People are leaving earlier than usual, so they may not even be reaching the proof or CTA.';next='Check promise delivery, proof, and CTA timing. Then confirm the business result before blaming watch time for the business problem.';}
         else{meaning='I am not seeing a clear YouTube problem here. The business result should decide what happens next.';next='Judge the actual conversion result. I would not change a healthy Convert video just because it got fewer views than a Reach video.';}
       }else{
-        jobMeaning='This video still needs a job, Reach, Trust, or Convert.';
-        goalLink='I can still tell you what looks off, but I cannot judge whether the video did its job until that job is set.';
-        measure=savedMetric||'Use the metric that matches the video’s intended job';
-        protect=savedGuard||'The parts of reach, click, and watch that are already healthy';
-        meaning=first
-          ?(first==='reach'?'YouTube showed this less than usual.':first==='packaging'?'The title / thumbnail is the clearest weak point.':'Watch performance is the clearest weak point.')+' Assign the video job before turning that into a bigger strategy decision.'
-          :'No clear performance problem is showing, but the video job is still unassigned.';
-        next='Set the job when you can. Until then, treat this as a clue on this video, not a reason to change the whole channel strategy.';
-        tone=d.kind==='needs_data'?'muted':'warn';
+        jobMeaning='This one is not tagged Reach, Trust, or Convert yet. That is okay, I can still read the performance. The job just tells me how hard to judge success.';
+        goalLink='I can tell you what looks off right now. Set the job when you want the dashboard to judge whether the video did what it was actually meant to do.';
+        if(first==='reach'){
+          meaning='Reach is the first thing I would look at. YouTube showed this to fewer people than usual, while the click and watch side look healthier. I would not start by changing the title, thumbnail, or opening.';
+          next='Check Browse and Suggested first. If distribution is genuinely low, I would adjust the next idea or angle before messing with the package or video.';
+          measure=savedMetric||'Engaged views, impressions, and traffic-source mix';
+          protect=savedGuard||'CTR and watch quality are healthier. Do not break those while trying to get more reach.';
+        }else if(first==='packaging'){
+          meaning='The video is getting enough exposure to judge the click, and the title / thumbnail is the first thing I would look at.';
+          next='Check CTR by traffic source. If it is still weak inside comparable Browse / Suggested traffic, test a meaningfully different title / thumbnail.';
+          measure=savedMetric||'CTR by traffic source';
+          protect=savedGuard||'Keep the topic and actual video stable while testing the package.';
+        }else if(first==='retention'){
+          meaning='People are getting into the video, but watch is the first thing I would look at. I would not change the topic or thumbnail before checking where viewers actually leave.';
+          next='Open the retention graph, pull the exact first 30 seconds if Studio has it, and find the first meaningful drop.';
+          measure=savedMetric||'First 30 seconds, APV / AVD, and the first meaningful retention drop';
+          protect=savedGuard||'Do not shrink a good idea or package just to manufacture better retention.';
+        }else{
+          meaning='Nothing here is making me want to change the strategy right now.';
+          next='Keep going and use the next comparable checkpoint or video to see whether anything actually repeats.';
+          measure=savedMetric||'Engaged views, CTR, and watch quality';
+          protect=savedGuard||'Do not manufacture a problem just because the video job is still unassigned.';
+        }
+        tone=d.kind==='needs_data'?'muted':tone;
       }
 
       if(d.winner&&soft.length){
@@ -268,7 +340,7 @@
         else next='This mature result is useful, but it is not strong enough by itself to rewrite the content plan. Keep the next planned video job and wait for repetition.';
         protect+=' At 28 days, focus on what this video teaches the content plan.';
       }
-      return {job,goal,desiredAudience,goalLink,jobMeaning,meaning,next,measure,protect,tone};
+      return {job,goal,desiredAudience,goalLink,jobMeaning,meaning,next,measure,protect,tone,why:quick.why,how:quick.how};
     }
 
   function install(win){
@@ -413,8 +485,8 @@
     function strategistReadHtml(c,v,r,d,h){
       const s=strategistRead(c,v,r,d,h);
       return '<section class="ac-strategist '+s.tone+'"><div class="ac-strategist-top"><div><span>VIDEO JOB</span><div class="ac-job-row"><select data-ac-job-select><option value="Unassigned" '+(s.job==='Unassigned'?'selected':'')+'>Unassigned</option><option value="Reach" '+(s.job==='Reach'?'selected':'')+'>Reach</option><option value="Trust" '+(s.job==='Trust'?'selected':'')+'>Trust</option><option value="Convert" '+(s.job==='Convert'?'selected':'')+'>Convert</option></select><small>Changes how the system interprets success, not the imported analytics.</small></div><small>'+esc(s.jobMeaning)+'</small></div><div><span>PROGRAM GOAL</span><b>'+esc(s.goal)+'</b>'+(s.desiredAudience?'<small>Desired audience: '+esc(s.desiredAudience)+'</small>':'')+'<small>'+esc(s.goalLink)+'</small></div></div>'+
-        '<div class="ac-strategist-read"><span>WHAT I THINK IS HAPPENING</span><b>'+esc(s.meaning)+'</b></div>'+
-        '<div class="ac-strategist-next"><div><span>WHAT I WOULD DO NEXT</span><b>'+esc(s.next)+'</b></div><div><span>WHAT I WOULD WATCH</span><b>'+esc(s.measure)+'</b></div><div><span>DO NOT BREAK</span><b>'+esc(s.protect)+'</b></div></div>'+
+        '<div class="ac-strategist-read"><span>MY STRATEGIST READ</span><b>'+esc(s.meaning)+'</b><small><b>Why:</b> '+esc(s.why)+'</small></div>'+
+        '<div class="ac-strategist-next"><div><span>WHAT I WOULD DO NEXT</span><b>'+esc(s.next)+'</b></div><div><span>HOW I WOULD CHECK IT</span><b>'+esc(s.how)+'</b></div><div><span>WHAT I WOULD WATCH</span><b>'+esc(s.measure)+'</b></div><div><span>DO NOT BREAK</span><b>'+esc(s.protect)+'</b></div></div>'+
       '</section>';
     }
 
@@ -622,7 +694,7 @@
       const p=W.prefs(c),v=selectedVideo(c);if(!v)return full;
       const b=matchingBaseline(c,v,p.hours); if(b)p.baselineId=b.id;
       let r;try{r=W.compare(c,v,b,p.hours);}catch(e){r={status:'needs_evidence',comparisons:{},message:e.message};}
-      const d=diagnose(r,p.hours),age=AGES[p.hours],baselineName=b?.label||'No usual result saved yet';
+      const d=diagnose(r,p.hours),quick=quickStrategistRead(r,d,p.hours),age=AGES[p.hours],baselineName=b?.label||'No usual result saved yet';
       const quickToggle='<button class="btn ac-quick-open" data-ac-quick-toggle>'+(p.quickOpen?'Close quick check':'Quick check newest / custom video')+'</button>';
       const quickPanel=p.quickOpen?quickCheckHtml(c,b,p.hours):'';
       const memberNames=(r.baseline?.memberVideoIds||[]).map(id=>W.videos(c).find(x=>(x.engineId||x.id)===id)?.title||id);
@@ -634,11 +706,13 @@
       const controls='<div class="ac-video-controls"><div class="ac-video-select-row"><label>Video<select id="ac-video">'+W.videos(c).map(x=>'<option value="'+esc(x.id)+'" '+(x.id===v.id?'selected':'')+'>'+esc(x.title)+'</option>').join('')+'</select></label>'+quickToggle+'</div><div class="ac-age-grid">'+ageOverview(c,v)+'</div><p class="ac-ready-note"><b>Saved checkpoints for this video:</b> '+esc(savedText)+'.</p><p>'+normalLine+'</p>'+(hasCheckpoint?comparisonDetail:'')+quickPanel+'</div>';
       const cohortCopy=normalSample?' The '+esc(age.label)+' normal is still built from '+esc(normalSample)+' similar earlier video'+(normalSample===1?'':'s')+'.':'';
       const numbersHtml=hasCheckpoint?metricsHtml(r,d):'<div class="ac-why ac-why-missing"><p><b>No '+esc(age.label)+' result is saved for this video.</b></p><p>This video currently has: '+esc(savedText)+'.'+cohortCopy+'</p><p>The creator normal and the video result are separate. The normal can be ready even when this older video was never saved at this checkpoint. Switch to a saved checkpoint above, or import the missing '+esc(age.label)+' result if Studio can still return it.</p></div>';
+      const quickAction='<div class="ac-quick-action '+d.tone+'"><div><span>WHAT I WOULD DO</span><b>'+esc(quick.doNext)+'</b></div><div><span>HOW I WOULD CHECK IT</span><b>'+esc(quick.how)+'</b></div></div>';
       const actions='<div class="actions ac-video-actions">'+(v.native&&!v.engineId?action('result','Update this video’s results'):action('import',v.engineId?'Update imported results':'Import results'))+action('baseline','Build / update baseline')+action('diagnosis','Use this in Diagnosis')+'</div>';
       return '<div class="ac-shell">'+
-        '<section class="ac-section ac-video-section '+d.tone+'"><div class="ac-section-head ac-video-head"><div class="ac-section-index">02</div><div><div class="ac-kicker">THIS VIDEO READ · '+age.label+' · '+age.name+'</div><h2>'+esc(d.headline)+'</h2><p>'+esc(d.explain)+'</p></div><div class="ac-top-badge"><span>CURRENT CALL</span><b>'+esc(d.bottleneck)+'</b><small>'+esc(age.act)+'</small></div></div>'+
+        '<section class="ac-section ac-video-section '+d.tone+'"><div class="ac-section-head ac-video-head"><div class="ac-section-index">02</div><div><div class="ac-kicker">MY QUICK READ · '+age.label+' · '+age.name+'</div><h2>'+esc(d.headline)+'</h2><p>'+esc(quick.why)+'</p></div><div class="ac-top-badge"><span>CURRENT CALL</span><b>'+esc(d.bottleneck)+'</b><small>'+esc(age.act)+'</small></div></div>'+
         '<div class="ac-section-body">'+controls+
           '<div class="ac-subsection"><div class="ac-subsection-label">HOW THE NUMBERS LOOK</div>'+numbersHtml+'</div>'+
+          quickAction+
           strategistReadHtml(c,v,r,d,p.hours)+
           '<div class="ac-support-row">'+diagnosisWhyHtml(r,d)+dataCoverageHtml(c,b,p.hours)+'</div>'+
           actions+
@@ -718,7 +792,7 @@
       .ac-age-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.ac-age{border:1px solid var(--line,#d9e0e2);border-radius:12px;background:transparent;padding:11px;text-align:left;display:grid;gap:4px;cursor:pointer;color:inherit}.ac-age.on{border-color:#245c5b;box-shadow:inset 0 0 0 1px #245c5b;background:rgba(36,92,91,.035)}.ac-age span{font-size:10px;font-weight:800;letter-spacing:.05em}.ac-age b{font-size:14px}.ac-age small{color:var(--muted,#68757d)}
       .ac-subsection{display:grid;gap:9px}.ac-subsection-label{font-size:10px;font-weight:900;letter-spacing:.09em;color:var(--muted,#68757d)}
       .ac-metrics{border:0!important;background:transparent!important;border-radius:0!important;padding:0!important;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.ac-metric{border:1px solid var(--line,#d9e0e2);border-radius:12px;padding:14px;display:grid;gap:5px;border-top:4px solid #718189}.ac-metric.bad{border-top-color:#b54b4b;background:rgba(181,75,75,.05)}.ac-metric.warn{border-top-color:#b5822e;background:rgba(181,130,46,.045)}.ac-metric.good,.ac-metric.great{border-top-color:#2f8464;background:rgba(47,132,100,.05)}.ac-metric.normal{border-top-color:#4d7884}.ac-metric.muted{opacity:.72}.ac-stage{font-size:10px;font-weight:900;letter-spacing:.1em}.ac-metric h4{margin:0;font-size:15px}.ac-values{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.ac-values b{font-size:23px}.ac-values span{font-size:12px;color:var(--muted,#68757d)}.ac-metric strong{font-size:13px}.ac-metric p,.ac-metric small{margin:0;color:var(--muted,#68757d);font-size:12px;line-height:1.4}
-      .ac-next-inline{border:1px solid var(--line,#d9e0e2);border-left:5px solid #55757a;border-radius:12px;padding:14px 15px;display:grid;grid-template-columns:minmax(180px,280px) minmax(0,1fr);gap:16px;align-items:center;background:rgba(84,110,116,.03)}.ac-next-inline.bad{border-left-color:#b54b4b}.ac-next-inline.warn{border-left-color:#b5822e}.ac-next-inline.good,.ac-next-inline.great{border-left-color:#2f8464}.ac-next-inline span{font-size:9px;font-weight:900;letter-spacing:.09em}.ac-next-inline b{display:block;margin-top:3px}.ac-next-inline p{margin:0;line-height:1.45}
+      .ac-next-inline{border:1px solid var(--line,#d9e0e2);border-left:5px solid #55757a;border-radius:12px;padding:14px 15px;display:grid;grid-template-columns:minmax(180px,280px) minmax(0,1fr);gap:16px;align-items:center;background:rgba(84,110,116,.03)}.ac-next-inline.bad{border-left-color:#b54b4b}.ac-next-inline.warn{border-left-color:#b5822e}.ac-next-inline.good,.ac-next-inline.great{border-left-color:#2f8464}.ac-next-inline span{font-size:9px;font-weight:900;letter-spacing:.09em}.ac-next-inline b{display:block;margin-top:3px}.ac-next-inline p{margin:0;line-height:1.45}.ac-quick-action{border:1px solid var(--line,#d9e0e2);border-left:5px solid #55757a;border-radius:12px;padding:12px 14px;display:grid;grid-template-columns:1fr 1.25fr;gap:14px;background:rgba(84,110,116,.03)}.ac-quick-action.bad{border-left-color:#b54b4b}.ac-quick-action.warn{border-left-color:#b5822e}.ac-quick-action.good,.ac-quick-action.great{border-left-color:#2f8464}.ac-quick-action>div{display:grid;gap:4px}.ac-quick-action span{font-size:9px;font-weight:900;letter-spacing:.09em}.ac-quick-action b{font-size:11px;line-height:1.45}@media(max-width:760px){.ac-quick-action{grid-template-columns:1fr}}
       .ac-video-actions{padding-top:2px}
       .ac-baseline-grid,.ac-channel{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.ac-baseline-grid>div,.ac-channel-card{padding:13px;border:1px solid var(--line,#d9e0e2);border-radius:11px;display:grid;gap:3px}.ac-baseline-grid span,.ac-channel-card span{font-size:11px;font-weight:800}.ac-baseline-grid b,.ac-channel-card b{font-size:20px}.ac-baseline-grid small,.ac-channel-card small{color:var(--muted,#68757d)}
       .ac-view-counts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:10px}.ac-view-counts>div{border:1px solid var(--line,#d9e0e2);border-radius:10px;padding:10px;display:grid;gap:2px}.ac-view-counts span{font-size:9px;font-weight:900;letter-spacing:.05em;text-transform:uppercase}.ac-view-counts b{font-size:17px}.ac-view-counts small{font-size:10px;opacity:.68}.ac-source-mix{margin-top:12px;border:1px solid var(--line,#d9e0e2);border-radius:12px;padding:12px}.ac-source-grid,.ac-normal-source{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.ac-source-grid>div,.ac-normal-cell{border:1px solid var(--line,#d9e0e2);border-radius:9px;padding:9px;display:grid;gap:2px}.ac-source-grid span,.ac-normal-cell span{font-size:9px;font-weight:900;letter-spacing:.05em;text-transform:uppercase}.ac-source-grid b,.ac-normal-cell b{font-size:15px}.ac-source-grid small,.ac-normal-cell small,.ac-source-note,.ac-normal-note{font-size:10px;line-height:1.4;opacity:.68}.ac-source-note{display:block;margin-top:8px}.ac-normal-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.ac-normal-card{border:1px solid var(--line,#d9e0e2);border-left:4px solid #55757a;border-radius:12px;padding:12px;display:grid;gap:10px}.ac-normal-channel{margin-top:12px;border:1px solid var(--line,#d9e0e2);border-left:4px solid #2f6873;border-radius:12px;padding:14px;display:grid;gap:10px}.ac-normal-channel>p{margin:0;font-size:12px;opacity:.72}.ac-normal-card.muted{opacity:.65}.ac-normal-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.ac-normal-card-head span{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}.ac-normal-card-head b{font-size:12px}.ac-normal-cells{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.ac-normal-card details{margin:0}.ac-normal-card summary{cursor:pointer;font-size:11px;font-weight:800;margin-bottom:8px}
@@ -734,7 +808,7 @@
 
       .ac-manual-dialog{width:min(850px,94vw);max-height:90vh;overflow:auto;border:1px solid var(--line,#bbc7c7);border-radius:14px;padding:20px;background:var(--card,#fff);color:inherit}.ac-manual-dialog h2{margin-top:0}.ac-manual-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:14px 0}.ac-manual-grid label,.ac-manual-source{display:grid;gap:4px}.ac-manual-grid span,.ac-manual-source span{font-size:10px;font-weight:800}.ac-manual-source{margin:10px 0}.ac-manual-error{color:#a23d3d;font-size:12px}@media(max-width:650px){.ac-manual-grid{grid-template-columns:1fr 1fr}}
 
-      .ac-strategist{border:1px solid var(--line,#d9e0e2);border-left:5px solid #55757a;border-radius:12px;padding:13px;display:grid;gap:11px;background:rgba(84,110,116,.025)}.ac-strategist.bad{border-left-color:#b54b4b}.ac-strategist.warn{border-left-color:#b5822e}.ac-strategist.good,.ac-strategist.great{border-left-color:#2f8464}.ac-strategist-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,.8fr);gap:10px}.ac-strategist-top>div,.ac-strategist-read,.ac-strategist-next>div{display:grid;gap:3px}.ac-strategist span{font-size:9px;font-weight:900;letter-spacing:.08em}.ac-strategist-top b{font-size:13px}.ac-strategist-top small{font-size:10px;line-height:1.4;color:var(--muted,#68757d)}.ac-strategist-read{padding:10px;border-radius:9px;background:rgba(84,110,116,.06)}.ac-strategist-read b{font-size:12px;line-height:1.45}.ac-strategist-next{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px}.ac-strategist-next>div{border-top:1px solid var(--line,#d9e0e2);padding-top:8px}.ac-strategist-next b{font-size:11px;line-height:1.4}
+      .ac-strategist{border:1px solid var(--line,#d9e0e2);border-left:5px solid #55757a;border-radius:12px;padding:13px;display:grid;gap:11px;background:rgba(84,110,116,.025)}.ac-strategist.bad{border-left-color:#b54b4b}.ac-strategist.warn{border-left-color:#b5822e}.ac-strategist.good,.ac-strategist.great{border-left-color:#2f8464}.ac-strategist-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,.8fr);gap:10px}.ac-strategist-top>div,.ac-strategist-read,.ac-strategist-next>div{display:grid;gap:3px}.ac-strategist span{font-size:9px;font-weight:900;letter-spacing:.08em}.ac-strategist-top b{font-size:13px}.ac-strategist-top small{font-size:10px;line-height:1.4;color:var(--muted,#68757d)}.ac-strategist-read{padding:10px;border-radius:9px;background:rgba(84,110,116,.06)}.ac-strategist-read b{font-size:12px;line-height:1.45}.ac-strategist-next{display:grid;grid-template-columns:1.7fr 1.4fr 1fr 1fr;gap:8px}.ac-strategist-next>div{border-top:1px solid var(--line,#d9e0e2);padding-top:8px}.ac-strategist-next b{font-size:11px;line-height:1.4}
       @media(max-width:760px){.ac-strategist-top,.ac-strategist-next{grid-template-columns:1fr}}
 
       .ac-job-row{display:flex;gap:8px;align-items:center}.ac-job-row select{min-width:110px}.ac-job-row small{font-size:9px!important}
@@ -783,5 +857,5 @@
     if(win.AcceleratorDeskBridge?.analyticsActive?.()) rerender();
   }
 
-  return {strategistRead,countSignal,rateSignal,durationSignal,metricRead,diagnose,ageCardRead,patternFromDiagnoses,install};
+  return {strategistRead,quickStrategistRead,countSignal,rateSignal,durationSignal,metricRead,diagnose,ageCardRead,patternFromDiagnoses,install};
 });
