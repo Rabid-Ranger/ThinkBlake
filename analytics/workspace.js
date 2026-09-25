@@ -7,7 +7,13 @@ function videoJob(c,v){return c?.coachOS?.analytics?.videoJobs?.[v?.engineId||v?
 function videos(c){const all=new Map();for(const v of c.videos||[])all.set(v.id,{id:v.id,title:v.package?.finalTitle||v.title||'Untitled video',native:v,published:v.cta?.publishDate||v.publishDate||''});for(const o of c.analyticsFoundation?.observations||[]){const native=[...all.values()].find(v=>[v.id,v.native?.cta?.publishedUrl,v.native?.publishedUrl,v.native?.url].filter(Boolean).some(x=>A.canonicalVideoId(x)===o.videoId));if(native){native.engineId=o.videoId;continue;}all.set(o.videoId,{id:o.videoId,engineId:o.videoId,title:o.title||o.videoId,published:o.publishedAt});}return [...all.values()].sort((a,b)=>String(b.published).localeCompare(String(a.published)));}
 function ageNormalName(h){return (h===24?'24-hour':h===48?'48-hour':h===168?'7-day':'28-day')+' normal';}
 function baselines(c,h){
- const engine=(c.analyticsFoundation?.policies||[]).filter(p=>p.windowHours===h).slice().sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||''))).map(p=>({id:p.id,label:ageNormalName(h)+(p.format==='edited-long-form'?' · long-form':' · '+p.format),engine:p}));
+ const seen=new Set(),engine=[];
+ for(const p of (c.analyticsFoundation?.policies||[]).filter(p=>p.windowHours===h).slice().sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')))){
+   const metric=p.primaryMetric||'impressions',def=typeof A.definitionFor==='function'?A.definitionFor(p,metric):(p.metricDefinitions?.[metric]||p.definitionId||'unknown');
+   const key=[p.windowHours,p.format,p.eraId,p.job||'',p.traffic||'all',p.paid||'unknown',metric,def].join('|');
+   if(seen.has(key))continue;seen.add(key);
+   engine.push({id:p.id,label:ageNormalName(h)+(p.format==='edited-long-form'?' · long-form':' · '+p.format),engine:p});
+ }
  const manual=(c.coachOS?.baseline?.sets||[]).filter(b=>!b.archived&&!b.managedByStudio&&b.window===windows[h]).map(b=>({id:b.id,label:b.name||'Manual normal',manual:b}));
  return [...engine,...manual];
 }
@@ -26,7 +32,7 @@ function matchingBaseline(c,v,h){
 function values(x){return Object.fromEntries(keys.map(k=>{const v=n(x?.[k==='retention30'?'ret30':k]);return[k,v===null?null:['ctr','retention30','apv','browsePct','suggestedPct','searchPct','externalPct'].includes(k)?v/100:v];}));}
 function compare(c,v,b,h,now=new Date().toISOString()){
  if(!v)return {comparisons:{},message:'Choose a video to inspect.'};
- const store=c.analyticsFoundation||A.emptyStore(),native=v.native?.analytics?.[windows[h]],obs=store.observations.filter(o=>o.videoId===(v.engineId||v.id)&&o.windowHours===h).at(-1);
+ const store=c.analyticsFoundation||A.emptyStore(),native=v.native?.analytics?.[windows[h]],obs=store.observations.filter(o=>o.videoId===(v.engineId||v.id)&&o.windowHours===h).slice().sort((a,b)=>(Number(a.revision)||0)-(Number(b.revision)||0)||String(a.acceptedAt||a.capturedAt||'').localeCompare(String(b.acceptedAt||b.capturedAt||''))).at(-1);
  if(b?.engine&&obs){const r=A.compareVideo(store,{videoId:obs.videoId,policyId:b.id,windowHours:h,asOf:now});return {...r,source:obs.source?.report||'',message:r.findings?.[0]?.message||'Record the matching result.',baselineName:b.label};}
  const raw=native|| (obs?Object.fromEntries(keys.map(k=>[k==='retention30'?'ret30':k,obs.metrics[k]==null?null:['ctr','retention30','apv'].includes(k)?obs.metrics[k]*100:obs.metrics[k]])):null),current=values(raw),comparisons={};
  const base=b?.manual,baseline=values(base),def=native?.metricDefinitionId||obs?.definitionId,source=native?.sourceRef||obs?.source?.report||'',verified=native?.windowVerified||obs?.coverage==='exact';
