@@ -377,7 +377,7 @@
     }
     function baselineMetric(c,b,k){const rec=baselineRecord(c,b);return rec?.values?.[k]??null;}
     function baselineOutcome(rec){
-      const k=n(rec?.values?.engagedViews)!==null?'engagedViews':n(rec?.values?.views)!==null?'views':n(rec?.values?.impressions)!==null?'impressions':null;
+      const k=n(rec?.values?.views)!==null?'views':n(rec?.values?.engagedViews)!==null?'engagedViews':n(rec?.values?.impressions)!==null?'impressions':null;
       const a=k?n(rec?.firstValues?.[k]):null,z=k?n(rec?.values?.[k]):null;
       const growth=a&&z!==null?z/a:null;
       return {key:k,current:z,first:a,growth};
