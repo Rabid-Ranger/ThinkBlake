@@ -106,10 +106,10 @@
       bottleneck=stageLabel(hard);
       tone=hours<168?'warn':'bad';
       if(hard.length>1){
-        headline=(hours<168?'More than one stage may be weak: ':'More than one stage is weak: ')+bottleneck;
+        headline=(hours<168?'A couple things need a look: ':'More than one area is weak: ')+bottleneck;
         explain='These are separate abnormal signals, not one proven cause. Start with the earliest weak stage in Reach → Packaging → Retention order, then use the later stage as supporting context.';
       }else{
-        headline=(hours<168?'This may be the issue: ':'Main issue: ')+bottleneck;
+        headline=(hours<168?'First thing to check: ':'Main issue: ')+bottleneck;
         explain='This is the clearest weak part of the video compared with what this creator usually gets at the same point after publishing.';
       }
     }else if(winner){
@@ -159,9 +159,9 @@
     const plainStatus=()=>{
       if(d.winner)return 'Strong result';
       if((d.hardIssues||[]).length>1)return 'More than one thing needs a look';
-      if(issue==='reach')return hours<168?'Reach is low so far':'Reach is below normal';
-      if(issue==='packaging')return 'Title + thumbnail need a look';
-      if(issue==='retention')return 'Retention needs a look';
+      if(issue==='reach')return d.outcomeMultiple!==null&&d.outcomeMultiple>=.7?'Result okay · reach lower':hours<168?'Reach is low so far':'Reach is below normal';
+      if(issue==='packaging')return d.outcomeMultiple!==null&&d.outcomeMultiple>=.7?'Result okay · CTR lower':'Title + thumbnail need a look';
+      if(issue==='retention')return d.outcomeMultiple!==null&&d.outcomeMultiple>=.7?'Result okay · retention lower':'Retention needs a look';
       return d.kind==='diagnosed'?'Looks normal':'Comparison ready';
     };
     if(d.outcomeMultiple!==null&&d.outcomeMultiple!==undefined) return {tone:d.tone||'muted',score:fmtMultiple(d.outcomeMultiple)+' usual',status:plainStatus()};
