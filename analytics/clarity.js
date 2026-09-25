@@ -48,7 +48,7 @@
   }
   function metricRead(r){
     const c=r?.comparisons||{};
-    const outcomeKey=c.engagedViews?.multiple!=null?'engagedViews':'views';
+    const outcomeKey=c.views?.multiple!=null?'views':c.engagedViews?.multiple!=null?'engagedViews':'views';
     const outcome=countSignal(c[outcomeKey]);
     const show=countSignal(c.impressions);
     const click=rateSignal(c.ctr,.5);
@@ -486,8 +486,8 @@
       const c=r?.comparisons||{},v=c.views||{},e=c.engagedViews||{};
       const hasViews=n(v.current)!==null||n(v.baseline)!==null,hasEngaged=n(e.current)!==null||n(e.baseline)!==null;
       if(!hasViews&&!hasEngaged)return '';
-      return '<div class="ac-view-counts"><div><span>Views · new count</span><b>'+fmtCount(v.current)+'</b><small>usual '+fmtCount(v.baseline)+'</small></div>'+
-        '<div><span>Engaged views · old/original count</span><b>'+fmtCount(e.current)+'</b><small>'+(hasEngaged?'usual '+fmtCount(e.baseline):'Not available for this checkpoint')+'</small></div></div>';
+      return '<div class="ac-view-counts"><div><span>Views · current count</span><b>'+fmtCount(v.current)+'</b><small>usual '+fmtCount(v.baseline)+'</small></div>'+
+        '<div><span>Engaged views · original view count</span><b>'+fmtCount(e.current)+'</b><small>'+(hasEngaged?'usual '+fmtCount(e.baseline):'Not available for this checkpoint')+'</small></div></div>';
     }
     function sourceMixHtml(r){
       const c=r?.comparisons||{},rows=[
@@ -521,8 +521,8 @@
         const viewNote=n(rec.values.engagedViews)!==null?'Both view-count methods available':'Engaged views not available yet';
         return '<div class="ac-normal-card"><div class="ac-normal-card-head"><span>'+AGES[h].label+'</span><b>'+esc(rec.sample)+' videos</b></div>'+
           '<div class="ac-normal-cells">'+
-            normalCell('Views · new count',rec.values.views,fmtCount)+
-            normalCell('Engaged views · old count',rec.values.engagedViews,fmtCount,viewNote)+
+            normalCell('Views · current count',rec.values.views,fmtCount)+
+            normalCell('Engaged views · original view count',rec.values.engagedViews,fmtCount,viewNote)+
             normalCell('Impressions',rec.values.impressions,fmtCount)+
             normalCell('CTR',rec.values.ctr,fmtRate)+
             normalCell('First 30 sec',rec.values.retention30,fmtRate)+
