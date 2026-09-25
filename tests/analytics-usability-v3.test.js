@@ -5,10 +5,10 @@ const U=require('../analytics/usability-v3');
 test('checkpoint guide uses the exact decision language requested',()=>{
   assert.equal(U.PHASES[24].label,'24h · Launch');
   assert.equal(U.PHASES[48].label,'48h · Check');
-  assert.equal(U.PHASES[168].label,'7d · Diagnosis');
+  assert.equal(U.PHASES[168].label,'7d · Main read');
   assert.equal(U.PHASES[672].label,'28d · What to make next');
   assert.equal(U.PHASES[2160].label,'90d · Channel Health');
-  assert.match(U.PHASES[48].question,/SHOW, CLICK, or WATCH/i);
+  assert.match(U.PHASES[48].question,/reach, CTR, or watch/i);
   assert.match(U.PHASES[168].decision,/main video decision point/i);
   assert.match(U.PHASES[672].decision,/what the next video should do/i);
   assert.match(U.PHASES[2160].decision,/does not set a per-video baseline/i);
@@ -18,14 +18,14 @@ test('optional checkpoint wording is removed everywhere',()=>{
   const out=U.phaseLabels('<button>24 hours</button><button>48 hours</button><button>7 days</button><button>28 days · optional</button>');
   assert.match(out,/24h · Launch/);
   assert.match(out,/48h · Check/);
-  assert.match(out,/7d · Diagnosis/);
+  assert.match(out,/7d · Main read/);
   assert.match(out,/28d · What to make next/);
   assert.doesNotMatch(out,/optional/i);
 });
 
 test('winner with a soft metric is framed as keep strategy plus watch item',()=>{
-  assert.deepEqual(U.winnerCall('NO FIX NEEDED · PACKAGING A LITTLE SOFT'),{soft:'PACKAGING',label:'KEEP STRATEGY · WATCH PACKAGING'});
-  assert.deepEqual(U.winnerCall('NO FIX NEEDED · RETENTION A LITTLE SOFT'),{soft:'RETENTION',label:'KEEP STRATEGY · WATCH RETENTION'});
+  assert.deepEqual(U.winnerCall('NO FIX NEEDED · TITLE / THUMBNAIL A LITTLE SOFT'),{soft:'TITLE / THUMBNAIL',label:'KEEP STRATEGY · CHECK TITLE / THUMBNAIL'});
+  assert.deepEqual(U.winnerCall('NO FIX NEEDED · WATCH A LITTLE SOFT'),{soft:'WATCH',label:'KEEP STRATEGY · CHECK WATCH'});
   assert.equal(U.winnerCall('NO CLEAR ISSUE'),null);
 });
 
