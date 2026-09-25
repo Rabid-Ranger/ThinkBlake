@@ -447,13 +447,13 @@
       if(n(c.retention30?.current)===null||n(c.retention30?.baseline)===null)missing.push('first 30 seconds');
       if(!['browsePct','suggestedPct','searchPct','externalPct'].some(k=>n(c[k]?.current)!==null&&n(c[k]?.baseline)!==null))missing.push('traffic sources');
       if(n(c.engagedViews?.current)===null||n(c.engagedViews?.baseline)===null)missing.push('Engaged views');
-      let logic='Nothing is weak enough to justify inventing a fix.';
-      if(d.hardIssues?.includes('reach'))logic='Impressions are clearly below this creator’s usual result. Start with topic demand, audience fit, and distribution. Low impressions do not tell us the exact reason by themselves.';
-      else if(d.hardIssues?.includes('packaging'))logic='Reach is not the main problem, but CTR is clearly below usual. That makes the title / thumbnail the next thing to inspect after traffic-source context.';
-      else if(d.hardIssues?.includes('retention'))logic=m.watchKey==='retention30'?'The first 30 seconds are clearly below usual. Inspect the opening and retention curve, but do not assume the cause from one number.':'Watch is clearly below usual based on '+watchLabel+'. The exact first-30-second number is missing, so treat this as a viewing-experience clue, not proof that the hook caused it.';
-      else if(d.softIssues?.length)logic='One number is a little soft, but the full result does not justify a strategy change yet.';
+      let logic='Nothing here is strong enough to make me invent a fix.';
+      if(d.hardIssues?.includes('reach'))logic='YouTube showed this to fewer people than usual. That points me toward the topic, audience fit, and distribution first. Low impressions still do not tell me the exact reason why.';
+      else if(d.hardIssues?.includes('packaging'))logic='Reach looks fine enough, but CTR is low. That makes the title / thumbnail the first thing I would inspect, after checking where the impressions came from.';
+      else if(d.hardIssues?.includes('retention'))logic=m.watchKey==='retention30'?'The first 30 seconds are clearly below usual. I would inspect the opening and retention curve, but I would not pretend one number tells us exactly why.':'Watch is below usual based on '+watchLabel+'. The exact first-30-second number is missing, so I would treat this as a clue, not proof that the hook caused it.';
+      else if(d.softIssues?.length)logic='One number is a little soft, but not enough to make me change the strategy yet.';
       const change=d.hardIssues?.includes('reach')?'If reach looks healthy on comparable topics / traffic sources and CTR or watch becomes the repeated weak point, the diagnosis should move there.':d.hardIssues?.includes('packaging')?'If CTR is healthy inside the same traffic source, or wider distribution explains the lower CTR, title / thumbnail becomes a weaker explanation.':d.hardIssues?.includes('retention')?'If the first 30 seconds and retention curve are healthy, the watch diagnosis weakens.':'Repetition across more comparable videos would make the call stronger.';
-      return '<details class="ac-why-compact"><summary><b>Why this read?</b><span>'+esc(missing.length?'Still missing: '+missing.join(', '):'See the numbers behind the call')+'</span></summary><div class="ac-why-body"><p><b>Why:</b> '+esc(logic)+'</p><ul>'+evidence.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul><p><b>What would change my mind:</b> '+esc(change)+'</p></div></details>';
+      return '<details class="ac-why-compact"><summary><b>Why I am saying that</b><span>'+esc(missing.length?'Still missing: '+missing.join(', '):'See the numbers behind the call')+'</span></summary><div class="ac-why-body"><p><b>What I see:</b> '+esc(logic)+'</p><ul>'+evidence.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul><p><b>What would make me change the call:</b> '+esc(change)+'</p></div></details>';
     }
     function quickCheckHtml(c,b,h){
       const p=W.prefs(c);if(!p.quickOpen)return '<button class="btn ac-quick-open" data-ac-quick-toggle>Quick check newest / custom video</button>';
@@ -604,7 +604,7 @@
       const reads=bestReads(c,8);
       if(!reads.length)return '<section class="ac-section ac-recent-section"><div class="ac-section-head"><div class="ac-section-index">05</div><div><div class="ac-kicker">RECENT VIDEOS</div><h2>No fair video reads yet</h2><p>Add results at the same checkpoints and the list will fill itself in.</p></div></div></section>';
       return '<section class="ac-section ac-recent-section">'+
-        '<div class="ac-section-head"><div class="ac-section-index">05</div><div><div class="ac-kicker">RECENT VIDEOS</div><h2>See the pattern without opening every video</h2><p>Latest usable checkpoint, score vs usual, and the main issue for each video.</p></div></div>'+
+        '<div class="ac-section-head"><div class="ac-section-index">05</div><div><div class="ac-kicker">RECENT VIDEOS</div><h2>See what keeps happening without opening every video</h2><p>Latest usable checkpoint, how it did vs normal, and the main thing I would look at.</p></div></div>'+
         '<div class="ac-section-body"><div class="ac-recent">'+reads.map(x=>{
           const card=ageCardRead(x.r,x.h,true);
           return '<div class="ac-row"><div><b>'+esc(x.v.title)+'</b><small>'+AGES[x.h].label+' · '+AGES[x.h].name+'</small></div><strong class="'+x.d.tone+'">'+esc(card.score)+'</strong><span class="ac-badge '+x.d.tone+'">'+esc(x.d.bottleneck)+'</span></div>';
@@ -614,7 +614,7 @@
     function patternHtml(c){
       const p=pattern(c),tone=p.max?(p.source==='hard'?'bad':'warn'):'normal';
       return '<section class="ac-section ac-pattern-section '+tone+'">'+
-        '<div class="ac-section-head"><div class="ac-section-index">04</div><div><div class="ac-kicker">RECENT 7-DAY PATTERN</div><h2>'+(p.max===1?'One video has a clue worth checking':p.max?'Repeated issue: '+esc(p.label):'Nothing is repeating yet')+'</h2><p>'+esc(p.explain)+'</p></div><span class="ac-badge '+tone+'">'+esc(p.confidence)+'</span></div>'+
+        '<div class="ac-section-head"><div class="ac-section-index">04</div><div><div class="ac-kicker">RECENT 7-DAY PATTERN</div><h2>'+(p.max===1?'One video has something worth watching':p.max?'This keeps showing up: '+esc(p.label):'Nothing is repeating yet')+'</h2><p>'+esc(p.explain)+'</p></div><span class="ac-badge '+tone+'">'+esc(p.confidence)+'</span></div>'+
         '<div class="ac-section-body"><div class="ac-decision-callout"><span>WHAT I’D DO NEXT</span><b>'+esc(p.next)+'</b></div><small>One result is worth noticing. Two similar results are worth watching. Three or more may be a real pattern.</small></div>'+
       '</section>';
     }
