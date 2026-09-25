@@ -180,17 +180,17 @@
     const outcome=n(c[outcomeKey]?.multiple),imp=n(c.impressions?.multiple),ctr=n(c.ctr?.deltaPp);
     const ret=n(c.retention30?.deltaPp),apv=n(c.apv?.deltaPp),avd=n(c.avdSeconds?.deltaSeconds);
     const first=d?.hardIssues?.[0]||d?.softIssues?.[0]||null;
-    const pp=x=>(x>=0?'+':'')+x.toFixed(1)+' pp';
+    const pp=x=>Math.abs(x).toFixed(1)+' pp';
     const watchLine=ret!==null
-      ?(Math.abs(ret)<2?'first 30 seconds are basically normal':'first 30 seconds are '+(ret>0?pp(ret)+' better':Math.abs(ret).toFixed(1)+' pp worse'))
+      ?(Math.abs(ret)<2?'first 30 seconds are basically normal':'first 30 seconds are '+pp(ret)+' '+(ret>0?'above':'below')+' normal')
       :apv!==null
-        ?(Math.abs(apv)<2?'APV is basically normal':'APV is '+(apv>0?pp(apv)+' better':Math.abs(apv).toFixed(1)+' pp worse'))
+        ?(Math.abs(apv)<2?'APV is basically normal':'APV is '+pp(apv)+' '+(apv>0?'above':'below')+' normal')
         :avd!==null
-          ?(Math.abs(avd)<30?'AVD is basically normal':'AVD is '+(avd>0?Math.round(avd)+' sec better':Math.abs(Math.round(avd))+' sec worse'))
+          ?(Math.abs(avd)<30?'AVD is basically normal':'AVD is '+Math.abs(Math.round(avd))+' sec '+(avd>0?'above':'below')+' normal')
           :null;
     if(outcome!==null)parts.push(outcomeLabel+' is '+fmtMultiple(outcome)+' normal');
     if(imp!==null)parts.push('impressions are '+fmtMultiple(imp)+' normal');
-    if(ctr!==null)parts.push(Math.abs(ctr)<.5?'CTR is basically normal':'CTR is '+(ctr>0?pp(ctr)+' above normal':Math.abs(ctr).toFixed(1)+' pp below normal'));
+    if(ctr!==null)parts.push(Math.abs(ctr)<.5?'CTR is basically normal':'CTR is '+pp(ctr)+' '+(ctr>0?'above':'below')+' normal');
     if(watchLine)parts.push(watchLine);
     let why=parts.length?parts.join(', ')+'.':'I do not have enough clean comparison data yet.';
     let doNext='Keep the current plan and use the next comparable checkpoint to see if anything repeats.';
@@ -288,15 +288,30 @@
         else if(first==='retention'){meaning='People are leaving earlier than usual, so they may not even be reaching the proof or CTA.';next='Check promise delivery, proof, and CTA timing. Then confirm the business result before blaming watch time for the business problem.';}
         else{meaning='I am not seeing a clear YouTube problem here. The business result should decide what happens next.';next='Judge the actual conversion result. I would not change a healthy Convert video just because it got fewer views than a Reach video.';}
       }else{
-        jobMeaning='This video still needs a job, Reach, Trust, or Convert.';
-        goalLink='I can still tell you what looks off, but I cannot judge whether the video did its job until that job is set.';
-        measure=savedMetric||'Use the metric that matches the video’s intended job';
-        protect=savedGuard||'The parts of reach, click, and watch that are already healthy';
-        meaning=first
-          ?(first==='reach'?'YouTube showed this less than usual.':first==='packaging'?'The title / thumbnail is the clearest weak point.':'Watch performance is the clearest weak point.')+' Assign the video job before turning that into a bigger strategy decision.'
-          :'No clear performance problem is showing, but the video job is still unassigned.';
-        next='Set the job when you can. Until then, treat this as a clue on this video, not a reason to change the whole channel strategy.';
-        tone=d.kind==='needs_data'?'muted':'warn';
+        jobMeaning='This one is not tagged Reach, Trust, or Convert yet. That is okay, I can still read the performance. The job just tells me how hard to judge success.';
+        goalLink='I can tell you what looks off right now. Set the job when you want the dashboard to judge whether the video did what it was actually meant to do.';
+        if(first==='reach'){
+          meaning='Reach is the first thing I would look at. YouTube showed this to fewer people than usual, while the click and watch side look healthier. I would not start by changing the title, thumbnail, or opening.';
+          next='Check Browse and Suggested first. If distribution is genuinely low, I would adjust the next idea or angle before messing with the package or video.';
+          measure=savedMetric||'Engaged views, impressions, and traffic-source mix';
+          protect=savedGuard||'CTR and watch quality are healthier. Do not break those while trying to get more reach.';
+        }else if(first==='packaging'){
+          meaning='The video is getting enough exposure to judge the click, and the title / thumbnail is the first thing I would look at.';
+          next='Check CTR by traffic source. If it is still weak inside comparable Browse / Suggested traffic, test a meaningfully different title / thumbnail.';
+          measure=savedMetric||'CTR by traffic source';
+          protect=savedGuard||'Keep the topic and actual video stable while testing the package.';
+        }else if(first==='retention'){
+          meaning='People are getting into the video, but watch is the first thing I would look at. I would not change the topic or thumbnail before checking where viewers actually leave.';
+          next='Open the retention graph, pull the exact first 30 seconds if Studio has it, and find the first meaningful drop.';
+          measure=savedMetric||'First 30 seconds, APV / AVD, and the first meaningful retention drop';
+          protect=savedGuard||'Do not shrink a good idea or package just to manufacture better retention.';
+        }else{
+          meaning='Nothing here is making me want to change the strategy right now.';
+          next='Keep going and use the next comparable checkpoint or video to see whether anything actually repeats.';
+          measure=savedMetric||'Engaged views, CTR, and watch quality';
+          protect=savedGuard||'Do not manufacture a problem just because the video job is still unassigned.';
+        }
+        tone=d.kind==='needs_data'?'muted':tone;
       }
 
       if(d.winner&&soft.length){
@@ -842,5 +857,5 @@
     if(win.AcceleratorDeskBridge?.analyticsActive?.()) rerender();
   }
 
-  return {strategistRead,countSignal,rateSignal,durationSignal,metricRead,diagnose,ageCardRead,patternFromDiagnoses,install};
+  return {strategistRead,quickStrategistRead,countSignal,rateSignal,durationSignal,metricRead,diagnose,ageCardRead,patternFromDiagnoses,install};
 });
