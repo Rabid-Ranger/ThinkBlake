@@ -32,7 +32,7 @@ test('unknown view definition still creates partial 24h baseline from compatible
  assert.equal(b.metrics.ctr.n,10);
  assert.equal(b.metrics.apv.n,10);
  assert.equal(b.metrics.avdSeconds.n,10);
- assert.equal(b.metrics.views.n,0);
+ assert.equal(b.metrics.views.n,10); // descriptive raw median is kept, but comparison remains blocked until the Views definition is verified
  assert.equal(b.metrics.engagedViews.n,0);
  assert.equal(b.metrics.retention30.n,0);
  assert.equal(b.metrics.impressions.median,32582.5);
@@ -68,7 +68,7 @@ test('explicit engaged views remain comparable even when the row-level view defi
  const p=out.next.policies[0];
  const b=out.next.baselines.filter(x=>x.policyId===p.id&&x.kind==='operating').at(-1);
  assert.equal(b.metrics.engagedViews.n,10);
- assert.equal(b.metrics.views.n,0);
+ assert.equal(b.metrics.views.n,10);
  assert.equal(b.metrics.engagedViews.definitionId,'youtube-studio-engaged-views-advanced-mode-v1');
  const target=withEngaged.at(-1);
  const r=E.compareVideo(out.next,{videoId:target.videoId,policyId:p.id,windowHours:24,asOf:now});
