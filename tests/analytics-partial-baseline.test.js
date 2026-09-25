@@ -59,3 +59,19 @@ test('repasting already-saved legacy rows upgrades them and creates the partial 
  assert.equal(b.metrics.impressions.n,10);
  assert.equal(b.metrics.views.n,0);
 });
+
+
+test('explicit engaged views remain comparable even when the row-level view definition is unknown',()=>{
+ const withEngaged=rows.map((row,i)=>({...row,metrics:{...row.metrics,engagedViews:1000+i*100}}));
+ const packet={...payload(),observations:withEngaged};
+ const out=I.parse(JSON.stringify(packet),creator,E.emptyStore(),now);
+ const p=out.next.policies[0];
+ const b=out.next.baselines.filter(x=>x.policyId===p.id&&x.kind==='operating').at(-1);
+ assert.equal(b.metrics.engagedViews.n,10);
+ assert.equal(b.metrics.views.n,0);
+ assert.equal(b.metrics.engagedViews.definitionId,'youtube-studio-engaged-views-advanced-mode-v1');
+ const target=withEngaged.at(-1);
+ const r=E.compareVideo(out.next,{videoId:target.videoId,policyId:p.id,windowHours:24,asOf:now});
+ assert.ok(r.comparisons.engagedViews.multiple!==null);
+ assert.equal(r.comparisons.views.multiple,null);
+});
