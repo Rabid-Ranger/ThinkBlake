@@ -188,7 +188,7 @@
         :avd!==null
           ?(Math.abs(avd)<30?'AVD is basically normal':'AVD is '+Math.abs(Math.round(avd))+' sec '+(avd>0?'above':'below')+' normal')
           :null;
-    if(outcome!==null)parts.push(outcomeLabel+' is '+fmtMultiple(outcome)+' normal');
+    if(outcome!==null)parts.push(outcomeLabel+(outcomeKey==='engagedViews'?' are ':' is ')+fmtMultiple(outcome)+' normal');
     if(imp!==null)parts.push('impressions are '+fmtMultiple(imp)+' normal');
     if(ctr!==null)parts.push(Math.abs(ctr)<.5?'CTR is basically normal':'CTR is '+pp(ctr)+' '+(ctr>0?'above':'below')+' normal');
     if(watchLine)parts.push(watchLine);
