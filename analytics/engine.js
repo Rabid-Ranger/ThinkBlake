@@ -6,6 +6,9 @@
 
   const RULE_VERSION = 'connected-analytics-v1';
   const WINDOWS = [24, 48, 168, 672];
+  const VIEW_COUNT_CHANGE_AT = Date.parse('2026-08-24T00:00:00.000Z');
+  const CURRENT_VIEW_DEFINITION = 'youtube-studio-views-started-2026-08-24-v1';
+  const ENGAGED_VIEW_DEFINITION = 'youtube-studio-engaged-views-original-v1';
   const metricDictionary = Object.freeze({
     views: { label: 'Views', unit: 'count', meaning: 'Playback starts under the recorded YouTube definition.' },
     engagedViews: { label: 'Engaged views', unit: 'count', meaning: 'Continued or intentional playback under the recorded source definition; not unique people or a fixed watch-duration threshold.' },
@@ -80,10 +83,23 @@
     if (value && typeof value === 'object') return '{' + Object.keys(value).sort().map(k => JSON.stringify(k) + ':' + stable(value[k])).join(',') + '}';
     return JSON.stringify(value);
   }
-  function definition(observation, metric) {
-    return observation.metricDefinitions && observation.metricDefinitions[metric] || observation.definitionId || 'unknown';
-  }
   function knownDefinition(value) { return Boolean(value && !/^(unknown|legacy|unverified)$/i.test(value)); }
+  function currentViewDefinition(metric, record) {
+    if (!['views', 'engagedViews'].includes(metric) || !record) return null;
+    const stamp = record.capturedAt || record.createdAt || record.acceptedAt || record.builtAt || record.effectiveAt || '';
+    const time = Date.parse(stamp);
+    const studioRecord = String(record.id || '').startsWith('studio:') || record.ruleVersion === RULE_VERSION || String(record.source?.report || record.source || '').toLowerCase().includes('youtube studio');
+    if (!studioRecord || !Number.isFinite(time) || time < VIEW_COUNT_CHANGE_AT) return null;
+    return metric === 'views' ? CURRENT_VIEW_DEFINITION : ENGAGED_VIEW_DEFINITION;
+  }
+  function definition(observation, metric) {
+    const metricSpecific = observation?.metricDefinitions?.[metric];
+    if (knownDefinition(metricSpecific)) return metricSpecific;
+    const currentView = currentViewDefinition(metric, observation);
+    if (currentView) return currentView;
+    if (metric === 'views' || metric === 'engagedViews') return metricSpecific || 'unknown';
+    return metricSpecific || observation?.definitionId || 'unknown';
+  }
   function logicalKey(observation) {
     return stable([observation.creatorId || '', observation.videoId, observation.windowHours, observation.traffic, observation.paid]);
   }
@@ -408,5 +424,6 @@
     return refreshBaselines(next, now);
   }
   return freeze({ RULE_VERSION, WINDOWS: WINDOWS.slice(), metricDictionary, emptyStore, canonicalVideoId, median, percentile,
-    countBand, sampleLevel, createPolicy, acceptObservation, acceptObservations, refreshBaselines, compareVideo, acceptReview });
+    countBand, sampleLevel, definitionFor: definition, knownDefinition, currentViewDefinition, CURRENT_VIEW_DEFINITION, ENGAGED_VIEW_DEFINITION,
+    createPolicy, acceptObservation, acceptObservations, refreshBaselines, compareVideo, acceptReview });
 });
