@@ -106,31 +106,31 @@
       bottleneck=stageLabel(hard);
       tone=hours<168?'warn':'bad';
       if(hard.length>1){
-        headline=(hours<168?'More than one stage may be weak: ':'More than one stage is weak: ')+bottleneck;
-        explain='These are separate abnormal signals, not one proven cause. Start with the earliest weak stage in SHOW → CLICK → WATCH order, then use the later stage as supporting context.';
+        headline=(hours<168?'Early warning: more than one thing looks weak: ':'More than one thing looks weak: ')+bottleneck;
+        explain='These are separate warning signs, not one proven cause. Start with the first weak step: reach, then title / thumbnail, then watch.';
       }else{
-        headline=(hours<168?'This may be the issue: ':'Main issue: ')+bottleneck;
-        explain='This is the clearest weak part of the video compared with what this creator usually gets at the same point after publishing.';
+        headline=(hours<168?'Early warning: ':'Main issue: ')+bottleneck;
+        explain='This is the clearest weak point compared with what this creator usually gets at the same age.';
       }
     }else if(winner){
       bottleneck=soft.length?'NO FIX NEEDED · '+stageLabel(soft)+' A LITTLE SOFT':'NO CLEAR ISSUE';
       tone='great';
-      headline=soft.length?'Winner. '+stageLabel(soft)+' is a little soft, but the video still won.':'Winner. Nothing obvious is broken.';
-      explain='The video is at '+fmtMultiple(outcomeMultiple)+' of its usual result. A weaker-looking number is something to learn from, not a reason to change a winning video.';
+      headline=soft.length?'Strong result. '+stageLabel(soft)+' is softer than usual, but the video still worked.':'Strong result. Nothing obvious is broken.';
+      explain='The video is at '+fmtMultiple(outcomeMultiple)+' of its usual result. Treat the softer metric as a lesson for the next video, not a rescue order.';
     }else if(under){
       bottleneck=soft.length?stageLabel(soft):'CAUSE NOT CLEAR';
       tone='warn';
-      headline='This video is below normal, but we can’t tell why yet.';
+      headline='The result is below usual, but the cause is not clear yet.';
       explain='The video is at '+fmtMultiple(outcomeMultiple)+' of its normal result, but the numbers do not point to one clear reason yet.';
     }else if(soft.length){
       bottleneck='CHECK THIS · '+stageLabel(soft);
       tone='warn';
-      headline=stageLabel(soft)+' looks a little soft, but don’t overreact.';
-      explain='One number is below normal, but the video may have reached a broader audience or still performed well overall.';
+      headline=stageLabel(soft)+' is a little soft, but not enough to overreact.';
+      explain='One number is below usual, but the full result does not justify a big change yet.';
     }else{
       bottleneck='NO CLEAR ISSUE';
-      headline='Nothing looks clearly wrong here.';
-      explain='These numbers are close to what this creator usually gets at this point after publishing.';
+      headline='Nothing looks clearly broken here.';
+      explain='These numbers are close to what this creator usually gets at the same age.';
     }
     const all=[...new Set([...hard,...soft])];
     const expansionContext=expandedAudience&&soft.includes('packaging')&&!winner;
