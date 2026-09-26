@@ -16,6 +16,7 @@
   const r=await fetch('/api/source?build=v1636',{cache:'no-store'});
   if(!r.ok)throw new Error(`Source request failed: ${r.status}`);
   let html=await r.text();
+  const previewAuthBypassed=location.hostname.endsWith('.vercel.app')&&location.hostname!=='accelerator-os-rho.vercel.app';
 
   // Framework is added by the V16.3 extension after the base app is defined.
   // The base normalizer's view allow-list predates that extension, so the
@@ -24,6 +25,25 @@
   const baseViews="const VIEWS=['home','creators','strategy','plan','videos','planner','calendar','learn','library'];";
   const currentViews="const VIEWS=['home','creators','strategy','plan','videos','planner','calendar','learn','library','framework'];";
   if(html.includes(baseViews)) html=html.replace(baseViews,currentViews);
+
+  if(previewAuthBypassed){
+    html=html.replace(
+      'const actionable = cloudAuthRequired || syncConflict || demoMode;',
+      'const previewAuthBypassed = isPreviewDeployment();\n        const actionable = syncConflict || (!previewAuthBypassed && (cloudAuthRequired || demoMode));'
+    );
+    html=html.replace(
+      'else if (cloudAuthRequired || demoMode) openCloudAuthDialog();',
+      'else if (!isPreviewDeployment() && (cloudAuthRequired || demoMode)) openCloudAuthDialog();'
+    );
+    html=html.replace(
+      "if (!(cloudAuthRequired || syncConflict || demoMode) || (event.key !== 'Enter' && event.key !== ' ')) return;\n            event.preventDefault();\n            if (syncConflict) openSyncConflictDialog();\n            else openCloudAuthDialog();",
+      "const previewAuthBypassed = isPreviewDeployment();\n            if (!(syncConflict || (!previewAuthBypassed && (cloudAuthRequired || demoMode))) || (event.key !== 'Enter' && event.key !== ' ')) return;\n            event.preventDefault();\n            if (syncConflict) openSyncConflictDialog();\n            else if (!previewAuthBypassed) openCloudAuthDialog();"
+    );
+    html=html.replace(
+      'function openCloudAuthDialog({ automatic = false } = {}) {\n    const dialog = ensureCloudAuthUi();',
+      'function openCloudAuthDialog({ automatic = false } = {}) {\n    if (isPreviewDeployment()) {\n      enterDemoMode();\n      return;\n    }\n    const dialog = ensureCloudAuthUi();'
+    );
+  }
 
   // Client-resource hotfix: use native links for saved resources instead of
   // popup-style window.open calls, and keep the toolbar Resources control as
