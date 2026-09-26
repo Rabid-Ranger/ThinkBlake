@@ -401,6 +401,13 @@ const PERSISTENCE_BRIDGE = String.raw`
     setSaveLabel('Demo mode - not synced');
   }
 
+  function isPreviewDeployment() {
+    // Branch previews are isolated review surfaces. Open bundled Demo Mode directly;
+    // production keeps the cloud gate and remains the only shared workspace authority.
+    const host = String(window.location && window.location.hostname || '').toLowerCase();
+    return host.endsWith('.vercel.app') && host !== 'accelerator-os-rho.vercel.app';
+  }
+
   function handleCloudAuthAlternative(event) {
     const hasLocal = event.currentTarget.dataset.localWorkspace === 'true';
     if (!hasLocal) {
@@ -1331,7 +1338,10 @@ const PERSISTENCE_BRIDGE = String.raw`
     let resumeDemo = false;
     try { resumeDemo = localStorage.getItem(DEMO_MARKER_KEY) === 'true'; } catch (_) {}
     readStoredSession();
-    if (resumeDemo && !accessToken && !refreshToken) {
+    if (isPreviewDeployment()) {
+      localWorkspaceAvailable = false;
+      enterDemoMode();
+    } else if (resumeDemo && !accessToken && !refreshToken) {
       localWorkspaceAvailable = false;
       enterDemoMode();
     } else {
