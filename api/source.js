@@ -1236,6 +1236,17 @@ const PERSISTENCE_BRIDGE = String.raw`
       }
 
       if (cloudAuthRequired) {
+        // A saved browser workspace is the preferred no-login entry point.
+        // Restore the exact existing copy, then keep cloud writes paused.
+        if (fallback) {
+          replaceState(fallback.value, 'local-recovery');
+          demoMode = true;
+          saveBlocked = true;
+          closeCloudAuthDialog();
+          hideStartupShield();
+          setSaveLabel('Saved');
+          return false;
+        }
         setCloudAuthLocalOption(localWorkspaceAvailable);
         showStartupShield(
           'Connect to your cloud workspace',
