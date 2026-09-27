@@ -94,8 +94,6 @@ const PERSISTENCE_BRIDGE = String.raw`
   let authDialogAutoOpened = false;
   let saveLabelGuardScheduled = false;
   let reconnectInFlight = false;
-  // The dashboard must remain usable without a cloud account. Cloud sync is an optional connection, never a startup gate.
-  const CLOUD_CONNECTION_OPTIONAL = true;
 
   function readBinding(name) {
     try { return (0, eval)('typeof ' + name + ' !== "undefined" ? ' + name + ' : undefined'); }
@@ -150,7 +148,7 @@ const PERSISTENCE_BRIDGE = String.raw`
           el.append(dot, textNode);
         }
         el.setAttribute('data-save-label', '');
-        const actionable = syncConflict || (!CLOUD_CONNECTION_OPTIONAL && (cloudAuthRequired || demoMode));
+        const actionable = cloudAuthRequired || syncConflict || demoMode;
         el.setAttribute('role', actionable ? 'button' : 'status');
         el.setAttribute('aria-live', 'polite');
         textNode.textContent = lastStatusText;
@@ -167,10 +165,10 @@ const PERSISTENCE_BRIDGE = String.raw`
           el.dataset.cloudAuthWired = 'true';
           el.addEventListener('click', () => {
             if (syncConflict) openSyncConflictDialog();
-            else if (!CLOUD_CONNECTION_OPTIONAL && (cloudAuthRequired || demoMode)) openCloudAuthDialog();
+            else if (cloudAuthRequired || demoMode) openCloudAuthDialog();
           });
           el.addEventListener('keydown', event => {
-            if (!(syncConflict || (!CLOUD_CONNECTION_OPTIONAL && (cloudAuthRequired || demoMode))) || (event.key !== 'Enter' && event.key !== ' ')) return;
+            if (!(cloudAuthRequired || syncConflict || demoMode) || (event.key !== 'Enter' && event.key !== ' ')) return;
             event.preventDefault();
             if (syncConflict) openSyncConflictDialog();
             else openCloudAuthDialog();
@@ -1143,8 +1141,7 @@ const PERSISTENCE_BRIDGE = String.raw`
   function queueSnapshot(serialized, { immediate = false } = {}) {
     if (demoMode) {
       lastObservedSerialized = serialized;
-      persistLocalSnapshot(serialized, 'local');
-      setSaveLabel(CLOUD_CONNECTION_OPTIONAL ? 'Saved locally - cloud optional' : 'Demo mode - not synced');
+      setSaveLabel('Demo mode - not synced');
       return;
     }
     persistLocalSnapshot(serialized, 'app');
@@ -1239,14 +1236,6 @@ const PERSISTENCE_BRIDGE = String.raw`
       }
 
       if (cloudAuthRequired) {
-        if (CLOUD_CONNECTION_OPTIONAL) {
-          if (fallback) replaceState(fallback.value, 'local-fallback');
-          demoMode = true;
-          saveBlocked = false;
-          hideStartupShield();
-          setSaveLabel('Saved');
-          return false;
-        }
         setCloudAuthLocalOption(localWorkspaceAvailable);
         showStartupShield(
           'Connect to your cloud workspace',
