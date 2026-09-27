@@ -268,7 +268,7 @@ const PERSISTENCE_BRIDGE = String.raw`
       '.save-label[data-save-state="auth"] .save-dot{background:#d36b55}',
       '.save-label[data-save-state="conflict"],.save-label[data-save-state="demo"]{cursor:pointer}',
       '.save-label[data-save-state="conflict"] .save-dot{background:#d36b55}.save-label[data-save-state="demo"] .save-dot{background:#d5b83f}',
-      'body[data-accelerator-cloud-gate="true"]>*:not(#accelerator-startup-shield):not(#accelerator-cloud-auth-dialog):not(#accelerator-sync-conflict-dialog):not(script):not(style){visibility:hidden!important}',
+      'body[data-accelerator-cloud-gate="true"]>*:not(#accelerator-startup-shield):not(#accelerator-cloud-auth-dialog):not(#accelerator-password-recovery-dialog):not(#accelerator-sync-conflict-dialog):not(script):not(style){visibility:hidden!important}',
       '.accelerator-startup-shield{box-sizing:border-box;position:fixed;inset:0;z-index:99996;display:grid;place-items:center;background:#f6f8fa;color:#17212b;padding:24px}',
       '.accelerator-startup-card{width:min(520px,100%);text-align:center}',
       '.accelerator-startup-mark{display:inline-grid;place-items:center;width:48px;height:48px;margin-bottom:22px;border-radius:15px;background:#17212b;color:#fff;font:900 20px/1 Inter,system-ui,sans-serif}',
