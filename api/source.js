@@ -1244,7 +1244,7 @@ const PERSISTENCE_BRIDGE = String.raw`
           demoMode = true;
           saveBlocked = false;
           hideStartupShield();
-          setSaveLabel('Saved locally - cloud optional');
+          setSaveLabel('Saved');
           return false;
         }
         setCloudAuthLocalOption(localWorkspaceAvailable);
