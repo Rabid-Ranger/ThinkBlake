@@ -1065,10 +1065,12 @@
     const view=String(n.dataset.view||'').toLowerCase();
     if(!view)return;
     if(window.__cgNativeView!=='analytics'){syncAnalyticsNavActive();return;}
-    // Analytics is a temporary overlay. Release it and let the dashboard's own
-    // navigation handler perform the requested transition.
-    window.__cgNativeView='';
-    syncAnalyticsNavActive();
+    // Native navigation uses the dashboard bridge because Analytics temporarily
+    // owns the content panel while preserving the existing top-bar controls.
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    if(!window.AcceleratorDeskBridge?.native?.(view)) routeNativeView(view);
   },true);
   document.addEventListener('click',e=>{
     const proxy=e.target.closest('[data-cg-nav-view]');
