@@ -245,8 +245,10 @@ const PERSISTENCE_BRIDGE = String.raw`
     const alternative = dialog.querySelector('[data-cloud-auth-close]');
     const copy = dialog.querySelector('.accelerator-cloud-auth-copy');
     const safe = dialog.querySelector('.accelerator-cloud-auth-safe span:last-child');
-    alternative.textContent = hasLocalWorkspace ? 'Work locally' : 'View demo';
-    alternative.dataset.localWorkspace = hasLocalWorkspace ? 'true' : 'false';
+    if (alternative) {
+      alternative.textContent = hasLocalWorkspace ? 'Work locally' : 'View demo';
+      alternative.dataset.localWorkspace = hasLocalWorkspace ? 'true' : 'false';
+    }
     copy.textContent = hasLocalWorkspace
       ? 'Connect this browser to load the current cloud workspace. You can keep working from the protected browser copy, but it will not replace cloud data automatically.'
       : 'Connect this browser to load the current cloud workspace. The built-in examples are available only in Demo Mode and can never sync into your account.';
@@ -285,7 +287,8 @@ const PERSISTENCE_BRIDGE = String.raw`
       '.accelerator-cloud-auth-form label{display:grid;gap:7px;color:#26313b;font:750 12px/1.2 Inter,system-ui,sans-serif}',
       '.accelerator-cloud-auth-form input{box-sizing:border-box;width:100%;min-height:48px;border:1px solid #cfd8df;border-radius:12px;background:#fff;color:#17212b;padding:11px 13px;font:500 16px/1.3 Inter,system-ui,sans-serif}',
       '.accelerator-cloud-auth-form input:focus{outline:0;border-color:#5487a1;box-shadow:0 0 0 3px rgba(84,135,161,.16)}',
-      '.accelerator-cloud-auth-actions{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:4px}',
+      '.accelerator-cloud-auth-actions{display:grid;gap:10px;margin-top:4px}',
+      '.accelerator-cloud-auth-forgot{justify-self:start;border:0;background:transparent;color:#355d78;padding:2px 0;font:750 12px/1.3 Inter,system-ui,sans-serif;cursor:pointer;text-decoration:underline}',
       '.accelerator-cloud-auth-actions button{min-height:46px;border-radius:12px;padding:10px 16px;font:800 13px/1.2 Inter,system-ui,sans-serif;cursor:pointer}',
       '.accelerator-cloud-auth-submit{border:1px solid #17212b;background:#17212b;color:#fff}',
       '.accelerator-cloud-auth-local{border:1px solid #cfd8df;background:#fff;color:#26313b}',
@@ -321,7 +324,8 @@ const PERSISTENCE_BRIDGE = String.raw`
       '<form class="accelerator-cloud-auth-form" id="accelerator-cloud-auth-form">',
       '<label>Email<input name="email" type="email" inputmode="email" autocomplete="email" required></label>',
       '<label>Password<input name="password" type="password" autocomplete="current-password" required></label>',
-      '<div class="accelerator-cloud-auth-actions"><button class="accelerator-cloud-auth-submit" type="submit">Connect cloud</button><button class="accelerator-cloud-auth-local" type="button" data-cloud-auth-close>Work locally</button></div>',
+      '<div class="accelerator-cloud-auth-actions"><button class="accelerator-cloud-auth-submit" type="submit">Connect cloud</button></div>',
+      '<button class="accelerator-cloud-auth-forgot" type="button" data-cloud-auth-reset>Forgot password?</button>',
       '</form>',
       '<p class="accelerator-cloud-auth-message" id="accelerator-cloud-auth-message" role="status" aria-live="polite"></p>',
       '<p class="accelerator-cloud-auth-safe"><span aria-hidden="true">●</span><span><strong>Your browser copy is safe.</strong> Signing in restores cloud data before the app is allowed to write anything.</span></p>',
@@ -329,7 +333,10 @@ const PERSISTENCE_BRIDGE = String.raw`
     ].join('');
     document.body.appendChild(dialog);
 
-    dialog.querySelector('[data-cloud-auth-close]').addEventListener('click', handleCloudAuthAlternative);
+    dialog.querySelector('[data-cloud-auth-reset]').addEventListener('click', () => {
+      const email = String(new FormData(dialog.querySelector('#accelerator-cloud-auth-form')).get('email') || '').trim();
+      void requestPasswordReset(email);
+    });
     dialog.querySelector('#accelerator-cloud-auth-form').addEventListener('submit', event => {
       event.preventDefault();
       const form = new FormData(event.currentTarget);
@@ -410,6 +417,27 @@ const PERSISTENCE_BRIDGE = String.raw`
     closeCloudAuthDialog();
     hideStartupShield();
     setSaveLabel('Cloud sign-in required - local backup safe');
+  }
+
+  async function requestPasswordReset(email) {
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      setCloudAuthMessage('Enter the email for your existing Accelerator OS account first.', 'error');
+      return false;
+    }
+    setCloudAuthMessage('Sending password-reset email…');
+    try {
+      const response = await fetch(SUPABASE_URL + '/auth/v1/recover', {
+        method: 'POST',
+        headers: { apikey: API_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, redirect_to: window.location.origin + '/?accelerator_recovery=1' })
+      });
+      if (!response.ok) throw new Error('reset request failed');
+      setCloudAuthMessage('Check that inbox for a password-reset email. Open its link in this browser to choose a new password.');
+      return true;
+    } catch (_) {
+      setCloudAuthMessage('Could not request a reset right now. Please try again in a moment.', 'error');
+      return false;
+    }
   }
 
   function ensureSyncConflictUi() {
