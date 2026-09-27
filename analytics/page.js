@@ -1060,7 +1060,7 @@
   `;document.head.appendChild(st); }
 
   document.addEventListener('click',e=>{
-    const n=e.target.closest('.nav button[data-view],.v11-primary-nav button[data-view]');
+    const n=e.target.closest('.nav button[data-view],.v11-primary-nav button[data-view],#cg-topbar-controls button[data-view]');
     if(!n||n.id==='accelerator-analytics-nav')return;
     const view=String(n.dataset.view||'').toLowerCase();
     if(!view)return;
