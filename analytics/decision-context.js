@@ -916,6 +916,16 @@ ${JSON.stringify(schema,null,2)}`;
     d.querySelector('#adc-copy-channel').onclick=async()=>{try{await win.navigator.clipboard.writeText(text);d.querySelector('#adc-copy-channel').textContent='Copied';}catch(_){d.querySelector('textarea').select();}};
   }
 
+  function openAnalyticsHandoff(win,c){
+    let d=win.document.getElementById('adc-analytics-handoff-dialog');
+    if(!d){d=win.document.createElement('dialog');d.id='adc-analytics-handoff-dialog';d.className='adc-prompt-dialog';win.document.body.appendChild(d);}
+    const text='# '+(c?.name||'Creator')+' — Analytics Handoff\n'+(win.__acceleratorCoachGuide?.analyticsReportBlock?.(c)||'## Analytics Summary\nNo analytics summary is available yet.');
+    d.innerHTML='<h2>Analytics handoff</h2><p>Copy this into a client update, coaching handoff, or working document. It reads the selected creator’s saved analytics, baseline, diagnosis, plan, and reviewed evidence. It does not alter any data.</p><textarea readonly id="adc-analytics-handoff-text">'+esc(text)+'</textarea><div class="actions"><button class="btn dark" id="adc-copy-analytics-handoff">Copy handoff</button><button class="btn" id="adc-close-analytics-handoff">Close</button></div>';
+    if(!d.open)d.showModal();
+    d.querySelector('#adc-close-analytics-handoff').onclick=()=>d.close();
+    d.querySelector('#adc-copy-analytics-handoff').onclick=async()=>{try{await win.navigator.clipboard.writeText(text);d.querySelector('#adc-copy-analytics-handoff').textContent='Copied';}catch(_){d.querySelector('#adc-analytics-handoff-text').select();}};
+  }
+
   function install(win){
     if(win.__acceleratorDecisionContextV1)return;win.__acceleratorDecisionContextV1=true;
     const W=win.AcceleratorAnalyticsWorkspace,guide=win.__acceleratorCoachGuide;if(!W||!guide)return;
@@ -970,12 +980,16 @@ ${JSON.stringify(schema,null,2)}`;
         first.prepend(fresh);
       }
     }
+    function injectAnalyticsHandoffButton(){
+      const c=current(),tools=win.document.querySelector('#studio-tools .actions');if(!c||!tools||tools.querySelector('[data-adc-analytics-handoff]'))return;
+      const b=win.document.createElement('button');b.className='btn';b.dataset.adcAnalyticsHandoff='1';b.textContent='Copy Analytics handoff';b.onclick=()=>openAnalyticsHandoff(win,c);tools.appendChild(b);
+    }
     function injectChannelButton(){
       const c=current(),tools=win.document.querySelector('#studio-tools .actions');if(!c||!tools||win.document.querySelector('#studio-tools [data-studio="prompt-center"],#studio-tools [data-studio="channel-prompt"],#studio-tools [data-adc-channel-prompt]'))return;
       const b=win.document.createElement('button');b.className='btn';b.dataset.adcChannelPrompt='1';b.textContent='Copy 90-day channel + audience prompt';b.onclick=()=>openChannelPrompt(win,c);tools.appendChild(b);
     }
     let queued=false;
-    const paint=()=>{if(queued)return;queued=true;win.requestAnimationFrame(()=>{queued=false;injectDiagnosis();injectPlan();injectVideoFocus();injectChannelButton();});};
+    const paint=()=>{if(queued)return;queued=true;win.requestAnimationFrame(()=>{queued=false;injectDiagnosis();injectPlan();injectVideoFocus();injectChannelButton();injectAnalyticsHandoffButton();});};
     new MutationObserver(paint).observe(win.document.documentElement,{childList:true,subtree:true});
     win.document.addEventListener('click',e=>{
       const missingFill=e.target.closest?.('[data-adc-fill-checkpoint]');
