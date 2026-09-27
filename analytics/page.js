@@ -1065,10 +1065,10 @@
     const view=String(n.dataset.view||'').toLowerCase();
     if(!view)return;
     if(window.__cgNativeView!=='analytics'){syncAnalyticsNavActive();return;}
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-    routeNativeView(view);
+    // Analytics is a temporary overlay. Release it and let the dashboard's own
+    // navigation handler perform the requested transition.
+    window.__cgNativeView='';
+    syncAnalyticsNavActive();
   },true);
   document.addEventListener('click',e=>{
     const proxy=e.target.closest('[data-cg-nav-view]');
