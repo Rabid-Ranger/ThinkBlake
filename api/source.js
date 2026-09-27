@@ -94,6 +94,9 @@ const PERSISTENCE_BRIDGE = String.raw`
   let authDialogAutoOpened = false;
   let saveLabelGuardScheduled = false;
   let reconnectInFlight = false;
+  // This browser has an existing local workspace. Keep it local and never
+  // turn its status label into a sign-in action or a cloud write.
+  let localRecoveryMode = false;
 
   function readBinding(name) {
     try { return (0, eval)('typeof ' + name + ' !== "undefined" ? ' + name + ' : undefined'); }
@@ -148,7 +151,8 @@ const PERSISTENCE_BRIDGE = String.raw`
           el.append(dot, textNode);
         }
         el.setAttribute('data-save-label', '');
-        const actionable = cloudAuthRequired || syncConflict || demoMode;
+        const needsCloudAction = !localRecoveryMode && (cloudAuthRequired || demoMode);
+        const actionable = syncConflict || needsCloudAction;
         el.setAttribute('role', actionable ? 'button' : 'status');
         el.setAttribute('aria-live', 'polite');
         textNode.textContent = lastStatusText;
@@ -165,10 +169,10 @@ const PERSISTENCE_BRIDGE = String.raw`
           el.dataset.cloudAuthWired = 'true';
           el.addEventListener('click', () => {
             if (syncConflict) openSyncConflictDialog();
-            else if (cloudAuthRequired || demoMode) openCloudAuthDialog();
+            else if (!localRecoveryMode && (cloudAuthRequired || demoMode)) openCloudAuthDialog();
           });
           el.addEventListener('keydown', event => {
-            if (!(cloudAuthRequired || syncConflict || demoMode) || (event.key !== 'Enter' && event.key !== ' ')) return;
+            if (!(syncConflict || (!localRecoveryMode && (cloudAuthRequired || demoMode))) || (event.key !== 'Enter' && event.key !== ' ')) return;
             event.preventDefault();
             if (syncConflict) openSyncConflictDialog();
             else openCloudAuthDialog();
@@ -527,6 +531,7 @@ const PERSISTENCE_BRIDGE = String.raw`
       accessToken = session.access_token;
       refreshToken = session.refresh_token;
       cloudAuthRequired = false;
+      localRecoveryMode = false;
       if (demoMode) clearDemoArtifacts();
       demoMode = false;
       saveBlocked = false;
@@ -1040,6 +1045,7 @@ const PERSISTENCE_BRIDGE = String.raw`
       }
     }
     cloudAuthRequired = false;
+    localRecoveryMode = false;
     if (pendingOutcome !== 'conflict') {
       syncConflict = false;
       saveBlocked = false;
@@ -1139,6 +1145,13 @@ const PERSISTENCE_BRIDGE = String.raw`
   }
 
   function queueSnapshot(serialized, { immediate = false } = {}) {
+    if (localRecoveryMode) {
+      // Keep edits in the same browser backup while cloud access remains paused.
+      persistLocalSnapshot(serialized, 'local-recovery');
+      lastObservedSerialized = serialized;
+      setSaveLabel('Saved locally');
+      return;
+    }
     if (demoMode) {
       lastObservedSerialized = serialized;
       setSaveLabel('Demo mode - not synced');
@@ -1240,7 +1253,8 @@ const PERSISTENCE_BRIDGE = String.raw`
         // Restore the exact existing copy, then keep cloud writes paused.
         if (fallback) {
           replaceState(fallback.value, 'local-recovery');
-          demoMode = true;
+          localRecoveryMode = true;
+          demoMode = false;
           saveBlocked = true;
           closeCloudAuthDialog();
           hideStartupShield();
