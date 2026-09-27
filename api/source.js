@@ -1527,6 +1527,7 @@ const PACKAGING_BRIDGE = String.raw`
 (() => {
   if (window.__acceleratorPackagingLab) return;
   window.__acceleratorPackagingLab = true;
+  document.title = 'Accelerator OS V16.3.7 - Cloud-First Packaging Lab';
   const E = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const binding = name => { try { return (0,eval)('typeof '+name+'!=="undefined" ? '+name+' : undefined'); } catch (_) { return undefined; } };
   const current = () => { const f=binding('creator'); return typeof f==='function' ? f() : null; };
