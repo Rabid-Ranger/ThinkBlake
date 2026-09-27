@@ -440,6 +440,46 @@ const PERSISTENCE_BRIDGE = String.raw`
     }
   }
 
+  function recoverySessionFromUrl() {
+    try {
+      if (!new URLSearchParams(window.location.search).has('accelerator_recovery')) return null;
+      const hash = new URLSearchParams(String(window.location.hash || '').replace(/^#/, ''));
+      if (hash.get('type') !== 'recovery' || !hash.get('access_token')) return null;
+      return { access_token: hash.get('access_token'), refresh_token: hash.get('refresh_token') || null };
+    } catch (_) { return null; }
+  }
+
+  function ensurePasswordRecoveryUi() {
+    let dialog = document.getElementById('accelerator-password-recovery-dialog');
+    if (dialog) return dialog;
+    dialog = document.createElement('dialog');
+    dialog.id = 'accelerator-password-recovery-dialog';
+    dialog.className = 'accelerator-cloud-auth';
+    dialog.innerHTML = '<section class="accelerator-cloud-auth-card"><p class="accelerator-cloud-auth-kicker">Account recovery</p><h2>Choose a new password</h2><p class="accelerator-cloud-auth-copy">This restores access to your existing cloud workspace. It does not create a new account or change dashboard data.</p><form class="accelerator-cloud-auth-form" id="accelerator-password-recovery-form"><label>New password<input name="password" type="password" autocomplete="new-password" minlength="8" required></label><label>Confirm new password<input name="confirmation" type="password" autocomplete="new-password" minlength="8" required></label><div class="accelerator-cloud-auth-actions"><button class="accelerator-cloud-auth-submit" type="submit">Save new password</button></div></form><p class="accelerator-cloud-auth-message" id="accelerator-password-recovery-message" role="status" aria-live="polite"></p></section>';
+    document.body.appendChild(dialog);
+    dialog.querySelector('#accelerator-password-recovery-form').addEventListener('submit', event => { event.preventDefault(); const form=new FormData(event.currentTarget); void completePasswordRecovery(String(form.get('password')||''),String(form.get('confirmation')||'')); });
+    return dialog;
+  }
+
+  async function completePasswordRecovery(password, confirmation) {
+    const dialog=ensurePasswordRecoveryUi(),message=dialog.querySelector('#accelerator-password-recovery-message'),submit=dialog.querySelector('.accelerator-cloud-auth-submit');
+    if (password.length < 8) { message.textContent='Use at least 8 characters.'; message.dataset.type='error'; return false; }
+    if (password !== confirmation) { message.textContent='Those passwords do not match.'; message.dataset.type='error'; return false; }
+    if (!accessToken) { message.textContent='This recovery link is no longer valid. Request another password reset.'; message.dataset.type='error'; return false; }
+    submit.disabled=true; message.textContent='Saving new password…'; delete message.dataset.type;
+    try {
+      const response=await fetch(SUPABASE_URL+'/auth/v1/user',{method:'PUT',headers:{apikey:API_KEY,Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:JSON.stringify({password})});
+      if(!response.ok) throw new Error('password update failed');
+      try { localStorage.setItem(AUTH_KEY,JSON.stringify({access_token:accessToken,refresh_token:refreshToken})); history.replaceState({},document.title,window.location.pathname); } catch (_) {}
+      cloudAuthRequired=false;
+      const candidateState=appState(),recoveryCandidate=candidateState?{value:clone(candidateState),key:'password-recovery'}:readFallbackState();
+      const connected=await connectCloud({restoreState:true,recoveryCandidate,forceRecoveryCandidate:true});
+      if(!connected) throw new Error('cloud connection failed');
+      message.textContent='Password updated. Loading your cloud workspace…'; setTimeout(()=>{try{dialog.close()}catch(_){dialog.removeAttribute('open')}hideStartupShield();},350); return true;
+    } catch (_) { message.textContent='Could not finish recovery. Request another reset link and try again.'; message.dataset.type='error'; return false; }
+    finally { submit.disabled=false; }
+  }
+
   function ensureSyncConflictUi() {
     let dialog = document.getElementById('accelerator-sync-conflict-dialog');
     if (dialog) return dialog;
@@ -1359,7 +1399,15 @@ const PERSISTENCE_BRIDGE = String.raw`
     let resumeDemo = false;
     try { resumeDemo = localStorage.getItem(DEMO_MARKER_KEY) === 'true'; } catch (_) {}
     readStoredSession();
-    if (resumeDemo && !accessToken && !refreshToken) {
+    const recoverySession = recoverySessionFromUrl();
+    if (recoverySession) {
+      accessToken = recoverySession.access_token;
+      refreshToken = recoverySession.refresh_token;
+      try { localStorage.setItem(AUTH_KEY, JSON.stringify(recoverySession)); } catch (_) {}
+      cloudAuthRequired = false;
+      const dialog = ensurePasswordRecoveryUi();
+      if (!dialog.open) { if (typeof dialog.showModal === 'function') dialog.showModal(); else dialog.setAttribute('open', ''); }
+    } else if (resumeDemo && !accessToken && !refreshToken) {
       localWorkspaceAvailable = false;
       enterDemoMode();
     } else {
