@@ -22,6 +22,8 @@ test('setup uses one exact checkpoint and requests the 15 most recent matured el
   assert.match(p,/IMPORTANT SECOND PASS/);
   assert.match(p,/Traffic source \/ How viewers found this video/);
   assert.match(p,/Do not stop after the general video analytics report/);
+  assert.match(p,/APV may legitimately exceed 100%/);
+  assert.match(p,/source must name both the core analytics report\/query and the separate exact-window Traffic source/);
   assert.doesNotMatch(p,/at most 5 eligible|10–20 previous/);
  }
 });
@@ -35,6 +37,14 @@ test('optional engagement, retention, and traffic context do not make an otherwi
  assert.equal(traffic.complete,0);
  const p=I.collectionPrompt({...c,analyticsFoundation:first.next},168,'missing',now);
  assert.doesNotMatch(p,/"test-video"/);
+});
+
+test('APV can exceed 100% while bounded percentages remain capped',()=>{
+ const replayed={...row,videoId:'replay-video',metrics:{...fullMetrics,apv:102.09}};
+ const out=I.parse(packet([replayed]),c,A.emptyStore(),now);
+ assert.ok(Math.abs(out.next.observations[0].metrics.apv-1.0209)<1e-12);
+ const badCtr={...row,videoId:'bad-ctr',metrics:{...fullMetrics,ctr:101}};
+ assert.throws(()=>I.parse(packet([badCtr]),c,A.emptyStore(),now),/ctr must be a valid non-negative number or null \(0–100%\)/);
 });
 
 test('missing-field request uses saved values and correct checkpoint for required metrics',()=>{
