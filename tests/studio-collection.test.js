@@ -33,6 +33,7 @@ test('one-video prompt can collect every matured checkpoint in one request',()=>
  const p=I.singleVideoPrompt(c,v,[24,48,168],now),schema=I.studioJson(p,c.id).data;
  assert.deepEqual(schema.observations.map(x=>x.windowHours),[24,48,168]);
  assert.ok(schema.observations.every(x=>x.videoId==='abc123xyz00'));
+ assert.ok(schema.observations.every(x=>x.internalVideoId==='abc123xyz00'));
  assert.match(p,/ONE VIDEO only/);
  assert.match(p,/Do not collect any other videos/);
  assert.match(p,/Traffic source \/ How viewers found this video/);
