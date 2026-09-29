@@ -364,24 +364,25 @@
     }
     function openManualEditor(){
       const c=current(),p=c&&W.prefs(c),v=c&&selectedVideo(c);if(!c||!p||!v)return;
-      const o=latestObservation(c,v,p.hours);
-      if(!o){
-        if(v.native&&win.__acceleratorCoachGuide?.review){const map={24:'_24h',48:'_48h',168:'_7d',672:'_28d'};return win.__acceleratorCoachGuide.review(map[p.hours],v.id);}
-        alert('No saved checkpoint exists for this video yet. Use Quick Check for a temporary read, or import the video first.');return;
-      }
+      const o=latestObservation(c,v,p.hours),isNew=!o,base=o||{metrics:{},definitionId:matchingBaseline(c,v,p.hours)?.engine?.definitionId||'unknown',coverage:'exact',paid:'unknown',source:{report:'YouTube Studio manual entry'}};
       let d=win.document.getElementById('ac-manual-dialog');
       if(!d){d=win.document.createElement('dialog');d.id='ac-manual-dialog';d.className='ac-manual-dialog';win.document.body.appendChild(d);}
-      const pct=k=>o.metrics?.[k]==null?'':Number(o.metrics[k])*100;
-      d.innerHTML='<h2>Edit '+esc(AGES[p.hours].label)+' checkpoint</h2><p><b>'+esc(v.title)+'</b></p><p>Use verified Studio values only. Blank means unavailable. This creates a revised checkpoint and keeps the earlier import history.</p><div class="ac-manual-grid">'+
-        manualInput('acm-views','Views',o.metrics?.views)+manualInput('acm-engaged','Engaged views',o.metrics?.engagedViews)+manualInput('acm-impressions','Impressions',o.metrics?.impressions)+
-        manualInput('acm-ctr','CTR %',pct('ctr'),'0.01')+manualInput('acm-ret30','0:30 / Intro %',pct('retention30'),'0.01')+manualInput('acm-apv','APV %',pct('apv'),'0.01')+manualInput('acm-avd','AVD seconds',o.metrics?.avdSeconds,'1')+
+      const pct=k=>base.metrics?.[k]==null?'':Number(base.metrics[k])*100;
+      const published=base.publishedAt||v.published||v.native?.cta?.publishDate||v.native?.publishDate||'';
+      const videoRef=base.videoId||v.engineId||v.native?.cta?.publishedUrl||v.native?.publishedUrl||v.native?.url||v.id;
+      d.innerHTML='<h2>'+(isNew?'Add ':'Edit ')+esc(AGES[p.hours].label)+' checkpoint</h2><p><b>'+esc(v.title)+'</b></p><p>'+(isNew?'Enter the exact '+esc(AGES[p.hours].label)+' Studio numbers. Use the real video ID / URL and exact published timestamp so Accelerator can keep the checkpoint honest.':'Use verified Studio values only. Blank means unavailable. This creates a revised checkpoint and keeps the earlier import history.')+'</p><div class="ac-manual-grid ac-manual-context">'+
+        manualText('acm-video-id','Video ID or URL',videoRef,'YouTube video ID or URL')+
+        manualText('acm-published','Published at',published,'2026-09-10T08:00:20Z')+
+        manualText('acm-definition','Measurement definition',base.definitionId||'unknown','Use the same verified definition as the baseline when known')+
+      '</div><div class="ac-manual-grid">'+
+        manualInput('acm-views','Views',base.metrics?.views)+manualInput('acm-engaged','Engaged views',base.metrics?.engagedViews)+manualInput('acm-impressions','Impressions',base.metrics?.impressions)+
+        manualInput('acm-ctr','CTR %',pct('ctr'),'0.01')+manualInput('acm-ret30','0:30 / Intro %',pct('retention30'),'0.01')+manualInput('acm-apv','APV %',pct('apv'),'0.01')+manualInput('acm-avd','AVD seconds',base.metrics?.avdSeconds,'1')+
         manualInput('acm-browse','Browse %',pct('browsePct'),'0.01')+manualInput('acm-suggested','Suggested %',pct('suggestedPct'),'0.01')+manualInput('acm-search','Search %',pct('searchPct'),'0.01')+manualInput('acm-external','External %',pct('externalPct'),'0.01')+
       '</div><div class="ac-manual-grid ac-manual-context">'+
-        manualText('acm-definition','Measurement definition',o.definitionId||'unknown','Use the exact verified definition or leave unknown')+
-        manualSelect('acm-coverage','Checkpoint coverage',o.coverage||'unknown',['exact','partial','unknown'])+
-        manualSelect('acm-paid','Traffic type',o.paid||'unknown',['organic','paid','mixed','unknown'])+
-      '</div><label class="ac-manual-source"><span>Source / report note</span><input id="acm-source" value="'+esc(o.source?.report||'YouTube Studio manual correction')+'"></label><div class="actions"><button class="btn dark" data-ac-manual-save>Save verified checkpoint</button><button class="btn" data-ac-manual-close>Cancel</button></div><p role="alert" class="ac-manual-error"></p>';
-      d.dataset.creatorId=c.id;d.dataset.videoId=v.engineId||v.id;d.dataset.hours=String(p.hours);
+        manualSelect('acm-coverage','Checkpoint coverage',base.coverage||'exact',['exact','partial','unknown'])+
+        manualSelect('acm-paid','Traffic type',base.paid||'unknown',['organic','paid','mixed','unknown'])+
+      '</div><label class="ac-manual-source"><span>Source / report note</span><input id="acm-source" value="'+esc(base.source?.report||'YouTube Studio manual entry')+'"></label><div class="actions"><button class="btn dark" data-ac-manual-save>'+(isNew?'Save checkpoint':'Save verified checkpoint')+'</button><button class="btn" data-ac-manual-close>Cancel</button></div><p role="alert" class="ac-manual-error"></p>';
+      d.dataset.creatorId=c.id;d.dataset.videoId=v.engineId||v.id;d.dataset.hours=String(p.hours);d.dataset.isNew=isNew?'1':'0';
       d.dataset.expectedRevision=win.AcceleratorDeskBridge?.revision?.(c);
       if(!d.open)d.showModal();
     }
@@ -396,19 +397,34 @@
     }
     function saveManualEditor(){
       const c=current(),p=c&&W.prefs(c),v=c&&selectedVideo(c),A=win.AcceleratorAnalytics,B=win.AcceleratorDeskBridge;if(!c||!p||!v||!A||!B?.commitAI)return;
-      const o=latestObservation(c,v,p.hours),d=win.document.getElementById('ac-manual-dialog');if(!o||!d)return;
+      const o=latestObservation(c,v,p.hours),d=win.document.getElementById('ac-manual-dialog');if(!d)return;
       const val=id=>{const raw=d.querySelector('#'+id)?.value?.trim();if(!raw)return null;const x=Number(raw);if(!Number.isFinite(x)||x<0)throw Error('Use non-negative numbers only.');return x;};
       const count=id=>{const x=val(id);if(x===null)return null;if(!Number.isInteger(x))throw Error('Views, Engaged views, and Impressions must be whole numbers.');return x;};
       const rate=(id,max100=true)=>{const x=val(id);if(x===null)return null;if(max100&&x>100)throw Error('That percentage must be between 0 and 100.');return x/100;};
       try{
         if(d.dataset.creatorId!==c.id||d.dataset.videoId!==(v.engineId||v.id)||Number(d.dataset.hours)!==Number(p.hours))throw Error('Creator or video changed. Reopen this checkpoint.');
-        const metrics={...o.metrics,views:count('acm-views'),engagedViews:count('acm-engaged'),impressions:count('acm-impressions'),ctr:rate('acm-ctr'),retention30:rate('acm-ret30'),apv:rate('acm-apv',false),avdSeconds:val('acm-avd'),browsePct:rate('acm-browse'),suggestedPct:rate('acm-suggested'),searchPct:rate('acm-search'),externalPct:rate('acm-external')};
+        const sourceNote=d.querySelector('#acm-source')?.value?.trim()||'YouTube Studio manual entry';
+        const definitionId=d.querySelector('#acm-definition')?.value?.trim()||o?.definitionId||'unknown';
+        const coverage=d.querySelector('#acm-coverage')?.value||o?.coverage||'unknown';
+        const paid=d.querySelector('#acm-paid')?.value||o?.paid||'unknown';
+        const videoRef=d.querySelector('#acm-video-id')?.value?.trim()||o?.videoId||v.engineId||v.id;
+        const publishedAt=d.querySelector('#acm-published')?.value?.trim()||o?.publishedAt||v.published||'';
+        const rawMetrics={views:count('acm-views'),engagedViews:count('acm-engaged'),impressions:count('acm-impressions'),ctr:val('acm-ctr'),retention30:val('acm-ret30'),apv:val('acm-apv'),avdSeconds:val('acm-avd'),browsePct:val('acm-browse'),suggestedPct:val('acm-suggested'),searchPct:val('acm-search'),externalPct:val('acm-external')};
+        if(d.dataset.isNew==='1'){
+          if(!videoRef)throw Error('Add the YouTube video ID or URL.');
+          if(!publishedAt||!Number.isFinite(Date.parse(publishedAt)))throw Error('Add the exact published timestamp from Studio, including the timezone.');
+          const packet={schemaVersion:1,creatorId:c.id,channelName:c.channelName||c.name,observations:[{videoId:videoRef,title:v.title,publishedAt,capturedAt:new Date().toISOString(),windowHours:Number(p.hours),format:'edited-long-form',eraId:'current',job:null,definitionId,coverage,paid,traffic:'all',source:sourceNote,metrics:rawMetrics}],channelPeriods:[],audienceSnapshots:[],limitations:[]};
+          const I=win.AcceleratorStudioImport;if(!I)throw Error('Studio import tools are unavailable. Refresh and try again.');
+          const parsed=I.parse(JSON.stringify(packet),c,c.analyticsFoundation||A.emptyStore(),new Date().toISOString());
+          if(!parsed.added)throw Error(parsed.limitations?.join(' ')||'This checkpoint could not be saved. Check the exact window and required fields.');
+          const next=win.AcceleratorLiveAnalytics?.apply?win.AcceleratorLiveAnalytics.apply(c,parsed):clone(c);
+          next.analyticsFoundation=parsed.next;
+          const expected=d.dataset.expectedRevision;if(!expected||expected==='undefined')throw Error('Save revision check is unavailable.');
+          B.commitAI(next,expected,false);d.close();rerender();return;
+        }
+        const metrics={...o.metrics,views:rawMetrics.views,engagedViews:rawMetrics.engagedViews,impressions:rawMetrics.impressions,ctr:rate('acm-ctr'),retention30:rate('acm-ret30'),apv:rate('acm-apv',false),avdSeconds:rawMetrics.avdSeconds,browsePct:rate('acm-browse'),suggestedPct:rate('acm-suggested'),searchPct:rate('acm-search'),externalPct:rate('acm-external')};
         const defs={...(o.metricDefinitions||{})};
         if(metrics.engagedViews!==null&&(!defs.engagedViews||/unknown|unverified/i.test(String(defs.engagedViews))))defs.engagedViews='youtube-studio-engaged-views-advanced-mode-v1';
-        const sourceNote=d.querySelector('#acm-source')?.value?.trim()||'YouTube Studio manual correction';
-        const definitionId=d.querySelector('#acm-definition')?.value?.trim()||o.definitionId||'unknown';
-        const coverage=d.querySelector('#acm-coverage')?.value||o.coverage||'unknown';
-        const paid=d.querySelector('#acm-paid')?.value||o.paid||'unknown';
         const input={...clone(o),metrics,metricDefinitions:defs,definitionId,coverage,paid,capturedAt:new Date().toISOString(),source:{kind:'manual',report:sourceNote}};
         delete input.acceptedAt;delete input.logicalKey;delete input.revision;delete input.revisionId;delete input.supersedesId;
         const nextStore=A.acceptObservation(c.analyticsFoundation||A.emptyStore(),input,new Date().toISOString());
