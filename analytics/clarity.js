@@ -381,7 +381,7 @@
       '</div><div class="ac-manual-grid ac-manual-context">'+
         manualSelect('acm-coverage','Checkpoint coverage',base.coverage||'exact',['exact','partial','unknown'])+
         manualSelect('acm-paid','Traffic type',base.paid||'unknown',['organic','paid','mixed','unknown'])+
-      '</div><label class="ac-manual-source"><span>Source / report note</span><input id="acm-source" value="'+esc(base.source?.report||'YouTube Studio manual entry')+'"></label><div class="actions"><button class="btn dark" data-ac-manual-save>'+(isNew?'Save checkpoint':'Save verified checkpoint')+'</button><button class="btn" data-ac-manual-close>Cancel</button></div><p role="alert" class="ac-manual-error"></p>';
+      '</div><label class="ac-manual-source"><span>Source / report note</span><input id="acm-source" value="'+esc(base.source?.report||'YouTube Studio manual entry')+'"></label><div class="actions"><button class="btn dark" data-ac-manual-save>'+(isNew?'Save checkpoint':'Save verified checkpoint')+'</button><button class="btn" data-studio="video-prompt" data-video-id="'+esc(v.engineId||v.id)+'" data-hours="'+p.hours+'">Get with Studio prompt</button><button class="btn" data-ac-manual-close>Cancel</button></div><p role="alert" class="ac-manual-error"></p>';
       d.dataset.creatorId=c.id;d.dataset.videoId=v.engineId||v.id;d.dataset.hours=String(p.hours);d.dataset.isNew=isNew?'1':'0';
       d.dataset.expectedRevision=win.AcceleratorDeskBridge?.revision?.(c);
       if(!d.open)d.showModal();
