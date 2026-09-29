@@ -413,7 +413,7 @@
         if(d.dataset.isNew==='1'){
           if(!videoRef)throw Error('Add the YouTube video ID or URL.');
           if(!publishedAt||!Number.isFinite(Date.parse(publishedAt)))throw Error('Add the exact published timestamp from Studio, including the timezone.');
-          const packet={schemaVersion:1,creatorId:c.id,channelName:c.channelName||c.name,observations:[{videoId:videoRef,title:v.title,publishedAt,capturedAt:new Date().toISOString(),windowHours:Number(p.hours),format:'edited-long-form',eraId:'current',job:null,definitionId,coverage,paid,traffic:'all',source:sourceNote,metrics:rawMetrics}],channelPeriods:[],audienceSnapshots:[],limitations:[]};
+          const packet={schemaVersion:1,creatorId:c.id,channelName:c.channelName||c.name,observations:[{videoId:videoRef,internalVideoId:v.id,title:v.title,publishedAt,capturedAt:new Date().toISOString(),windowHours:Number(p.hours),format:'edited-long-form',eraId:'current',job:null,definitionId,coverage,paid,traffic:'all',source:sourceNote,metrics:rawMetrics}],channelPeriods:[],audienceSnapshots:[],limitations:[]};
           const I=win.AcceleratorStudioImport;if(!I)throw Error('Studio import tools are unavailable. Refresh and try again.');
           const parsed=I.parse(JSON.stringify(packet),c,c.analyticsFoundation||A.emptyStore(),new Date().toISOString());
           if(!parsed.added)throw Error(parsed.limitations?.join(' ')||'This checkpoint could not be saved. Check the exact window and required fields.');
