@@ -370,7 +370,7 @@
       findings.push({ stage: 'click', status: 'candidate', message: 'Packaging is a candidate for review. Compare the promise and audience context before choosing a test.' });
     }
     if (!limitedViewing && lower(opening)) findings.push({ stage: 'opening', status: 'candidate', message: 'The opening is holding fewer viewers than usual. Check whether the first 30 seconds deliver what the title and thumbnail promised.' });
-    if (!limitedViewing && (!opening || opening.status === 'unavailable' || notLower(opening)) && (lower(comparisons.apv) || lower(comparisons.avdSeconds))) findings.push({ stage: 'experience', status: 'candidate', message: 'Inspect the actual retention curve and structure. These averages do not identify a timestamp or cause.' });
+    if (!limitedViewing && (!opening || opening.status === 'unavailable' || notLower(opening)) && (lower(comparisons.apv) || lower(comparisons.avdSeconds))) findings.push({ stage: 'experience', status: 'candidate', message: 'APV / AVD are lower than usual. Open the retention graph to see where people started leaving. If the first bigger drop is early, check the opening; if it is later, check pacing and structure.' });
     if (impressions && impressions.multiple !== null && impressions.multiple < .7 && impressions.n >= 5) findings.push({ stage: 'opportunity', status: 'candidate', message: 'YouTube is showing this video less than usual. Check the topic, audience fit, and where the views came from before blaming the title or thumbnail.' });
     if (!findings.length) findings.push({ stage: null, status: 'observe', message: 'Keep the video’s job in mind. These numbers do not point to one clear main issue yet.' });
     return findings;
