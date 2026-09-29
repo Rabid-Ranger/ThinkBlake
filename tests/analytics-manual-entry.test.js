@@ -8,6 +8,7 @@ const I=require('../analytics/import');
 const page=fs.readFileSync(path.join(__dirname,'../analytics/page.js'),'utf8');
 const clarity=fs.readFileSync(path.join(__dirname,'../analytics/clarity.js'),'utf8');
 const decision=fs.readFileSync(path.join(__dirname,'../analytics/decision-context.js'),'utf8');
+const live=fs.readFileSync(path.join(__dirname,'../analytics/live.js'),'utf8');
 
 test('studio prompts require strict parseable json and exact checkpoint fields',()=>{
   const c={id:'c_test',name:'Test Creator'};
@@ -57,4 +58,13 @@ test('current analytics read provides a direct manual channel data action',()=>{
   assert.match(decision,/Where do I find this\?/);
   assert.match(decision,/Enter channel data/);
   assert.match(decision,/analytics-snapshot-edit:/);
+});
+
+
+test('checkpoint editor offers a Studio prompt as an alternative to manual entry',()=>{
+  assert.match(clarity,/Get with Studio prompt/);
+  assert.match(clarity,/data-studio="video-prompt"/);
+  assert.match(live,/function openVideoCheckpointPrompt/);
+  assert.match(live,/Studio prompt/);
+  assert.match(live,/data-studio="video-prompt"/);
 });
