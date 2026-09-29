@@ -144,11 +144,11 @@
   }
   function durationAnswer(rate,label='AVD'){
     const ratioV=n(rate?.multiple),delta=n(rate?.deltaSeconds),current=n(rate?.current),baseline=n(rate?.baseline);
-    if(ratioV===null&&delta===null)return {tone:'muted',label:'Not enough data yet',line:'We do not have a fair Average View Duration comparison yet.',meaning:'AVD can support WATCH when exact 0:30 and APV are unavailable.',next:'Add or verify the same-age AVD normal, then inspect the retention curve if WATCH looks weak.'};
+    if(ratioV===null&&delta===null)return {tone:'muted',label:'Not enough data yet',line:'We do not have a fair Average View Duration comparison yet.',meaning:'AVD tells you how long people watched on average. It does not show where they left.',next:'Add or verify the same-age AVD normal. If AVD looks weak, open the retention graph to see where viewers started leaving.'};
     const line=(current!==null&&baseline!==null?label+' '+Math.round(current)+' sec vs '+Math.round(baseline)+' sec normal':label+' comparison available')+
       (ratioV!==null?' · '+mult(ratioV)+' normal':'')+(delta!==null?' · '+(delta>=0?'+':'')+Math.round(delta)+' sec':'');
-    if(ratioV!==null&&ratioV<.7)return {tone:'bad',label:'Yes. WATCH looks clearly weak for this creator.',line,meaning:'Average viewing time is well below this creator’s normal. That flags the viewing experience, even without an exact 0:30 number.',next:'Open the retention curve and inspect the first meaningful divergence, promise delivery, pacing, and structure.'};
-    if(ratioV!==null&&ratioV<.85)return {tone:'warn',label:'WATCH is a little below normal.',line,meaning:'AVD is softer than usual, but not enough by itself to prove the opening is the main problem.',next:'Keep it in context with CTR, traffic source, APV when available, and the retention curve.'};
+    if(ratioV!==null&&ratioV<.7)return {tone:'bad',label:'Yes. WATCH looks clearly weak for this creator.',line,meaning:'People watched for less time than usual. AVD tells us the video was watched less deeply overall, but not where people left.',next:'Open the retention graph and find the first spot where viewers drop harder than usual. Early drop = check the hook/opening. Later drop = check pacing, structure, or promise delivery.'};
+    if(ratioV!==null&&ratioV<.85)return {tone:'warn',label:'WATCH is a little below normal.',line,meaning:'AVD is a little lower than usual. That means people watched for less time overall, but it does not tell us where they left.',next:'Check APV and the retention graph. If the first bigger drop is early, inspect the opening. If it is later, inspect pacing and structure.'};
     if(ratioV!==null&&ratioV>1.15)return {tone:'good',label:'No. WATCH looks stronger than usual.',line,meaning:'Average viewing time is above this creator’s normal.',next:'Protect the viewing pattern and continue to RETURN + RESULT.'};
     return {tone:'normal',label:'Nothing looks clearly wrong here.',line,meaning:'Average viewing time is close to this creator’s normal.',next:'Continue to RETURN + RESULT.'};
   }
@@ -305,11 +305,11 @@
       if(bad){verdict='Analytics lean NO: viewers are leaving more than usual.';line='At least one key watch metric is clearly weaker than this creator’s usual result.';}
       else if(warn){verdict='Analytics say WATCH is a little soft, but not clearly the main break.';line='One or more watch metrics are a little below usual, but the pattern is not strong enough by itself.';}
       else if(healthy){verdict='Analytics support YES: watch performance looks healthy.';line='0:30 / APV / AVD do not show a clear watch problem against this creator’s usual results.';}
-      return {tone:bad?'bad':warn?'warn':healthy?'good':'muted',verdict,line,meaning:bad?'The viewing experience is worth checking. 0:30 tells you about the opening; APV/AVD help show whether the weakness continues later.':healthy?'Retention does not look like the first obvious break.':'The averages are not enough to force an answer.',next:bad?'Open the retention curve. Find the first meaningful divergence and rewind 30–60 seconds before the visible drop before deciding what caused it.':'If this looks healthy, move to whether people come back. If you are still unsure, inspect the full retention curve.',metrics:[
+      return {tone:bad?'bad':warn?'warn':healthy?'good':'muted',verdict,line,meaning:bad?'The viewing experience is worth checking. 0:30 tells you about the opening; APV/AVD help show whether the weakness continues later.':healthy?'Retention does not look like the first obvious break.':'The averages are not enough to force an answer.',next:bad?'Open the retention graph. Find the first spot where viewers drop harder than usual. If it happens in the first 30–60 seconds, check the hook/opening. If it happens later, check pacing, structure, or whether the video stopped delivering on the promise.':'If this looks healthy, move to whether people come back. If you are still unsure, open the full retention graph.',metrics:[
         {label:'First 30 sec',value:r30.value,compare:r30.compare,tone:r30.tone},
         {label:'APV',value:apv.value,compare:apv.compare,tone:apv.tone},
         {label:'AVD',value:avd.value,compare:avd.compare,tone:avd.tone}
-      ],note:'The dashboard does not have the full retention curve or exact drop timestamps. These numbers tell you whether to inspect WATCH, not why viewers left.'};
+      ],note:'0:30 tells you how the opening held. APV and AVD tell you how deeply people watched overall. The retention graph is what shows where viewers started leaving.'};
     }
     if(index===5){
       const metrics=[
