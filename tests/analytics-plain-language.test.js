@@ -21,7 +21,9 @@ test('core analytics UI does not use the jargon phrases we removed',()=>{
     'DATA-ASSISTED WORKING ANSWER',
     'Under 3% · investigate',
     'Clearly weak opportunity',
-    'No same-age creator baseline'
+    'No same-age creator baseline',
+    'APV and AVD cannot locate an opening problem',
+    'first meaningful divergence'
   ];
   for(const phrase of banned)assert.equal(source.includes(phrase),false,phrase);
 });
@@ -42,4 +44,13 @@ test('plain-language diagnosis outputs say what happened and what to do next',()
   assert.equal(normal.headline,'Nothing looks clearly broken here.');
   assert.match(normal.explain,/what this creator usually gets/);
   assert.doesNotMatch(normal.explain,/working range|same-age normal/i);
+});
+
+
+test('retention coaching explains APV AVD and the graph in simple language',()=>{
+  const D=require('../analytics/decision-context');
+  const src=D.focusAction.toString();
+  assert.match(src,/APV and AVD tell you people watched less overall/i);
+  assert.match(src,/graph tells you where they started leaving/i);
+  assert.match(src,/first 30–60 seconds/i);
 });
