@@ -18,6 +18,16 @@ const encoded = [
 
 let verifiedSource;
 
+// Analytics extensions use semantic aliases that were not present in the
+// base theme. Without these aliases their light fallbacks (#fff) win in dark
+// mode, leaving white cards with near-white text. Keep the aliases tied to
+// the existing theme tokens so light and dark modes stay in one system.
+const ANALYTICS_THEME_BRIDGE = String.raw`
+<style id="accelerator-analytics-theme-bridge">
+:root{--card:var(--surface);--panel:var(--surface);--text:var(--ink);--surface-2:var(--soft)}
+html[data-theme="dark"]{--card:var(--surface);--panel:var(--surface);--text:var(--ink);--surface-2:var(--soft)}
+</style>`;
+
 function source() {
   if (verifiedSource) return verifiedSource;
   const bytes = zlib.brotliDecompressSync(Buffer.from(encoded, 'base64'));
@@ -1645,7 +1655,7 @@ const PACKAGING_BRIDGE = String.raw`
 function injectPersistence(html) {
   if (html.includes('id="accelerator-v1637-packaging-bridge"')) return html;
   const closingBody = html.lastIndexOf('</body>');
-  const bridges = PERSISTENCE_BRIDGE + '\n' + PACKAGING_BRIDGE;
+  const bridges = ANALYTICS_THEME_BRIDGE + '\n' + PERSISTENCE_BRIDGE + '\n' + PACKAGING_BRIDGE;
   if (closingBody < 0) return html + bridges;
   return html.slice(0, closingBody) + bridges + '\n' + html.slice(closingBody);
 }
