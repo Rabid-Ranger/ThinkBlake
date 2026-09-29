@@ -31,6 +31,9 @@ test('manual video checkpoint editor exposes every missing video field',()=>{
     assert.ok(clarity.includes(id),id);
   }
   assert.match(clarity,/creates a revised checkpoint and keeps the earlier import history/i);
+  assert.match(clarity,/Add .*checkpoint/);
+  assert.match(clarity,/acm-video-id/);
+  assert.match(clarity,/acm-published/);
   assert.match(clarity,/apv:rate\('acm-apv',false\)/);
   assert.doesNotMatch(page,/\['ctr','ret30','apv'\]\.includes\(k\)&&n>100/);
   assert.match(page,/\['ctr','ret30'\]\.includes\(k\)&&n>100/);
