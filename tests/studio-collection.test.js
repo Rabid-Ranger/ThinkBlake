@@ -28,6 +28,20 @@ test('setup uses one exact checkpoint and requests the 15 most recent matured el
  }
 });
 
+test('one-video prompt can collect every matured checkpoint in one request',()=>{
+ const v={id:'abc123xyz00',engineId:'abc123xyz00',title:'One video',published:'2026-08-01T12:00:00Z'};
+ const p=I.singleVideoPrompt(c,v,[24,48,168],now),schema=I.studioJson(p,c.id).data;
+ assert.deepEqual(schema.observations.map(x=>x.windowHours),[24,48,168]);
+ assert.ok(schema.observations.every(x=>x.videoId==='abc123xyz00'));
+ assert.match(p,/ONE VIDEO only/);
+ assert.match(p,/Do not collect any other videos/);
+ assert.match(p,/Traffic source \/ How viewers found this video/);
+ assert.match(p,/APV may legitimately exceed 100%/);
+ const fix=I.singleVideoFormatPrompt(c,v,[24,48,168]);
+ assert.match(fix,/PREVIOUS ANSWER only/);
+ assert.doesNotMatch(fix,/Collect measured YouTube analytics/);
+});
+
 test('optional engagement, retention, and traffic context do not make an otherwise complete checkpoint incomplete',()=>{
  const optional={...row,metrics:{...fullMetrics,engagedViews:null,retention30:null,browsePct:null,suggestedPct:null,searchPct:null,externalPct:null}};
  const first=I.parse(packet([optional]),c,A.emptyStore(),now);
