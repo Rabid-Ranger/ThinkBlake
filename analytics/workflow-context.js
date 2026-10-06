@@ -120,8 +120,8 @@
     if(weak)return {
       tone:'bad',label:'Yes. This looks clearly weak for this creator.',
       line,
-      meaning:label==='CTR'?'People are clicking these videos less than they usually do for this creator.':'People are watching less than they usually do after clicking.',
-      next:label==='CTR'?'First check whether YouTube showed the video to a broader audience and where the views came from. If that does not explain it, the title/thumbnail is likely the issue.':'Open the retention graph and check the first 30–60 seconds. Find where viewers start leaving more than usual.'
+      meaning:label==='CTR'?'People are choosing these videos less than they usually do for this creator. That is an appeal signal, not automatic proof the thumbnail is the cause.':'People are watching less than they usually do after clicking.',
+      next:label==='CTR'?'First check whether YouTube showed the video to a broader audience and where the views came from. If that does not explain it, inspect the idea / angle and title-thumbnail promise together. On a published video, the package is the part you can directly test.':'Open the retention graph and check the first 30–60 seconds. Find where viewers start leaving more than usual.'
     };
     if(soft)return {
       tone:'warn',label:'A little below normal, but not enough to call it the main problem.',
@@ -373,7 +373,7 @@
     if(x.includes('reach')||x.includes('discovery')||x.includes('acquisition')||x.includes('gateway'))return 'Reach';
     if(x.includes('trust')||x.includes('loyalty')||x.includes('pathway'))return 'Trust';
     if(x.includes('business')||x.includes('convert'))return 'Convert';
-    if(x.includes('packag')||x.includes('opening')||x.includes('viewing')||x.includes('retention'))return overall?.action?.job||'Keep intended Reach / Trust / Convert job, fix this execution layer across it';
+    if(x.includes('packag')||x.includes('appeal')||x.includes('opening')||x.includes('viewing')||x.includes('retention'))return overall?.action?.job||'Keep intended Reach / Trust / Convert job, fix this execution layer across it';
     if(x.includes('growth'))return 'Protect the job mix producing the wins';
     return overall?.action?.job||'Decide from the plan';
   }
@@ -394,10 +394,10 @@
       next='Check traffic source, audience fit, topic interest, competition, seasonality, and whether CLICK or WATCH may have limited expansion before deciding what to change.';
       alternative='Low impressions can come from limited opportunity, a narrower intentional audience, source shifts, competition / seasonality, or weaker viewer response that reduced further expansion.';
     }else if(q.click.tone==='bad'){
-      leading='Packaging / click';
-      because='SHOW is not the first clear failure, but CLICK is. '+q.click.line;
+      leading='Appeal / click';
+      because='SHOW is not the clearest constraint, but CLICK is weak. '+q.click.line+' CTR tells us the video was less appealing to choose; it does not isolate the idea, title, or thumbnail by itself.';
       next=q.click.next;
-      alternative='A colder or broader audience mix can cool CTR without proving the package is bad.';
+      alternative='A colder or broader audience mix can cool CTR, and a weak underlying idea / angle can also depress clicks even when the thumbnail execution is solid.';
     }else if(q.watch.tone==='bad'){
       leading='Promise / opening / viewing experience';
       because='SHOW and CLICK hold better, while WATCH is the first clear weak stage. '+q.watch.line;
