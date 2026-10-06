@@ -11,7 +11,7 @@
     168:{label:'7d',name:'MAIN READ',purpose:'What happened compared with this creator’s usual result?',act:'Use this to decide what, if anything, should change on the next video.'},
     672:{label:'28d',name:'WHAT TO MAKE NEXT',purpose:'What did this video teach us?',act:'Use this to decide what to make next and what to repeat, change, or stop.'}
   };
-  const STAGE={reach:'DISTRIBUTION / OPPORTUNITY',packaging:'TITLE / THUMBNAIL',retention:'WATCH'};
+  const STAGE={reach:'DISTRIBUTION / OPPORTUNITY',packaging:'APPEAL / PACKAGE',retention:'WATCH'};
   const n=v=>v===''||v==null||!Number.isFinite(Number(v))?null:Number(v);
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const fmtCount=v=>n(v)===null?'—':Math.round(n(v)).toLocaleString();
@@ -65,12 +65,12 @@
       if(stages.includes('reach')) return 'The video still won even though YouTube did not show it as evenly as usual. Check where the views came from before copying the surface topic.';
       return 'Protect what worked. Figure out what you can repeat in the topic, title/thumbnail, and viewing experience before changing the approach.';
     }
-    if(key==='packaging|retention') return 'Check the promise first. If fewer people click and the people who click also watch less, a thumbnail swap alone may not fix it.';
+    if(key==='packaging|retention') return 'Check the promise first. If fewer people choose the video and the people who click also watch less, the issue may sit in the idea / angle, the title-thumbnail promise, or how the video delivers it. A thumbnail swap alone may not fix it.';
     if(key==='packaging|reach') return 'Both distribution and clicking are weak. Do not assume the topic caused the low impressions. Check traffic source, audience fit, topic interest / competition / seasonality, and whether the package was weak enough to limit expansion.';
     if(key==='reach|retention') return 'Both distribution and watching are weak. Low impressions may reflect limited opportunity or may be downstream of how viewers responded. Check traffic source, audience fit, topic conditions, and the retention curve before choosing a cause.';
     if(stages.length>1&&stages.includes('reach')) return 'Several signals are weak at once. Do not treat low SHOW as the cause just because it appears first. Check traffic source and audience mix, then weigh opportunity conditions, CTR, and retention together before choosing one major change.';
     if(stages.includes('reach')) return 'SHOW is below usual. Treat that as a distribution clue, not a topic verdict. Check traffic source, audience fit, topic interest, competition, seasonality, and whether click / watch signals may have limited further expansion before deciding what to change.';
-    if(stages.includes('packaging')) return 'Look at the title and thumbnail. If you can, compare CTR by traffic source. Test one meaningfully different title/thumbnail, not tiny random tweaks.';
+    if(stages.includes('packaging')) return 'CLICK is weak, which points to appeal, not automatically a bad thumbnail. Check traffic source, then inspect the idea / angle and title-thumbnail promise together. For a published video, test one meaningfully different package rather than tiny random tweaks.';
     if(stages.includes('retention')) return 'Open the retention graph and find the first spot where viewers drop harder than usual. If it is in the first 30–60 seconds, check the hook and opening. If it is later, check pacing, structure, or whether the video stopped delivering on the promise.';
     return 'Nothing clearly needs fixing right now. Keep the video’s job and where the views came from in mind, then check again at the next useful checkpoint.';
   }
@@ -110,7 +110,7 @@
         headline=hours<168?'A couple things look off so far.':'A couple things look off here.';
         explain='I would not try to fix all of them at once, and I would not assume the left-most metric caused the others. Low SHOW can be limited opportunity or a downstream result of weaker appeal / viewing. Use traffic source, audience fit, topic conditions, CTR, and retention together to decide what is most likely.';
       }else{
-        headline=hours<168?'So far, this looks like '+(hard[0]==='reach'?'a distribution / opportunity question.':hard[0]==='packaging'?'a title / thumbnail issue.':'a watch issue.'):'This looks like '+(hard[0]==='reach'?'a distribution / opportunity question.':hard[0]==='packaging'?'a title / thumbnail issue.':'a watch issue.');
+        headline=hours<168?'So far, this looks like '+(hard[0]==='reach'?'a distribution / opportunity question.':hard[0]==='packaging'?'an appeal / package question.':'a watch issue.'):'This looks like '+(hard[0]==='reach'?'a distribution / opportunity question.':hard[0]==='packaging'?'an appeal / package question.':'a watch issue.');
         explain='This is the one thing that stands out most against what this creator normally gets at the same age.';
       }
     }else if(winner){
@@ -158,7 +158,7 @@
     const d=diagnose(r,hours),c=r?.comparisons||{},outcomeKey=d.metrics?.outcomeKey;
     if(d.outcomeMultiple!==null&&d.outcomeMultiple!==undefined){
       const outcomeLabel=outcomeKey==='engagedViews'?'Engaged views':'Views';
-      const hardStatus=d.hardIssues?.length?(d.hardIssues.length>1?'A couple things look off':d.hardIssues[0]==='reach'?'Distribution is low':d.hardIssues[0]==='packaging'?'Looks like title / thumbnail':'Looks like watch'):null;
+      const hardStatus=d.hardIssues?.length?(d.hardIssues.length>1?'A couple things look off':d.hardIssues[0]==='reach'?'Distribution is low':d.hardIssues[0]==='packaging'?'Click / appeal is weak':'Looks like watch'):null;
       const status=d.kind==='diagnosed'?(hardStatus||(d.winner?'Strong result':d.softIssues?.length?'One thing to check':'In the usual range')):age.purpose;
       return {tone:d.tone||'muted',score:outcomeLabel+' '+fmtMultiple(d.outcomeMultiple),status};
     }
@@ -166,7 +166,7 @@
     const fair=[imp,ctr,ret,apv,avd].some(x=>x!==null);
     if(fair){
       const score=imp!==null?'Impressions '+fmtMultiple(imp):ctr!==null?'CTR '+(ctr>=0?'+':'')+ctr.toFixed(1)+' pp':'Watch data ready';
-      const hardStatus=d.hardIssues?.length?(d.hardIssues.length>1?'A couple things look off':d.hardIssues[0]==='reach'?'Distribution is low':d.hardIssues[0]==='packaging'?'Looks like title / thumbnail':'Looks like watch'):null;
+      const hardStatus=d.hardIssues?.length?(d.hardIssues.length>1?'A couple things look off':d.hardIssues[0]==='reach'?'Distribution is low':d.hardIssues[0]==='packaging'?'Click / appeal is weak':'Looks like watch'):null;
       const status=d.kind==='diagnosed'?(hardStatus||(d.softIssues?.length?'One thing to check':'Comparison ready')):'Comparison ready';
       return {tone:d.tone||'normal',score,status};
     }
@@ -205,7 +205,7 @@
       doNext='Leave the winner alone. Carry the softer metric forward as a note for the next video.';
       how='Check whether that same weak spot shows up again on the next comparable upload before changing anything.';
     }else if((d?.hardIssues||[]).length>1){
-      why+=' More than one thing is off, so I would start with the first break instead of trying to fix everything.';
+      why+=' More than one signal is off, so I would not assume the first metric caused the others.';
       doNext='Do not pick a cause just because one metric appears earlier in the dashboard. Separate the signals before changing the strategy.';
       how='Check traffic source and audience mix, then test the idea / package evidence and retention evidence together. Change one major variable only after the evidence points to it.';
     }else if(first==='reach'){
@@ -213,9 +213,9 @@
       doNext='Check Browse and Suggested, audience fit, topic interest / competition / seasonality, and the click / watch response before deciding whether the next idea should change.';
       how='If CTR and watch are healthy in comparable traffic, limited opportunity becomes more plausible. If CTR or watch is also weak, treat low distribution as possibly downstream and investigate that evidence before changing the topic.';
     }else if(first==='packaging'){
-      why+=' That points me to the title / thumbnail before the actual video.';
-      doNext='Test a meaningfully different title / thumbnail promise. Keep the topic and video itself stable.';
-      how='Break CTR out by traffic source. If Browse / Suggested CTR is still clearly low, test the package. If wider distribution explains the lower CTR, do not blame the thumbnail.';
+      why+=' That points me to an appeal problem, but CTR alone cannot tell me whether the weak link is the idea / angle or the title-thumbnail package.';
+      doNext='For this published video, test a meaningfully different title / thumbnail promise. For the next video, also check whether the underlying idea / angle was compelling enough.';
+      how='Break CTR out by traffic source. If Browse / Suggested CTR is still clearly low, inspect the idea / angle and package together. Wider distribution can cool CTR without proving either is bad.';
     }else if(first==='retention'){
       why+=' That points me to the viewing experience before the topic or package.';
       doNext='Open the retention graph and find the first real drop before changing the topic or thumbnail.';
@@ -265,7 +265,7 @@
         measure=savedMetric||'Engaged views / views, impressions, and new-viewer growth';
         protect=savedGuard||'CTR, watch quality, and audience fit';
         if(first==='reach'){meaning='Distribution is lower than usual. That is a real observation, but it does not prove the topic caused it. I would check traffic sources, audience fit, topic interest / competition / seasonality, plus click and watch response before changing the title, thumbnail, opening, or next idea.';next='Check Browse and Suggested first, then decide whether the evidence points to limited opportunity, weak appeal, weak viewing, or simply an audience / source shift.';}
-        else if(first==='packaging'){meaning='People are seeing the video, but the click is the weak point. I would look at the title / thumbnail before touching the actual video.';next='Test a meaningfully different title / thumbnail promise. Keep the core idea the same so you can tell whether the package was actually the problem.';}
+        else if(first==='packaging'){meaning='People are seeing the video, but choosing it is the weak point. That is an appeal signal, not automatic proof the thumbnail is bad. I would inspect the idea / angle and title-thumbnail promise together.';next='For this published video, test a meaningfully different title / thumbnail. For the next comparable Reach idea, also ask whether the angle itself was compelling enough.';}
         else if(first==='retention'){meaning='People are finding and clicking the video, but they are leaving earlier than usual. I would look at the opening and retention graph before changing the topic or thumbnail.';next='Find the first real drop. Then check whether the opening delivered the promise fast enough.';}
         else{meaning='Nothing here is making me want to change the Reach strategy.';next='Keep going. Use the next comparable Reach video to see if anything actually repeats.';}
       }else if(job==='Trust'){
@@ -274,7 +274,7 @@
         measure=savedMetric||'First 30 seconds, APV / AVD, returning viewers, and next-video behavior';
         protect=savedGuard||'Audience fit and enough reach to bring the right viewers in';
         if(first==='reach'){meaning='Distribution is lower than usual, but I would not call a Trust video a failure from that alone or assume the topic caused it.';next='Check watch quality, next-video behavior, returning viewers, traffic sources, and audience fit. Only widen the topic when the evidence says opportunity is actually the constraint.';}
-        else if(first==='packaging'){meaning='The right people may be seeing it, but not enough are clicking. The title / thumbnail is where I would look first.';next='Make the promise clearer for the core viewer. Do not broaden it just to chase clicks.';}
+        else if(first==='packaging'){meaning='The right people may be seeing it, but not enough are choosing it. Inspect the idea / angle and title-thumbnail promise together rather than blaming the thumbnail alone.';next='Make the promise clearer for the core viewer. On the published video, test the package. Do not broaden the idea just to chase clicks.';}
         else if(first==='retention'){meaning='Watch is the clearest weak point, and that matters a lot more on a Trust video.';next='Look at the first 30 seconds and the retention curve. Fix promise delivery, pacing, proof, and the handoff to the next useful video.';}
         else{meaning='Nothing here is making me want to change the Trust strategy.';next='Keep the viewing experience strong and make the next useful video obvious. I would watch returning viewers before changing direction.';}
       }else if(job==='Convert'){
@@ -285,7 +285,7 @@
         protect=savedGuard||'Audience fit, trust, and enough of the right viewers';
         if(resultMissing){meaning='I can read the YouTube side, but I still do not know whether the video actually converted.';next='Check the real lead, booking, or sales result before calling this a win or loss. Use reach, CTR, and watch to figure out where the path may be breaking.';}
         else if(first==='reach'){meaning='Distribution is lower than usual, but a Convert video can still do its job with fewer views if the right people take action.';next='Check the business result first. Only broaden the idea when the evidence says too few qualified people are getting into the path because opportunity is constrained.';}
-        else if(first==='packaging'){meaning='The title / thumbnail is the clearest weak point here.';next='Make the package clearer for the actual buyer or prospect, then watch what happens to the business result.';}
+        else if(first==='packaging'){meaning='Choosing the video is the clearest weak point here. That could be the idea / angle, the title-thumbnail package, or both.';next='For the published video, make the package clearer for the actual buyer or prospect, then watch what happens to the business result.';}
         else if(first==='retention'){meaning='People are leaving earlier than usual, so they may not even be reaching the proof or CTA.';next='Check promise delivery, proof, and CTA timing. Then confirm the business result before blaming watch time for the business problem.';}
         else{meaning='I am not seeing a clear YouTube problem here. The business result should decide what happens next.';next='Judge the actual conversion result. I would not change a healthy Convert video just because it got fewer views than a Reach video.';}
       }else{
@@ -297,8 +297,8 @@
           measure=savedMetric||'Engaged views, impressions, and traffic-source mix';
           protect=savedGuard||'CTR and watch quality are healthier. Do not break those while trying to get more reach.';
         }else if(first==='packaging'){
-          meaning='The video is getting enough exposure to judge the click, and the title / thumbnail is the first thing I would look at.';
-          next='Check CTR by traffic source. If it is still weak inside comparable Browse / Suggested traffic, test a meaningfully different title / thumbnail.';
+          meaning='The video is getting enough exposure to judge the click, and appeal is the first weak signal. That does not tell me whether the idea / angle or the title-thumbnail package is the root cause.';
+          next='Check CTR by traffic source. If it is still weak inside comparable Browse / Suggested traffic, test a meaningfully different title / thumbnail and carry the idea / angle question into the next upload.';
           measure=savedMetric||'CTR by traffic source';
           protect=savedGuard||'Keep the topic and actual video stable while testing the package.';
         }else if(first==='retention'){
@@ -538,7 +538,7 @@
       if(n(c.engagedViews?.current)===null||n(c.engagedViews?.baseline)===null)missing.push('Engaged views');
       let logic='Nothing here is strong enough to make me invent a fix.';
       if(d.hardIssues?.includes('reach'))logic='YouTube showed this to fewer people than usual. That is a distribution observation, not a cause. Check audience fit, traffic source, topic interest, competition, seasonality, and whether click / watch response may have limited expansion before deciding why.';
-      else if(d.hardIssues?.includes('packaging'))logic='Reach looks fine enough, but CTR is low. That makes the title / thumbnail the first thing I would inspect, after checking where the impressions came from.';
+      else if(d.hardIssues?.includes('packaging'))logic='Distribution looks sufficient to judge the click, but CTR is low. That tells me appeal is weak; after checking traffic source, inspect the idea / angle and title-thumbnail promise together rather than blaming the thumbnail alone.';
       else if(d.hardIssues?.includes('retention'))logic=m.watchKey==='retention30'?'The first 30 seconds are clearly below usual. I would inspect the opening and retention curve, but I would not pretend one number tells us exactly why.':'Watch is below usual based on '+watchLabel+'. The exact first-30-second number is missing, so I would treat this as a clue, not proof that the hook caused it.';
       else if(d.softIssues?.length)logic='One number is a little soft, but not enough to make me change the strategy yet.';
       const change=d.hardIssues?.includes('reach')?'If comparable traffic shows healthy opportunity, or CTR / watch repeatedly look weak enough to explain limited expansion, the diagnosis should move away from topic / opportunity and toward the stronger evidence.':d.hardIssues?.includes('packaging')?'If CTR is healthy inside the same traffic source, or wider distribution explains the lower CTR, title / thumbnail becomes a weaker explanation.':d.hardIssues?.includes('retention')?'If the first 30 seconds and retention curve are healthy, the watch diagnosis weakens.':'Repetition across more comparable videos would make the call stronger.';
