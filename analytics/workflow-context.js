@@ -85,13 +85,13 @@
     if(v<.7)return {
       tone:'bad',label:kind==='show'?'Yes. YouTube is showing these videos less than usual.':'Yes. Recent videos are clearly below normal.',
       line:'Recent middle result: '+mult(v)+' of what this creator usually gets'+(sample?' across '+sample+' 7-day video'+(sample===1?'':'s'):'')+'.',
-      meaning:kind==='show'?'This is a real clue. YouTube is not showing these videos as much as it usually does.':'The videos really are under normal, so keep checking where the drop starts.',
-      next:kind==='show'?'Before changing the title or thumbnail, check the topic, who the video reached, and where the views came from.':'Next, check whether YouTube showed the videos as much as usual.'
+      meaning:kind==='show'?'This is a real distribution clue. It tells us the videos received fewer registered impression opportunities, not why.':'The videos really are under normal, so keep checking where the drop starts.',
+      next:kind==='show'?'Check traffic source, audience fit, topic interest, competition, seasonality, CTR, and watch response before deciding whether the idea, package, viewing experience, or external conditions limited expansion.':'Next, check whether YouTube showed the videos as much as usual.'
     };
     if(v<1.3)return {
       tone:'normal',label:kind==='show'?'No. YouTube is showing these videos about as much as usual.':'No clear problem here.',
       line:'Recent middle result: '+mult(v)+' of what this creator usually gets'+(sample?' across '+sample+' 7-day video'+(sample===1?'':'s'):'')+'.',
-      meaning:kind==='show'?'How often YouTube showed the videos does not look like the problem.':'The result is close to what this creator usually gets.',
+      meaning:kind==='show'?'Distribution volume is close to normal. Keep checking CLICK and WATCH rather than treating impressions as proof of the cause.':'The result is close to what this creator usually gets.',
       next:kind==='show'?'Next, check whether people clicked when they saw the videos.':'Do not treat normal results like a channel problem. Only dig deeper if something else in the channel points to an issue.'
     };
     return {
@@ -99,7 +99,7 @@
       label:kind==='show'?'No. YouTube is showing these videos more than usual.':'No. Results are above normal.',
       line:'Recent middle result: '+mult(v)+' of what this creator usually gets'+(sample?' across '+sample+' 7-day video'+(sample===1?'':'s'):'')+'.',
       meaning:kind==='show'?'YouTube is showing these videos more than it usually does.':'This looks like a strength, not a problem.',
-      next:kind==='show'?'If the result is still weak, check CLICK and WATCH next. The problem is not that YouTube failed to show it.':'Protect what is working and figure out what you can repeat before changing it.'
+      next:kind==='show'?'If the result is still weak, check CLICK and WATCH plus source mix. Strong SHOW rules out a simple lack-of-opportunity explanation, but it does not by itself identify the cause.':'Protect what is working and figure out what you can repeat before changing it.'
     };
   }
   function rateAnswer(rate,label,thresholdRatio,missingMetric){
@@ -277,7 +277,7 @@
         {label:'Impressions vs usual',value:show===null?'—':mult(show),compare:'Recent similar videos',tone:show===null?'muted':show<.7?'bad':show>1.3?'good':'normal'},
         audienceMetric(a,'newViewers','New viewers','First-time viewers in the period')
       ];
-      return {tone:weak?'bad':healthy?'good':'warn',verdict:weak?'Analytics lean NO: discovery / Reach looks weak.':healthy?'Analytics support YES: enough people appear to be getting a chance to see the videos.':'Analytics are mixed on Reach.',line:'This question uses impressions against the creator’s usual result plus the New-viewer trend.',meaning:weak?'The first issue may be getting in front of enough of the right new people, before CTR or retention.':'Reach does not look like the clearest break from the data we have.',next:weak?'Check topic demand and traffic sources before changing the title/thumbnail.':'Keep moving to audience fit and click unless the creator context says otherwise.',metrics,note:'New viewers help with Reach. They do not tell you by themselves whether those viewers are the right audience.'};
+      return {tone:weak?'bad':healthy?'good':'warn',verdict:weak?'Analytics show lower distribution / discovery than usual.':healthy?'Analytics support YES: enough people appear to be getting a chance to see the videos.':'Analytics are mixed on distribution / Reach.',line:'This question uses impressions against the creator’s usual result plus the New-viewer trend.',meaning:weak?'Distribution is the clearest weak signal, but low impressions do not prove the topic caused it. The cause could involve opportunity, audience fit, source mix, appeal, viewing response, competition, or seasonality.':'Distribution does not look like the clearest break from the data we have.',next:weak?'Check traffic sources, audience fit, topic conditions, CTR, and watch before deciding what to change.':'Keep moving to audience fit and click unless the creator context says otherwise.',metrics,note:'New viewers help with Reach. They do not tell you by themselves whether those viewers are the right audience.'};
     }
     if(index===2){
       const leads=businessMetric(channelData,'qualifiedLeads','Qualified leads');
@@ -389,10 +389,10 @@
       next='Keep the working direction. Check source mix and the intended video job, then carry one supported lesson into the next video.';
       alternative='Wider distribution can lower rates; platform reach does not by itself prove Trust or business success.';
     }else if(r.show!==null&&r.show<.7){
-      leading='Topic / Reach';
-      because='The videos are under normal, and the first place the drop shows up is SHOW: YouTube is showing them at '+mult(r.show)+' of the usual level.';
-      next='Check the topic, who the video reached, and where the views came from before changing the title or thumbnail.';
-      alternative='A narrower intentional audience, source shift or mixed comparison set could lower impressions without making the idea bad.';
+      leading='Distribution / opportunity';
+      because='The videos are under normal and SHOW is below usual at '+mult(r.show)+' of the normal level. That tells us distribution is constrained; it does not prove the topic caused it.';
+      next='Check traffic source, audience fit, topic interest, competition, seasonality, and whether CLICK or WATCH may have limited expansion before deciding what to change.';
+      alternative='Low impressions can come from limited opportunity, a narrower intentional audience, source shifts, competition / seasonality, or weaker viewer response that reduced further expansion.';
     }else if(q.click.tone==='bad'){
       leading='Packaging / click';
       because='SHOW is not the first clear failure, but CLICK is. '+q.click.line;
@@ -462,7 +462,7 @@
       '<h3>'+esc(prop.leading)+'</h3>'+
       '<p>'+esc(prop.because)+'</p>'+
       '<div class="awf-plan-link"><span>WHAT THIS MEANS FOR THE PLAN</span><b>'+esc(prop.jobFocus)+'</b><p>'+esc(prop.next)+'</p></div>'+
-      '<small>'+esc(prop.confidence)+' confidence. The metric sequence suggests where to focus. Creator goals, offer, audience fit, capacity and business context still confirm the final diagnosis.</small>'+
+      '<small>'+esc(prop.confidence)+' confidence. The metric tells you where to investigate, not automatically what caused the result. Creator goals, offer, audience fit, traffic source, capacity and business context still confirm the final diagnosis.</small>'+
     '</section>';
     const summary=drawer.querySelector('#awf-diagnosis-decision');
     if(!summary){const first=drawer.querySelector('.cg-section');if(first){const t=win.document.createElement('template');t.innerHTML=summaryHtml;first.after(t.content.firstElementChild);}}
@@ -537,7 +537,7 @@
       'cg-r-compare':'Compared with this creator’s matched '+(read.rw.hours===24?'24-hour':read.rw.hours===48?'48-hour':read.rw.hours===168?'7-day':'28-day')+' baseline.',
       'cg-r-unusual':d.bottleneck==='NO CLEAR ISSUE'?'Nothing looks clearly off.':d.bottleneck,
       'cg-r-mean':d.explain||'',
-      'cg-r-notprove':'This comparison shows where the problem might be. It does not prove why it happened.',
+      'cg-r-notprove':'This comparison shows where to investigate. A weak metric is not proof of the underlying cause.',
       'cg-r-next':d.next||'',
       'cg-r-decision':d.next||''
     };
