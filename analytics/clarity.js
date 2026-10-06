@@ -165,7 +165,7 @@
     const fair=[imp,ctr,ret,apv,avd].some(x=>x!==null);
     if(fair){
       const score=imp!==null?'Impressions '+fmtMultiple(imp):ctr!==null?'CTR '+(ctr>=0?'+':'')+ctr.toFixed(1)+' pp':'Watch data ready';
-      const hardStatus=d.hardIssues?.length?(d.hardIssues.length>1?'A couple things look off':d.hardIssues[0]==='reach'?'Looks like reach':d.hardIssues[0]==='packaging'?'Looks like title / thumbnail':'Looks like watch'):null;
+      const hardStatus=d.hardIssues?.length?(d.hardIssues.length>1?'A couple things look off':d.hardIssues[0]==='reach'?'Distribution is low':d.hardIssues[0]==='packaging'?'Looks like title / thumbnail':'Looks like watch'):null;
       const status=d.kind==='diagnosed'?(hardStatus||(d.softIssues?.length?'One thing to check':'Comparison ready')):'Comparison ready';
       return {tone:d.tone||'normal',score,status};
     }
