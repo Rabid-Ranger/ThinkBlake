@@ -9,7 +9,7 @@
   const metricDictionary = Object.freeze({
     views: { label: 'Views', unit: 'count', meaning: 'Playback starts under the recorded YouTube definition.' },
     engagedViews: { label: 'Engaged views', unit: 'count', meaning: 'Continued or intentional playback under the recorded source definition; not unique people or a fixed watch-duration threshold.' },
-    impressions: { label: 'Registered impressions', unit: 'count', meaning: 'Eligible thumbnail opportunities reported by YouTube, not every source of a view.' },
+    impressions: { label: 'Registered impressions', unit: 'count', meaning: 'Eligible thumbnail opportunities reported by YouTube, not every source of a view. Low impressions describe distribution; they do not by themselves prove the topic, title, thumbnail, or video was the cause.' },
     ctr: { label: 'Impressions CTR', unit: 'ratio', max: 1, meaning: 'Choice following a registered thumbnail impression. Use the reported rate, not total views divided by impressions.' },
     retention30: { label: 'First 30-second retention', unit: 'ratio', max: 1, meaning: 'The reported Studio intro percentage. It identifies an opening question, not the cause of a drop.' },
     apv: { label: 'Average percentage viewed', unit: 'ratio', meaning: 'Average portion watched. Compare similar duration and format; replay-related values may exceed 100%.' },
