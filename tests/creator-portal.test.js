@@ -31,3 +31,14 @@ test('Open creator view is a native secure link, not a popup-dependent window.op
   assert.doesNotMatch(share,/window\.open\(linkUrl/);
   assert.doesNotMatch(share,/data-cshare="open"/);
 });
+
+test('shared video workspace carries the full working flow and coach feedback without giving the creator strategy access',()=>{
+ const share=read('ui/creator-sharing.js'),portal=read('ui/creator-portal.js'),edge=read('supabase/functions/creator-portal/index.ts');
+ assert.match(share,/Coach feedback/);
+ assert.match(share,/workflow:\{brief/);
+ assert.match(share,/internal strategy and analytics stay private/);
+ assert.match(portal,/Copy this video context for AI/);
+ assert.match(portal,/Publish \+ learn/);
+ assert.match(edge,/feedbackUpdatedAt/);
+ assert.match(edge,/workflow: \{/);
+});
