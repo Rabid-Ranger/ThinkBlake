@@ -69,6 +69,7 @@ function sanitizeCompleted(input: unknown, allowed: Set<string>) {
 }
 function sanitizeCoachVideo(v: any) {
   const tasks = sanitizeTasks(v?.coach?.tasks);
+  const flow = v?.coach?.workflow || {};
   return {
     id: validId(v?.id),
     coach: {
@@ -83,6 +84,15 @@ function sanitizeCoachVideo(v: any) {
       stage: text(v?.coach?.stage, 120),
       publishDate: text(v?.coach?.publishDate, 120),
       tasks,
+      feedback: text(v?.coach?.feedback, 12000),
+      feedbackUpdatedAt: text(v?.coach?.feedbackUpdatedAt, 120),
+      workflow: {
+        brief: { job: text(flow?.brief?.job, 160), viewer: text(flow?.brief?.viewer, 4000), promise: text(flow?.brief?.promise, 4000), format: text(flow?.brief?.format, 500) },
+        package: { title: text(flow?.package?.title, 500), thumbnailText: text(flow?.package?.thumbnailText, 500), thumbnailConcept: text(flow?.package?.thumbnailConcept, 4000) },
+        script: { hook: text(flow?.script?.hook, 12000), outline: text(flow?.script?.outline, 20000), cta: text(flow?.script?.cta, 4000) },
+        production: { owner: text(flow?.production?.owner, 500), date: text(flow?.production?.date, 120), assets: text(flow?.production?.assets, 8000) },
+        analytics: { next: text(flow?.analytics?.next, 4000) },
+      },
     },
     creator: {
       titleDraft: text(v?.creator?.titleDraft, 500),
