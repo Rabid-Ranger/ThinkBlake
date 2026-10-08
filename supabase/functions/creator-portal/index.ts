@@ -67,20 +67,6 @@ function sanitizeCompleted(input: unknown, allowed: Set<string>) {
   if (!Array.isArray(input)) return [];
   return [...new Set(input.map(x => text(x, 120)).filter(x => allowed.has(x)))].slice(0, 20);
 }
-function sanitizeBuild(input: any) {
-  const b = input || {}, viewer = b.viewer || {}, r = b.research || {}, p = b.promise || {}, pack = b.package || {}, h = b.hook || {}, st = b.structure || {}, cta = b.cta || {}, hand = b.handoff || {};
-  return {
-    job: text(b.job, 160), role: text(b.role, 400), exactViewer: text(b.exactViewer, 4000), archetype: text(b.archetype, 500), stage: text(b.stage, 120),
-    viewer: { problem: text(viewer.problem, 4000), desire: text(viewer.desire, 4000) },
-    research: { methods: Array.isArray(r.methods) ? r.methods.slice(0, 12).map((x:any) => text(x, 300)).filter(Boolean) : [], platformEvidence: text(r.platformEvidence, 12000), referenceVideos: text(r.referenceVideos, 12000), openGap: text(r.openGap, 8000), beliefShift: text(r.beliefShift, 8000), objection: text(r.objection, 8000) },
-    promise: { viewer: text(p.viewer, 4000), problem: text(p.problem, 4000), result: text(p.result, 4000), mechanism: text(p.mechanism, 4000) },
-    package: { titleApproach: text(pack.titleApproach, 500), workingTitle: text(pack.workingTitle, 500), finalTitle: text(pack.finalTitle, 500), thumbnailApproach: text(pack.thumbnailApproach, 500), thumbnailConcept: text(pack.thumbnailConcept, 4000), thumbnailText: text(pack.thumbnailText, 500) },
-    hook: { type: text(h.type, 500), draft: text(h.draft, 12000) },
-    structure: { type: text(st.type, 500), notes: text(st.notes, 20000) },
-    cta: { midType: text(cta.midType, 500), midDraft: text(cta.midDraft, 4000), endType: text(cta.endType, 500), endDraft: text(cta.endDraft, 4000), publishDate: text(cta.publishDate, 120), publishedUrl: text(cta.publishedUrl, 4000), review24: bool(cta.review24), review7: bool(cta.review7), review28: bool(cta.review28) },
-    handoff: { owner: text(hand.owner, 500), dueDate: text(hand.dueDate, 120), assets: text(hand.assets, 12000), checklist: text(hand.checklist, 16000), notes: text(hand.notes, 12000), format: text(hand.format, 500), layout: text(hand.layout, 500) },
-  };
-}
 function sanitizeCoachVideo(v: any) {
   const tasks = sanitizeTasks(v?.coach?.tasks);
   const flow = v?.coach?.workflow || {};
@@ -106,7 +92,6 @@ function sanitizeCoachVideo(v: any) {
         script: { hook: text(flow?.script?.hook, 12000), outline: text(flow?.script?.outline, 20000), cta: text(flow?.script?.cta, 4000) },
         production: { owner: text(flow?.production?.owner, 500), date: text(flow?.production?.date, 120), assets: text(flow?.production?.assets, 8000) },
         analytics: { next: text(flow?.analytics?.next, 4000) },
-        build: sanitizeBuild(flow?.build),
       },
     },
     creator: {
@@ -121,8 +106,6 @@ function sanitizeCoachVideo(v: any) {
       status: text(v?.creator?.status, 120),
       readyForReview: bool(v?.creator?.readyForReview),
       completedTaskIds: sanitizeCompleted(v?.creator?.completedTaskIds, new Set(tasks.map((t:any)=>t.id))),
-      activeStep: text(v?.creator?.activeStep, 80),
-      draft: sanitizeBuild(v?.creator?.draft),
     }
   };
 }
@@ -147,8 +130,6 @@ function sanitizeCoachPayload(input: any, prior: any = null) {
         status: text(old.creator.status, 120),
         readyForReview: bool(old.creator.readyForReview),
         completedTaskIds: sanitizeCompleted(old.creator.completedTaskIds, tasks),
-        activeStep: text(old.creator.activeStep, 80),
-        draft: sanitizeBuild(old.creator.draft),
       };
     }
     return clean;
@@ -183,8 +164,6 @@ function mergeCreatorPayload(prior: any, incoming: any) {
         status: text(inc?.creator?.status, 120),
         readyForReview: bool(inc?.creator?.readyForReview),
         completedTaskIds: sanitizeCompleted(inc?.creator?.completedTaskIds, allowedTasks),
-        activeStep: text(inc?.creator?.activeStep, 80),
-        draft: sanitizeBuild(inc?.creator?.draft),
       }
     };
   });
