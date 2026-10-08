@@ -42,6 +42,7 @@ function source() {
 const PERSISTENCE_BRIDGE = String.raw`
 <script id="accelerator-v1636-persistence-bridge">
 (() => {
+  if (window.__acceleratorCreatorPlannerMode) return;
   if (window.__acceleratorPersistenceBridge) return;
   window.__acceleratorPersistenceBridge = true;
   document.title = 'Accelerator OS V16.3.6 - Cloud-First Data Safety';

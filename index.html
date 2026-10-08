@@ -13,6 +13,7 @@
 <div class="load"><h1>Accelerator OS</h1><p>Loading your workspace...</p></div>
 <script>
 (async()=>{try{
+  const creatorToken=new URLSearchParams(location.search).get('creatorPortalToken');
   const r=await fetch('/api/source?build=v1636',{cache:'no-store'});
   if(!r.ok)throw new Error(`Source request failed: ${r.status}`);
   let html=await r.text();
@@ -36,7 +37,15 @@
   html=html.split(homeResourceButton).join(homeResourceLink);
   html=html.replace('</head>','<style id="accelerator-resource-hotfix">.v152-badge{display:none!important}.v152-open-link,.v152-resource-row a.tinybtn{text-decoration:none}</style></head>');
 
-  html=html.replace('</body>','<script src="/analytics/measurement.js"><\/script><script src="/analytics/engine.js"><\/script><script src="/analytics/import.js"><\/script><script src="/analytics/page.js"><\/script><script src="/analytics/workspace.js"><\/script><script src="/analytics/legacy-baseline-compat.js"><\/script><script src="/analytics/live.js"><\/script><script src="/analytics/clarity.js"><\/script><script src="/analytics/decision-context.js"><\/script><script src="/analytics/workflow-context.js"><\/script><script src="/analytics/richness.js"><\/script><script src="/analytics/usability-v3.js"><\/script><script src="/analytics/program-bridge.js"><\/script><script src="/ai/review-reminders.js"><\/script><script src="/ai/review-ui.js"><\/script><script src="/ui/plain-language.js"><\/script><script src="/ui/creator-sharing.js"><\/script></body>');
+  // A creator link uses the real planner, but must never load or replace the
+  // coach's browser or cloud workspace. Keep its short-lived draft in session
+  // storage before the app source runs.
+  if(creatorToken){
+    const preflight=`<script>(function(){var k='accelerator.mainline.v11.cleancore',shadow=null;window.__acceleratorCreatorPlannerMode=true;var p=Storage.prototype,g=p.getItem,s=p.setItem,r=p.removeItem;p.getItem=function(key){return String(key)===k?shadow:g.call(this,key)};p.setItem=function(key,value){return String(key)===k?(shadow=String(value)):s.call(this,key,value)};p.removeItem=function(key){return String(key)===k?(shadow=null):r.call(this,key)};})();<\/script>`;
+    html=html.replace('</head>',preflight+'</head>');
+  }
+
+  html=html.replace('</body>','<script src="/analytics/measurement.js"><\/script><script src="/analytics/engine.js"><\/script><script src="/analytics/import.js"><\/script><script src="/analytics/page.js"><\/script><script src="/analytics/workspace.js"><\/script><script src="/analytics/legacy-baseline-compat.js"><\/script><script src="/analytics/live.js"><\/script><script src="/analytics/clarity.js"><\/script><script src="/analytics/decision-context.js"><\/script><script src="/analytics/workflow-context.js"><\/script><script src="/analytics/richness.js"><\/script><script src="/analytics/usability-v3.js"><\/script><script src="/analytics/program-bridge.js"><\/script><script src="/ai/review-reminders.js"><\/script><script src="/ai/review-ui.js"><\/script><script src="/ui/plain-language.js"><\/script><script src="/ui/creator-sharing.js"><\/script><script src="/ui/creator-planner-mode.js"><\/script></body>');
   document.open();
   document.write(html);
   document.close();

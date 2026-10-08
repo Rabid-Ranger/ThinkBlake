@@ -14,7 +14,11 @@
 </style>
 </head>
 <body>
-<main id="creator-portal" class="shell"><div class="card empty"><b>Loading your creator workspace…</b></div></main>
-<script src="/ui/creator-portal.js" defer></script>
+<main class="shell"><div class="card empty"><b>Opening the video planner…</b><p class="muted">Your shared video is loading.</p></div></main>
+<script>
+  const token=decodeURIComponent(location.hash.slice(1)||'').trim();
+  if(token) location.replace('/?creatorPortalToken='+encodeURIComponent(token));
+  else document.querySelector('main').innerHTML='<div class="card empty"><b>This link is incomplete.</b><p class="muted">Ask your coach for a new video link.</p></div>';
+</script>
 </body>
 </html>

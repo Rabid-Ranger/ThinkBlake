@@ -41,6 +41,23 @@ function text(value: unknown, max = 20000) {
   return String(value).replace(/\u0000/g, "").slice(0, max);
 }
 function bool(value: unknown) { return value === true; }
+function safeValue(value: any, depth = 0): any {
+  if (depth > 7) return undefined;
+  if (typeof value === 'string') return text(value, 20000);
+  if (typeof value === 'number' || typeof value === 'boolean' || value === null) return value;
+  if (Array.isArray(value)) return value.slice(0, 60).map(v => safeValue(v, depth + 1)).filter(v => v !== undefined);
+  if (value && typeof value === 'object') { const out: any = {}; for (const [k,v] of Object.entries(value).slice(0,120)) { if (/^[A-Za-z0-9_.-]{1,80}$/.test(k)) { const clean=safeValue(v, depth + 1); if (clean !== undefined) out[k]=clean; } } return out; }
+  return undefined;
+}
+function sanitizePlanner(input: any) {
+  const planner = input && typeof input === 'object' ? input : {};
+  const creator = planner.creator && typeof planner.creator === 'object' ? planner.creator : {};
+  const video = planner.video && typeof planner.video === 'object' ? planner.video : {};
+  const allowedCreator = ['id','name','channelName','niche','strategy','audience','message','businessPath'];
+  const allowedVideo = ['id','title','job','role','stage','owner','publishDate','exactViewer','format','flowStep','visitedFlow','viewer','research','archetype','promise','package','hook','structure','cta','handoff','production'];
+  const pick=(source:any, keys:string[])=>Object.fromEntries(keys.map(k=>[k,safeValue(source?.[k])]).filter(([,v])=>v!==undefined));
+  return { creator: pick(creator, allowedCreator), video: pick(video, allowedVideo) };
+}
 function tokenValue() {
   const bytes = crypto.getRandomValues(new Uint8Array(32));
   let binary = "";
@@ -86,6 +103,7 @@ function sanitizeCoachVideo(v: any) {
       tasks,
       feedback: text(v?.coach?.feedback, 12000),
       feedbackUpdatedAt: text(v?.coach?.feedbackUpdatedAt, 120),
+      planner: sanitizePlanner(v?.coach?.planner),
       workflow: {
         brief: { job: text(flow?.brief?.job, 160), viewer: text(flow?.brief?.viewer, 4000), promise: text(flow?.brief?.promise, 4000), format: text(flow?.brief?.format, 500) },
         package: { title: text(flow?.package?.title, 500), thumbnailText: text(flow?.package?.thumbnailText, 500), thumbnailConcept: text(flow?.package?.thumbnailConcept, 4000) },
@@ -95,6 +113,7 @@ function sanitizeCoachVideo(v: any) {
       },
     },
     creator: {
+      plannerDraft: safeValue(v?.creator?.plannerDraft),
       titleDraft: text(v?.creator?.titleDraft, 500),
       thumbnailTextDraft: text(v?.creator?.thumbnailTextDraft, 500),
       thumbnailConceptDraft: text(v?.creator?.thumbnailConceptDraft, 4000),
@@ -119,6 +138,7 @@ function sanitizeCoachPayload(input: any, prior: any = null) {
     if (old?.creator) {
       const tasks = new Set(clean.coach.tasks.map((t:any)=>t.id));
       clean.creator = {
+        plannerDraft: safeValue(old.creator.plannerDraft),
         titleDraft: text(old.creator.titleDraft, 500),
         thumbnailTextDraft: text(old.creator.thumbnailTextDraft, 500),
         thumbnailConceptDraft: text(old.creator.thumbnailConceptDraft, 4000),
@@ -153,6 +173,7 @@ function mergeCreatorPayload(prior: any, incoming: any) {
     return {
       ...base,
       creator: {
+        plannerDraft: safeValue(inc?.creator?.plannerDraft),
         titleDraft: text(inc?.creator?.titleDraft, 500),
         thumbnailTextDraft: text(inc?.creator?.thumbnailTextDraft, 500),
         thumbnailConceptDraft: text(inc?.creator?.thumbnailConceptDraft, 4000),
