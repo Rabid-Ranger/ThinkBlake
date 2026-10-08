@@ -69,6 +69,7 @@ function sanitizeCompleted(input: unknown, allowed: Set<string>) {
 }
 function sanitizeBuild(input: any) {
   const b = input || {}, viewer = b.viewer || {}, r = b.research || {}, p = b.promise || {}, pack = b.package || {}, h = b.hook || {}, st = b.structure || {}, cta = b.cta || {}, hand = b.handoff || {};
+  const guide = (items: any) => Array.isArray(items) ? items.slice(0, 28).map((x:any) => ({ name: text(x?.name, 300), what: text(x?.what, 3000), best: text(x?.best, 3000), formula: text(x?.formula, 3000), structure: text(x?.structure, 3000), avoid: text(x?.avoid, 3000), steps: Array.isArray(x?.steps) ? x.steps.slice(0, 8).map((step:any) => text(step, 1200)).filter(Boolean) : [] })).filter((x:any) => x.name) : [];
   return {
     job: text(b.job, 160), role: text(b.role, 400), exactViewer: text(b.exactViewer, 4000), archetype: text(b.archetype, 500), stage: text(b.stage, 120),
     viewer: { problem: text(viewer.problem, 4000), desire: text(viewer.desire, 4000) },
@@ -79,6 +80,7 @@ function sanitizeBuild(input: any) {
     structure: { type: text(st.type, 500), notes: text(st.notes, 20000) },
     cta: { midType: text(cta.midType, 500), midDraft: text(cta.midDraft, 4000), endType: text(cta.endType, 500), endDraft: text(cta.endDraft, 4000), publishDate: text(cta.publishDate, 120), publishedUrl: text(cta.publishedUrl, 4000), review24: bool(cta.review24), review7: bool(cta.review7), review28: bool(cta.review28) },
     handoff: { owner: text(hand.owner, 500), dueDate: text(hand.dueDate, 120), assets: text(hand.assets, 12000), checklist: text(hand.checklist, 16000), notes: text(hand.notes, 12000), format: text(hand.format, 500), layout: text(hand.layout, 500) },
+    guidance: { research: guide(b.guidance?.research), types: guide(b.guidance?.types), title: guide(b.guidance?.title), thumbnail: guide(b.guidance?.thumbnail), hook: guide(b.guidance?.hook), structure: guide(b.guidance?.structure), cta: guide(b.guidance?.cta) },
   };
 }
 function sanitizeCoachVideo(v: any) {
