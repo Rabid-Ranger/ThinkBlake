@@ -52,7 +52,7 @@ async function fixture() {
 test('OAuth discovery and public MCP discovery expose no client data',async()=>{
   const f=await fixture();const r=await f.handler(new Request(RESOURCE+'?route=oauth-metadata'));
   const metadata=await r.json();assert.equal(metadata.code_challenge_methods_supported[0],'S256');assert.equal(metadata.client_id_metadata_document_supported,true);
-  const list=await f.request('',{jsonrpc:'2.0',id:1,method:'tools/list'});assert.equal(list.data.result.tools.length,5);
+  const list=await f.request('',{jsonrpc:'2.0',id:1,method:'tools/list'});assert.equal(list.data.result.tools.length,6);
   const denied=await f.call('get_client_context',{},'');assert.equal(denied.status,401);assert.match(denied.headers.get('www-authenticate'),/resource_metadata/);
 });
 test('consent cannot select another client’s file or send codes to an unregistered destination',async()=>{
@@ -166,4 +166,58 @@ test('Excel extraction keeps sheet names, cell references and cached values with
   const {officeText}=await modulePromise;const encode=s=>new TextEncoder().encode(s);
   const result=officeText({'xl/workbook.xml':encode('<workbook><sheets><sheet name="Research &amp; evidence" r:id="rId1"/></sheets></workbook>'),'xl/_rels/workbook.xml.rels':encode('<Relationships><Relationship Id="rId1" Target="worksheets/sheet1.xml"/></Relationships>'),'xl/sharedStrings.xml':encode('<sst><si><t>Video title</t></si></sst>'),'xl/worksheets/sheet1.xml':encode('<worksheet><sheetData><row><c r="A1" t="s"><v>0</v></c><c r="B1"><f>2+2</f><v>4</v></c><c r="C1"><f>HYPERLINK("https://evil.test")</f></c></row></sheetData></worksheet>')},'xlsx');
   assert.match(result[0],/Research & evidence/);assert.match(result[0],/A1: Video title/);assert.match(result[0],/B1: 4/);assert.match(result[0],/cached value/);assert.ok(!result[0].includes('evil.test'));
+});
+
+test('planning context includes capacity, roadmap and commitments; selected video includes the actual script fields',async()=>{
+  const f=await fixture(),token=await f.login(),c=f.tables.workspace_states[0].state.creators[0];
+  Object.assign(c,{capacity:{videosPerMonth:2},roadmap:{destination:'Qualified viewers'},commitments:[{what:'Film the approved video',who:'Client',when:'Friday'}]});
+  Object.assign(c.videos[0],{hook:{draft:'The approved opening'},structure:{notes:'Evidence then demonstration'},cta:{endDraft:'Watch the next lesson'},handoff:{owner:'Client'},package:{thumbnailConcept:'One clear comparison',storagePath:'private/file',accessToken:'hidden'},script:'Actual script text'});
+  const before=JSON.stringify(f.tables.workspace_states);
+  const r=await f.call('get_client_context',{videoId:'v1'},token.access_token),v=JSON.parse(r.data.result.content[0].text);
+  assert.equal(v.creator.capacity.videosPerMonth,2);assert.equal(v.creator.roadmap.destination,'Qualified viewers');assert.equal(v.commitments[0].who,'Client');
+  assert.equal(v.selectedVideo.hook.draft,'The approved opening');assert.equal(v.selectedVideo.script,'Actual script text');assert.equal(v.selectedVideo.cta.endDraft,'Watch the next lesson');
+  assert.ok(!JSON.stringify(v).includes('private/file'));assert.ok(!JSON.stringify(v).includes('hidden'));assert.equal(JSON.stringify(f.tables.workspace_states),before);
+  assert.equal((await f.call('get_client_context',{videoId:'another-client-video'},token.access_token)).data.result.isError,true);
+});
+
+test('large plans are paged so later videos remain accessible without sending every script',async()=>{
+  const f=await fixture(),token=await f.login(),c=f.tables.workspace_states[0].state.creators[0];
+  c.videos=Array.from({length:45},(_,i)=>({id:'v'+i,title:'Video '+i,hook:{draft:'Long script '+i}}));
+  const first=JSON.parse((await f.call('get_client_context',{},token.access_token)).data.result.content[0].text);
+  assert.equal(first.videos.length,20);assert.equal(first.videoPage.nextOffset,20);assert.equal(first.videoPage.total,45);assert.equal(first.selectedVideo,null);assert.ok(!JSON.stringify(first).includes('Long script'));
+  const last=JSON.parse((await f.call('get_client_context',{videoOffset:40},token.access_token)).data.result.content[0].text);
+  assert.equal(last.videos[0].id,'v40');assert.equal(last.videoPage.nextOffset,null);
+  assert.equal((await f.call('get_client_context',{videoLimit:1000},token.access_token)).data.result.isError,true);
+});
+
+test('saved analytics preserve exact windows, units, missing values and revisions, with no data writes',async()=>{
+  const f=await fixture(),token=await f.login(),c=f.tables.workspace_states[0].state.creators[0];
+  c.analyticsFoundation={observations:[{id:'o1',revisionId:'rev1',creatorId:'c1',videoId:'yt1',internalVideoId:'v1',windowHours:168,capturedAt:'2026-10-20T00:00:00Z',coverage:'exact',definitionId:'unknown',paid:'organic',source:'Actual source report',metrics:{views:123,engagedViews:null,ctr:0.062,apv:1.12,retention30:null}}, {id:'o2',creatorId:'c1',videoId:'yt1',internalVideoId:'v1',windowHours:24,metrics:{views:50}}, {id:'private',creatorId:'c2',videoId:'private-video',windowHours:168,metrics:{views:999999}}]};
+  const before=JSON.stringify(f.tables.workspace_states),writes=f.writes.length;
+  const r=await f.call('get_client_analytics',{section:'observations',videoId:'v1',windowHours:168},token.access_token),v=JSON.parse(r.data.result.content[0].text);
+  assert.equal(v.total,1);assert.equal(v.items[0].metrics.engagedViews,null);assert.equal(v.items[0].metrics.ctr,0.062);assert.equal(v.items[0].metrics.apv,1.12);assert.equal(v.items[0].units.ctr,'ratio');assert.equal(v.items[0].definitionId,'unknown');assert.equal(v.items[0].source,'Actual source report');assert.equal(v.items[0].revisionId,'rev1');
+  assert.ok(!JSON.stringify(v).includes('private-video'));assert.equal(JSON.stringify(f.tables.workspace_states),before);assert.equal(f.writes.length,writes);
+});
+
+test('baseline cohorts and channel/audience windows stay separate from native manual percentages',async()=>{
+  const f=await fixture(),token=await f.login(),c=f.tables.workspace_states[0].state.creators[0];
+  c.analyticsFoundation={policies:[{id:'p1',windowHours:168,definitionId:'known',format:'edited-long-form'}],baselines:[{id:'b1',policyId:'p1',kind:'operating',effectiveAt:'2026-10-20T00:00:00Z',memberVideoIds:['earlier-video'],metrics:{ctr:{median:0.05,n:1,definitionVerified:true}}}]};
+  c.coachOS={baseline:{sets:[{id:'manual',window:'_7d',ctr:6.2,n:3,metricDefinitionId:'unknown'}]},analytics:{snapshots:[{period:'90d',periodStart:'2026-07-01T00:00:00Z',periodEndExclusive:'2026-09-29T00:00:00Z',sourceRef:'90-day report',watchTime:300,views:1000}],audienceSnapshots:[{asOf:'2026-10-20',windowDays:28,monthlyAudience:500,sourceRef:'Audience report'}]}};
+  c.videos[0].analytics={_7d:{views:'',ctr:6.2,ret30:''}};
+  const read=async section=>JSON.parse((await f.call('get_client_analytics',{section},token.access_token)).data.result.content[0].text);
+  const b=await read('baselines');assert.deepEqual(b.items[0].memberVideoIds,['earlier-video']);assert.equal(b.items[0].policy.windowHours,168);assert.equal(b.items[1].saved.ctr,6.2);
+  const channel=await read('channel');assert.equal(channel.items[0].saved.watchTime,300);assert.equal(channel.items[0].saved.periodEndExclusive,'2026-09-29T00:00:00Z');assert.ok(!JSON.stringify(channel.items).includes('monthlyAudience'));
+  const audience=await read('audience');assert.equal(audience.items[0].saved.windowDays,28);assert.equal(audience.items[0].saved.monthlyAudience,500);
+  const manual=await read('manual_video_results');assert.equal(manual.items[0].saved.views,'');assert.equal(manual.items[0].saved.ctr,6.2);assert.match(manual.items[0].units,/not zero/);
+});
+
+test('analytics pagination, unknown sections and client isolation are enforced on the server',async()=>{
+  const f=await fixture(),token=await f.login(),c=f.tables.workspace_states[0].state.creators[0];
+  c.analyticsFoundation={observations:Array.from({length:41},(_,i)=>({id:'o'+i,windowHours:168,videoId:'yt'+i,metrics:{views:i}}))};
+  const first=JSON.parse((await f.call('get_client_analytics',{section:'observations',limit:40},token.access_token)).data.result.content[0].text);assert.equal(first.items.length,40);assert.equal(first.nextOffset,40);
+  const last=JSON.parse((await f.call('get_client_analytics',{section:'observations',offset:40,limit:40},token.access_token)).data.result.content[0].text);assert.equal(last.items.length,1);assert.equal(last.nextOffset,null);
+  for(const args of [{section:'everything'},{section:'observations',offset:-1},{section:'observations',limit:1000},{section:'observations',windowHours:72},{section:'channel',windowHours:168},{section:'baselines',videoId:'v1'},{creatorId:'c2'}])assert.equal((await f.call('get_client_analytics',args,token.access_token)).data.result.isError,true);
+  assert.equal((await f.call('get_client_analytics',{},'')).status,401);
+  const all=await f.login({accessScope:'workspace'});assert.equal((await f.call('get_client_analytics',{},all.access_token)).data.result.isError,true);
+  const second=JSON.parse((await f.call('get_client_analytics',{creatorId:'c2'},all.access_token)).data.result.content[0].text);assert.equal(second.counts.observationRevisions,0);
 });

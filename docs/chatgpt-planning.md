@@ -28,6 +28,34 @@ workspace settings, not by this server.
 
 ## Tools
 
+Current release: V16.3.9 / MCP 1.1.0. Six tools, with five reads and one draft submission.
+
+- `get_client_analytics`: paged read-only saved evidence. Start with `overview`,
+  then choose `observations`, `baselines`, `channel`, `audience` or
+  `manual_video_results`. Use `windowHours` only for video/baseline sections;
+  `videoId` only for observation/native-video sections. Follow `nextOffset`.
+  Engine rates stay ratios; native/manual percentages stay percentage values.
+  Exact-age checkpoints, source definitions, revisions, cohort IDs and missing
+  values remain intact. Stored data is not automatically certified as verified.
+  This tool does not collect Studio data, calculate a diagnosis, or write data.
+
+`get_client_context` now includes saved capacity, roadmap, foundation fields,
+notes, commitments and assignments. Video summaries default to 20 per page,
+maximum 40; follow `videoPage.nextOffset` using `videoOffset`. Supply `videoId`
+to get that video's actual package/packaging, hook, structure, script, CTA and
+handoff fields plus saved learning notes. No embedded image bytes, storage paths
+or credential-named fields are included. Nested strings/arrays are bounded and
+limits are disclosed in each response. Files still require `read_resource`.
+
+The existing ChatGPT panel now has **Start with a task**: video plan, call prep,
+focused video review, saved-analytics learning, or strategy clarification. The
+chosen request is copied for use in ChatGPT. It does not start a model call in
+the hosted dashboard. Only plan candidates can be sent back through the existing
+draft/review flow; other suggestions are reviewed and edited by the coach.
+
+The historical descriptions below document the original connection; the
+owner-only update and current release details take precedence where expanded.
+
 - `list_clients`: lists clients available through the connection. Workspace-wide
   grants include all clients in the authorized workspace. Each following tool
   requires a `creatorId` so different clients are never silently mixed.
