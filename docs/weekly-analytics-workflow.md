@@ -5,6 +5,49 @@ Chrome session and the channels he can manage. This is a local scheduled run,
 not a hosted browser or a separately billed model API service. The computer,
 Chrome connection, and the required sign-ins must be available.
 
+## Catch-up and manual triggers
+
+The weekly due time stays Monday at 09:00 America/Toronto. The same automation
+now checks daily at 09:00, 13:00, 17:00 and 21:00 Toronto time. This provides later
+opportunities when a scheduled check is missed; it is not an immediate on-wake
+hook and cannot operate while this computer/app/browser is unavailable.
+
+Before loading browser skills, research, or opening any tabs, run:
+`node work/ThinkBlake/scripts/weekly-analytics-gate.cjs` from this chat's root.
+When it returns `run: false`, end quietly without browser work. The first weekly
+due date is November 2, 2026. Completed weeks are skipped. Missing several weeks
+causes one current catch-up collection, not a replay of every missed run.
+
+An explicit user request in this chat such as **Run analytics now** is a manual
+trigger. Run the same gate with `--manual`; this bypasses the due time and retry
+wait, but not identity checks, source verification, deduplication or safe saving.
+There is no dashboard button or newly installed browser extension for this.
+
+Use a local exclusive run lock at `work/weekly-analytics/active.lock` to avoid
+overlapping manual and scheduled collection. Create with exclusive-create mode;
+if a lock exists, do not start a second collector. Only remove a stale lock after
+checking its recorded run is no longer active. Always release your own lock on
+completion or failure. A lock is not proof of a successful collection.
+
+Save a JSON record `work/weekly-analytics/run-<UTC timestamp>.json` after every
+actual collection attempt, including `week` (the gate's Monday date), `result`
+(`complete`, `partial` or `blocked`), ISO `finishedAt`, and `channels` array.
+For each client/channel include identity, reports/windows reviewed, save/read-back
+outcome, verified-completion time and unresolved gaps. Accompany with a readable
+run summary. Inspect prior records and resume incomplete channels; do not collect
+already verified channels again for the same weekly run. First discover current
+client/channel mappings so newly added clients are not silently omitted.
+
+Use `complete` only after every currently mapped real client has a verified
+review/save/read-back or a documented reviewed no-new-data result. Missing access
+or an unconfirmed save makes the attempt partial/blocked, never complete. A report
+may list unavailable individual metrics explicitly without inventing them. Partial
+attempts wait at least four hours; blocked attempts wait at least 24 hours before
+an automatic retry. The gate fails closed on malformed run records.
+
+The scheduled prompt does only the short local gate check when no collection is
+due. These checks still use normal plan allowance; no model API key was added.
+
 ## Before each run
 
 1. Use the available computer/browser skill and CUA APIs for all browser actions.
