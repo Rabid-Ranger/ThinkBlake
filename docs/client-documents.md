@@ -25,9 +25,13 @@ Creator video share links do not expose these resources.
 ## QA
 
 Run node --test tests/client-documents.test.js tests/creator-portal.test.js
-tests/ui-plain-language.test.js. All 22 checks pass, including unsupported active
+tests/ui-plain-language.test.js. All 26 checks pass, including unsupported active
 format handling, arbitrary file metadata, PDF validation, upload failure,
 workspace isolation, sign-in requirements, and authenticated PDF blob viewing.
 The user will perform the real file-upload test; do not select their local files
 through automation. Check the live chooser, link flow, file form, Back, drawer,
 and responsive layout independently.
+
+Live browser QA also confirmed both chooser paths, empty-file feedback, Back,
+link saving/pinning, cloud save confirmation, reload persistence, and the corrected
+file form layout. The temporary QA link was removed after testing.

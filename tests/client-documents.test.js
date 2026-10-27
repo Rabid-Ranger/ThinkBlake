@@ -109,3 +109,10 @@ test('invalid and executable links cannot be saved',async()=>{
   assert.equal(h.creator.clientResources.length,0);assert.match(h.elements['doc-status'].textContent,/valid web link/);
   assert.equal(h.api.safeUrl('example.com'),'https://example.com/');
 });
+test('editing existing links uses the unified form and preserves their details',()=>{
+  const h=harness(()=>({ok:true}));
+  h.creator.clientResources.push({id:'existing',url:'https://example.com/',label:'Existing link',note:'Keep me',type:'Drive'});
+  h.click({action:'v152-edit-resource',id:'existing'});
+  assert.equal(h.modals.at(-1)[0],'Edit link resource');
+  assert.match(h.modals.at(-1)[1],/Existing link/);assert.match(h.modals.at(-1)[1],/Keep me/);
+});
