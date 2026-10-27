@@ -56,6 +56,13 @@ test('workspace changes prevent attaching a PDF to the wrong workspace',async()=
   await assert.rejects(h.api.upload(h.creator,'old-workspace',pdf(),fields),/still loading/);
   assert.equal(h.calls.length,0);
 });
+test('shared research uploads use a separate workspace folder and never attach to the current client',async()=>{
+  const h=harness(()=>({ok:true})),shared={id:'_shared',clientResources:[]};
+  const r=await h.api.upload(shared,'workspace-a',pdf(),fields);
+  assert.match(r.storagePath,/^workspace-a\/_shared\//);assert.equal(shared.clientResources.length,1);
+  assert.equal(h.creator.clientResources.length,0);assert.equal(h.saved.length,1);
+  assert.doesNotMatch(JSON.stringify(r),/%PDF|test-token/);
+});
 test('private preview rejects references from another workspace',async()=>{
   const h=harness(()=>{throw Error('must not fetch');});
   h.context.window.open=()=>{throw Error('must not open popups');};

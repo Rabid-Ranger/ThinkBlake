@@ -77,7 +77,8 @@ workspace settings, not by this server.
 
 The local browser fixture verifies editing and selectively approving candidates,
 filling an empty slot, preserving an existing video, and cloud-save confirmation.
-Live activation additionally requires the user's final ChatGPT connection consent.
+The real account connection is active. ChatGPT lists the installed read and draft
+tools, and Accelerator shows workspace-wide access.
 
 Official references:
 
@@ -92,3 +93,34 @@ New workspace-wide grants use the reserved pair `creator_id = "*"` and
 automatically. No database schema or existing RLS permissions changed. Every
 tool still checks current workspace membership, and every file read validates
 the chosen client and storage prefix. Drafts retain the actual chosen creator ID.
+
+## Owner-only privacy and shared library (2026-10-27)
+
+The personal development plugin was not publicly published. In addition, the
+backend now pins the verified existing owner and the existing private ChatGPT
+OAuth client in `accelerator_ai_settings`. All dashboard management, token
+issuance/refresh and protected tool calls check this pin. Another workspace
+member cannot authorize or use this plugin. Missing settings fail closed.
+Settings have RLS and no PUBLIC/anon/authenticated privileges. The live settings
+were checked against the existing issued connection without exposing tokens.
+SQL: `database/setup-accelerator-ai-owner.sql`.
+
+The ChatGPT panel contains a shared research library in
+`state.workspaceResources`. Files use the private Storage folder
+`<workspace>/_shared/…`; metadata and links save through the existing versioned
+workspace-saving path. `list_workspace_resources` discovers shared references.
+Use `read_resource` with `resourceScope="workspace"` to read one. Client-specific
+grants do not inherit shared library access. Linked private documents still need
+the corresponding authorized browser/app; URLs are not fetched by this server.
+
+Text reading additionally supports `.docx` and `.xlsx` using `fflate@0.8.2` to
+unpack only relevant XML, with an 8 MB extracted XML limit. Macros and formulas
+are never executed. Word extraction omits images/layout and caps paragraphs/text.
+Excel extraction uses cached cell values, caps sheets/rows/cells, and discloses
+those limits. Other formats and scanned PDFs may need direct ChatGPT attachment.
+
+The standalone Packaging Lab tab and its injected implementation were removed.
+Video-planner title/thumbnail steps remain part of the guided video workflow.
+Primary navigation never wraps individual tabs; narrower layouts give the whole
+navigation its own row. Weekly analytics uses the existing browser connection
+and import UI; see `weekly-analytics-workflow.md`.

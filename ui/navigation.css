@@ -1,0 +1,21 @@
+/* Keep every primary tab on the same navigation line. On narrower screens the
+   whole navigation gets its own row, rather than dropping Analytics alone. */
+#app .topbar{height:auto;min-height:78px;display:grid;grid-template-columns:auto minmax(0,1fr)!important;gap:7px 18px;padding:12px 0 0;align-items:center}
+#app .topbar>.brand{grid-column:1;grid-row:1}
+#app .topbar>.top-actions,#app .topbar>#cg-topbar-controls{grid-column:2;grid-row:1;justify-self:end;min-width:0;max-width:100%}
+#app .topbar>.nav,#app .topbar>.v11-primary-nav{grid-column:1/-1;grid-row:2;display:flex;flex-wrap:nowrap!important;align-items:center;justify-content:flex-start;gap:4px;min-width:0;max-width:100%;overflow-x:auto;overflow-y:hidden;padding:5px 0 10px;scrollbar-width:thin}
+#app .topbar>.nav button,#app .topbar>.v11-primary-nav button{flex:0 0 auto;white-space:nowrap}
+#app .top-actions{border-top:0;display:flex;flex-wrap:nowrap;gap:6px;align-items:center;min-width:0;padding:0}
+#app .top-actions .creator-select{max-width:185px;min-width:130px}
+@media(min-width:1700px){
+ #app .topbar{grid-template-columns:auto minmax(0,1fr) auto!important;min-height:72px;padding:0;gap:12px}
+ #app .topbar>.nav,#app .topbar>.v11-primary-nav{grid-column:2;grid-row:1;padding:0;gap:2px}
+ #app .topbar>.nav button,#app .topbar>.v11-primary-nav button{padding:9px 10px;font-size:11px}
+ #app .topbar>.top-actions,#app .topbar>#cg-topbar-controls{grid-column:3}
+ #app .top-actions .creator-select{max-width:165px}
+}
+@media(max-width:900px){
+ #app .topbar>.top-actions,#app .topbar>#cg-topbar-controls{grid-column:1/-1;grid-row:2;justify-self:stretch;overflow-x:auto;padding:4px 0}
+ #app .topbar>.nav,#app .topbar>.v11-primary-nav{grid-row:3;border-top:1px solid var(--line,#ddd)}
+ #app .top-actions{width:max-content;min-width:100%}
+}

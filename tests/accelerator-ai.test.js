@@ -9,12 +9,12 @@ const SITE='https://accelerator-os-rho.vercel.app',RESOURCE=SITE+'/api/accelerat
 const CLIENT='https://chatgpt.com/oauth/client.json',REDIRECT='https://chatgpt.com/connector_platform_oauth_redirect';
 async function fixture() {
   const {createHandler}=await modulePromise;
-  const tables={workspace_members:[{workspace_id:'w1',user_id:'u1',role:'owner'}],workspace_states:[{workspace_id:'w1',version:7,state:{creators:[{id:'c1',name:'Client one',strategy:{goal:'Trusted growth'},videos:[{id:'v1',title:'Approved title',job:'Trust'}],clientResources:[{id:'r1',label:'Selected research',fileName:'research.txt',storagePath:'w1/c1/file/research.txt'},{id:'r2',label:'Not selected',storagePath:'w1/c1/other/secret.txt',fileName:'secret.txt'}]},{id:'c2',name:'Other client',videos:[{title:'Private other client'}]}]}}],accelerator_ai_connections:[],accelerator_ai_codes:[],accelerator_ai_drafts:[]};
+  const tables={accelerator_ai_settings:[{id:1,owner_user_id:'u1',oauth_client_id:CLIENT}],workspace_members:[{workspace_id:'w1',user_id:'u1',role:'owner'}],workspace_states:[{workspace_id:'w1',version:7,state:{creators:[{id:'c1',name:'Client one',strategy:{goal:'Trusted growth'},videos:[{id:'v1',title:'Approved title',job:'Trust'}],clientResources:[{id:'r1',label:'Selected research',fileName:'research.txt',storagePath:'w1/c1/file/research.txt'},{id:'r2',label:'Not selected',storagePath:'w1/c1/other/secret.txt',fileName:'secret.txt'}]},{id:'c2',name:'Other client',videos:[{title:'Private other client'}]}]}}],accelerator_ai_connections:[],accelerator_ai_codes:[],accelerator_ai_drafts:[]};
   let readFiles=0,writes=[];
   const fetcher=async (input,options={})=>{
     const u=new URL(input),method=options.method||'GET';
     if(input===CLIENT)return new Response(JSON.stringify({redirect_uris:[REDIRECT]}));
-    if(u.pathname==='/auth/v1/user')return options.headers.Authorization==='Bearer owner-session'?Response.json({id:'u1'}):Response.json({}, {status:401});
+    if(u.pathname==='/auth/v1/user')return options.headers.Authorization==='Bearer owner-session'?Response.json({id:'u1'}):options.headers.Authorization==='Bearer other-session'?Response.json({id:'u2'}):Response.json({}, {status:401});
     if(u.pathname.startsWith('/storage/')){readFiles++;return new Response('Research fact with a source.');}
     const table=u.pathname.split('/').pop();if(!tables[table])throw Error('Unexpected table '+table);
     let rows=tables[table].filter(row=>[...u.searchParams].every(([k,v])=>{
@@ -52,7 +52,7 @@ async function fixture() {
 test('OAuth discovery and public MCP discovery expose no client data',async()=>{
   const f=await fixture();const r=await f.handler(new Request(RESOURCE+'?route=oauth-metadata'));
   const metadata=await r.json();assert.equal(metadata.code_challenge_methods_supported[0],'S256');assert.equal(metadata.client_id_metadata_document_supported,true);
-  const list=await f.request('',{jsonrpc:'2.0',id:1,method:'tools/list'});assert.equal(list.data.result.tools.length,4);
+  const list=await f.request('',{jsonrpc:'2.0',id:1,method:'tools/list'});assert.equal(list.data.result.tools.length,5);
   const denied=await f.call('get_client_context',{},'');assert.equal(denied.status,401);assert.match(denied.headers.get('www-authenticate'),/resource_metadata/);
 });
 test('consent cannot select another client’s file or send codes to an unregistered destination',async()=>{
@@ -129,4 +129,41 @@ test('workspace-wide drafts are attached to the chosen client and retries cannot
   assert.equal(f.tables.accelerator_ai_drafts[0].creator_id,'c2');
   args.creatorId='c1';assert.equal((await f.call('submit_plan_draft',args,token.access_token)).data.result.isError,true);
   const rejected=await f.approve({resourceIds:['*']});assert.equal(rejected.status,400);
+});
+test('another authenticated workspace editor cannot use or authorize the private plugin',async()=>{
+  const f=await fixture();f.tables.workspace_members.push({workspace_id:'w1',user_id:'u2',role:'editor'});
+  const r=await f.request('dashboard',{action:'approve',workspaceId:'w1',creatorId:'c1',resourceIds:['r1'],authorization:f.authorization},'other-session');
+  assert.equal(r.status,403);assert.equal(f.tables.accelerator_ai_connections.length,0);
+  const token=await f.login();f.tables.accelerator_ai_connections[0].user_id='u2';
+  assert.equal((await f.call('list_clients',{},token.access_token)).status,403);
+});
+test('missing owner settings fail closed and another OAuth app cannot reuse this owner',async()=>{
+  const f=await fixture();f.tables.accelerator_ai_settings[0].oauth_client_id='another-app';
+  assert.equal((await f.approve()).status,403);assert.equal(f.tables.accelerator_ai_codes.length,0);
+  f.tables.accelerator_ai_settings=[];assert.equal((await f.approve()).status,403);
+});
+test('shared research is available across clients while file paths stay inside the shared folder',async()=>{
+  const f=await fixture(),token=await f.login({accessScope:'workspace'});
+  f.tables.workspace_states[0].state.workspaceResources=[{id:'shared-1',label:'Common framework',fileName:'framework.txt',storagePath:'w1/_shared/file/framework.txt'}];
+  const list=await f.call('list_workspace_resources',{},token.access_token);assert.equal(JSON.parse(list.data.result.content[0].text).resources.length,1);
+  const read=await f.call('read_resource',{resourceId:'shared-1',resourceScope:'workspace'},token.access_token);assert.equal(read.data.result.isError,false);
+  const context=await f.call('get_client_context',{creatorId:'c2'},token.access_token);assert.equal(JSON.parse(context.data.result.content[0].text).workspaceResources[0].id,'shared-1');
+  const draft=await f.call('submit_plan_draft',{creatorId:'c2',requestId:'shared-source-draft',plan:{sourceResourceIds:['shared-1'],videos:[{title:'Idea using a shared framework',job:'Trust',rationale:'From shared source'}]}},token.access_token);assert.equal(draft.data.result.isError,false);
+  f.tables.workspace_states[0].state.workspaceResources[0].storagePath='w1/c1/private/research.txt';
+  assert.equal((await f.call('read_resource',{resourceId:'shared-1',resourceScope:'workspace'},token.access_token)).data.result.isError,true);
+});
+test('a client-only grant does not inherit shared library access',async()=>{
+  const f=await fixture(),token=await f.login();
+  assert.equal((await f.call('list_workspace_resources',{},token.access_token)).data.result.isError,true);
+  assert.equal((await f.call('read_resource',{resourceId:'shared-1',resourceScope:'workspace'},token.access_token)).data.result.isError,true);
+});
+test('Word extraction preserves text while excluding macros and document instructions',async()=>{
+  const {officeText}=await modulePromise;const encode=s=>new TextEncoder().encode(s);
+  const result=officeText({'word/document.xml':encode('<w:document><w:p><w:r><w:t>First &amp; useful</w:t></w:r></w:p><w:p><w:r><w:t>Second paragraph</w:t></w:r></w:p></w:document>'),'word/vbaProject.bin':encode('never execute')},'docx');
+  assert.match(result[0],/First & useful\nSecond paragraph/);assert.ok(!result[0].includes('never execute'));
+});
+test('Excel extraction keeps sheet names, cell references and cached values without evaluating formulas',async()=>{
+  const {officeText}=await modulePromise;const encode=s=>new TextEncoder().encode(s);
+  const result=officeText({'xl/workbook.xml':encode('<workbook><sheets><sheet name="Research &amp; evidence" r:id="rId1"/></sheets></workbook>'),'xl/_rels/workbook.xml.rels':encode('<Relationships><Relationship Id="rId1" Target="worksheets/sheet1.xml"/></Relationships>'),'xl/sharedStrings.xml':encode('<sst><si><t>Video title</t></si></sst>'),'xl/worksheets/sheet1.xml':encode('<worksheet><sheetData><row><c r="A1" t="s"><v>0</v></c><c r="B1"><f>2+2</f><v>4</v></c><c r="C1"><f>HYPERLINK("https://evil.test")</f></c></row></sheetData></worksheet>')},'xlsx');
+  assert.match(result[0],/Research & evidence/);assert.match(result[0],/A1: Video title/);assert.match(result[0],/B1: 4/);assert.match(result[0],/cached value/);assert.ok(!result[0].includes('evil.test'));
 });
