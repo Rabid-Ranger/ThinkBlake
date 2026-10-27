@@ -6,17 +6,18 @@ const source = fs.readFileSync(require('node:path').join(__dirname,'../ui/client
 function harness(fetch) {
   const creator = {id:'creator-a',clientResources:[]};
   const calls = [], saved = [];
+  const modals=[],drawers=[],elements={};let click;
   const context = vm.createContext({
-    TextDecoder, Blob, crypto:require('node:crypto').webcrypto,
+    TextDecoder, Blob, URL, crypto:require('node:crypto').webcrypto,
     window:{__acceleratorSaveDiagnostics:()=>({workspaceId:'workspace-a'})},
     localStorage:{getItem:()=>JSON.stringify({access_token:'test-token'})},
-    document:{documentElement:{},head:{appendChild(){}},createElement:()=>({}),addEventListener(){},querySelectorAll:()=>[]},
+    document:{documentElement:{},head:{appendChild(){}},createElement:()=>({}),addEventListener:(type,handler)=>{if(type==='click')click=handler;},querySelectorAll:()=>[],getElementById:id=>elements[id]},
     MutationObserver:class {observe(){}},
     fetch:async(...args)=>{calls.push(args);return fetch(...args);},
-    creator:()=>creator,save:()=>saved.push(true)
+    creator:()=>creator,save:()=>saved.push(true),openModal:(...args)=>modals.push(args),openDrawer:(...args)=>drawers.push(args),closeModal(){},render(){},toast(){},confirm:()=>true
   });
   vm.runInContext(source,context);
-  return {api:context.window.AcceleratorClientDocuments,creator,calls,saved,context};
+  return {api:context.window.AcceleratorClientDocuments,creator,calls,saved,context,modals,drawers,elements,click:dataset=>click({target:{closest:()=>({dataset})},preventDefault(){},stopImmediatePropagation(){}})};
 }
 function pdf(name='guide.pdf',body='%PDF-1.7\ncontent') { const b=new Blob([body]);b.name=name;return b; }
 const fields = {label:'Client guide',note:'Notes',pinned:true};
@@ -85,4 +86,26 @@ test('active formats never render as executable web documents',()=>{
   for(const fileName of ['page.html','icon.svg','script.js','macro.docm','file.unknown']) assert.equal(h.api.previewType({fileName}),'');
   assert.equal(h.api.previewType({fileName:'notes.txt'}),'text/plain');
   assert.equal(h.api.previewType({fileName:'photo.PNG'}),'image/png');
+});
+test('Add resource choices open both forms without relying on legacy private functions',()=>{
+  const h=harness(()=>({ok:true}));
+  h.click({action:'v152-add-resource'});assert.equal(h.modals.at(-1)[0],'Add resource');
+  h.click({documentAction:'link'});assert.equal(h.modals.at(-1)[0],'Add a link');
+  h.click({documentAction:'choose'});h.click({documentAction:'upload'});
+  assert.equal(h.modals.at(-1)[0],'Upload a file');
+});
+test('saving a link updates the creator and reopens a working resources drawer',async()=>{
+  const h=harness(()=>({ok:true}));
+  h.click({documentAction:'link'});
+  Object.assign(h.elements,{'doc-url':{value:'https://example.com/guide'},'doc-label':{value:'Guide'},'doc-note':{value:'Notes'},'doc-pin':{checked:true},'doc-status':{textContent:''}});
+  h.click({documentAction:'save'});await new Promise(setImmediate);
+  assert.equal(h.creator.clientResources.length,1);assert.equal(h.creator.clientResources[0].url,'https://example.com/guide');
+  assert.equal(h.saved.length,1);assert.match(h.drawers.at(-1)[1],/href="https:\/\/example.com\/guide"/);
+});
+test('invalid and executable links cannot be saved',async()=>{
+  const h=harness(()=>({ok:true}));h.click({documentAction:'link'});
+  Object.assign(h.elements,{'doc-url':{value:'javascript:alert(1)'},'doc-label':{value:''},'doc-note':{value:''},'doc-pin':{checked:false},'doc-status':{textContent:''}});
+  h.click({documentAction:'save'});await new Promise(setImmediate);
+  assert.equal(h.creator.clientResources.length,0);assert.match(h.elements['doc-status'].textContent,/valid web link/);
+  assert.equal(h.api.safeUrl('example.com'),'https://example.com/');
 });
