@@ -22,8 +22,9 @@ test('a failed save remains retryable but does not repeatedly retry unchanged po
   const queue=createQueue({delay:0,send:async()=>{calls++;if(calls===1)throw Error('Offline');},onState:s=>states.push(s)});
   queue.enqueue(payload('draft'),true);await turn();
   assert.equal(states.at(-1),'error');
+  assert.equal(queue.pending,true);
   queue.enqueue(payload('draft'));await queue.flush();assert.equal(calls,1);
-  queue.enqueue(payload('draft'),true);await turn();assert.equal(calls,2);assert.equal(states.at(-1),'saved');
+  queue.enqueue(payload('draft'),true);await turn();assert.equal(calls,2);assert.equal(states.at(-1),'saved');assert.equal(queue.pending,false);
 });
 test('unchanged polling while saving cannot duplicate a successful save',async()=>{
   let release;const sent=[];

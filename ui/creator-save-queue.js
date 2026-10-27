@@ -30,7 +30,7 @@
         if(immediate)flush();else timer=setTimeout(flush,delay);
       },
       flush,
-      get pending(){return running||!!pending;}
+      get pending(){return running||!!pending||!!failed;}
     };
   }
   if(typeof module==='object'&&module.exports)module.exports=createCreatorSaveQueue;
