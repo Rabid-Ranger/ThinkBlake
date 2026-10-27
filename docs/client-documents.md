@@ -34,4 +34,14 @@ and responsive layout independently.
 
 Live browser QA also confirmed both chooser paths, empty-file feedback, Back,
 link saving/pinning, cloud save confirmation, reload persistence, and the corrected
-file form layout. The temporary QA link was removed after testing.
+file form layout. The temporary QA link cleanup was interrupted by browser control.
+
+## Membership permission repair (October 27, 2026)
+
+Real uploads exposed a missing EXECUTE grant on the existing is_workspace_member
+helper invoked by workspace_members RLS. Applied a repair to the live database:
+authenticated may execute, anon may not, and authenticated callers cannot pass
+another user ID to enumerate membership. Existing service-role checks remain
+permitted. Ran database/verify-client-document-permissions.sql as authenticated:
+own workspace true; unrelated workspace false; other user false; upload-policy
+expression true. No workspace state or stored files were modified by this test.
