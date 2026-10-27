@@ -28,6 +28,17 @@ workspace settings, not by this server.
 
 ## Tools
 
+V16.3.10 adds **Documents & links for this request** inside the existing planning
+panel. Client resources and shared research are grouped separately. Nothing is
+checked by default. Selected resource IDs, client/shared scope, labels, file names
+and link URLs are included in the copied task request. Unchecked research is
+excluded from that request and the prompt asks before using additional sources.
+With no selection, the prompt asks to use client context only. This is request
+focus, not a change to the connection's existing permissions. Private links still
+require an authorized browser or connected app. Selections are held per client and
+workspace for the current browser page; refreshing drafts or reopening the panel
+preserves them, while a page reload resets them. No workspace data is written.
+
 Current release: V16.3.9 / MCP 1.1.0. Six tools, with five reads and one draft submission.
 
 - `get_client_analytics`: paged read-only saved evidence. Start with `overview`,
