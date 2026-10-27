@@ -1,4 +1,4 @@
-/* Private PDF attachments live in Storage; only their metadata enters workspace state. */
+/* Private resource files live in Storage; only metadata enters workspace state. */
 (() => {
   if (window.__acceleratorCreatorPlannerMode || window.AcceleratorClientDocuments) return;
   const BASE = 'https://pqggobwpazihraeqvspc.supabase.co';
@@ -23,11 +23,17 @@
     return res;
   }
   function objectPath(path) { return path.split('/').map(encodeURIComponent).join('/'); }
+  function extension(name) { return String(name || '').split('.').pop().toLowerCase(); }
+  function previewType(r) {
+    return ({pdf:'application/pdf',png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',gif:'image/gif',webp:'image/webp',avif:'image/avif',txt:'text/plain',csv:'text/plain',md:'text/plain',json:'text/plain',mp3:'audio/mpeg',wav:'audio/wav',ogg:'audio/ogg',mp4:'video/mp4',webm:'video/webm'})[extension(r.fileName)] || '';
+  }
   async function validate(file) {
-    if (!file || !/\.pdf$/i.test(file.name)) throw new Error('Choose a PDF document.');
-    if (!file.size || file.size > LIMIT) throw new Error('Choose a PDF smaller than 20 MB.');
-    const head = new TextDecoder().decode(await file.slice(0, 5).arrayBuffer());
-    if (head !== '%PDF-') throw new Error('This file is not a valid PDF document.');
+    if (!file || !file.name) throw new Error('Choose a file to upload.');
+    if (file.size > LIMIT) throw new Error('Choose a file no larger than 20 MB.');
+    if (/\.pdf$/i.test(file.name)) {
+      const head = new TextDecoder().decode(await file.slice(0, 5).arrayBuffer());
+      if (head !== '%PDF-') throw new Error('This file is not a valid PDF document.');
+    }
   }
   async function upload(c, wid, file, fields) {
     await validate(file);
@@ -35,29 +41,33 @@
     const id = crypto.randomUUID();
     const filename = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(-120);
     const path = wid+'/'+encodeURIComponent(String(c.id))+'/'+id+'/'+filename;
-    await request('object/'+BUCKET+'/'+objectPath(path), {method: 'POST', headers: {'Content-Type':'application/pdf','x-upsert':'false'}, body: file});
+    const contentType = file.type || 'application/octet-stream';
+    await request('object/'+BUCKET+'/'+objectPath(path), {method: 'POST', headers: {'Content-Type':contentType,'x-upsert':'false'}, body: file});
     if (wid !== workspace()) throw new Error('The workspace changed during upload. Return to the original workspace and upload again.');
-    const resource = {id:'cr_'+id, label:fields.label.trim() || file.name, note:fields.note.trim(), pinned:fields.pinned, type:'PDF', storagePath:path, fileName:file.name, fileSize:file.size, createdAt:new Date().toISOString()};
+    const resource = {id:'cr_'+id, label:fields.label.trim() || file.name, note:fields.note.trim(), pinned:fields.pinned, type:extension(file.name).slice(0,12).toUpperCase() || 'File', contentType, storagePath:path, fileName:file.name, fileSize:file.size, createdAt:new Date().toISOString()};
     c.clientResources ||= [];
     c.clientResources.push(resource);
     bind('save')();
     return resource;
   }
   function action(r, download = false) {
-    return '<button class="tinybtn" data-document-action="'+(download?'download':'view')+'" data-id="'+esc(r.id)+'">'+(download?'Download':'View PDF ↗')+'</button>';
+    return '<button class="tinybtn" data-document-action="'+(download?'download':'view')+'" data-id="'+esc(r.id)+'">'+(download?'Download':previewType(r)?'View ↗':'Open ↗')+'</button>';
   }
   function openResources() {
     const c = current(); if (!c) return;
     const all = c.clientResources || [];
-    const rows = list => list.map(r => '<div class="v152-resource-row"><div class="v152-resource-icon">'+(r.storagePath?'PDF':'↗')+'</div><div><h4>'+esc(r.label || 'Untitled resource')+'</h4><p>'+esc(r.type || 'Other')+(r.fileSize?' · '+(r.fileSize/1024/1024).toFixed(1)+' MB':'')+(r.note?' · '+esc(r.note):'')+'</p></div><div class="actions">'+(r.storagePath?action(r)+action(r,true):'<a class="tinybtn" target="_blank" rel="noopener noreferrer" href="'+esc(bind('v152SafeUrl')(r.url)||'#')+'">Open ↗</a>')+'<button class="tinybtn" data-action="v152-edit-resource" data-id="'+esc(r.id)+'">Edit</button></div></div>').join('');
+    const rows = list => list.map(r => '<div class="v152-resource-row"><div class="v152-resource-icon">'+(r.storagePath?'▤':'↗')+'</div><div><h4>'+esc(r.label || 'Untitled resource')+'</h4><p>'+esc(r.type || 'Other')+(r.fileSize?' · '+(r.fileSize/1024/1024).toFixed(1)+' MB':'')+(r.note?' · '+esc(r.note):'')+'</p></div><div class="actions client-file-actions">'+(r.storagePath?action(r)+action(r,true):'<a class="tinybtn" target="_blank" rel="noopener noreferrer" href="'+esc(bind('v152SafeUrl')(r.url)||'#')+'">Open ↗</a>')+'<button class="tinybtn" data-action="v152-edit-resource" data-id="'+esc(r.id)+'">Edit</button></div></div>').join('');
     const pinned = all.filter(r=>r.pinned), rest = all.filter(r=>!r.pinned);
-    bind('openDrawer')(c.name+' · Resources', '<div class="drawer-section"><div class="v152-panel-head"><div><h3>Client resources</h3><p>Keep links and PDF documents for this creator in one place.</p></div><div class="actions"><button class="btn" data-document-action="upload">Upload PDF</button><button class="btn dark" data-action="v152-add-resource">+ Add link</button></div></div></div>'+(pinned.length?'<div class="v152-resource-group"><h3>Pinned</h3>'+rows(pinned)+'</div>':'')+'<div class="v152-resource-group"><h3>Saved resources</h3>'+(rest.length?rows(rest):'<p>No other resources saved yet.</p>')+'</div>', '<button class="btn" data-action="close-drawer">Close</button>');
+    bind('openDrawer')(c.name+' · Resources', '<div class="drawer-section"><div class="v152-panel-head"><div><h3>Client resources</h3><p>Links, documents and files for '+esc(c.name)+'.</p></div><button class="btn dark" data-document-action="choose">+ Add resource</button></div></div>'+(pinned.length?'<div class="v152-resource-group"><h3>Pinned</h3>'+rows(pinned)+'</div>':'')+'<div class="v152-resource-group"><h3>Saved resources</h3>'+(rest.length?rows(rest):'<div class="v152-resource-empty">No resources here yet. <button class="side-action" data-document-action="choose">Add the first one →</button></div>')+'</div>', '<button class="btn" data-action="close-drawer">Close</button>');
+  }
+  function choose() {
+    bind('openModal')('Add resource', '<p class="resource-intro">What would you like to add for '+esc(current()?.name)+'?</p><div class="resource-choices"><button class="resource-choice" data-document-action="link"><span class="resource-choice-icon" aria-hidden="true">↗</span><strong>Add a link</strong><span>A document, folder, dashboard or any web page.</span></button><button class="resource-choice" data-document-action="upload"><span class="resource-choice-icon" aria-hidden="true">↑</span><strong>Upload a file</strong><span>Documents, PDFs, images, spreadsheets and more. Up to 20 MB.</span></button></div>', '<button class="btn" data-action="close-modal">Cancel</button>');
   }
   let uploadContext = null, busy = false;
   function modal(r) {
     const c = current(); if (!c) return;
     uploadContext = {c, wid:workspace(), resource:r};
-    bind('openModal')(r?'Edit PDF resource':'Upload PDF', '<div class="fields"><div class="field"><label for="doc-label">Label</label><input id="doc-label" value="'+esc(r?.label || '')+'"></div>'+(!r?'<div class="field"><label for="doc-file">PDF document</label><input id="doc-file" type="file" accept=".pdf,application/pdf"><p>PDF files up to 20 MB. View in a new tab or download anytime.</p></div>':'<p>'+esc(r.fileName)+'</p>')+'<div class="field"><label for="doc-note">Note</label><textarea id="doc-note">'+esc(r?.note || '')+'</textarea></div><label><input type="checkbox" id="doc-pin" '+(r?.pinned?'checked':'')+'> Pin this resource</label><p id="doc-status" role="status" aria-live="polite"></p></div>', '<button class="btn" data-action="close-modal">Cancel</button><button class="btn dark" data-document-action="save">'+(r?'Save changes':'Upload PDF')+'</button>');
+    bind('openModal')(r?'Edit file resource':'Upload a file', '<div class="fields">'+(!r?'<div class="field"><label for="doc-file">File</label><input id="doc-file" type="file"><p>Any file up to 20 MB. PDFs, images and other supported formats open in your browser. Other files can be downloaded.</p></div>':'<p>'+esc(r.fileName)+'</p>')+'<div class="field"><label for="doc-label">Name (optional)</label><input id="doc-label" placeholder="Use the file name" value="'+esc(r?.label || '')+'"></div><div class="field"><label for="doc-note">Note</label><textarea id="doc-note">'+esc(r?.note || '')+'</textarea></div><label><input type="checkbox" id="doc-pin" '+(r?.pinned?'checked':'')+'> Pin this resource</label><p id="doc-status" role="status" aria-live="polite"></p></div>', (r?'<button class="btn" data-action="close-modal">Cancel</button>':'<button class="btn" data-document-action="choose">Back</button>')+(r?'<button class="btn ghost" data-document-action="remove">Remove resource</button>':'')+'<button class="btn dark" data-document-action="save">'+(r?'Save changes':'Upload file')+'</button>');
   }
   async function saveDocument(button) {
     if (busy || !uploadContext) return;
@@ -65,64 +75,91 @@
     const fields = {label:document.getElementById('doc-label').value, note:document.getElementById('doc-note').value, pinned:document.getElementById('doc-pin').checked};
     const file = document.getElementById('doc-file')?.files[0];
     const status = document.getElementById('doc-status');
-    const cancels = [...document.querySelectorAll('[data-action="close-modal"]')];
+    const cancels = [...document.querySelectorAll('[data-action="close-modal"], [data-document-action="choose"]')];
     busy = true; button.disabled = true; cancels.forEach(b=>b.disabled=true);
-    status.textContent = context.resource?'Saving…':'Uploading PDF…';
+    status.textContent = context.resource?'Saving…':'Uploading file…';
     try {
       if (context.resource) { Object.assign(context.resource, fields); bind('save')(); }
       else await upload(context.c, context.wid, file, fields);
       bind('closeModal')(); bind('render')();
-      if (current() === context.c) openResources();
-      bind('toast')('PDF resource saved');
+      if (String(current()?.id) === String(context.c.id)) openResources();
+      bind('toast')('Resource saved');
     } catch (error) { status.textContent = error.message; }
     finally { busy = false; button.disabled = false; cancels.forEach(b=>b.disabled=false); }
   }
   async function openDocument(r, download) {
     // Reserve the tab during the click so popup protection cannot block the async fetch.
     const tab = download ? null : window.open('about:blank', '_blank');
-    if (!download && !tab) { bind('toast')('Allow popups to view this PDF in a new tab.'); return; }
-    if (tab) { tab.opener = null; tab.document.title = r.fileName || 'Loading PDF'; tab.document.body.textContent = 'Loading PDF…'; }
+    if (!download && !tab) { bind('toast')('Allow popups to open this file in a new tab.'); return; }
+    if (tab) { tab.opener = null; tab.document.title = r.fileName || 'Loading file'; tab.document.body.textContent = 'Loading file…'; }
     try {
       const wid = workspace();
       if (!wid || !r.storagePath.startsWith(wid+'/')) throw new Error('This document belongs to another workspace.');
       const res = await request('object/authenticated/'+BUCKET+'/'+objectPath(r.storagePath));
-      const blob = new Blob([await res.arrayBuffer()], {type:'application/pdf'});
+      const type = previewType(r);
+      const blob = new Blob([await res.arrayBuffer()], {type:type || 'application/octet-stream'});
       const url = URL.createObjectURL(blob);
-      if (download) { const a = document.createElement('a'); a.href=url; a.download=r.fileName || 'document.pdf'; a.click(); setTimeout(()=>URL.revokeObjectURL(url),60000); }
-      else { tab.location.replace(url); const timer = setInterval(()=>{if(tab.closed){URL.revokeObjectURL(url);clearInterval(timer);}},30000); }
+      if (download) { const a = document.createElement('a'); a.href=url; a.download=r.fileName || 'resource'; a.click(); setTimeout(()=>URL.revokeObjectURL(url),60000); }
+      else {
+        if (type) tab.location.replace(url);
+        else {
+          tab.document.body.replaceChildren();
+          const heading=tab.document.createElement('h1'), note=tab.document.createElement('p'), link=tab.document.createElement('a');
+          heading.textContent=r.fileName || r.label; note.textContent='This file is saved in your resources. Download it to open it in its app.';
+          link.textContent='Download file';link.href=url;link.download=r.fileName || 'resource';
+          tab.document.body.append(heading,note,link);
+          tab.document.body.style.cssText='font:16px/1.6 system-ui;max-width:700px;margin:64px auto;padding:24px;color:#243244';
+        }
+        const timer = setInterval(()=>{if(tab.closed){URL.revokeObjectURL(url);clearInterval(timer);}},30000);
+      }
     } catch (error) { tab?.close(); bind('toast')(error.message); }
   }
   document.addEventListener('click', e => {
-    const b = e.target.closest('[data-document-action], [data-action="v152-client-resources"], [data-action="v152-edit-resource"]');
+    const b = e.target.closest('[data-document-action], [data-action="v152-client-resources"], [data-action="v152-edit-resource"], [data-action="v152-add-resource"]');
     if (!b) return;
     const r = current()?.clientResources?.find(r=>r.id===b.dataset.id);
     if (b.dataset.action === 'v152-edit-resource' && !r?.storagePath) return;
     e.preventDefault(); e.stopImmediatePropagation();
     if (b.dataset.action === 'v152-client-resources') openResources();
+    else if (b.dataset.action === 'v152-add-resource' || b.dataset.documentAction === 'choose') choose();
     else if (b.dataset.action === 'v152-edit-resource') modal(r);
+    else if (b.dataset.documentAction === 'link') bind('v152ResourceModal')();
     else if (b.dataset.documentAction === 'upload') modal();
     else if (b.dataset.documentAction === 'save') saveDocument(b);
+    else if (b.dataset.documentAction === 'remove' && uploadContext?.resource && !busy) {
+      const {c,resource}=uploadContext;
+      if (confirm('Remove this file from this creator’s resources? The stored file is kept.')) {
+        c.clientResources=c.clientResources.filter(item=>item.id!==resource.id);
+        bind('save')();bind('closeModal')();bind('render')();openResources();
+      }
+    }
     else if (r?.storagePath) openDocument(r,b.dataset.documentAction === 'download');
   }, true);
   function decorate() {
     if (!current()) return;
     document.querySelectorAll('.v152-panel').forEach(panel=>{
       const manage = panel.querySelector('[data-action="v152-client-resources"]');
-      if (manage && !panel.querySelector('[data-document-action="upload"]')) {
-        manage.insertAdjacentHTML('beforebegin','<button class="tinybtn" data-document-action="upload">Upload PDF</button>');
+      if (manage && !panel.dataset.resourceDecorated) {
+        panel.dataset.resourceDecorated='true';
+        manage.insertAdjacentHTML('beforebegin','<button class="tinybtn" data-document-action="choose">+ Add resource</button>');
         const h = panel.querySelector('h3'); if (h) h.textContent='Resources for '+current().name;
-        const p = panel.querySelector('.v152-panel-head p'); if(p) p.textContent='Links and PDF documents, ready to view whenever you need them.';
+        const p = panel.querySelector('.v152-panel-head p'); if(p) p.textContent='Links, documents and files, all in one place.';
+        const empty=panel.querySelector('.v152-resource-empty');
+        if(empty) empty.innerHTML='No resources here yet. <button class="side-action" data-document-action="choose">Add the first one →</button>';
       }
     });
     const all = current().clientResources || [], ordered = [...all.filter(r=>r.pinned),...all.filter(r=>!r.pinned)].slice(0,4);
     document.querySelectorAll('.v152-resource-mini').forEach((row,i)=>{
       const r = ordered[i], link = row.querySelector('.v152-open-link');
-      if (r?.storagePath && link) link.outerHTML=action(r)+action(r,true);
+      if (r?.storagePath && link) link.outerHTML='<div class="client-file-actions">'+action(r)+action(r,true)+'</div>';
     });
   }
   let scheduled = false;
   new MutationObserver(()=>{if(!scheduled){scheduled=true;requestAnimationFrame(()=>{scheduled=false;decorate();});}}).observe(document.documentElement,{childList:true,subtree:true});
-  window.AcceleratorClientDocuments = {validate, upload, openDocument, openResources};
+  const style=document.createElement('style');
+  style.textContent='.resource-intro{color:var(--muted);margin:0 0 18px}.resource-choices{display:grid;grid-template-columns:1fr 1fr;gap:14px}.resource-choice{display:flex;flex-direction:column;align-items:flex-start;gap:10px;text-align:left;padding:22px;border:1px solid var(--line,#ddd);border-radius:14px;background:var(--surface,#fff);color:var(--ink,#243244);font:inherit;cursor:pointer}.resource-choice:hover,.resource-choice:focus-visible{border-color:var(--accent,#326ad7);outline:2px solid var(--accent,#326ad7);outline-offset:2px}.resource-choice strong{font-size:17px}.resource-choice>span:last-child{color:var(--muted);font-size:13px;line-height:1.5}.resource-choice-icon{display:grid;place-items:center;width:40px;height:40px;border-radius:10px;background:var(--soft,#eef2f6);font-size:24px}.client-file-actions{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.v152-resource-row>div:nth-child(2){min-width:0}.v152-resource-row h4,.v152-resource-mini b{overflow-wrap:anywhere}#doc-file{max-width:100%}@media(max-width:600px){.resource-choices{grid-template-columns:1fr}.v152-panel-head{flex-wrap:wrap}.v152-resource-row{grid-template-columns:32px minmax(0,1fr)}.v152-resource-row>.actions{grid-column:2}.v152-resource-mini{grid-template-columns:32px minmax(0,1fr)}.v152-resource-mini>.client-file-actions{grid-column:2}}';
+  document.head.appendChild(style);
+  window.AcceleratorClientDocuments = {validate, upload, openDocument, openResources, previewType};
   // The existing link editor also reopens this drawer after saving a link.
   if (bind('v152OpenResources')) (0, eval)('v152OpenResources = window.AcceleratorClientDocuments.openResources');
   decorate();

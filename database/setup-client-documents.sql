@@ -2,7 +2,7 @@
 -- Does not modify workspace_states or existing creator data.
 begin;
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('client-documents', 'client-documents', false, 20971520, array['application/pdf'])
+values ('client-documents', 'client-documents', false, 20971520, null)
 on conflict (id) do nothing;
 
 create policy "Workspace editors upload client PDFs"
@@ -27,3 +27,6 @@ using (
   )
 );
 commit;
+
+-- Applied October 27, 2026: accept all file formats in the existing private bucket.
+update storage.buckets set allowed_mime_types = null where id = 'client-documents';

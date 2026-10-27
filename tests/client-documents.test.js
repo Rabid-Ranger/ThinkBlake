@@ -10,7 +10,7 @@ function harness(fetch) {
     TextDecoder, Blob, crypto:require('node:crypto').webcrypto,
     window:{__acceleratorSaveDiagnostics:()=>({workspaceId:'workspace-a'})},
     localStorage:{getItem:()=>JSON.stringify({access_token:'test-token'})},
-    document:{documentElement:{},addEventListener(){},querySelectorAll:()=>[]},
+    document:{documentElement:{},head:{appendChild(){}},createElement:()=>({}),addEventListener(){},querySelectorAll:()=>[]},
     MutationObserver:class {observe(){}},
     fetch:async(...args)=>{calls.push(args);return fetch(...args);},
     creator:()=>creator,save:()=>saved.push(true)
@@ -20,9 +20,9 @@ function harness(fetch) {
 }
 function pdf(name='guide.pdf',body='%PDF-1.7\ncontent') { const b=new Blob([body]);b.name=name;return b; }
 const fields = {label:'Client guide',note:'Notes',pinned:true};
-test('rejects non-PDF, renamed invalid files and oversized files before upload',async()=>{
+test('rejects missing, renamed invalid PDF and oversized files before upload',async()=>{
   const h=harness(()=>{throw Error('must not upload');});
-  await assert.rejects(h.api.upload(h.creator,'workspace-a',pdf('guide.html'),fields),/Choose a PDF/);
+  await assert.rejects(h.api.upload(h.creator,'workspace-a',null,fields),/Choose a file/);
   await assert.rejects(h.api.upload(h.creator,'workspace-a',pdf('guide.pdf','<html>'),fields),/not a valid PDF/);
   await assert.rejects(h.api.validate({name:'guide.pdf',size:21*1024*1024}),/20 MB/);
   assert.equal(h.calls.length,0);assert.equal(h.creator.clientResources.length,0);
@@ -69,4 +69,20 @@ test('signed-out uploads do not send a file or create metadata',async()=>{
   h.context.localStorage.getItem=()=>null;
   await assert.rejects(h.api.upload(h.creator,'workspace-a',pdf(),fields),/Sign in/);
   assert.equal(h.calls.length,0);assert.equal(h.creator.clientResources.length,0);
+});
+
+test('uploads arbitrary files and retains their original MIME type and name',async()=>{
+  const h=harness(()=>({ok:true}));
+  for(const name of ['notes.docx','budget.xlsx','archive.zip','photo.png','notes.txt','file.unknown']) {
+    const file=new Blob(['example'],{type:'application/octet-stream'});file.name=name;
+    const r=await h.api.upload(h.creator,'workspace-a',file,fields);
+    assert.equal(r.fileName,name);assert.equal(r.contentType,'application/octet-stream');
+  }
+  assert.equal(h.creator.clientResources.length,6);
+});
+test('active formats never render as executable web documents',()=>{
+  const h=harness(()=>({ok:true}));
+  for(const fileName of ['page.html','icon.svg','script.js','macro.docm','file.unknown']) assert.equal(h.api.previewType({fileName}),'');
+  assert.equal(h.api.previewType({fileName:'notes.txt'}),'text/plain');
+  assert.equal(h.api.previewType({fileName:'photo.PNG'}),'image/png');
 });

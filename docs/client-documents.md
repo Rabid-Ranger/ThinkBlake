@@ -1,30 +1,33 @@
-# Client PDF resources
+# Client resources
 
-Client resources support existing links plus private PDF uploads up to 20 MB.
-Upload PDF saves the file to Supabase Storage and adds only its metadata to the
-creator's existing clientResources list. View PDF fetches the file with the current
-cloud session and opens a PDF blob in a new tab; Download saves a separate copy.
-Browser PDF preferences can still choose an external viewer or download behavior.
+One Add resource entry opens a choice between Add a link and Upload a file.
+The empty-state Add the first one control opens the same chooser. Manage opens
+all resources for the selected creator, with the same Add resource action.
 
-## Live storage setup (applied October 27, 2026)
+Any file up to 20 MB can be uploaded. The original filename and MIME type are
+retained. The file lives in private Supabase Storage; only metadata enters
+clientResources in the cloud workspace. PDFs, common raster images, plain text
+and supported media have a View action. Other formats open a page with their
+filename and a download link. Download is available separately for every file.
+HTML, SVG, scripts and unknown formats are downloaded rather than executed.
+Removing a file resource removes its listing and retains its storage object.
+Existing PDF resource metadata remains compatible.
 
-Applied database/setup-client-documents.sql against project pqggobwpazihraeqvspc.
-It created the private client-documents bucket and membership-based read/upload
-policies. Editors, admins and owners can upload; workspace members can read.
-No service key or public file URL is used. Existing workspace state is untouched.
-Without this setup uploads report a storage setup error and do not add a broken
-resource. PDFs are not exposed by creator video share links.
+## Live storage setup
 
-## Verification
+Applied database/setup-client-documents.sql to pqggobwpazihraeqvspc on October 27,
+2026. The client-documents bucket is private with a 20971520-byte limit. Its MIME
+allowlist is null, allowing all file formats. Workspace owner/admin/editor
+members may upload, and workspace members may read. Policy names retain their
+original PDF names for compatibility. No service key or public file URL is used.
+Creator video share links do not expose these resources.
 
-Run node --test tests/client-documents.test.js.
-After setup, sign into the dashboard, upload a disposable PDF, verify View PDF
-and Download, edit its label/note, pin it, and reload to confirm cloud persistence.
-Verify an unrelated workspace and a signed-out session cannot read the file.
-Stored objects are immutable; this release does not delete uploaded files.
+## QA
 
-Production verification: the live dashboard renders Upload PDF and its upload form.
-The bucket query confirmed public=false, file_size_limit=20971520 and
-allowed_mime_types=[application/pdf]. The 20 targeted automated checks pass.
-A real browser upload is pending because the Chrome automation extension has
-not been granted access to local file URLs; no test document was uploaded.
+Run node --test tests/client-documents.test.js tests/creator-portal.test.js
+tests/ui-plain-language.test.js. All 22 checks pass, including unsupported active
+format handling, arbitrary file metadata, PDF validation, upload failure,
+workspace isolation, sign-in requirements, and authenticated PDF blob viewing.
+The user will perform the real file-upload test; do not select their local files
+through automation. Check the live chooser, link flow, file form, Back, drawer,
+and responsive layout independently.
