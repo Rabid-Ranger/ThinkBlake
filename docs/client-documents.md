@@ -25,7 +25,7 @@ Creator video share links do not expose these resources.
 ## QA
 
 Run node --test tests/client-documents.test.js tests/creator-portal.test.js
-tests/ui-plain-language.test.js. All 26 checks pass, including unsupported active
+tests/ui-plain-language.test.js. All 27 checks pass, including unsupported active
 format handling, arbitrary file metadata, PDF validation, upload failure,
 workspace isolation, sign-in requirements, and authenticated PDF blob viewing.
 The user will perform the real file-upload test; do not select their local files
@@ -45,3 +45,11 @@ another user ID to enumerate membership. Existing service-role checks remain
 permitted. Ran database/verify-client-document-permissions.sql as authenticated:
 own workspace true; unrelated workspace false; other user false; upload-policy
 expression true. No workspace state or stored files were modified by this test.
+
+## Embedded preview repair
+
+View now opens a native dialog inside the dashboard, eliminating window.open
+and popup-blocker dependencies. PDFs use an embedded browser PDF viewer; images,
+plain text and supported media also preview inline. Download remains separate.
+Closing the dialog revokes its object URL and clears the embedded content.
+A generation check prevents slow responses from reopening a closed preview.

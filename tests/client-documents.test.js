@@ -3,6 +3,15 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const source = fs.readFileSync(require('node:path').join(__dirname,'../ui/client-documents.js'),'utf8');
+function element(tag) {
+  const handlers={},parts={};
+  return {tag,children:[],open:false,textContent:'',style:{},
+    appendChild(child){this.children.push(child);},replaceChildren(){this.children=[];this.textContent='';},
+    querySelector(selector){return parts[selector] ||= element(selector);},
+    addEventListener(event,handler){handlers[event]=handler;},
+    showModal(){this.open=true;},close(){this.open=false;handlers.close?.();},click(){}
+  };
+}
 function harness(fetch) {
   const creator = {id:'creator-a',clientResources:[]};
   const calls = [], saved = [];
@@ -11,7 +20,7 @@ function harness(fetch) {
     TextDecoder, Blob, URL, crypto:require('node:crypto').webcrypto,
     window:{__acceleratorSaveDiagnostics:()=>({workspaceId:'workspace-a'})},
     localStorage:{getItem:()=>JSON.stringify({access_token:'test-token'})},
-    document:{documentElement:{},head:{appendChild(){}},createElement:()=>({}),addEventListener:(type,handler)=>{if(type==='click')click=handler;},querySelectorAll:()=>[],getElementById:id=>elements[id]},
+    document:{documentElement:{},head:{appendChild(){}},body:element('body'),createElement:element,addEventListener:(type,handler)=>{if(type==='click')click=handler;},querySelectorAll:()=>[],getElementById:id=>elements[id]},
     MutationObserver:class {observe(){}},
     fetch:async(...args)=>{calls.push(args);return fetch(...args);},
     creator:()=>creator,save:()=>saved.push(true),openModal:(...args)=>modals.push(args),openDrawer:(...args)=>drawers.push(args),closeModal(){},render(){},toast(){},confirm:()=>true
@@ -47,24 +56,37 @@ test('workspace changes prevent attaching a PDF to the wrong workspace',async()=
   await assert.rejects(h.api.upload(h.creator,'old-workspace',pdf(),fields),/still loading/);
   assert.equal(h.calls.length,0);
 });
-test('private preview rejects references from another workspace and closes its reserved tab',async()=>{
-  const h=harness(()=>{throw Error('must not fetch');});let closed=false,message='';
-  h.context.window.open=()=>({document:{body:{}},close(){closed=true;}});
-  h.context.toast=t=>{message=t;};
+test('private preview rejects references from another workspace',async()=>{
+  const h=harness(()=>{throw Error('must not fetch');});
+  h.context.window.open=()=>{throw Error('must not open popups');};
   await h.api.openDocument({storagePath:'other-workspace/file.pdf'},false);
-  assert.equal(h.calls.length,0);assert.equal(closed,true);assert.match(message,/another workspace/);
+  assert.equal(h.calls.length,0);
+  const dialog=h.context.document.body.children[0];
+  assert.match(dialog.querySelector('.client-resource-preview-body').textContent,/another workspace/);
 });
-test('PDF preview fetches privately and opens a PDF blob without triggering a download',async()=>{
+test('PDF preview opens inside the dashboard without any popup and releases its URL on close',async()=>{
   const h=harness(()=>({ok:true,arrayBuffer:async()=>new TextEncoder().encode('%PDF-1.7').buffer}));
-  let destination='',openedBlob;
-  h.context.window.open=()=>({document:{body:{}},location:{replace:url=>{destination=url;}}});
-  h.context.URL={createObjectURL:blob=>{openedBlob=blob;return 'blob:test-pdf';}};
-  h.context.setInterval=()=>1;
+  let openedBlob,revoked='';
+  h.context.window.open=()=>{throw Error('must not open popups');};
+  h.context.URL={createObjectURL:blob=>{openedBlob=blob;return 'blob:test-pdf';},revokeObjectURL:url=>{revoked=url;}};
   await h.api.openDocument({storagePath:'workspace-a/creator-a/guide.pdf',fileName:'guide.pdf'},false);
-  assert.equal(destination,'blob:test-pdf');assert.equal(openedBlob.type,'application/pdf');
+  const dialog=h.context.document.body.children[0],body=dialog.querySelector('.client-resource-preview-body');
+  assert.equal(dialog.open,true);assert.equal(body.children[1].tag,'iframe');assert.equal(body.children[1].src,'blob:test-pdf');
+  assert.equal(openedBlob.type,'application/pdf');
   assert.match(h.calls[0][0],/object\/authenticated\/client-documents\/workspace-a/);
   assert.equal(h.calls[0][1].headers.Authorization,'Bearer test-token');
+  dialog.close();assert.equal(revoked,'blob:test-pdf');
 });
+test('closing a loading preview prevents a stale file from reopening it',async()=>{
+  let respond,created=0;
+  const h=harness(()=>new Promise(resolve=>{respond=resolve;}));
+  h.context.URL={createObjectURL:()=>{created++;return 'blob:test';}};
+  const loading=h.api.openDocument({storagePath:'workspace-a/creator-a/guide.pdf',fileName:'guide.pdf'},false);
+  h.context.document.body.children[0].close();
+  respond({ok:true,arrayBuffer:async()=>new ArrayBuffer(0)});await loading;
+  assert.equal(created,0);assert.equal(h.context.document.body.children[0].open,false);
+});
+
 test('signed-out uploads do not send a file or create metadata',async()=>{
   const h=harness(()=>{throw Error('must not fetch');});
   h.context.localStorage.getItem=()=>null;

@@ -106,32 +106,67 @@
     } catch (error) { status.textContent = error.message; }
     finally { busy = false; button.disabled = false; cancels.forEach(b=>b.disabled=false); }
   }
+  let previewDialog=null, previewUrl=null, previewGeneration=0;
+  function releasePreview() {
+    previewGeneration++;
+    if(previewUrl) URL.revokeObjectURL(previewUrl);
+    previewUrl=null;
+    previewDialog?.querySelector('.client-resource-preview-body').replaceChildren();
+  }
+  function viewer(r) {
+    if(!previewDialog) {
+      previewDialog=document.createElement('dialog');
+      previewDialog.className='client-resource-viewer';
+      previewDialog.innerHTML='<header><h2></h2><button type="button" aria-label="Close file preview">Close</button></header><div class="client-resource-preview-body"></div>';
+      previewDialog.querySelector('button').addEventListener('click',()=>previewDialog.close());
+      previewDialog.addEventListener('close',releasePreview);
+      document.body.appendChild(previewDialog);
+    }
+    releasePreview();
+    previewDialog.querySelector('h2').textContent=r.label || r.fileName || 'File preview';
+    const body=previewDialog.querySelector('.client-resource-preview-body');
+    body.textContent='Loading file…';
+    if(!previewDialog.open) previewDialog.showModal();
+    return {body,generation:previewGeneration};
+  }
   async function openDocument(r, download) {
-    // Reserve the tab during the click so popup protection cannot block the async fetch.
-    const tab = download ? null : window.open('about:blank', '_blank');
-    if (!download && !tab) { bind('toast')('Allow popups to open this file in a new tab.'); return; }
-    if (tab) { tab.opener = null; tab.document.title = r.fileName || 'Loading file'; tab.document.body.textContent = 'Loading file…'; }
+    const preview=download?null:viewer(r);
     try {
       const wid = workspace();
       if (!wid || !r.storagePath.startsWith(wid+'/')) throw new Error('This document belongs to another workspace.');
       const res = await request('object/authenticated/'+BUCKET+'/'+objectPath(r.storagePath));
       const type = previewType(r);
       const blob = new Blob([await res.arrayBuffer()], {type:type || 'application/octet-stream'});
+      if(preview && (preview.generation!==previewGeneration || !previewDialog.open)) return;
       const url = URL.createObjectURL(blob);
-      if (download) { const a = document.createElement('a'); a.href=url; a.download=r.fileName || 'resource'; a.click(); setTimeout(()=>URL.revokeObjectURL(url),60000); }
-      else {
-        if (type) tab.location.replace(url);
-        else {
-          tab.document.body.replaceChildren();
-          const heading=tab.document.createElement('h1'), note=tab.document.createElement('p'), link=tab.document.createElement('a');
-          heading.textContent=r.fileName || r.label; note.textContent='This file is saved in your resources. Download it to open it in its app.';
-          link.textContent='Download file';link.href=url;link.download=r.fileName || 'resource';
-          tab.document.body.append(heading,note,link);
-          tab.document.body.style.cssText='font:16px/1.6 system-ui;max-width:700px;margin:64px auto;padding:24px;color:#243244';
-        }
-        const timer = setInterval(()=>{if(tab.closed){URL.revokeObjectURL(url);clearInterval(timer);}},30000);
+      if (download) {
+        const a=document.createElement('a');a.href=url;a.download=r.fileName || 'resource';a.click();
+        setTimeout(()=>URL.revokeObjectURL(url),60000);
+        return;
       }
-    } catch (error) { tab?.close(); bind('toast')(error.message); }
+      previewUrl=url;
+      const body=preview.body;
+      body.replaceChildren();
+      const link=document.createElement('a');link.href=url;link.download=r.fileName || 'resource';link.textContent='Download file';link.className='btn';
+      body.appendChild(link);
+      if(type==='text/plain') {
+        const text=await blob.text();
+        if(preview.generation!==previewGeneration || !previewDialog.open) return;
+        const pre=document.createElement('pre');pre.textContent=text;body.appendChild(pre);
+      } else if(type) {
+        const tag=type==='application/pdf'?'iframe':type.startsWith('image/')?'img':type.startsWith('audio/')?'audio':'video';
+        const media=document.createElement(tag);media.src=url;
+        if(tag==='iframe') media.title=r.fileName || 'PDF preview';
+        if(tag==='img') media.alt=r.fileName || r.label;
+        if(tag==='audio'||tag==='video') media.controls=true;
+        body.appendChild(media);
+      } else {
+        const note=document.createElement('p');note.textContent='This file is saved in your resources. Download it to open it in its app.';body.appendChild(note);
+      }
+    } catch (error) {
+      if(preview && preview.generation===previewGeneration && previewDialog.open) preview.body.textContent=error.message;
+      else if(download) bind('toast')(error.message);
+    }
   }
   document.addEventListener('click', e => {
     const b = e.target.closest('[data-document-action], [data-action="v152-client-resources"], [data-action="v152-edit-resource"], [data-action="v152-add-resource"]');
@@ -175,7 +210,7 @@
   let scheduled = false;
   new MutationObserver(()=>{if(!scheduled){scheduled=true;requestAnimationFrame(()=>{scheduled=false;decorate();});}}).observe(document.documentElement,{childList:true,subtree:true});
   const style=document.createElement('style');
-  style.textContent='.resource-intro{color:var(--muted);margin:0 0 18px}.resource-choices{display:grid;grid-template-columns:1fr 1fr;gap:14px}.resource-choice{display:flex;flex-direction:column;align-items:flex-start;gap:10px;text-align:left;padding:22px;border:1px solid var(--line,#ddd);border-radius:14px;background:var(--surface,#fff);color:var(--ink,#243244);font:inherit;cursor:pointer}.resource-choice:hover,.resource-choice:focus-visible{border-color:var(--accent,#326ad7);outline:2px solid var(--accent,#326ad7);outline-offset:2px}.resource-choice strong{font-size:17px}.resource-choice>span:last-child{color:var(--muted);font-size:13px;line-height:1.5}.resource-choice-icon{display:grid;place-items:center;width:40px;height:40px;border-radius:10px;background:var(--soft,#eef2f6);font-size:24px}.client-resource-pin{display:flex!important;align-items:center;gap:10px;cursor:pointer}.client-resource-pin input{width:18px!important;height:18px!important;min-height:0!important;margin:0!important;flex:0 0 18px}.client-resource-pin span{font-weight:500}#doc-file::file-selector-button{padding:8px 14px;border:1px solid var(--line,#ddd);border-radius:7px;margin-right:12px;background:var(--soft,#eef2f6);color:var(--ink,#243244);font:inherit;cursor:pointer}.client-file-actions{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.v152-resource-row>div:nth-child(2){min-width:0}.v152-resource-row h4,.v152-resource-mini b{overflow-wrap:anywhere}#doc-file{max-width:100%}@media(max-width:600px){.resource-choices{grid-template-columns:1fr}.v152-panel-head{flex-wrap:wrap}.v152-resource-row{grid-template-columns:32px minmax(0,1fr)}.v152-resource-row>.actions{grid-column:2}.v152-resource-mini{grid-template-columns:32px minmax(0,1fr)}.v152-resource-mini>.client-file-actions{grid-column:2}}';
+  style.textContent='.client-resource-viewer{width:min(1100px,calc(100vw - 32px));height:min(88vh,950px);max-width:none;max-height:92vh;box-sizing:border-box;border:1px solid var(--line,#ddd);border-radius:14px;padding:0;background:var(--surface,#fff);color:var(--ink,#243244)}.client-resource-viewer[open]{display:flex;flex-direction:column}.client-resource-viewer::backdrop{background:#0009}.client-resource-viewer header{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:16px 20px;border-bottom:1px solid var(--line,#ddd)}.client-resource-viewer h2{font-size:18px;margin:0;overflow-wrap:anywhere}.client-resource-viewer header button{padding:8px 14px;border:1px solid var(--line,#ddd);border-radius:8px;background:var(--surface,#fff);color:inherit;cursor:pointer}.client-resource-preview-body{flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;padding:16px;overflow:auto}.client-resource-preview-body>.btn{align-self:flex-start;text-decoration:none}.client-resource-preview-body iframe{width:100%;flex:1;min-height:300px;border:0}.client-resource-preview-body img,.client-resource-preview-body video{max-width:100%;min-height:0;flex:1;object-fit:contain}.client-resource-preview-body audio{width:100%}.client-resource-preview-body pre{white-space:pre-wrap;overflow-wrap:anywhere;font:14px/1.6 ui-monospace,monospace}.resource-intro{color:var(--muted);margin:0 0 18px}.resource-choices{display:grid;grid-template-columns:1fr 1fr;gap:14px}.resource-choice{display:flex;flex-direction:column;align-items:flex-start;gap:10px;text-align:left;padding:22px;border:1px solid var(--line,#ddd);border-radius:14px;background:var(--surface,#fff);color:var(--ink,#243244);font:inherit;cursor:pointer}.resource-choice:hover,.resource-choice:focus-visible{border-color:var(--accent,#326ad7);outline:2px solid var(--accent,#326ad7);outline-offset:2px}.resource-choice strong{font-size:17px}.resource-choice>span:last-child{color:var(--muted);font-size:13px;line-height:1.5}.resource-choice-icon{display:grid;place-items:center;width:40px;height:40px;border-radius:10px;background:var(--soft,#eef2f6);font-size:24px}.client-resource-pin{display:flex!important;align-items:center;gap:10px;cursor:pointer}.client-resource-pin input{width:18px!important;height:18px!important;min-height:0!important;margin:0!important;flex:0 0 18px}.client-resource-pin span{font-weight:500}#doc-file::file-selector-button{padding:8px 14px;border:1px solid var(--line,#ddd);border-radius:7px;margin-right:12px;background:var(--soft,#eef2f6);color:var(--ink,#243244);font:inherit;cursor:pointer}.client-file-actions{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.v152-resource-row>div:nth-child(2){min-width:0}.v152-resource-row h4,.v152-resource-mini b{overflow-wrap:anywhere}#doc-file{max-width:100%}@media(max-width:600px){.resource-choices{grid-template-columns:1fr}.v152-panel-head{flex-wrap:wrap}.v152-resource-row{grid-template-columns:32px minmax(0,1fr)}.v152-resource-row>.actions{grid-column:2}.v152-resource-mini{grid-template-columns:32px minmax(0,1fr)}.v152-resource-mini>.client-file-actions{grid-column:2}}';
   document.head.appendChild(style);
   window.AcceleratorClientDocuments = {validate, upload, openDocument, openResources, previewType, safeUrl};
   // The existing link editor also reopens this drawer after saving a link.
