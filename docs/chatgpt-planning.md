@@ -13,8 +13,9 @@ workspace settings, not by this server.
    `https://accelerator-os-rho.vercel.app/api/accelerator-ai`.
 3. Choose OAuth and Client ID Metadata Documents (CIMD). The server supports
    public-client authorization-code exchange with mandatory PKCE S256.
-4. On Accelerator's approval screen, choose exactly one client and the resources
-   ChatGPT may read. Approve access. It expires after 30 days.
+4. On Accelerator's approval screen, choose all clients/resources in the current
+   workspace, or one client with selected resources. Approve access. It expires
+   after 30 days. Workspace access includes future clients and resources.
 5. In a research chat, select Accelerator and ask it to read the selected context
    and resources. Existing research chats remain in ChatGPT; the dashboard does
    not import chat history.
@@ -27,7 +28,11 @@ workspace settings, not by this server.
 
 ## Tools
 
-- `get_client_context`: authorized client's strategy, current plan, up to 100
+- `list_clients`: lists clients available through the connection. Workspace-wide
+  grants include all clients in the authorized workspace. Each following tool
+  requires a `creatorId` so different clients are never silently mixed.
+
+- `get_client_context`: chosen authorized client's strategy, current plan, up to 100
   existing videos, 12 most recent coaching summaries, and selected resource
   metadata. Embedded images and credential-like fields are omitted.
 - `read_resource`: selected resource only. Reads uploaded PDF text, text, CSV,
@@ -56,7 +61,7 @@ workspace settings, not by this server.
 - Access tokens expire after one hour. Refresh tokens rotate atomically and grant
   expiry is fixed at 30 days. Membership and revocation are checked on every call.
 - Tokens cannot be used as database, storage, or dashboard sessions. They only
-  work through this server's three narrow tools.
+  work through this server's four narrow tools.
 - Connector tables have RLS enabled and no privileges for PUBLIC, anon, or
   authenticated. Only the server role can use them. Its secret remains in the
   Supabase function environment, never in Vercel, browser code, or plugin config.
@@ -64,7 +69,7 @@ workspace settings, not by this server.
   `pqggobwpazihraeqvspc` on 2026-10-27. No client state was seeded or rewritten.
 - `.well-known` discovery routes are in `vercel.json`. They expose metadata only.
 - No arbitrary URL fetch, code execution, deletion tool, automatic model call,
-  or account-wide client listing is exposed to ChatGPT.
+  is exposed to ChatGPT. Client listing is restricted to the authorized workspace.
 
 ## Validation
 
@@ -78,3 +83,12 @@ Official references:
 
 - https://developers.openai.com/api/docs/guides/custom-mcp-server
 - https://developers.openai.com/plugins/build/auth
+
+## Workspace-wide consent update (2026-10-27)
+
+The user explicitly requested access to all Accelerator clients and resources.
+New workspace-wide grants use the reserved pair `creator_id = "*"` and
+`resource_ids = ["*"]`. Both values must match; older client grants never expand
+automatically. No database schema or existing RLS permissions changed. Every
+tool still checks current workspace membership, and every file read validates
+the chosen client and storage prefix. Drafts retain the actual chosen creator ID.

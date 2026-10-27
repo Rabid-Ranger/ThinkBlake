@@ -39,8 +39,8 @@ async function fixture() {
   const verifier='a'.repeat(43),challenge=Buffer.from(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(verifier))).toString('base64url');
   const authorization={client_id:CLIENT,redirect_uri:REDIRECT,response_type:'code',code_challenge:challenge,code_challenge_method:'S256',resource:RESOURCE,state:'state-123',scope:'accelerator:read accelerator:draft offline_access'};
   const approve=async(extra={})=>request('dashboard',{action:'approve',workspaceId:'w1',creatorId:'c1',resourceIds:['r1'],authorization,...extra},'owner-session');
-  const login=async()=>{
-    const approval=await approve();assert.equal(approval.status,200);
+  const login=async(extra={})=>{
+    const approval=await approve(extra);assert.equal(approval.status,200);
     const code=new URL(approval.data.redirectUrl).searchParams.get('code');
     const exchange={grant_type:'authorization_code',code,client_id:CLIENT,redirect_uri:REDIRECT,code_verifier:verifier,resource:RESOURCE};
     const token=await request('token',exchange);assert.equal(token.status,200);
@@ -52,7 +52,7 @@ async function fixture() {
 test('OAuth discovery and public MCP discovery expose no client data',async()=>{
   const f=await fixture();const r=await f.handler(new Request(RESOURCE+'?route=oauth-metadata'));
   const metadata=await r.json();assert.equal(metadata.code_challenge_methods_supported[0],'S256');assert.equal(metadata.client_id_metadata_document_supported,true);
-  const list=await f.request('',{jsonrpc:'2.0',id:1,method:'tools/list'});assert.equal(list.data.result.tools.length,3);
+  const list=await f.request('',{jsonrpc:'2.0',id:1,method:'tools/list'});assert.equal(list.data.result.tools.length,4);
   const denied=await f.call('get_client_context',{},'');assert.equal(denied.status,401);assert.match(denied.headers.get('www-authenticate'),/resource_metadata/);
 });
 test('consent cannot select another client’s file or send codes to an unregistered destination',async()=>{
@@ -101,4 +101,32 @@ test('expired grants and removed workspace membership deny existing connections'
 });
 test('untrusted browser origins cannot create a consent grant',async()=>{
   const f=await fixture();const r=await f.handler(new Request(RESOURCE+'?route=dashboard',{method:'POST',headers:{Origin:'https://evil.example',Authorization:'Bearer owner-session'},body:JSON.stringify({action:'approve'})}));assert.equal(r.status,403);assert.equal(f.tables.accelerator_ai_connections.length,0);
+});
+test('workspace consent exposes every current client and new resources while requiring an explicit target',async()=>{
+  const f=await fixture(),token=await f.login({accessScope:'workspace'});
+  const conn=f.tables.accelerator_ai_connections[0];assert.equal(conn.creator_id,'*');assert.deepEqual(conn.resource_ids,['*']);
+  const clients=JSON.parse((await f.call('list_clients',{},token.access_token)).data.result.content[0].text);assert.equal(clients.clients.length,2);
+  assert.equal((await f.call('get_client_context',{},token.access_token)).data.result.isError,true);
+  const second=JSON.parse((await f.call('get_client_context',{creatorId:'c2'},token.access_token)).data.result.content[0].text);assert.equal(second.creator.id,'c2');
+  const first=f.tables.workspace_states[0].state.creators[0];first.clientResources.push({id:'new-resource',label:'Added after connecting',fileName:'new.txt',storagePath:'w1/c1/new/new.txt'});
+  const context=JSON.parse((await f.call('get_client_context',{creatorId:'c1'},token.access_token)).data.result.content[0].text);assert.equal(context.resources.length,3);
+  assert.equal((await f.call('read_resource',{creatorId:'c1',resourceId:'new-resource'},token.access_token)).data.result.isError,false);
+  const overview=await f.request('dashboard',{action:'overview',workspaceId:'w1',creatorId:'c2'},'owner-session');assert.equal(overview.data.connections.length,1);
+});
+test('client-specific grants never expand and workspace access stays inside the authorized workspace',async()=>{
+  const f=await fixture(),one=await f.login();
+  const names=JSON.parse((await f.call('list_clients',{},one.access_token)).data.result.content[0].text);assert.equal(names.clients.length,1);
+  assert.equal((await f.call('get_client_context',{creatorId:'c2'},one.access_token)).data.result.isError,true);
+  const all=await f.login({accessScope:'workspace'});
+  assert.equal((await f.call('get_client_context',{creatorId:'another-workspace-client'},all.access_token)).data.result.isError,true);
+  f.tables.workspace_states[0].state.creators[0].clientResources[0].storagePath='different-workspace/c1/private.txt';
+  assert.equal((await f.call('read_resource',{creatorId:'c1',resourceId:'r1'},all.access_token)).data.result.isError,true);assert.equal(f.readFiles,0);
+});
+test('workspace-wide drafts are attached to the chosen client and retries cannot mix clients',async()=>{
+  const f=await fixture(),token=await f.login({accessScope:'workspace'});
+  const args={creatorId:'c2',requestId:'client-two-draft',plan:{videos:[{title:'Client two idea',job:'Trust',rationale:'Specific to client two'}]}};
+  assert.equal((await f.call('submit_plan_draft',args,token.access_token)).data.result.isError,false);
+  assert.equal(f.tables.accelerator_ai_drafts[0].creator_id,'c2');
+  args.creatorId='c1';assert.equal((await f.call('submit_plan_draft',args,token.access_token)).data.result.isError,true);
+  const rejected=await f.approve({resourceIds:['*']});assert.equal(rejected.status,400);
 });
