@@ -2,25 +2,46 @@
 (function(root){
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function ctaStarters(cta={},mid=true){
-    const asset=cta[mid?'midDestination':'endDestination']||'[specific resource or next step]';
-    const benefit=cta[mid?'midBenefit':'endBenefit']||'[the practical help it provides]';
-    return mid?[
-      ['Remove the next obstacle',`If [the specific part you just demonstrated] is the bit you want beside you when you try this, ${asset} gives you ${benefit}. It is linked below. Now, here is [the next obstacle we still need to solve].`],
-      ['Use the tool in the demonstration',`The [worksheet or checklist] I am using here is ${asset}. You can get it below if you want to work through this with your own [situation]. Let us use it on [the next real example].`],
-      ['Offer help when the situation calls for it',`If [specific fit condition] and you want help with [the harder decision], ${asset} is designed to help with ${benefit}. Details are below. First, let me show you [the next useful point].`]
+    const prefix=mid?'mid':'end',type=String(cta[prefix+'Type']||'').toLowerCase();
+    const asset=cta[prefix+'Destination']||'[name the real next step]';
+    const benefit=cta[prefix+'Benefit']||'[the concrete help it provides]';
+    const bridge=cta[prefix+'Bridge']||'[the specific obstacle this part of the video exposes]';
+    if(/video|playlist/.test(type))return mid?[
+      ['Follow the question',bridge+'. '+asset+' covers '+benefit+'. It is linked below. For now, [return to the next point in this video].'],
+      ['Connect the two demonstrations','The missing piece here is [the related question]. '+asset+' shows '+benefit+'. Keep it for your next step; first, [finish the current demonstration].'],
+      ['Give the next video a job','Use '+asset+' for [the next practical decision]: '+benefit+'. Right now, [the remaining useful point in this video].']
     ]:[
-      ['Continue into the next useful video',`You can now [do the thing this video promised]. The next decision is [the unresolved problem that follows]. In ${asset}, I show you ${benefit}, so start there.`],
-      ['Turn the lesson into action',`To put [the specific lesson] into practice, ${asset} gives you ${benefit}. It is linked below, so you can [the concrete next action].`],
-      ['Make a relevant business invitation',`If [specific fit condition] and you want help with [the next outcome], ${asset} is the next step. [Explain what actually happens after clicking.] Details are below.`]
+      ['Leave the next question alive',bridge+'. That is what '+asset+' walks through: '+benefit+'. Watch that next.'],
+      ['Move from understanding to doing','The next step is [the specific action the viewer now needs]. '+asset+' shows '+benefit+'. Start with [the relevant demonstration in that video].'],
+      ['Expose the next obstacle','[The next obstacle] changes how this works in practice. In '+asset+', [the concrete example] makes '+benefit+' clear. Go there next.']
+    ];
+    if(/business|service|consult|booking|call/.test(type))return mid?[
+      ['Bridge into real application',bridge+'. That is the work we do in '+asset+': '+benefit+'. [Describe the real first step and point to its link.] Now, [return to the next teaching point].'],
+      ['Demonstrate the service naturally','[Show the real tool, diagnostic or process used in the work.] This is part of '+asset+', where we work on '+benefit+'. [Explain the actual next action.] Here is how to use this first piece on your own.'],
+      ['Name the decision that needs help','The harder decision is [the specific problem beyond the demonstration]. '+asset+' is where we work through '+benefit+'. [State the next action and what happens afterwards.] First, [continue the promised lesson].']
+    ]:[
+      ['Make the next step tangible',bridge+'. '+asset+' is where we work through '+benefit+'. [Explain exactly what happens after the next action, including the real commitment.] [Point to the link and ask for that one action.]'],
+      ['Continue the work, not the pitch','The practical next decision is [the decision the viewer needs help making]. In '+asset+', we work on '+benefit+'. [Name the actual first step.] Details are below.'],
+      ['Show what working together changes','[The unresolved constraint] is the part we tackle in '+asset+': '+benefit+'. [Describe the actual deliverable or first conversation.] [Make one clear invitation.]']
+    ];
+    return mid?[
+      ['Use the resource inside the demonstration',bridge+'. The [tool or page being demonstrated] is from '+asset+', which gives you '+benefit+'. [Point to the actual link.] Now, [the next useful point].'],
+      ['Remove the friction just exposed','[The specific step] is easier with [the actual aid]. '+asset+' gives you '+benefit+'. [Say where to get it and what to do with it.] Let us use that on [the next example].'],
+      ['Let the viewer try the same process','Here is the [tool] I used for [the result just shown]. It is in '+asset+' with '+benefit+'. [Point to the link.] [Continue the demonstration without restarting the introduction.]']
+    ]:[
+      ['Turn the insight into a real next action',bridge+'. '+asset+' gives you '+benefit+'. [Name the first useful action inside it and point to the actual link.]'],
+      ['Hand over the tool used on screen','Take the [tool just demonstrated] into your own [situation]. '+asset+' includes '+benefit+'. [Give the actual access instruction.]'],
+      ['Make the next decision easier','[The next practical decision] is easier with [the relevant aid]. '+asset+' gives you '+benefit+'. [Give one clear action to get and use it.]']
     ];
   }
+  function productionStatus(v={}){const h=v.handoff||{};return {format:h.format||'Long-form',layout:h.layout||'Talking Head + B-roll',formatSelected:h.formatManual===true,layoutSelected:h.layoutManual===true,approach:v.archetype||''};}
   function validImage(file){return /^image\/(png|jpeg|webp|gif)$/i.test(file?.type||'')&&file.size>0&&file.size<=10*1024*1024;}
   function previewData(image,makeCanvas=()=>document.createElement('canvas')){
     if(!image.width||!image.height)throw Error('Invalid image dimensions');
     for(const width of [640,480,360,240]){const scale=Math.min(1,width/Math.max(image.width,image.height)),canvas=makeCanvas();canvas.width=Math.max(1,Math.round(image.width*scale));canvas.height=Math.max(1,Math.round(image.height*scale));canvas.getContext('2d').drawImage(image,0,0,canvas.width,canvas.height);const src=canvas.toDataURL('image/jpeg',.65);if(src.length<=18000)return src;}
     throw Error('Image is too detailed for a preview');
   }
-  const api={ctaStarters,validImage,previewData};if(typeof module==='object'&&module.exports){module.exports=api;return;}
+  const api={ctaStarters,productionStatus,validImage,previewData};if(typeof module==='object'&&module.exports){module.exports=api;return;}
   const get=n=>{try{return(0,eval)('typeof '+n+'!=="undefined"?'+n+':undefined')}catch{return null}};
   const saveWork=()=>{get('save')?.();get('render')?.();document.dispatchEvent(new Event('accelerator-video-edited'));};
   const original=get('renderVideoDecision');if(typeof original!=='function')return;
@@ -29,13 +50,21 @@
   function ctaPanel(v,mid){
     const cta=v.cta||{},prefix=mid?'mid':'end',options=mid?['No mid-roll CTA','Lead magnet / resource','Business / service','Next video']:['Next video','Lead magnet / resource','Business / service','No end CTA'];
     if(cta[prefix+'Type']&&!options.includes(cta[prefix+'Type']))options.unshift(cta[prefix+'Type']);
-    return '<section class="workbench-section workbench-cta-panel"><h2>'+(mid?'1. In-video CTA':'2. End CTA')+'</h2><p>'+(mid?'Optional. Aim near the first third only after giving real value; use the moment where the resource genuinely helps, not an arbitrary timestamp. Make one relevant invitation, then return to the next useful point.':'Deliver the promised value, then bridge to one natural next action: another video, a useful resource or relevant help. Avoid a recap followed by a pile of unrelated asks.')+'</p><label class="workbench-field">'+(mid?'In-video':'End')+' next step<select aria-label="'+(mid?'In-video':'End')+' next step" data-scope="video" data-bind="cta.'+prefix+'Type"><option value="">Choose when the destination is known</option>'+options.map(x=>'<option '+(cta[prefix+'Type']===x?'selected':'')+'>'+esc(x)+'</option>').join('')+'</select></label>'+field((mid?'In-video':'End')+' destination','cta.'+prefix+'Destination',cta[prefix+'Destination'],'Name the actual guide, lead magnet, offer or next video')+field((mid?'In-video':'End')+' link','cta.'+prefix+'Url',cta[prefix+'Url'],'Paste the actual destination URL; do not guess')+field((mid?'In-video':'End')+' viewer benefit','cta.'+prefix+'Benefit',cta[prefix+'Benefit'],'What specific help does this give this viewer?')+(mid?field('Placement in the video','cta.midPlacement',cta.midPlacement,'After which example or first useful payoff? Around one third if appropriate.'):'')+'<h3>Starting points to adapt</h3><p>Replace bracketed gaps with true details. An unspecified offer stays unspecified.</p><div class="workbench-starters">'+ctaStarters(cta,mid).map(([label,script],i)=>'<article><h4>'+esc(label)+'</h4><p>'+esc(script)+'</p><button type="button" class="btn" data-workbench-cta="'+prefix+'" data-index="'+i+'">Insert this starting point</button></article>').join('')+'</div>'+field((mid?'In-video CTA':'End CTA')+' wording','cta.'+prefix+'Draft',cta[prefix+'Draft'],'Write the version you will actually say')+'</section>';
+    return '<section class="workbench-section workbench-cta-panel"><h2>'+(mid?'1. In-video CTA':'2. End CTA')+'</h2><p>'+(mid?'Optional. Aim near the first third only after giving real value; use the moment where the resource genuinely helps, not an arbitrary timestamp. Make one relevant invitation, then return to the next useful point.':'Deliver the promised value, then bridge to one natural next action: another video, a useful resource or relevant help. Avoid a recap followed by a pile of unrelated asks.')+'</p><label class="workbench-field">'+(mid?'In-video':'End')+' next step<select aria-label="'+(mid?'In-video':'End')+' next step" data-scope="video" data-bind="cta.'+prefix+'Type"><option value="">Choose when the destination is known</option>'+options.map(x=>'<option '+(cta[prefix+'Type']===x?'selected':'')+'>'+esc(x)+'</option>').join('')+'</select></label>'+field((mid?'In-video':'End')+' destination','cta.'+prefix+'Destination',cta[prefix+'Destination'],'Name the actual guide, lead magnet, offer or next video')+field((mid?'In-video':'End')+' link','cta.'+prefix+'Url',cta[prefix+'Url'],'Paste the actual destination URL; do not guess')+field((mid?'In-video':'End')+' viewer benefit','cta.'+prefix+'Benefit',cta[prefix+'Benefit'],'What specific help does this give this viewer?')+field((mid?'In-video':'End')+' content bridge','cta.'+prefix+'Bridge',cta[prefix+'Bridge'],'What happened in the video that makes this next step useful?')+(mid?field('Placement in the video','cta.midPlacement',cta.midPlacement,'After which example or first useful payoff? Around one third if appropriate.'):'')+'<h3>Starting points to adapt</h3><p>Choose the destination category first. Build the invitation from the exact moment in your video, the useful next step and one concrete action. Replace brackets with true details; read it aloud.</p><div class="workbench-starters">'+ctaStarters(cta,mid).map(([label,script],i)=>'<article><h4>'+esc(label)+'</h4><p>'+esc(script)+'</p><button type="button" class="btn" data-workbench-cta="'+prefix+'" data-index="'+i+'">Insert this starting point</button></article>').join('')+'</div>'+field((mid?'In-video CTA':'End CTA')+' wording','cta.'+prefix+'Draft',cta[prefix+'Draft'],'Write the version you will actually say')+'</section>';
   }
   const wrapped=function(c,v,id){
     let html=original(c,v,id);
     if(id==='cta')return audience(v)+'<h2>Plan both calls to action</h2><p>Use the real destination your coach has chosen. If it is missing, flag it for review instead of inventing an offer.</p>'+ctaPanel(v,true)+ctaPanel(v,false);
+    if(id==='handoff'&&window.__acceleratorCreatorPlannerMode){
+      const p=productionStatus(v),tpl=document.createElement('template');tpl.innerHTML=html;
+      const allowed=['handoff.owner','handoff.date','handoff.dueDate','handoff.assets','handoff.checklist','handoff.notes'];
+      const groups=[...new Set([...tpl.content.querySelectorAll('[data-bind]')].filter(e=>allowed.includes(e.getAttribute('data-bind'))).map(e=>e.closest('.fields')).filter(Boolean))];
+      const select=(label,path,value,values)=>{if(!values.includes(value))values.unshift(value);return '<label class="workbench-field">'+label+'<select aria-label="'+label+'" data-scope="video" data-bind="'+path+'">'+values.map(x=>'<option '+(x===value?'selected':'')+'>'+esc(x)+'</option>').join('')+'</select></label>';};
+      return audience(v)+'<section class="workbench-section"><h2>Choose how this video will be filmed</h2><p><b>Video approach:</b> '+esc(p.approach||'Not chosen yet')+'</p><p>'+(p.formatSelected&&p.layoutSelected?'These are saved production selections. Change them when the video needs a different treatment.':'These are suggestions, not confirmed choices. The app derives them from the video approach and story structure; without those, it falls back to Long-form and Talking Head + B-roll.')+'</p><button class="btn" type="button" data-creator-step="4">Review video approach</button>'+select('Video format','handoff.format',p.format,['Long-form','Shorts','Live','Podcast','Series / Show','Premiere / Event'])+'<p>'+ (p.formatSelected?'Format: saved selection.':'Format: suggested default; confirm or change it.')+'</p>'+select('Filming style','handoff.layout',p.layout,['Talking Head + B-roll','Talking Head','Screen Recording','Whiteboard / Annotation','Slides / Presentation','Interview / Dual Cam','Roundtable / Panel','On-location / Field','Hybrid by Beat','Documentary / VO + B-roll'])+'<p>'+(p.layoutSelected?'Filming style: saved selection.':'Filming style: suggested default; confirm or change it.')+'</p><button class="btn dark" type="button" data-confirm-production>Confirm production choices</button></section><h2>Plan the actual shoot</h2><p>Choose the people, demonstrations and assets needed to deliver this particular video.</p>'+groups.map(e=>e.outerHTML).join('');
+    }
     if(id==='viewer'&&window.__acceleratorCreatorPlannerMode)return '<h2>Audience: who is watching, and what do they want?</h2><p>Start with your coach’s prep. Add what you know about the person, the moment and the result they need.</p>'+field('Who is this video for?','promise.viewer',v.promise?.viewer||v.exactViewer)+field('What makes them click today?','viewer.moment',v.viewer?.moment)+field('What are they struggling with?','viewer.problem',v.viewer?.problem)+field('What do they want instead?','viewer.desire',v.viewer?.desire,'Keep it specific to this video')+field('Their words, doubts or objections','viewer.language',v.viewer?.language)+audience(v);
     const tpl=document.createElement('template');tpl.innerHTML=html;
+    if(id==='type'&&window.__acceleratorCreatorPlannerMode){const intro=tpl.content.querySelector('.decision-head p');if(intro)intro.textContent='Choose the kind of video: tutorial, comparison, story, demonstration or another approach. This informs the story and production suggestions. Length and filming style are chosen separately in Production.';}
     // Main work sections stay visible; choosing a pattern cannot collapse them.
     tpl.content.querySelectorAll('details').forEach(details=>{
       const summary=details.querySelector(':scope > summary');
@@ -48,7 +77,13 @@
       const help=tpl.content.querySelector('.workbench-section');
       if(draft&&help){help.querySelector('h3').textContent='1. Choose a starting point (optional)';help.querySelector('.decision-head')?.remove();help.querySelectorAll('.grid > div').forEach(box=>{if(box.querySelector('b')?.textContent==='Recommended runway')box.remove();});draft.before(help);draft.insertAdjacentHTML('beforebegin','<h3>2. Write or refine your opening</h3>');}
     }
-    if(id==='structure'){const fields=tpl.content.querySelector('[data-bind="structure.notes"]')?.closest('.fields');fields?.insertAdjacentHTML('beforebegin','<p>Bullet points are enough: what does the viewer need first, what example or proof makes it clear, and what question pulls them into the next point?</p>');}
+    if(id==='structure'){
+      const fields=tpl.content.querySelector('[data-bind="structure.notes"]')?.closest('.fields');
+      const details=[...tpl.content.querySelectorAll('details')].find(d=>/structure|organising/.test(d.querySelector('summary')?.textContent||''));
+      if(fields&&details){details.querySelector(':scope > summary')?.remove();const section=document.createElement('section');section.className='workbench-section';section.innerHTML='<h2>1. Choose the story progression</h2><p>Choose how the viewer moves from their question to the payoff. This is a starting structure, not a script to copy.</p>';section.append(...details.childNodes);section.querySelector('.decision-head')?.remove();details.remove();fields.before(section);}
+      fields?.insertAdjacentHTML('beforebegin','<h2>2. Plan the outline in bullet points</h2><p>For each point: the viewer’s question → the useful answer or action → a real example or proof → the next unresolved question. Write the actual content in your voice.</p>');
+      [...tpl.content.querySelectorAll('h2')].filter(h=>h.textContent==='Your outline').forEach(h=>h.remove());
+    }
     if(id==='package'){
       const options=Array.from({length:3},(_,i)=>v.package?.thumbnailOptions?.[i]||{});
       const cards='<section class="workbench-section"><h2>Your thumbnail options</h2><p>Upload previews for options 1, 2 and 3. Compare them with the working title. A written concept is optional when the images explain the idea.</p><div class="workbench-thumbnails">'+options.map((o,i)=>'<article><h3>Option '+(i+1)+'</h3>'+(o.src?'<img src="'+esc(o.src)+'" alt="Thumbnail option '+(i+1)+'">':'<div class="workbench-image-empty">No image yet</div>')+'<label>Upload preview<input type="file" aria-label="Upload thumbnail option '+(i+1)+'" accept="image/png,image/jpeg,image/webp,image/gif" data-thumbnail-option="'+i+'"></label>'+(o.src?'<button class="btn" type="button" data-remove-thumbnail-option="'+i+'">Remove image</button>'+field('Notes for option '+(i+1),'package.thumbnailOptions.'+i+'.note',o.note):'')+'</article>').join('')+'</div><p data-thumbnail-status role="status"></p></section>';
@@ -80,7 +115,8 @@
     };(0,eval)('render=window.__workbenchRender');delete window.__workbenchRender;
   }
   document.addEventListener('click',event=>{
-    const button=event.target.closest('[data-workbench-cta],[data-remove-thumbnail-option]');if(!button)return;const v=get('video')?.();if(!v)return;event.preventDefault();event.stopImmediatePropagation();
+    const button=event.target.closest('[data-workbench-cta],[data-remove-thumbnail-option],[data-confirm-production]');if(!button)return;const v=get('video')?.();if(!v)return;event.preventDefault();event.stopImmediatePropagation();
+    if(button.hasAttribute('data-confirm-production')){const p=productionStatus(v);v.handoff ||= {};Object.assign(v.handoff,{format:p.format,layout:p.layout,formatManual:true,layoutManual:true});saveWork();return;}
     if(button.hasAttribute('data-workbench-cta')){const prefix=button.dataset.workbenchCta,script=ctaStarters(v.cta,prefix==='mid')[Number(button.dataset.index)]?.[1];if(!script)return;v.cta ||= {};const key=prefix+'Draft';v.cta[key]=v.cta[key]?.trim()?v.cta[key]+'\n\n'+script:script;}
     else{const i=Number(button.dataset.removeThumbnailOption);if(i<0||i>2)return;v.package.thumbnailOptions ||= [];v.package.thumbnailOptions[i]={};}
     saveWork();

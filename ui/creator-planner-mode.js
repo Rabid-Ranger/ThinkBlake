@@ -23,8 +23,8 @@
   `;document.head.appendChild(s);document.documentElement.dataset.creatorPlanner='true'}
   function renderError(message){document.documentElement.removeAttribute('data-creator-loading');document.body.innerHTML='<main class="shell"><section class="page"><div class="empty-state"><h2>Video planner unavailable</h2><p>'+esc(message)+'</p></div></section></main>'}
   const STEPS=['Video goal','Why this video','Viewer','Research','Video format','Promise','Title & thumbnail','Opening','Outline','Next action','Filming plan','Publishing','Review'];
-  const VISIBLE_STEPS=[0,2,3,6,7,8,9,10,11,12];
-  const STEP_LABELS={0:'Brief',2:'Audience',3:'References',9:'Calls to action'};
+  const VISIBLE_STEPS=[0,2,3,4,6,7,8,9,10,11,12];
+  const STEP_LABELS={0:'Brief',2:'Audience',3:'References',4:'Video approach',9:'Calls to action'};
   const STAGES=[['Video brief',0,5],['Title & thumbnail',6,6],['Script',7,9],['Production',10,11],['Review',12,12]];
   function activeVideo(){return get('state')?.creators?.[0]?.videos?.[0];}
   function step(){return Math.min(12,Math.max(0,Number(activeVideo()?.flowStep)||0));}
