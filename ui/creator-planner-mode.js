@@ -21,7 +21,7 @@
     @media(max-width:640px){.creator-stage-track{grid-template-columns:1fr 1fr}.creator-save-actions{width:100%}.creator-save-actions .btn{flex:1}.creator-coach-brief{padding:14px}}
     @media(max-width:640px){.creator-planner-banner{align-items:flex-start;flex-direction:column}.creator-planner-banner .btn{width:100%}}
   `;document.head.appendChild(s);document.documentElement.dataset.creatorPlanner='true'}
-  function renderError(message){document.body.innerHTML='<main class="shell"><section class="page"><div class="empty-state"><h2>Video planner unavailable</h2><p>'+esc(message)+'</p></div></section></main>'}
+  function renderError(message){document.documentElement.removeAttribute('data-creator-loading');document.body.innerHTML='<main class="shell"><section class="page"><div class="empty-state"><h2>Video planner unavailable</h2><p>'+esc(message)+'</p></div></section></main>'}
   const STEPS=['Video goal','Why this video','Viewer','Research','Video format','Promise','Title & thumbnail','Opening','Outline','Next action','Filming plan','Publishing','Review'];
   const STAGES=[['Video brief',0,5],['Title & thumbnail',6,6],['Script',7,9],['Production',10,11],['Review',12,12]];
   function activeVideo(){return get('state')?.creators?.[0]?.videos?.[0];}
@@ -85,7 +85,7 @@
       },onState:updateBanner});
       const render=get('render');if(typeof render!=='function')throw new Error('The planner did not finish loading. Please refresh this page.');
       set('render',function(){render();decorate();});
-      lastStatus=localCreator.readyForReview?'ready':'saved';get('render')();
+      lastStatus=localCreator.readyForReview?'ready':'saved';get('render')();document.title='Video workspace · '+(shared.creator?.name||'Creator');document.documentElement.removeAttribute('data-creator-loading');
       document.addEventListener('input',event=>{if(event.target.matches('[data-creator-note]'))localCreator.notes=event.target.value;saveDraft();});
       document.addEventListener('change',event=>{const t=event.target;if(t.matches('[data-creator-task]')){const done=new Set(localCreator.completedTaskIds||[]);t.checked?done.add(t.dataset.creatorTask):done.delete(t.dataset.creatorTask);localCreator.completedTaskIds=[...done];}saveDraft();});
       setInterval(()=>saveDraft(),1800);
