@@ -352,7 +352,7 @@ if(typeof Deno!=='undefined') {
       const pages=[];
       for(let i=1;i<=doc.numPages;i++){const page=await doc.getPage(i);const content=await page.getTextContent();pages.push(content.items.map(x=>x.str||'').join(' '));}
       return pages;
-    }finally{await doc.destroy();}
+    }finally{await doc.loadingTask.destroy();}
   };
   const extractOffice=async(bytes,ext)=>{
     const {unzipSync}=await import('npm:fflate@0.8.2');let total=0;

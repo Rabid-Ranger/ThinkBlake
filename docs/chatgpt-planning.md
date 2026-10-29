@@ -163,3 +163,9 @@ Video-planner title/thumbnail steps remain part of the guided video workflow.
 Primary navigation never wraps individual tabs; narrower layouts give the whole
 navigation its own row. Weekly analytics uses the existing browser connection
 and import UI; see `weekly-analytics-workflow.md`.
+
+## Using an existing research workbook
+
+Choose the client, check the source documents under step 1, and use **Use ideas from my document**. Copy the request, open the installed Accelerator app in ChatGPT, click **Try in chat**, and paste/send. This asks ChatGPT to read every segment and preserve researched titles, order and seasonal timing. Refine in chat, then explicitly ask **Send this draft to Accelerator**. Back in the dashboard, check for the returned draft and review before applying. Uploading or selecting a document does not start analysis.
+
+The PDF runtime uses unpdf 1.9.1. Its loading task owns `destroy()`; the document proxy does not. The optional runtime regression test exercises the exact production adapter against the real dependency: install `unpdf@1.9.1` outside the repo, set `UNPDF_MODULE` to its absolute file URL, then run `node --test tests/pdf-runtime.test.cjs`. `PDF_VERIFY_FILE` optionally verifies the original 26-page workbook locally; private files are never committed.
