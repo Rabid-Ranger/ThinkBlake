@@ -1,6 +1,7 @@
 /* Coaching principles guide decisions; templates never count as research proof. */
 (()=>{
   const get=n=>{try{return(0,eval)('typeof '+n+'!=="undefined"?'+n+':undefined')}catch{return null}};
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const original=get('renderVideoDecision');if(typeof original!=='function')return;
   const opening='<section class="video-quality-guide"><h2>Make the opening earn the next minute.</h2><p>Confirm the title’s promise immediately. Give the viewer one specific question they want answered, then start delivering.</p><details><summary>Check the opening</summary><ul><li><b>Confirm the click:</b> show or name the promised result, problem or decision.</li><li><b>Create honest curiosity:</b> an unresolved cause, surprising contrast, consequential choice or test—not “you won’t believe what happens.”</li><li><b>Make it credible:</b> use a real demonstration, example or relevant experience. Never invent proof or credentials.</li><li><b>Give direction:</b> make the payoff and approach clear without reading out a list of sections. Promise, proof and plan can appear in the order that fits this video.</li><li><b>Begin:</b> cut greetings, repeated setup and filler. Read it aloud in the creator’s voice; do not force a fixed duration.</li></ul></details></section>';
   const structure='<section class="video-quality-guide"><p><b>Keep pulling the viewer forward.</b> Each section should change what they know, can do or need to decide. Pay off the previous question, then expose the specific next obstacle or consequence. Avoid generic “next up” bridges and artificial cliffhangers.</p></section>';
@@ -13,6 +14,11 @@
         try{const url=new URL(input.value);if(!['https:','http:'].includes(url.protocol))return;link.href=url.href;}catch{return;}
         input.after(link);
       });
+      if(window.__acceleratorCreatorPlannerMode){
+        const refs=[...tpl.content.querySelectorAll('[data-research-open]')];
+        const rows=refs.map(a=>{const row=a.closest('.video-row'),title=row?.querySelector('[data-bind$=".title"]')?.value||a.href,note=row?.querySelector('[data-bind$=".note"]')?.value||'';return '<li><a href="'+esc(a.href)+'" target="_blank" rel="noopener noreferrer">'+esc(title)+'</a>'+(note?'<p>'+esc(note)+'</p>':'')+'</li>';}).join('');
+        return '<section class="video-quality-guide"><h2>Your research references</h2><p>'+(refs.length?'These sources came with your brief. Use the relevant examples to prepare your video; you can keep the existing choices.':'No reference links have been supplied yet. Ask your coach if you need examples before continuing.')+'</p>'+(rows?'<ul>'+rows+'</ul>':'')+'</section><details><summary>Review research notes or add a reference</summary>'+tpl.innerHTML+'</details>';
+      }
       return tpl.innerHTML;
     }
     if(window.__acceleratorCreatorPlannerMode&&id==='job'&&v.job){
@@ -25,6 +31,10 @@
       if(!fields)return opening+html;
       const draft=fields.outerHTML;fields.remove();
       return opening+draft+'<details class="video-optional-patterns"><summary>Optional opening patterns and starters</summary><p>Use these to explore an approach. Replace placeholders and adapt them to the actual video; a suggested pattern is not a quality verdict.</p>'+tpl.innerHTML+'</details>';
+    }
+    if(window.__acceleratorCreatorPlannerMode&&id==='final'){
+      const rows=[['Video goal',v.job,0],['Viewer',v.promise?.viewer||v.exactViewer,2],['Promise',v.promise?.result,5],['Working title',v.package?.finalTitle||v.package?.workingTitle||v.title,6],['Thumbnail',v.package?.thumbnailConcept,6],['Opening',v.hook?.draft,7],['Outline',v.structure?.notes,8],['Next action',v.cta?.endDraft||v.ctaDraft,9],['Filming plan',v.handoff?.assets,10],['Publish date',v.cta?.publishDate||v.publishDate,11]];
+      return '<section class="video-quality-guide"><h2>Review your video before sending it.</h2><p>Check the promise, opening and filming needs. Your coach can help with anything still missing.</p></section>'+rows.map(([label,value,index])=>'<section class="creator-coach-brief"><h3>'+esc(label)+'</h3><p>'+esc(typeof value==='string'&&value.trim()?value:'Not drafted yet')+'</p><button type="button" class="btn" data-creator-step="'+index+'">Review '+esc(label.toLowerCase())+'</button></section>').join('');
     }
     return id==='structure'?structure+html:html;
   };

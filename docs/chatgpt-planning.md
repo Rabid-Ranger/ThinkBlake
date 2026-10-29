@@ -178,3 +178,6 @@ The PDF runtime uses unpdf 1.9.1. Its loading task owns `destroy()`; the documen
 - Creator links keep the dashboard shell hidden until the shared video has loaded; creator mode skips coach analytics add-ons and uses a creator-specific page title. Existing no-login capability links and coach-review saving remain in place.
 - Opening drafts appear before optional template starters. Guidance covers click confirmation, specific honest curiosity, real proof, natural promise/plan and immediate delivery. Body guidance requires payoff and progression. This condenses Blake’s “Find latest script prompt” discussion (v5.7) and saved paraphrased Jake Trinder case notes (knowledge-base/14-failing-channel-proof.md), not a universal mandated order or new AI training.
 - Coaches can revisit any video section; Continue still shows missing-information checks. Creator video jobs already selected by the coach appear as a summary with optional editing.
+
+Creator research now shows the supplied clickable references before optional editing/research choices. Their final review summarizes only the video brief, promise, package, opening, outline, next action and production details; it does not ask them to fill the coach diagnosis or monthly strategy.
+
