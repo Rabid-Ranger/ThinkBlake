@@ -6,6 +6,15 @@
   const structure='<section class="video-quality-guide"><p><b>Keep pulling the viewer forward.</b> Each section should change what they know, can do or need to decide. Pay off the previous question, then expose the specific next obstacle or consequence. Avoid generic “next up” bridges and artificial cliffhangers.</p></section>';
   const wrapped=function(c,v,id){
     const html=original(c,v,id);
+    if(id==='research'){
+      const tpl=document.createElement('template');tpl.innerHTML=html;
+      tpl.content.querySelectorAll('input[data-bind^="research.refs."][data-bind$=".url"]').forEach(input=>{
+        const link=document.createElement('a');link.className='btn';link.dataset.researchOpen='';link.target='_blank';link.rel='noopener noreferrer';link.textContent='Open reference ↗';
+        try{const url=new URL(input.value);if(!['https:','http:'].includes(url.protocol))return;link.href=url.href;}catch{return;}
+        input.after(link);
+      });
+      return tpl.innerHTML;
+    }
     if(window.__acceleratorCreatorPlannerMode&&id==='job'&&v.job){
       const jobs={Reach:'Help relevant new viewers discover you.',Trust:'Build confidence in your experience, judgment or approach.',Convert:'Help qualified viewers take a specific next step toward your offer.'};
       return '<section class="video-quality-guide"><h2>This video’s job: '+String(v.job).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))+'</h2><p>'+(jobs[v.job]||'Confirm the intended job with your coach.')+'</p><p>Your coach has already set this. Keep it unless the purpose of the video changes.</p></section><details><summary>Review or change the video job</summary>'+html+'</details>';
@@ -29,5 +38,6 @@
       document.addEventListener('click',event=>{const b=event.target.closest('[data-action="video-step"]');if(!b)return;const v=get('video')?.(),i=Number(b.dataset.index);if(!v||!Number.isInteger(i)||i<0||i>12)return;event.preventDefault();event.stopImmediatePropagation();v.flowStep=i;v.visitedFlow=Math.max(v.visitedFlow||0,i);get('save')?.();get('render')?.();window.scrollTo(0,0);},true);
     }
   }
-  const style=document.createElement('style');style.textContent='.video-quality-guide{padding:16px 18px;border:1px solid var(--line,#dce3e6);border-radius:12px;background:var(--soft,#f4f7f8);margin:0 0 20px}.video-quality-guide h2{font-size:21px;margin:0 0 8px}.video-quality-guide p,.video-quality-guide li{line-height:1.65}.video-quality-guide li{margin:8px 0}.video-quality-guide summary,.video-optional-patterns>summary{cursor:pointer;font-weight:750}.video-optional-patterns{margin:20px 0}';document.head.appendChild(style);
+  document.addEventListener('input',event=>{const input=event.target;if(!input.matches('input[data-bind^="research.refs."][data-bind$=".url"]'))return;const link=input.parentElement.querySelector('[data-research-open]');if(!link)return;try{const u=new URL(input.value);link.hidden=!['https:','http:'].includes(u.protocol);if(!link.hidden)link.href=u.href;}catch{link.hidden=true;}});
+  const style=document.createElement('style');style.textContent='.choice.recommended:before{content:"SUGGESTED"!important}.video-quality-guide{padding:16px 18px;border:1px solid var(--line,#dce3e6);border-radius:12px;background:var(--soft,#f4f7f8);margin:0 0 20px}.video-quality-guide h2{font-size:21px;margin:0 0 8px}.video-quality-guide p,.video-quality-guide li{line-height:1.65}.video-quality-guide li{margin:8px 0}.video-quality-guide summary,.video-optional-patterns>summary{cursor:pointer;font-weight:750}.video-optional-patterns{margin:20px 0}';document.head.appendChild(style);
 })();
