@@ -181,3 +181,6 @@ The PDF runtime uses unpdf 1.9.1. Its loading task owns `destroy()`; the documen
 
 Creator research now shows the supplied clickable references before optional editing/research choices. Their final review summarizes only the video brief, promise, package, opening, outline, next action and production details; it does not ask them to fill the coach diagnosis or monthly strategy.
 
+
+V16.3.13: Creator prep is a single supplied Brief plus References; separate role, viewer, format and promise screens are removed from their required sequence while the saved fields remain intact. Format stays in Production. Nine visible steps remain across the same five stages. Research and package reference cards derive public YouTube thumbnails from validated video IDs and offer click-to-play privacy-enhanced embeds plus external links. Only the origin is sent as the iframe referrer, never the capability query. Uploaded thumbnail references also appear on Package. Creator package/outline editors precede optional patterns. No YouTube metadata API or paid AI calls are used.
+

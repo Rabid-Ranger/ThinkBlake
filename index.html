@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#171f27"><meta name="referrer" content="no-referrer"><script>if(new URLSearchParams(location.search).has("creatorPortalToken"))document.documentElement.setAttribute("data-creator-loading","");</script><style>html[data-creator-loading] body{visibility:hidden}html[data-creator-loading]::before{content:"Opening your video workspace…";display:block;position:fixed;inset:0;padding:25vh 24px;text-align:center;background:#f6f8fa;color:#17212b;font:16px system-ui;z-index:2147483647}</style>
-<meta name="accelerator-build" content="V16.3.12">
+<meta name="accelerator-build" content="V16.3.13">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<title>Accelerator OS V16.3.12</title>
+<title>Accelerator OS V16.3.13</title>
 <style>html,body{margin:0;min-height:100%;background:#0d1117;color:#e6edf3;font-family:Inter,system-ui,sans-serif}body{display:grid;place-items:center}.load{text-align:center;padding:24px}.load p{color:#8b949e}</style>
 </head>
 <body>
@@ -14,7 +14,7 @@
 <script>
 (async()=>{try{
   const creatorToken=new URLSearchParams(location.search).get('creatorPortalToken');
-  const r=await fetch('/api/source?build=v16312',{cache:'no-store'});
+  const r=await fetch('/api/source?build=v16313',{cache:'no-store'});
   if(!r.ok)throw new Error(`Source request failed: ${r.status}`);
   let html=await r.text();
 
@@ -49,7 +49,7 @@
 
   if(creatorToken)html=html.replace('</body>','<script src="/ui/plain-language.js"><\/script><script src="/ui/creator-save-queue.js"><\/script><script src="/ui/creator-planner-mode.js"><\/script></body>');
   else html=html.replace('</body>','<script src="/analytics/measurement.js"><\/script><script src="/analytics/engine.js"><\/script><script src="/analytics/import.js"><\/script><script src="/analytics/page.js"><\/script><script src="/analytics/workspace.js"><\/script><script src="/analytics/legacy-baseline-compat.js"><\/script><script src="/analytics/live.js"><\/script><script src="/analytics/clarity.js"><\/script><script src="/analytics/decision-context.js"><\/script><script src="/analytics/workflow-context.js"><\/script><script src="/analytics/richness.js"><\/script><script src="/analytics/usability-v3.js"><\/script><script src="/analytics/program-bridge.js"><\/script><script src="/ai/review-reminders.js"><\/script><script src="/ai/review-ui.js"><\/script><script src="/ui/plain-language.js"><\/script><script src="/ui/client-documents.js"><\/script><script src="/ui/creator-sharing.js"><\/script><script src="/ui/creator-save-queue.js"><\/script><script src="/ui/creator-planner-mode.js"><\/script></body>');
-  html=html.replace('</body>','<script src="/ui/video-guidance.js"><\/script><script src="/ui/research-progress.js"><\/script><script src="/ui/ai-planning.js"><\/script></body>');
+  html=html.replace('</body>','<script src="/ui/reference-media.js"><\/script><script src="/ui/video-guidance.js"><\/script><script src="/ui/research-progress.js"><\/script><script src="/ui/ai-planning.js"><\/script></body>');
   html=html.replace('</head>','<link rel="stylesheet" href="/ui/navigation.css"></head>');
   document.open();
   document.write(html);

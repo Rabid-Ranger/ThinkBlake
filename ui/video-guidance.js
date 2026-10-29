@@ -15,15 +15,25 @@
         input.after(link);
       });
       if(window.__acceleratorCreatorPlannerMode){
-        const refs=[...tpl.content.querySelectorAll('[data-research-open]')];
-        const rows=refs.map(a=>{const row=a.closest('.video-row'),title=row?.querySelector('[data-bind$=".title"]')?.value||a.href,note=row?.querySelector('[data-bind$=".note"]')?.value||'';return '<li><a href="'+esc(a.href)+'" target="_blank" rel="noopener noreferrer">'+esc(title)+'</a>'+(note?'<p>'+esc(note)+'</p>':'')+'</li>';}).join('');
-        return '<section class="video-quality-guide"><h2>Your research references</h2><p>'+(refs.length?'These sources came with your brief. Use the relevant examples to prepare your video; you can keep the existing choices.':'No reference links have been supplied yet. Ask your coach if you need examples before continuing.')+'</p>'+(rows?'<ul>'+rows+'</ul>':'')+'</section><details><summary>Review research notes or add a reference</summary>'+tpl.innerHTML+'</details>';
+        return '<section class="creator-reference-section"><h2>References for this video</h2><p>Watch the examples and use the notes your coach supplied.</p>'+(window.AcceleratorReferenceMedia?.cards(v.research?.refs)||'')+'</section><details><summary>Research notes or add a reference</summary>'+tpl.innerHTML+'</details>';
       }
       return tpl.innerHTML;
     }
-    if(window.__acceleratorCreatorPlannerMode&&id==='job'&&v.job){
+    if(window.__acceleratorCreatorPlannerMode&&id==='job'){
       const jobs={Reach:'Help relevant new viewers discover you.',Trust:'Build confidence in your experience, judgment or approach.',Convert:'Help qualified viewers take a specific next step toward your offer.'};
-      return '<section class="video-quality-guide"><h2>This video’s job: '+String(v.job).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))+'</h2><p>'+(jobs[v.job]||'Confirm the intended job with your coach.')+'</p><p>Your coach has already set this. Keep it unless the purpose of the video changes.</p></section><details><summary>Review or change the video job</summary>'+html+'</details>';
+      return '<section class="video-quality-guide"><h2>Your video brief</h2><p><b>'+esc(v.job||'Video goal')+':</b> '+esc(jobs[v.job]||'Confirm the goal with your coach.')+'</p><p><b>Who it is for:</b> '+esc(v.promise?.viewer||v.exactViewer||'Your coach has not supplied this yet.')+'</p><p><b>What they should get:</b> '+esc(v.promise?.result||'Your coach has not supplied the payoff yet.')+'</p><p>This is your starting brief. Keep what fits; flag anything that feels inaccurate before filming.</p></section><details><summary>Suggest changes to the brief</summary><div class="fields"><div class="field full"><label>Who is this for?</label><textarea data-scope="video" data-bind="promise.viewer">'+esc(v.promise?.viewer)+'</textarea></div><div class="field full"><label>What should the viewer get from this video?</label><textarea data-scope="video" data-bind="promise.result">'+esc(v.promise?.result)+'</textarea></div></div></details>';
+    }
+    if(id==='package'){
+      const refs=(v.research?.refs||[]).filter(r=>window.AcceleratorReferenceMedia?.youtubeId(r.url)).slice(0,6);
+      const images=(v.package?.refs||[]).filter(r=>/^data:image\/(png|jpeg|webp|gif);base64,/i.test(r.src||'')||window.AcceleratorReferenceMedia?.safeUrl(r.src));
+      const board=(refs.length||images.length)?'<section class="package-reference-board"><h2>Thumbnail references</h2><p>Use these examples to discuss the visual idea. They are references, not your finished thumbnail.</p>'+ (images.length?'<div class="package-reference-images">'+images.map(r=>'<figure><img src="'+esc(r.src)+'" alt="'+esc(r.name||'Uploaded thumbnail reference')+'"><figcaption>'+esc(r.name||'Uploaded reference')+'</figcaption></figure>').join('')+'</div>':'')+(window.AcceleratorReferenceMedia?.cards(refs,{compact:true})||'')+'</section>':'';
+      if(window.__acceleratorCreatorPlannerMode){
+        const tpl=document.createElement('template');tpl.innerHTML=html;
+        const groups=[...new Set([...tpl.content.querySelectorAll('[data-bind]')].filter(e=>['package.workingTitle','package.finalTitle','package.thumbnailConcept','package.thumbnailText'].includes(e.getAttribute('data-bind'))).map(e=>e.closest('.fields')).filter(Boolean))];
+        const fields=groups.map(e=>e.outerHTML).join('');groups.forEach(e=>e.remove());
+        return board+'<h2>Your title and thumbnail</h2><p>Refine the supplied package. Use the optional approaches only if you need a different direction.</p>'+fields+'<details><summary>Optional approaches and image uploads</summary>'+tpl.innerHTML+'</details>';
+      }
+      return board+html;
     }
     if(id==='hook'){
       const tpl=document.createElement('template');tpl.innerHTML=html;
@@ -35,6 +45,10 @@
     if(window.__acceleratorCreatorPlannerMode&&id==='final'){
       const rows=[['Video goal',v.job,0],['Viewer',v.promise?.viewer||v.exactViewer,2],['Promise',v.promise?.result,5],['Working title',v.package?.finalTitle||v.package?.workingTitle||v.title,6],['Thumbnail',v.package?.thumbnailConcept,6],['Opening',v.hook?.draft,7],['Outline',v.structure?.notes,8],['Next action',v.cta?.endDraft||v.ctaDraft,9],['Filming plan',v.handoff?.assets,10],['Publish date',v.cta?.publishDate||v.publishDate,11]];
       return '<section class="video-quality-guide"><h2>Review your video before sending it.</h2><p>Check the promise, opening and filming needs. Your coach can help with anything still missing.</p></section>'+rows.map(([label,value,index])=>'<section class="creator-coach-brief"><h3>'+esc(label)+'</h3><p>'+esc(typeof value==='string'&&value.trim()?value:'Not drafted yet')+'</p><button type="button" class="btn" data-creator-step="'+index+'">Review '+esc(label.toLowerCase())+'</button></section>').join('');
+    }
+    if(id==='structure'&&window.__acceleratorCreatorPlannerMode){
+      const tpl=document.createElement('template');tpl.innerHTML=html;const fields=tpl.content.querySelector('[data-bind="structure.notes"]')?.closest('.fields');
+      if(fields){const draft=fields.outerHTML;fields.remove();return structure+'<h2>Your outline</h2>'+draft+'<details><summary>Optional structure patterns and examples</summary>'+tpl.innerHTML+'</details>';}
     }
     return id==='structure'?structure+html:html;
   };
