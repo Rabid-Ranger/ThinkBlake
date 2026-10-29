@@ -45,7 +45,7 @@ const PERSISTENCE_BRIDGE = String.raw`
   if (window.__acceleratorCreatorPlannerMode) return;
   if (window.__acceleratorPersistenceBridge) return;
   window.__acceleratorPersistenceBridge = true;
-  document.title = 'Accelerator OS V16.3.13';
+  document.title = 'Accelerator OS V16.3.14';
 
   const REF = 'pqggobwpazihraeqvspc';
   const SUPABASE_URL = 'https://' + REF + '.supabase.co';
@@ -1546,7 +1546,7 @@ module.exports = function handler(_req, res) {
     const html = injectPersistence(source());
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('X-Accelerator-Build', 'V16.3.13-workflow-audit');
+    res.setHeader('X-Accelerator-Build', 'V16.3.14-workflow-audit');
     res.setHeader('X-Accelerator-Source-Length', String(EXPECTED_BYTES));
     res.setHeader('X-Accelerator-Source-SHA256', EXPECTED_SHA256);
     res.status(200).send(html);
