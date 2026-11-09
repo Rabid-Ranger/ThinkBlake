@@ -53,16 +53,56 @@ function source() {
   'Identity / Viewer Callout':'When you’re [SPECIFIC VIEWER IN A REAL SITUATION], [RECOGNIZABLE PROBLEM] can make [DESIRED OUTCOME] feel out of reach. The part to watch is [SPECIFIC CLUE].'
  };
  const WORKED={
-  'Problem Recognition':['Your budget still runs short before payday, even after you track every expense. What keeps the tracking from helping?','I mapped three months of my own pay dates and bills.','spot the cash gap before it happens','mark the next two pay dates'],
-  'Clear Goal':['You can hit a repeatable draw without adding another swing thought. Watch where the ball starts.','I filmed both swings with the same club and target so you can see what the setup changed.','set up for a repeatable draw','compare where my feet point'],
-  'Contradiction':['Publishing more should give a channel more chances to grow. So why did this channel get fewer qualified views after doubling its uploads?','I compared the channel’s uploads before and after the schedule change.','find which topics bring in the right viewers','put two uploads side by side'],
-  'Proof First':['Watch the two ball flights. Both shots use the same club and target, so what made one curve back?','I hit both shots and kept the club and target the same to isolate the setup.','spot the setup change that helps produce a draw','replay where my feet point'],
-  'Story in Motion':['I was trying to stop missing deadlines when my biggest project slipped despite a full calendar.','This is my calendar from that week, with the work blocks I actually logged.','protect time for the work that keeps slipping','find the only uninterrupted block on my calendar'],
-  'Decision Callout':['Choosing a camera for filming alone? Watch what happens when I leave the frame and walk back.','I ran both cameras through the same autofocus test at the same distance.','choose a camera that can keep you in focus while you film alone','compare how fast each camera finds my face again'],
-  'Immediate Result / Cold Open':['Here’s the landing page that drew more sign-ups. Watch the first headline as we rewind to the original.','I ran the two headlines against the same offer and kept the rest of the page fixed.','make your landing-page promise easier to understand','read both headlines at phone size'],
-  'Question / Mystery':['Why is the ball still slicing when you’re practicing more often? Look at where it starts before it curves.','I filmed two setups with the same club so you can compare the ball flights.','use ball flight to identify what to check in your setup','compare the starting direction of both shots'],
-  'Stakes / Deadline':['Before payroll is due, check which bills clear before cash comes in. A healthy month-end total can hide a shortfall on payday.','I reconciled the actual deposit and payment dates for this example.','spot a payroll cash gap while there’s still time to act','put payroll and the next deposit on the same calendar'],
-  'Identity / Viewer Callout':['When you’re managing a team for the first time, a simple correction can turn into a performance review. Listen for when the employee stops offering ideas.','I’ve led these conversations and brought two practice versions to show what changes.','give corrective feedback without shutting down the conversation','compare the first question in each version']
+  "Problem Recognition":[
+   ["Your sourdough still spreads into a pancake after a longer proof. What is the dough telling you before it goes into the oven?","I baked two loaves from the same batch and photographed both at shaping.","spot the difference between weak dough and overproofing","compare how each loaf holds its shape"],
+   ["Your houseplant wilts even though you water it regularly. What keeps the roots from taking up water?","I lifted both root balls and checked the moisture below the surface.","diagnose a wilt before watering again","look at the bottom of the pot"],
+   ["Your team leaves every meeting with a task list, and the same tasks come back next week. What is missing from the handoff?","I reviewed six of our meeting notes against what actually shipped.","write an action item someone can act on","compare the two handoffs that got different results"]
+  ],
+  "Clear Goal":[
+   ["You can hem jeans and keep the original stitching. Watch what happens at the side seam.","I sewed both hems on scraps from the same pair so you can see the difference.","shorten jeans while keeping the factory edge","measure from the fold"],
+   ["You can photograph a glass without a studio light. Watch what changes along the rim.","I shot the same glass in three window setups and kept the camera settings fixed.","get a clean outline with one window","turn the glass away from the direct light"],
+   ["You can build an emergency fund on irregular pay. The part to watch is what happens in a low-income month.","I tracked my freelance deposits for a year and tested this against the leanest month.","choose a savings amount your cash flow can support","find your lowest typical deposit"]
+  ],
+  "Contradiction":[
+   ["A bigger pot should help a plant grow. So why did the smaller transplant put on more leaves?","I grew the two seedlings beside each other and logged how long each pot stayed wet.","choose a pot size your plant can use","compare the soil after three days"],
+   ["A thicker winter coat should feel warmer. So why was the thinner setup more comfortable on the climb?","I walked the same route in both setups and recorded when I started sweating.","layer for a winter hike without getting soaked","compare what happened on the first hill"],
+   ["Fewer buttons should make a checkout easier. So why did more people get stuck after we removed one?","I watched recordings of users attempting both versions.","spot the control that makes checkout easier to finish","replay the moment they went looking for it"]
+  ],
+  "Proof First":[
+   ["Both pizza slices came from the same dough. Why is only one crisp underneath?","I baked them at the same temperature and changed only the surface under the dough.","get a crisp base in a home oven","flip both slices over"],
+   ["Both audio clips use the same microphone and room. Why does one sound much closer?","I recorded both takes with the gain fixed and marked the mic distance on the desk.","get clearer speech with the mic you already own","listen for the room echo between words"],
+   ["Both seedlings came from the same packet. Why did one tray come up two days earlier?","I sowed the trays together and logged the soil temperature in each.","set up a steadier germination tray","compare the overnight readings"]
+  ],
+  "Story in Motion":[
+   ["I was trying to repair my grandmother’s radio when the dial lit up but the speaker stayed silent.","I kept the repair log and filmed the test that narrowed down the fault.","trace a silent speaker without replacing parts at random","replay the first voltage check"],
+   ["I was trying to finish a mural before opening day when the first coat dried a different color in every corner.","These are the swatches I painted under the actual lights that evening.","choose paint that reads consistently in a mixed-light room","compare the same swatch near the door and window"],
+   ["I was trying to run my first trail race when I lost more time at aid stations than on the climbs.","I kept the race splits and timed the stops from my watch data.","plan quicker aid-station stops","look at what happened at the first stop"]
+  ],
+  "Decision Callout":[
+   ["Choosing between two bike locks for an outdoor rack? Watch what happens when each has to fit around the same thick post.","I tried both locks on the racks along my commute and measured the space left around the frame.","choose a lock that fits the rack you actually use","check the inside clearance"],
+   ["Choosing between a rice cooker and a pot for weeknight meals? Both have to hold rice for the same half-hour.","I cooked the same rice in both and weighed out equal portions before tasting them.","choose the method that suits when your household eats","look at the texture after holding"],
+   ["Choosing between two note-taking apps for fieldwork? Watch what each saves when the connection drops.","I ran both on the same phone with airplane mode on.","pick a setup that keeps your notes when you lose signal","create and reopen one note offline"]
+  ],
+  "Immediate Result / Cold Open":[
+   ["Here is the repaired zipper closing smoothly. Watch the slider as I rewind to where it started separating.","I repaired this jacket and filmed each change before testing it.","tell whether a zipper needs a slider adjustment or replacement","inspect the teeth where it opens"],
+   ["Here is the stop-motion shot without the flicker. Watch the shadow as we rewind to the first take.","I shot the same movement twice and changed only how I lit the set.","keep light consistent through a stop-motion sequence","compare the first five frames"],
+   ["Here is the first-page draft with the confusing handoff fixed. Watch what moved above the fold.","I watched three readers try to find the next step in both versions.","make the next action obvious on a short guide","look at where readers paused in the original"]
+  ],
+  "Question / Mystery":[
+   ["Why does the aquarium glass turn green again after you clean it? Look at the side facing the window.","I tracked when the algae returned and compared both sides of the same tank.","figure out which conditions are feeding the algae","map where the light hits"],
+   ["Why does the bread crust soften as it cools? Look at what collects underneath the loaf.","I baked the loaves together and cooled one on a rack and one on a board.","keep the underside crisp after baking","check where the steam went"],
+   ["Why does this wool sweater keep growing after washing? Look at where the shoulders hang while it dries.","I measured the same swatch before and after drying it two ways.","dry knitwear without stretching it out","compare the wet measurements"]
+  ],
+  "Stakes / Deadline":[
+   ["Before you sign a lease, check where the water goes after a hard rain. A dry viewing can hide the cleanup you inherit.","I inspected this entryway after two storms and marked the water line.","spot a drainage issue before committing to a rental","look at the grade beside the door"],
+   ["Before sending a print run, check the darkest areas on paper. A screen can hide details that disappear in print.","I printed the same file on both papers and kept the printer settings fixed.","catch lost shadow detail before you pay for the run","compare the darkest square on both proofs"],
+   ["Before the first frost, check the pots that lose heat fastest. A sheltered thermometer can miss the cold at the roots.","I measured overnight temperatures in both pots on the same patio.","decide which containers to move first","compare the readings just before sunrise"]
+  ],
+  "Identity / Viewer Callout":[
+   ["When you are new to fostering dogs, the first walk can feel like a test. Watch what happens before the leash tightens.","I have fostered dogs through those first walks and filmed two approaches with the same dog.","make the first walk easier for both of you","notice what happens at the doorway"],
+   ["When you start running sound for a small venue, every squeal can send you reaching for the wrong knob. Listen for what changes when the mic turns.","I ran this test on the same stage with the same speaker and mic.","trace the source of feedback without guessing","replay the moment the mic crosses the speaker line"],
+   ["When you are learning a language between shifts, an untouched vocabulary list can feel like falling behind. Look at which words actually come back in conversation.","I logged the words I used on three real errands after practicing two ways.","practice words you can recall in a real situation","start with the first question I had to answer"]
+  ]
  };
  const openingParts=(angle,authority,result,firstBeat)=>[
   [angle,authority,'I’ll show you how to '+result+'. First, let’s '+firstBeat+'.'],
@@ -75,7 +115,7 @@ function source() {
   '[DELIVER THE TITLE’S PROMISED RESULT]',
   '[TAKE THE FIRST USEFUL STEP]'
  ).map(parts=>parts.join(' '));
- const workedFor=name=>openingParts(...(WORKED[name]||WORKED['Problem Recognition']));
+ const workedFor=name=>(WORKED[name]||WORKED['Problem Recognition']).map((example,index)=>({parts:openingParts(...example)[index],authority:example[1]}));
  const LABELS=['Clean + direct','Proof / demonstration','Tension / reframe'];`)
     .replace(/ const FORMULAS=\{[\s\S]*?\n \};/, '')
     .replace(/ const FALLBACK=\[[\s\S]*?\n \];/, ' const FORMULAS=Object.fromEntries(Object.keys(ATTENTION).map(name=>[name,openingFor(name)]));\n const FALLBACK=openingFor();')
@@ -84,9 +124,10 @@ function source() {
     .replace("const selectedExamples=EXAMPLES[v.hook?.type]||EXAMPLES['Problem Recognition'];", "const selectedExamples=workedFor(v.hook?.type);")
     .replace("exampleLabel.textContent='Filled example'", "exampleLabel.textContent='Worked example · authority in bold'")
     .replace('example.textContent=selectedExamples[formulaIndex];', String.raw`
-for(const part of selectedExamples[formulaIndex]){
+const worked=selectedExamples[formulaIndex];
+     for(const part of worked.parts){
       if(example.childNodes.length)example.append(' ');
-      if(part===(WORKED[v.hook?.type]||WORKED['Problem Recognition'])[1]){
+      if(part===worked.authority){
        const authority=document.createElement('strong');authority.textContent=part;example.append(authority);
       }else example.append(part);
      }`);
