@@ -77,18 +77,9 @@
       const help=tpl.content.querySelector('.workbench-section');
       if(draft&&help){help.querySelector('h3').textContent='1. Choose a starting point (optional)';help.querySelector('.decision-head')?.remove();help.querySelectorAll('.grid > div').forEach(box=>{if(box.querySelector('b')?.textContent==='Recommended runway')box.remove();});draft.before(help);draft.insertAdjacentHTML('beforebegin','<h3>2. Write or refine your opening</h3>');
         if(window.__acceleratorCreatorPlannerMode){
-          const plan=v.hook?.openingPlan||{};
-          const title=v.package?.finalTitle?.trim()||v.package?.workingTitle?.trim()||v.title||'Add a working title first.';
-          const worksheet='<section class="workbench-section"><h3>2. Plan what the viewer sees and hears</h3><p><b>Current title:</b> '+esc(title)+'</p><p>Use these optional notes to build the opening. One shot or line can cover several points.</p>'+
-            field('Confirm the click','hook.openingPlan.click',plan.click,'What will you show or say first to confirm the exact promise?')+
-            field('Open a specific question','hook.openingPlan.curiosity',plan.curiosity,'What real contrast, clue or decision makes the viewer want the answer?')+
-            field('Show credible proof','hook.openingPlan.proof',plan.proof,'What result, demo or firsthand detail earns trust on this topic?')+
-            field('Set up the first useful beat','hook.openingPlan.firstBeat',plan.firstBeat,'What will you do first? Mention who this helps when it makes the opening clearer.')+
-            field('Place the payoff','hook.openingPlan.payoff',plan.payoff,'Where in the outline will you answer the question you opened?')+'</section>';
-          const draftHeading=draft.previousElementSibling;
-          draftHeading.textContent='3. Write or refine your opening';
-          draftHeading.insertAdjacentHTML('beforebegin',worksheet);
-          draft.insertAdjacentHTML('afterend','<section class="workbench-section"><h3>4. Read it aloud and check the opening</h3><p>Can the viewer recognize the click immediately? Is the question specific enough to picture? Does the proof earn trust, and does the first beat start delivering? Check that your outline pays off the question.</p><p>Use Think Media’s Attention, Authority, Agenda or Jake Trinder’s Promise, Proof, Plan as a review lens. Keep the order that sounds natural for this video.</p></section>');
+          const title=v.package?.finalTitle?.trim()||v.package?.workingTitle?.trim()||v.title;
+          if(title)draft.insertAdjacentHTML('beforebegin','<p><b>Current title:</b> '+esc(title)+'</p>');
+          draft.insertAdjacentHTML('afterend','<section class="workbench-section"><h3>3. Quick read-aloud check</h3><p>Does the first line or shot confirm the click and raise a specific question? Is there a real reason to trust the answer? Does the next beat start delivering? Make sure the outline answers the question you opened.</p></section>');
         }
       }
     }
