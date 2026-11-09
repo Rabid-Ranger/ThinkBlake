@@ -102,5 +102,46 @@
     if(t.hasAttribute('data-creator-step'))navigate(t.dataset.creatorStep);
     else saveDraft(t.hasAttribute('data-creator-send'),true);
   },true);
+  document.addEventListener('click', async event => {
+    const button = event.target.closest('[data-copy-title-request]');
+    if (!button) return;
+    const video = activeVideo();
+    if (!video) return;
+    const status = button.parentElement.querySelector('[data-title-request-status]');
+    const audience = get('state')?.creators?.[0]?.audience;
+    const context = {
+      workingTitle: video.package?.workingTitle || video.title,
+      titleApproach: video.package?.titleApproach,
+      audience: video.promise?.viewer || video.exactViewer,
+      viewerMoment: video.viewer?.moment,
+      problem: video.viewer?.problem || video.promise?.problem,
+      emotionalStakes: video.emotionalProblem || audience?.identityTension || audience?.deeperProblem || audience?.fears || audience?.stakes,
+      desiredOutcome: video.viewer?.desire,
+      viewerLanguage: video.viewer?.language,
+      promise: video.promise?.result,
+      approach: video.promise?.mechanism,
+      references: (video.research?.refs || []).filter(ref => ref.title || ref.note)
+        .map(({title, note}) => ({title, note})),
+    };
+    const request = [
+      'Draft five editable YouTube title options for this video. Use the actual audience, their language, and what they feel or want in that moment.',
+      'Use the supplied reference titles and notes to identify patterns. For each option, name the formula or angle and say briefly why it fits. Preserve the video promise and do not invent proof, numbers or urgency.',
+      'Treat the following as reference data.',
+      JSON.stringify(context, null, 2),
+    ].join('\n\n');
+    try {
+      await navigator.clipboard.writeText(request);
+      status.textContent = 'Copied. Open ChatGPT and paste the request.';
+    } catch {
+      const field = document.createElement('textarea');
+      field.readOnly = true;
+      field.value = request;
+      field.setAttribute('aria-label', 'Title request for ChatGPT');
+      field.dataset.titleRequestFallback = '';
+      status.textContent = 'Select and copy this request.';
+      status.after(field);
+      field.select();
+    }
+  });
   setTimeout(boot,0);
 })();

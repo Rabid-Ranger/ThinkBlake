@@ -15,7 +15,7 @@
         input.after(link);
       });
       if(window.__acceleratorCreatorPlannerMode){
-        return '<section class="creator-reference-section"><h2>References for this video</h2><p>Watch the examples and use the notes your coach supplied.</p>'+(window.AcceleratorReferenceMedia?.cards(v.research?.refs)||'')+'</section><details><summary>Research notes or add a reference</summary>'+tpl.innerHTML+'</details>';
+        return '<section class="creator-reference-section"><h2>References for this video</h2><p>Watch the examples and use the notes your coach supplied.</p>'+(window.AcceleratorReferenceMedia?.cards(v.research?.refs)||'')+'</section><section><h2>Research notes and links</h2>'+tpl.innerHTML+'</section>';
       }
       return tpl.innerHTML;
     }
@@ -24,14 +24,23 @@
       return '<section class="video-quality-guide"><h2>Your video brief</h2><p><b>'+esc(v.job||'Video goal')+':</b> '+esc(jobs[v.job]||'Confirm the goal with your coach.')+'</p><p><b>Who it is for:</b> '+esc(v.promise?.viewer||v.exactViewer||'Your coach has not supplied this yet.')+'</p><p><b>What they should get:</b> '+esc(v.promise?.result||'Your coach has not supplied the payoff yet.')+'</p><p>This is your starting brief. Keep what fits; flag anything that feels inaccurate before filming.</p></section><details><summary>Suggest changes to the brief</summary><div class="fields"><div class="field full"><label>Who is this for?</label><textarea data-scope="video" data-bind="promise.viewer">'+esc(v.promise?.viewer)+'</textarea></div><div class="field full"><label>What should the viewer get from this video?</label><textarea data-scope="video" data-bind="promise.result">'+esc(v.promise?.result)+'</textarea></div></div></details>';
     }
     if(id==='package'){
-      const refs=(v.research?.refs||[]).filter(r=>window.AcceleratorReferenceMedia?.youtubeId(r.url)).slice(0,6);
+      const media=window.AcceleratorReferenceMedia;
+      const refs=(v.research?.refs||[]).filter(r=>window.__acceleratorCreatorPlannerMode?media?.safeUrl(r.url):media?.youtubeId(r.url));
+      if(!window.__acceleratorCreatorPlannerMode)refs.splice(6);
       const images=(v.package?.refs||[]).filter(r=>/^data:image\/(png|jpeg|webp|gif);base64,/i.test(r.src||'')||window.AcceleratorReferenceMedia?.safeUrl(r.src));
-      const board=(refs.length||images.length)?'<section class="package-reference-board"><h2>Thumbnail references</h2><p>Use these examples to discuss the visual idea. They are references, not your finished thumbnail.</p>'+ (images.length?'<div class="package-reference-images">'+images.map(r=>'<figure><img src="'+esc(r.src)+'" alt="'+esc(r.name||'Uploaded thumbnail reference')+'"><figcaption>'+esc(r.name||'Uploaded reference')+'</figcaption></figure>').join('')+'</div>':'')+(window.AcceleratorReferenceMedia?.cards(refs,{compact:true})||'')+'</section>':'';
+      const board=(refs.length||images.length)?'<section class="package-reference-board"><h2>Title and thumbnail references</h2><p>Use these examples to discuss the visual idea. They are references, not your finished thumbnail.</p>'+ (images.length?'<div class="package-reference-images">'+images.map(r=>'<figure><img src="'+esc(r.src)+'" alt="'+esc(r.name||'Uploaded thumbnail reference')+'"><figcaption>'+esc(r.name||'Uploaded reference')+'</figcaption></figure>').join('')+'</div>':'')+(window.AcceleratorReferenceMedia?.cards(refs,{compact:true})||'')+'</section>':'';
       if(window.__acceleratorCreatorPlannerMode){
         const tpl=document.createElement('template');tpl.innerHTML=html;
         const groups=[...new Set([...tpl.content.querySelectorAll('[data-bind]')].filter(e=>['package.workingTitle','package.finalTitle','package.thumbnailConcept','package.thumbnailText'].includes(e.getAttribute('data-bind'))).map(e=>e.closest('.fields')).filter(Boolean))];
         const fields=groups.map(e=>e.outerHTML).join('');groups.forEach(e=>e.remove());
-        return board+'<h2>Your title and thumbnail</h2><p>Refine the supplied package. Use the optional approaches only if you need a different direction.</p>'+fields+'<details><summary>Optional approaches and image uploads</summary>'+tpl.innerHTML+'</details>';
+        const options = tpl.content.querySelectorAll('[data-kind="title"], [data-action="toggle-angle"], .v16235-formula-bank, [data-action="v162-use-title-starter"]');
+        const controls = [...new Set([...options].map(el=>el.closest('.v14-selected-formulas, .choice-grid, .more-wrap, .section-head') || el))];
+        const formulas = controls.filter(el=>!controls.some(parent=>parent!==el && parent.contains(el))).map(el=>el.outerHTML).join('');
+        controls.forEach(el=>el.remove());
+        return board+'<h2>Your title and thumbnail</h2>'+fields+
+          '<section class="video-quality-guide"><h2>Title options</h2><p>Try a title approach and edit the starter to fit your video.</p>'+formulas+
+          '<button class="btn" type="button" data-copy-title-request>Copy title request for ChatGPT</button> <a href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">Open ChatGPT ↗</a><p data-title-request-status role="status">Paste the request in your own ChatGPT account to generate more options.</p></section>'+
+          '<details><summary>More packaging guidance</summary>'+tpl.innerHTML+'</details>';
       }
       return board+html;
     }
