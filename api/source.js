@@ -52,19 +52,44 @@ function source() {
   'Stakes / Deadline':'Before [REAL DEADLINE OR DECISION], check [SIGNAL THE VIEWER CAN SEE]. Missing it can cost [CONCRETE CONSEQUENCE].',
   'Identity / Viewer Callout':'When you’re [SPECIFIC VIEWER IN A REAL SITUATION], [RECOGNIZABLE PROBLEM] can make [DESIRED OUTCOME] feel out of reach. The part to watch is [SPECIFIC CLUE].'
  };
- const openingFor=name=>{
-  const attention=ATTENTION[name]||ATTENTION['Problem Recognition'];
-  return [
-   attention+' [SHOW THE RESULT, DEMO OR FIRSTHAND PROOF THAT EARNS TRUST]. I’ll show you how to [DELIVER THE TITLE’S PROMISED RESULT], starting with [FIRST USEFUL STEP].',
-   '[SHOW THE DEMO, RESULT OR SIDE-BY-SIDE PROOF FIRST]. '+attention+' I’ll use what you just saw to show you [DELIVER THE TITLE’S PROMISED RESULT]. First, let’s look at [FIRST USEFUL DETAIL].',
-   'Here’s how to [DELIVER THE TITLE’S PROMISED RESULT]. '+attention+' [SHOW OR NAME THE TEST, EXPERIENCE OR EVIDENCE THAT MAKES THIS CREDIBLE]. Let’s start by [FIRST ACTION THAT HELPS ANSWER THE QUESTION].'
-  ];
+ const WORKED={
+  'Problem Recognition':['Your budget still runs short before payday, even after you track every expense. What keeps the tracking from helping?','I mapped three months of my own pay dates and bills.','spot the cash gap before it happens','mark the next two pay dates'],
+  'Clear Goal':['You can hit a repeatable draw without adding another swing thought. Watch where the ball starts.','I filmed both swings with the same club and target so you can see what the setup changed.','set up for a repeatable draw','compare where my feet point'],
+  'Contradiction':['Publishing more should give a channel more chances to grow. So why did this channel get fewer qualified views after doubling its uploads?','I compared the channel’s uploads before and after the schedule change.','find which topics bring in the right viewers','put two uploads side by side'],
+  'Proof First':['Watch the two ball flights. Both shots use the same club and target, so what made one curve back?','I hit both shots and kept the club and target the same to isolate the setup.','spot the setup change that helps produce a draw','replay where my feet point'],
+  'Story in Motion':['I was trying to stop missing deadlines when my biggest project slipped despite a full calendar.','This is my calendar from that week, with the work blocks I actually logged.','protect time for the work that keeps slipping','find the only uninterrupted block on my calendar'],
+  'Decision Callout':['Choosing a camera for filming alone? Watch what happens when I leave the frame and walk back.','I ran both cameras through the same autofocus test at the same distance.','choose a camera that can keep you in focus while you film alone','compare how fast each camera finds my face again'],
+  'Immediate Result / Cold Open':['Here’s the landing page that drew more sign-ups. Watch the first headline as we rewind to the original.','I ran the two headlines against the same offer and kept the rest of the page fixed.','make your landing-page promise easier to understand','read both headlines at phone size'],
+  'Question / Mystery':['Why is the ball still slicing when you’re practicing more often? Look at where it starts before it curves.','I filmed two setups with the same club so you can compare the ball flights.','use ball flight to identify what to check in your setup','compare the starting direction of both shots'],
+  'Stakes / Deadline':['Before payroll is due, check which bills clear before cash comes in. A healthy month-end total can hide a shortfall on payday.','I reconciled the actual deposit and payment dates for this example.','spot a payroll cash gap while there’s still time to act','put payroll and the next deposit on the same calendar'],
+  'Identity / Viewer Callout':['When you’re managing a team for the first time, a simple correction can turn into a performance review. Listen for when the employee stops offering ideas.','I’ve led these conversations and brought two practice versions to show what changes.','give corrective feedback without shutting down the conversation','compare the first question in each version']
  };
+ const openingParts=(angle,authority,result,firstBeat)=>[
+  [angle,authority,'I’ll show you how to '+result+'. First, let’s '+firstBeat+'.'],
+  [authority,angle,'I’ll use that comparison to show you how to '+result+'. First, let’s '+firstBeat+'.'],
+  ['Here’s how to '+result+'.',angle,authority,'Let’s start by doing this: '+firstBeat+'.']
+ ];
+ const openingFor=name=>openingParts(
+  ATTENTION[name]||ATTENTION['Problem Recognition'],
+  '[AUTHORITY / PROOF: SHOW OR SAY ONE SPECIFIC REASON TO TRUST YOU ON THIS TOPIC, SUCH AS A TEST YOU RAN, A RESULT YOU HELPED ACHIEVE OR RELEVANT FIRSTHAND EXPERIENCE]',
+  '[DELIVER THE TITLE’S PROMISED RESULT]',
+  '[TAKE THE FIRST USEFUL STEP]'
+ ).map(parts=>parts.join(' '));
+ const workedFor=name=>openingParts(...(WORKED[name]||WORKED['Problem Recognition']));
  const LABELS=['Clean + direct','Proof / demonstration','Tension / reframe'];`)
     .replace(/ const FORMULAS=\{[\s\S]*?\n \};/, '')
     .replace(/ const FALLBACK=\[[\s\S]*?\n \];/, ' const FORMULAS=Object.fromEntries(Object.keys(ATTENTION).map(name=>[name,openingFor(name)]));\n const FALLBACK=openingFor();')
-    .replace('Keep the sentence shape until the finished hook sounds natural out loud.', "The opening earns attention, the proof earns authority, and the promise and first beat set the agenda. Brackets that start with SHOW are filming cues.")
-    .replace("exampleLabel.textContent='Filled example'", "exampleLabel.textContent='Example of this opening angle'");
+    .replace('Keep the sentence shape until the finished hook sounds natural out loud.', "The opening earns attention, the proof earns authority, and the promise and first beat set the agenda. You can show your proof on camera or say it in one short line.")
+    .replace(/ const EXAMPLES=\{[\s\S]*?\n \};/, '')
+    .replace("const selectedExamples=EXAMPLES[v.hook?.type]||EXAMPLES['Problem Recognition'];", "const selectedExamples=workedFor(v.hook?.type);")
+    .replace("exampleLabel.textContent='Filled example'", "exampleLabel.textContent='Worked example · authority in bold'")
+    .replace('example.textContent=selectedExamples[formulaIndex];', String.raw`
+for(const part of selectedExamples[formulaIndex]){
+      if(example.childNodes.length)example.append(' ');
+      if(part===(WORKED[v.hook?.type]||WORKED['Problem Recognition'])[1]){
+       const authority=document.createElement('strong');authority.textContent=part;example.append(authority);
+      }else example.append(part);
+     }`);
   verifiedSource = html.slice(0, bankStart) + bank + html.slice(bankEnd);
   return verifiedSource;
 }
