@@ -31,16 +31,23 @@
       const board=(refs.length||images.length)?'<section class="package-reference-board"><h2>Title and thumbnail references</h2><p>Use these examples to discuss the visual idea. They are references, not your finished thumbnail.</p>'+ (images.length?'<div class="package-reference-images">'+images.map(r=>'<figure><img src="'+esc(r.src)+'" alt="'+esc(r.name||'Uploaded thumbnail reference')+'"><figcaption>'+esc(r.name||'Uploaded reference')+'</figcaption></figure>').join('')+'</div>':'')+(window.AcceleratorReferenceMedia?.cards(refs,{compact:true})||'')+'</section>':'';
       if(window.__acceleratorCreatorPlannerMode){
         const tpl=document.createElement('template');tpl.innerHTML=html;
-        const groups=[...new Set([...tpl.content.querySelectorAll('[data-bind]')].filter(e=>['package.workingTitle','package.finalTitle','package.thumbnailConcept','package.thumbnailText'].includes(e.getAttribute('data-bind'))).map(e=>e.closest('.fields')).filter(Boolean))];
+        const thumbnailHeading=[...tpl.content.querySelectorAll('.section-head')].find(el=>el.querySelector('.kicker')?.textContent.trim()==='Thumbnail strategy');
+        if(v.flowStep===13){
+          const thumbnailFields=tpl.content.querySelector('[data-bind="package.thumbnailConcept"]')?.closest('.fields');
+          const first=thumbnailHeading || thumbnailFields;
+          const siblings=first ? [...first.parentNode.children] : [];
+          const thumbnailContent=siblings.slice(siblings.indexOf(first)).map(el=>el.outerHTML).join('');
+          return board+'<h2>Your thumbnail</h2>'+thumbnailContent;
+        }
+        const groups=[...new Set([...tpl.content.querySelectorAll('[data-bind="package.workingTitle"], [data-bind="package.finalTitle"]')].map(e=>e.closest('.fields')).filter(Boolean))];
         const fields=groups.map(e=>e.outerHTML).join('');groups.forEach(e=>e.remove());
         const options = tpl.content.querySelectorAll('[data-kind="title"], [data-action="toggle-angle"], .v16235-formula-bank, [data-action="v162-use-title-starter"]');
         const controls = [...new Set([...options].map(el=>el.closest('.v14-selected-formulas, .choice-grid, .more-wrap, .section-head') || el))];
         const formulas = controls.filter(el=>!controls.some(parent=>parent!==el && parent.contains(el))).map(el=>el.outerHTML).join('');
         controls.forEach(el=>el.remove());
-        return board+'<h2>Your title and thumbnail</h2>'+fields+
+        return board+'<h2>Your title</h2>'+fields+
           '<section class="video-quality-guide"><h2>Title options</h2><p>Try a title approach and edit the starter to fit your video.</p>'+formulas+
-          '<button class="btn" type="button" data-copy-title-request>Copy title request for ChatGPT</button> <a href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">Open ChatGPT ↗</a><p data-title-request-status role="status">Paste the request in your own ChatGPT account to generate more options.</p></section>'+
-          '<details><summary>More packaging guidance</summary>'+tpl.innerHTML+'</details>';
+          '<button class="btn" type="button" data-copy-title-request>Copy title request for ChatGPT</button> <a href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">Open ChatGPT ↗</a><p data-title-request-status role="status">Paste the request in your own ChatGPT account to generate more options.</p></section>';
       }
       return board+html;
     }

@@ -23,12 +23,13 @@
   `;document.head.appendChild(s);document.documentElement.dataset.creatorPlanner='true'}
   function renderError(message){document.documentElement.removeAttribute('data-creator-loading');document.body.innerHTML='<main class="shell"><section class="page"><div class="empty-state"><h2>Video planner unavailable</h2><p>'+esc(message)+'</p></div></section></main>'}
   const STEPS=['Video goal','Why this video','Viewer','Research','Video format','Promise','Title & thumbnail','Opening','Outline','Next action','Filming plan','Publishing','Review'];
-  const VISIBLE_STEPS=[0,2,3,4,6,7,8,9,10,11,12];
-  const STEP_LABELS={0:'Brief',2:'Audience',3:'References',4:'Video approach',9:'Calls to action'};
-  const STAGES=[['Video brief',0,5],['Title & thumbnail',6,6],['Script',7,9],['Production',10,11],['Review',12,12]];
+  const THUMBNAIL_STEP=13;
+  const VISIBLE_STEPS=[0,2,3,4,6,THUMBNAIL_STEP,7,8,9,10,11,12];
+  const STEP_LABELS={0:'Brief',2:'Audience',3:'References',4:'Video approach',6:'Title',9:'Calls to action',[THUMBNAIL_STEP]:'Thumbnail'};
+  const STAGES=[['Video brief',[0,2,3,4]],['Title & thumbnail',[6,THUMBNAIL_STEP]],['Script',[7,8,9]],['Production',[10,11]],['Review',[12]]];
   function activeVideo(){return get('state')?.creators?.[0]?.videos?.[0];}
-  function step(){return Math.min(12,Math.max(0,Number(activeVideo()?.flowStep)||0));}
-  function stage(){return STAGES.findIndex(s=>step()>=s[1]&&step()<=s[2]);}
+  function step(){return Math.min(THUMBNAIL_STEP,Math.max(0,Number(activeVideo()?.flowStep)||0));}
+  function stage(){return STAGES.findIndex(s=>s[1].includes(step()));}
   function draftPayload(ready=false){
     const video=activeVideo();if(!video)return null;
     if(ready)localCreator.readyForReview=true;
@@ -57,14 +58,14 @@
     const video=activeVideo(),host=document.querySelector('.page');if(!doc||!video||!host)return;
     updateBanner(lastStatus,lastError);coachBrief();
     const track=host.querySelector('.phase-track');
-    if(track){track.classList.add('creator-stage-track');track.innerHTML=STAGES.map((s,i)=>'<button type="button" class="phase-pill '+(i===stage()?'active':'')+'" data-creator-step="'+s[1]+'" '+(i===stage()?'aria-current="step"':'')+'>'+ (i+1)+'. '+s[0]+'</button>').join('');}
+    if(track){track.classList.add('creator-stage-track');track.innerHTML=STAGES.map((s,i)=>'<button type="button" class="phase-pill '+(i===stage()?'active':'')+'" data-creator-step="'+s[1][0]+'" '+(i===stage()?'aria-current="step"':'')+'>'+ (i+1)+'. '+s[0]+'</button>').join('');}
     const top=host.querySelector('.flow-top');
-    if(top){const current=STAGES[stage()];const sub=document.createElement('nav');sub.className='creator-step-track';sub.setAttribute('aria-label','Steps in '+current[0]);sub.innerHTML=VISIBLE_STEPS.filter(i=>i>=current[1]&&i<=current[2]).map(i=>'<button type="button" data-creator-step="'+i+'" '+(i===step()?'aria-current="step"':'')+'>'+esc(STEP_LABELS[i]||STEPS[i])+'</button>').join('');top.appendChild(sub);}
+    if(top){const current=STAGES[stage()];const sub=document.createElement('nav');sub.className='creator-step-track';sub.setAttribute('aria-label','Steps in '+current[0]);sub.innerHTML=current[1].map(i=>'<button type="button" data-creator-step="'+i+'" '+(i===step()?'aria-current="step"':'')+'>'+esc(STEP_LABELS[i]||STEPS[i])+'</button>').join('');top.appendChild(sub);}
     const footer=host.querySelector('.flow-footer');
     if(footer)footer.innerHTML='<span class="creator-step-count">Step '+(VISIBLE_STEPS.indexOf(step())+1)+' of '+VISIBLE_STEPS.length+' · '+(STEP_LABELS[step()]||STEPS[step()])+'</span><button class="btn" type="button" data-creator-step="'+VISIBLE_STEPS[Math.max(0,VISIBLE_STEPS.indexOf(step())-1)]+'" '+(step()===0?'disabled':'')+'>Back</button>'+(step()===12?'<button class="btn dark" type="button" data-creator-send>Send for coach review</button>':'<button class="btn dark" type="button" data-creator-step="'+VISIBLE_STEPS[VISIBLE_STEPS.indexOf(step())+1]+'">Save & continue →</button>');
     if(step()===12){const panel=document.createElement('section');panel.className='creator-coach-brief';panel.innerHTML='<h2>Anything your coach should know?</h2><label for="creator-review-notes">Questions, decisions or help you need</label><textarea id="creator-review-notes" data-creator-note rows="5">'+esc(localCreator.notes||'')+'</textarea>';footer?.before(panel);}
   }
-  function navigate(index){const v=activeVideo();if(!v)return;saveDraft();v.flowStep=VISIBLE_STEPS.includes(Number(index))?Number(index):0;v.visitedFlow=Math.max(v.visitedFlow||0,v.flowStep);try{sessionStorage.setItem('accelerator-creator-step:'+baseVideo.id,String(v.flowStep));}catch{}get('render')?.();if([3,6].includes(v.flowStep))document.querySelector('.flow-shell')?.scrollIntoView({block:'start',behavior:'instant'});else window.scrollTo({top:0,behavior:'smooth'});}
+  function navigate(index){const v=activeVideo();if(!v)return;saveDraft();v.flowStep=VISIBLE_STEPS.includes(Number(index))?Number(index):0;v.visitedFlow=Math.max(v.visitedFlow||0,v.flowStep);try{sessionStorage.setItem('accelerator-creator-step:'+baseVideo.id,String(v.flowStep));}catch{}get('render')?.();if([3,6,THUMBNAIL_STEP].includes(v.flowStep))document.querySelector('.flow-shell')?.scrollIntoView({block:'start',behavior:'instant'});else window.scrollTo({top:0,behavior:'smooth'});}
   function lockNavigation(){document.addEventListener('click',event=>{const target=event.target.closest('[data-view],[data-action]');if(!target)return;const view=target.dataset.view,action=target.dataset.action;if(view&&view!=='planner'||['handoff-video','mark-published','mark-ready','add-video','delete-video','switch-creator','open-session','video-ai-context','v152-client-resources'].includes(action)){event.preventDefault();event.stopImmediatePropagation();}},true);}
   function buildState(payload){const shared=payload?.videos?.[0],coach=shared?.coach||{},flow=coach.workflow||{};const planner=coach.planner?.video?coach.planner:{creator:{id:payload.creator?.id||'',name:payload.creator?.name||'Creator',channelName:payload.creator?.channelName||'',strategy:{audience:coach.viewer||flow.brief?.viewer||''}},video:{id:shared?.id||'',title:coach.title||'Shared video',job:coach.job||flow.brief?.job||'',stage:coach.stage||'Planning',package:{workingTitle:coach.title||flow.package?.title||'',thumbnailText:coach.thumbnailText||flow.package?.thumbnailText||'',thumbnailConcept:coach.thumbnailConcept||flow.package?.thumbnailConcept||''},viewer:{problem:coach.viewer||flow.brief?.viewer||''},promise:{viewer:coach.viewer||flow.brief?.viewer||'',result:coach.promiseResult||flow.brief?.promise||''},hook:{draft:coach.hookDraft||flow.script?.hook||''},structure:{notes:coach.outlineNotes||flow.script?.outline||''},handoff:{owner:coach.handoffOwner||flow.production?.owner||'',date:coach.handoffDate||flow.production?.date||'',assets:coach.handoffAssets||flow.production?.assets||''},cta:{endDraft:coach.cta||flow.script?.cta||'',publishDate:coach.publishDate||''}}};const seed=get('seed'),normalize=get('normalize');if(typeof seed!=='function'||typeof normalize!=='function')throw new Error('The planner did not finish loading. Please refresh this page.');const state=seed();const creator=state.creators?.[0];const blank=value=>Array.isArray(value)?[]:value&&typeof value==='object'?Object.fromEntries(Object.entries(value).map(([k,v])=>[k,blank(v)])):typeof value==='string'?'':typeof value==='number'?0:typeof value==='boolean'?false:null;Object.assign(creator,blank(creator));merge(creator,planner.creator||{});creator.id=String(payload.creator?.id||creator.id);creator.name=payload.creator?.name||creator.name;creator.videos=[];const video=clone(planner.video);video.id=String(payload.videos?.[0]?.id||video.id);creator.videos=[video];state.currentCreatorId=creator.id;state.currentVideoId=video.id;state.view='planner';state.theme='light';return normalize(state)}
   async function boot(){
@@ -76,8 +77,10 @@
       localCreator=clone(shared.videos[0].creator||{});
       const legacy={};const put=(key,path)=>{if(typeof localCreator[key]!=='string'||!localCreator[key].trim())return;const parts=path.split('.');legacy[parts[0]] ||= {};legacy[parts[0]][parts[1]]=localCreator[key];};put('titleDraft','package.workingTitle');put('thumbnailTextDraft','package.thumbnailText');put('thumbnailConceptDraft','package.thumbnailConcept');put('hookDraft','hook.draft');put('viewerDraft','promise.viewer');put('promiseResultDraft','promise.result');put('outlineNotesDraft','structure.notes');merge(scoped.creators[0].videos[0],legacy);merge(scoped.creators[0].videos[0],localCreator.plannerDraft||{});
       delete localCreator.plannerDraft;
-      scoped.creators[0].videos[0].flowStep=0;try{const saved=Number(sessionStorage.getItem('accelerator-creator-step:'+baseVideo.id));if(Number.isInteger(saved)&&saved>=0&&saved<13)scoped.creators[0].videos[0].flowStep=saved;}catch{}
+      scoped.creators[0].videos[0].flowStep=0;try{const saved=Number(sessionStorage.getItem('accelerator-creator-step:'+baseVideo.id));if(Number.isInteger(saved)&&VISIBLE_STEPS.includes(saved))scoped.creators[0].videos[0].flowStep=saved;}catch{}
       if(!VISIBLE_STEPS.includes(scoped.creators[0].videos[0].flowStep))scoped.creators[0].videos[0].flowStep=0;
+      const flow=get('VIDEO_FLOW');
+      flow[THUMBNAIL_STEP]=flow[6];
       set('state',scoped);style();lockNavigation();
       saver=window.createCreatorSaveQueue({initial:draftPayload(),send:async payload=>{
         let out;

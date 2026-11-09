@@ -84,7 +84,7 @@
       fields?.insertAdjacentHTML('beforebegin','<h2>2. Plan the outline in bullet points</h2><p>For each point: the viewer’s question → the useful answer or action → a real example or proof → the next unresolved question. Write the actual content in your voice.</p>');
       [...tpl.content.querySelectorAll('h2')].filter(h=>h.textContent==='Your outline').forEach(h=>h.remove());
     }
-    if(id==='package'){
+    if(id==='package'&&(!window.__acceleratorCreatorPlannerMode||v.flowStep===13)){
       const options=Array.from({length:3},(_,i)=>v.package?.thumbnailOptions?.[i]||{});
       const cards='<section class="workbench-section"><h2>Your thumbnail options</h2><p>Upload previews for options 1, 2 and 3. Compare them with the working title. A written concept is optional when the images explain the idea.</p><div class="workbench-thumbnails">'+options.map((o,i)=>'<article><h3>Option '+(i+1)+'</h3>'+(o.src?'<img src="'+esc(o.src)+'" alt="Thumbnail option '+(i+1)+'">':'<div class="workbench-image-empty">No image yet</div>')+'<label>Upload preview<input type="file" aria-label="Upload thumbnail option '+(i+1)+'" accept="image/png,image/jpeg,image/webp,image/gif" data-thumbnail-option="'+i+'"></label>'+(o.src?'<button class="btn" type="button" data-remove-thumbnail-option="'+i+'">Remove image</button>'+field('Notes for option '+(i+1),'package.thumbnailOptions.'+i+'.note',o.note):'')+'</article>').join('')+'</div><p data-thumbnail-status role="status"></p></section>';
       const concept=tpl.content.querySelector('[data-bind="package.thumbnailConcept"]')?.closest('.fields');
