@@ -37,7 +37,9 @@
           const first=thumbnailHeading || thumbnailFields;
           const siblings=first ? [...first.parentNode.children] : [];
           const thumbnailContent=siblings.slice(siblings.indexOf(first)).map(el=>el.outerHTML).join('');
-          return board+'<h2>Your thumbnail</h2>'+thumbnailContent;
+          const title=v.package?.finalTitle?.trim()||v.package?.workingTitle?.trim()||v.title||'Add a working title on the Title tab.';
+          const references=board||'<section class="package-reference-board"><h2>Thumbnail references</h2><p>No visual references added yet. Add one below to compare directions.</p></section>';
+          return references+'<section class="video-quality-guide"><h2>Current title</h2><p>'+esc(title)+'</p><button class="btn" type="button" data-creator-step="6">Go to Title</button></section><h2>Your thumbnail</h2>'+thumbnailContent;
         }
         const groups=[...new Set([...tpl.content.querySelectorAll('[data-bind="package.workingTitle"], [data-bind="package.finalTitle"]')].map(e=>e.closest('.fields')).filter(Boolean))];
         const fields=groups.map(e=>e.outerHTML).join('');groups.forEach(e=>e.remove());
